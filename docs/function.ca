@@ -1,0 +1,15 @@
+with system
+
+function(int a, int b) add -> int does return a+b
+
+function(int a, int b) add_twice -> int does
+	int temp = a+b
+	temp+=b
+return temp
+
+function() main -> int does
+	print("add(1,2)=%i", add(1,2))
+	int foo=5
+	int bar=10
+	print("add(foo,bar)=%i", add(foo,bar))
+return 0

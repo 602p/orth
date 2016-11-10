@@ -1,0 +1,37 @@
+Memory managment in caste is a little complex, but that is the price for consistency.
+It's also probably horribly inefficient, but this is really just for fun.
+The interface that you, the programmer, should be using is _all_ objects. That includes
+ ints and strings and all that stuff you would normally expect to be primitives. We're like
+ python like that. These primitives of course exist internally, but shouldn't be accessed.
+
+Local (what would be statically allocated on the stack in C) variables are actually
+ allocated on the heap. The only things passed around are pointer to stuff. "Static"
+ variables are automatically deallocated when the frame exits, so as to avoid leaking
+ memory. Referencable variables (need a better name) are not deallocated on exit. Therefore
+ they persist, and can be returned (return is by pointer, but otherwise it would have been
+ deallocated at exit.) They are specified by putting a @ before its type in it's definition
+
+An exeption to this is referencing attributes of a object (e.g. mystring.len) implicitly
+ marks the variable holding the new reference not to be removed.
+
+Example:
+
+`	function() foo -> int does
+`		int bar=1
+`		int baz=2
+`		@int qux=3 //not automatically freed
+`
+`		//implicit bar:free()
+`		//implicit baz:free()
+`		//NO implicit qux:free(), qux persists until someone who gets the return of this frees it
+`	return qux
+
+TODO: Decide if returning something should automatically exempt it from freeing, probably
+
+Example:
+`	function(str thestring) get_cstring_length -> int does
+`		int length=thestring.len
+`		@int cstring_len=length+1
+`		//NO implicit length:free(), because it is a reference to an object attribute
+`		//NO free on cstring_len because it is marked as returned
+`	return cstring_len

@@ -1,0 +1,49 @@
+
+class Person is
+	str .first
+	str .last
+	int .birthyear
+	int .balance
+
+	method(Person me) :get_fullname -> str does
+		@str res=me.first+" "+me.last
+	return res
+
+	method(Person me, int year) :get_age -> int does
+		@int res=year-me.birthyear
+	return res
+
+	method(Person me, int amt) :charge -> bool does
+		if me.balance>=amt do
+			me.balance-=amt
+			return true
+		done
+	return false
+
+	method(Person me, int amt) :credit -> does
+		me.balance+=amt
+	return
+
+	staticmethod(str first, str last, int year, int balance) ::Create -> Person does
+		//Assignment to members is by default reference (no copy)
+		@Person res = Person{}
+		res.first=first
+		res.last=last
+		res.birthyear=int::Clone(year)
+		res.balance=int::Clone(balance)
+	return res
+
+	staticmethod(str first, str last) ::CreateName -> Person does
+		@Person res = Person::Create(first, last, -1, 0)
+	return res
+done
+
+function(str first) create_smith -> Person does
+	@Person res = Person::CreateName(first, "Smith")
+return res
+
+function() main -> int does
+	Person bob = create_smith("Bob")
+	print("First=%s, Last=%s, Full=%s", bob.first, bob.last, bob:get_fullname()!)
+	//bob:free() is implicitly called at the end of the block because it is a "local" (No @ in definition)
+return 0

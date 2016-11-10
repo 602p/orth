@@ -1,14 +1,19 @@
 import cabuiltins
 import caclass
+import emit, sys
+import os
+from util import CODict
 
-foo=caclass.CAClass("foo", slots={
-	"age":cabuiltins.caint,
-	"height":cabuiltins.cafloat
-})
+foo=caclass.CAClass("foo", slots=CODict
+	(age=cabuiltins.caint)
+	(height=cabuiltins.cafloat)
+)
 
-class DummyWriter:
-	def emitl(self, line):print(line)
-	def pushindent(self):print("<push indent>")
-	def popindent(self):print("<pop indent>")
+bar=caclass.CAClass("bar", slots=CODict
+	(count=cabuiltins.caint)
+	(foo=caclass.pointerto(foo))
+)
 
-foo.emit_struct_ir(DummyWriter())
+writer=emit.IRWriter(sys.stdout)
+foo.emit_struct_ir(writer)
+bar.emit_struct_ir(writer)

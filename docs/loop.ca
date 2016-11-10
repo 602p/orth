@@ -1,0 +1,10 @@
+with system
+
+function() main -> int does
+	int i = 0
+	while i<100 do
+		i++
+		print("i=%i",i)
+	done
+	print("Done!")
+return 0

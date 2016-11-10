@@ -16,11 +16,20 @@ class CAClass(CANamespace):
 		if self.primitive: return self.primitive
 		return "ca_"+self.name #TODO: Inculde namespacing
 
+	def get_ir_type_identifier(self):
+		return ("%" if not self.primitive else "") + self.get_ir_identifier()
+
 	def emit_struct_ir(self, irwriter):
 		if self.primitive: return
 		irwriter.emitl("%"+self.get_ir_identifier()+" = type {")
 		irwriter.pushindent()
+
+		last=next(reversed(self.slots))
 		for name, caclass in self.slots.items():
-			irwriter.emitl(caclass.get_ir_identifier()+", //"+name)
+			irwriter.emiti()
+			irwriter.emit(caclass.get_ir_type_identifier())
+			if name!=last:
+				irwriter.emit(",")
+			irwriter.emit(" ;"+name+"\n")
 		irwriter.popindent()
 		irwriter.emitl("}")

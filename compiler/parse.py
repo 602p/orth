@@ -1,31 +1,37 @@
-from tokenize import toktys, tokenize
-
-class ASTNode:
-	def __init__(self, **kwargs):
-		self.__dict__.update(kwargs)
-		self.attrs=list(kwargs.keys())
-
-	def __str__(self):
-		r = type(self).__name__
-		if self.attrs:
-			r+="("
-			r+=", ".join(k+"="+str(self.__dict__[k]) for k in self.attrs)
-			r+=")"
-		return r
-
-	def __repr__(self): return str(self)
+from tokenize import tokenize
+import grammar
+from grammarutil import Token
+from grammar import ast_node_types
 
 def parse(tokens):
-	pass
+	progress=True
+	while progress and tokens:
+		progress=False
+		for index in range(len(tokens)):
+			for ast_type in ast_node_types:
+				print(ast_type, tokens)
+				consumed=ast_type.pattern.cm_match(tokens[index:])
+				if consumed:
+					consumed_tokens=tokens[index:index+consumed]
+					del tokens[index:index+consumed]
+					tokens.insert(index, ast_type(consumed_tokens))
+					index+=1
+					progress=True
+					break
+			if progress:
+				break
+	
+	noops=[item for item in tokens if isinstance(item, Token) and item.type == grammar.Tokens.T_ENDOFSTATEMENT]
+	for item in noops:
+		tokens.remove(item)
+	return tokens
 
-tokens=tokenize(r"""function (int a, int b) foo ->  bool does
-	int b=2
-	a+=1
-	if !(a>=b) do
-		return 1
-	done
-return 0
+tokens=tokenize(r"""
+	int b=(2*2)-2
 """)
 
+# print(ast_node_types)
 print(tokens)
-print(parse(tokens))
+result=parse(tokens)
+print("\n"*3)
+print("\n\n".join(item.prettyprint() for item in result))

@@ -131,7 +131,7 @@ class ASTNode(metaclass=ASTNodeMeta):
 	def __init__(self, elements):
 		pass
 
-	def replace(self, elements):
+	def replace(self):
 		return False
 
 	def _get_interesting_keys(self):

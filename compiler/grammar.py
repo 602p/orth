@@ -131,13 +131,21 @@ class CallExpr(ValueExpression):
 		else:
 			self.args=[elements[1].value]
 
-# class AugmentedAssignExpression(Expression):
-# 	pattern=VariableIdentifierExpr+T_AUGASSIGN+ValueExpression
+class AugmentedAssignExpression(Expression):
+	pattern=VariableIdentifierExpr+T_AUGASSIGN+ValueExpression
 
-# 	def replace(self, elements):
-# 		return AssignmentExpr([elements[0], None,
-# 			BinOpExpr([
-# 				elements[0],
-# 				Tokens.T_OPERATOR.make_token(elements[1].value[:-1]),
-# 				elements[2]
-# 			]), None])
+	def __init__(self, elements):
+		self.variable=elements[0]
+		self.operation=elements[1].value[0]
+		self.offset=elements[2]
+	
+	def replace(self):
+		return AssignmentExpr([
+			self.variable,
+			None,
+			BinOpExpr([
+				self.variable,
+				T_BINARY_OPERATOR.make_token(self.operation),
+				self.offset
+			])
+		])

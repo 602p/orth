@@ -32,4 +32,4 @@ def tokenize(text, verbose=False):
 		else:
 			raise SyntaxError("No match at %i: %s" % (position, text[position:]))
 
-	return tokens
+	return tokens[1:]

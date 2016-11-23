@@ -109,26 +109,27 @@ class CSE(CSEBase):
 	def __init__(self, elements):
 		self.args=[elements[0]]+elements[2].args
 
-class ListExpr(ASTNode):
-	pattern=T_LIST_START+(CSEBase|ValueExpression)+T_LIST_STOP
+class TupleExpr(ASTNode):
+	pattern=T_PAREN_OPEN+[CSEBase]+T_PAREN_CLOSE
 
 	def __init__(self, elements):
-		if isinstance(elements[1], CSEBase):
-			self.args=elements[1].args
-		else:
-			self.args=[elements[1]]
-
-class CallExpr(ValueExpression):
-	pattern=ValueExpression+T_INVOKE+[ListExpr]
-
-	def __init__(self, elements):
-		self.method=elements[0]
 		if len(elements)==2:
 			self.args=[]
 		else:
-			self.args=elements[2]
+			if isinstance(elements[1], CSEBase):
+				self.args=elements[1].args
+			else:
+				self.args=[elements[1]]
 
+class CallExpr(ValueExpression):
+	pattern=ValueExpression+(TupleExpr|GroupingExpr)
 
+	def __init__(self, elements):
+		self.method=elements[0]
+		if isinstance(elements[1], TupleExpr):
+			self.args=elements[1].args
+		else:
+			self.args=[elements[1].value]
 
 # class AugmentedAssignExpression(Expression):
 # 	pattern=VariableIdentifierExpr+T_AUGASSIGN+ValueExpression

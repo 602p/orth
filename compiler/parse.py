@@ -77,7 +77,7 @@ def parse(tokens):
 	return view.tokens
 
 tokens=tokenize(r"""
-a![(b![c,d]+e)]
+a(1, b, c(z,x+2)*5)
 """)
 
 # print(ast_node_types)

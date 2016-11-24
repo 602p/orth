@@ -9,4 +9,4 @@ tokens=tokenize.tokenize(string)
 node=parse.parse(tokens)
 print(node.prettyprint())
 
-drawblockdiag.emit_node_file(open('out.bd', 'w'), node)
+drawblockdiag.emit_node_file(open('out.bd', 'w'), node, one_box_per_object=True)

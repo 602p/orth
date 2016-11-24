@@ -27,13 +27,14 @@ def emit_node(fd, node, color=None, one_box_per_object=False):
 	for key in node._get_interesting_keys():
 		value=getattr(node, key)
 		if isinstance(value, ASTNode):
-			emit_link(fd, nodename, emit_node(fd, value), key)
+			emit_link(fd, nodename, emit_node(fd, value, one_box_per_object=one_box_per_object), key)
 		elif isinstance(value, list):
 			interstitial="i_"+str(random.randint(0, 999999))
 			emit_item(fd, interstitial, key+("\n(empty)" if not value else ""), '#aaaaff')
 			emit_link(fd, nodename, interstitial, key)
 			for idx, item in enumerate(value):
-				emit_link(fd, interstitial, emit_node(fd, item), key+"[%i]"%idx)
+				emit_link(fd, interstitial, emit_node(fd, item,
+					one_box_per_object=one_box_per_object), key+"[%i]"%idx)
 		else:
 			desc+=key+" = "+str(value)+"\\n"
 
@@ -51,5 +52,5 @@ def emit_node_file(fd, node, one_box_per_object=False):
 	emit(fd, "blockdiag{\n")
 	emit(fd, "node_width=112\n")
 	emit(fd, "node_height=48\n")
-	emit_node(fd, node, one_box_per_object)
+	emit_node(fd, node, "gray", one_box_per_object)
 	emit(fd, "}")

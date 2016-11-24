@@ -29,6 +29,7 @@ def match_element(element, tokens):
 
 def chain_matches(pattern, tokens):
 	consumed=0
+	print(pattern, tokens)
 	for element_idx, element in enumerate(pattern):
 		try:
 			match = match_element(element, tokens[consumed:])
@@ -48,17 +49,21 @@ def parse(tokens):
 	while view.has_any:
 		progress=True
 		while progress:
-			# print("#####",view.get_forward_slice())
+			
 			progress=False
 			for atype in real_types:
-				print(view.get_lookahead(), atype.bad_lookahead_tokens)
 				if view.get_lookahead() and view.get_lookahead().type in atype.bad_lookahead_tokens:
-					print("\tSkipping...")
 					continue
+				print("#####",view.get_forward_slice())
 				match = chain_matches(atype.pattern.chain, view.get_forward_slice())
+
+				# if match>len(view.get_forward_slice()) and \
+				#    view.get_forward_slice()[match].type in atype.bad_following_tokens:
+				# 	continue
 				
 				# print(atype, match, view.idx, str(atype.pattern), view.get_forward_slice())
 				if match:
+					print(atype)
 					node=atype(view.get_forward_slice()[0:match])
 					print("Emitting", str(node))
 					rep=node.replace()
@@ -66,6 +71,7 @@ def parse(tokens):
 						node=rep
 					# print("***", node)
 					view.replace(match, node)
+					print(view.tokens, view.idx)
 					progress=True
 					break
 		view.next()

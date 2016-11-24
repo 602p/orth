@@ -1,10 +1,12 @@
 import sys, drawblockdiag, tokenize, parse, grammarutil
 
 string=r"""
-int a = 1
+f(a.b+2, 77)
+do_a_thing(foo.bar(a.b.c.d))
 """
 
 tokens=tokenize.tokenize(string)
+print(tokens)
 node=parse.parse(tokens)
 print(node.prettyprint())
 

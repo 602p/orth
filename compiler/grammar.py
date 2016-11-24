@@ -15,7 +15,7 @@ class Tokens(metaclass=TokenHolder):
 
 	T_IF_START = TokenType("if +", ["T_ENDOFSTATEMENT"])
 	T_IF_DONE = TokenType("done", ["T_ENDOFSTATEMENT"])
-	T_IF_DO = TokenType("do")
+	T_IF_DO = TokenType(" +do")
 	T_IF_ELSE = TokenType("else", ["T_ENDOFSTATEMENT"])
 		
 	T_RETURN = TokenType("return +", ["T_ENDOFSTATEMENT"])
@@ -33,6 +33,7 @@ class Tokens(metaclass=TokenHolder):
 	T_INVOKE = TokenType(r"!")
 
 	T_COMMA = TokenType(r",")
+	T_DOT = TokenType(r"\.")
 
 	T_BINARY_OPERATOR = TokenType(r"(>=)|(<=)|(!=)|[/\*\-\+%|\^><]", capture=True)
 	T_UNARY_OPERATOR = TokenType(r"\-", capture=True)
@@ -48,7 +49,10 @@ class Expression(ASTNode):
 class ValueExpression(Expression):
 	pass
 
-class IdentifierExpr(ValueExpression):
+class IdentifierExpr(Expression):
+	pass
+
+class NameExpr(IdentifierExpr, ValueExpression):
 	pattern=T_NAME|T_VAR_DECL
 
 	def __init__(self, elements):
@@ -62,6 +66,7 @@ class IdentifierExpr(ValueExpression):
 
 class BinOpExpr(ValueExpression):
 	pattern=ValueExpression+T_BINARY_OPERATOR+ValueExpression
+	bad_lookahead_tokens=[T_DOT]
 
 	def __init__(self, elements):
 		self.lhs=elements[0]
@@ -77,8 +82,10 @@ class UnOpExpr(ValueExpression):
 
 class AssignmentExpr(Expression):
 	pattern=IdentifierExpr+T_ASSIGNMENT+ValueExpression
+	bad_lookahead_tokens=[T_DOT]
 
 	def __init__(self, elements, was_augassign=False):
+		# print(elements)
 		self.lhs=elements[0]
 		self.rhs=elements[2]
 		if self.lhs.type!="?":
@@ -144,6 +151,7 @@ class ZeroTupleExpr(TupleExpr):
 
 class CallExpr(ValueExpression):
 	pattern=ValueExpression+(TupleExpr|GroupingExpr)
+	bad_lookahead_tokens=[T_DOT]
 
 	def __init__(self, elements):
 		self.method=elements[0]
@@ -154,6 +162,7 @@ class CallExpr(ValueExpression):
 
 class AugmentedAssignExpression(Expression):
 	pattern=IdentifierExpr+T_AUGASSIGN+ValueExpression
+	bad_lookahead_tokens=[T_DOT]
 
 	def __init__(self, elements):
 		self.variable=elements[0]
@@ -170,6 +179,15 @@ class AugmentedAssignExpression(Expression):
 				self.offset
 			])
 		], was_augassign=True)
+
+class AccessorExpr(ValueExpression, IdentifierExpr):
+	pattern=ValueExpression+T_DOT+IdentifierExpr
+	bad_lookahead_tokens=[T_DOT]
+
+	def __init__(self, elements):
+		self.object=elements[0]
+		self.field=elements[2].name
+		self.type="?"
 
 class BunchaExpressions(Expression):
 	def __init__(self, elements):

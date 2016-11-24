@@ -20,8 +20,9 @@ def emit_item(fd, name, label, color=None):
 def emit_link(fd, start, end, label=None):
 	emit(fd, start+" -> "+end+("[label=\""+label+"\"]" if label else "")+";")
 
-def emit_node(fd, node, color=None):
-	nodename="n_"+str(id(node))
+def emit_node(fd, node, color=None, one_box_per_object=False):
+	nodeid=id(node) if one_box_per_object else random.randint(0, 99999999999999)
+	nodename="n_"+str(nodeid)
 	desc=type(node).__name__+"\\n"
 	for key in node._get_interesting_keys():
 		value=getattr(node, key)
@@ -46,9 +47,9 @@ def emit_node(fd, node, color=None):
 
 	return nodename
 
-def emit_node_file(fd, node):
+def emit_node_file(fd, node, one_box_per_object=False):
 	emit(fd, "blockdiag{\n")
 	emit(fd, "node_width=112\n")
 	emit(fd, "node_height=48\n")
-	emit_node(fd, node)
+	emit_node(fd, node, one_box_per_object)
 	emit(fd, "}")

@@ -78,9 +78,11 @@ class UnOpExpr(ValueExpression):
 class AssignmentExpr(Expression):
 	pattern=IdentifierExpr+T_ASSIGNMENT+ValueExpression
 
-	def __init__(self, elements):
+	def __init__(self, elements, was_augassign=False):
 		self.lhs=elements[0]
 		self.rhs=elements[2]
+		if was_augassign:
+			self.augassign=True
 
 class LiteralExpr(ValueExpression):
 	pattern=T_INTEGER_LITERAL
@@ -165,7 +167,7 @@ class AugmentedAssignExpression(Expression):
 				T_BINARY_OPERATOR.make_token(self.operation),
 				self.offset
 			])
-		])
+		], was_augassign=True)
 
 class BunchaExpressions(Expression):
 	def __init__(self, elements):

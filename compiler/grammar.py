@@ -81,6 +81,8 @@ class AssignmentExpr(Expression):
 	def __init__(self, elements, was_augassign=False):
 		self.lhs=elements[0]
 		self.rhs=elements[2]
+		if self.lhs.type!="?":
+			self.init=True
 		if was_augassign:
 			self.augassign=True
 

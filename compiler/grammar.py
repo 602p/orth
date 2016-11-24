@@ -48,7 +48,7 @@ class Expression(ASTNode):
 class ValueExpression(Expression):
 	pass
 
-class VariableIdentifierExpr(ValueExpression):
+class IdentifierExpr(ValueExpression):
 	pattern=T_NAME|T_VAR_DECL
 
 	def __init__(self, elements):
@@ -76,7 +76,7 @@ class UnOpExpr(ValueExpression):
 		self.expression=elements[1]
 
 class AssignmentExpr(Expression):
-	pattern=VariableIdentifierExpr+T_ASSIGNMENT+ValueExpression
+	pattern=IdentifierExpr+T_ASSIGNMENT+ValueExpression
 
 	def __init__(self, elements):
 		self.lhs=elements[0]
@@ -93,33 +93,50 @@ class NoopExpr(Expression):
 
 class GroupingExpr(ValueExpression):
 	pattern=T_PAREN_OPEN+ValueExpression+T_PAREN_CLOSE
+	bad_lookahead_tokens=[T_NAME, T_PAREN_CLOSE]
 
 	def __init__(self, elements):
 		self.value=elements[1]
 
-class CSEBase(ASTNode):
-	pattern=ValueExpression+T_COMMA+ValueExpression
+class TupleFragment(ASTNode):
+	pattern=T_COMMA+ValueExpression+T_COMMA+ValueExpression+T_PAREN_CLOSE
 
 	def __init__(self, elements):
-		self.args=[elements[0], elements[2]]
+		self.args=[elements[1], elements[3]]
 
-class CSE(CSEBase):
-	pattern=ValueExpression+T_COMMA+CSEBase
+class TupleFragmentContinuation(TupleFragment):
+	pattern=T_COMMA+ValueExpression+TupleFragment
 
 	def __init__(self, elements):
-		self.args=[elements[0]]+elements[2].args
+		self.args=[elements[1]]+elements[2].args
 
 class TupleExpr(ASTNode):
-	pattern=T_PAREN_OPEN+[CSEBase]+T_PAREN_CLOSE
+	pattern=T_PAREN_OPEN+ValueExpression+TupleFragment
 
 	def __init__(self, elements):
-		if len(elements)==2:
+		if len(elements)==1:
 			self.args=[]
 		else:
-			if isinstance(elements[1], CSEBase):
-				self.args=elements[1].args
-			else:
-				self.args=[elements[1]]
+			self.args=[elements[1]]
+			self.args.extend(elements[2].args)
+
+class TwoTupleExpr(TupleExpr):
+	pattern=T_PAREN_OPEN+ValueExpression+T_COMMA+ValueExpression+T_PAREN_CLOSE
+
+	def __init__(self, elements):
+		self.args=[elements[1], elements[3]]
+
+class OneTupleExpr(TupleExpr):
+	pattern=T_PAREN_OPEN+ValueExpression+T_PAREN_CLOSE
+
+	def __init__(self, elements):
+		self.args=[elements[1]]
+
+class ZeroTupleExpr(TupleExpr):
+	pattern=T_PAREN_OPEN+T_PAREN_CLOSE
+
+	def __init__(self, elements):
+		self.args=[]
 
 class CallExpr(ValueExpression):
 	pattern=ValueExpression+(TupleExpr|GroupingExpr)
@@ -132,7 +149,7 @@ class CallExpr(ValueExpression):
 			self.args=[elements[1].value]
 
 class AugmentedAssignExpression(Expression):
-	pattern=VariableIdentifierExpr+T_AUGASSIGN+ValueExpression
+	pattern=IdentifierExpr+T_AUGASSIGN+ValueExpression
 
 	def __init__(self, elements):
 		self.variable=elements[0]
@@ -149,3 +166,7 @@ class AugmentedAssignExpression(Expression):
 				self.offset
 			])
 		])
+
+class BunchaExpressions(Expression):
+	def __init__(self, elements):
+		self.exprs=elements

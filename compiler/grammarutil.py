@@ -115,6 +115,9 @@ class TokenView:
 	def get_forward_slice(self):
 		return self.tokens[self.idx:]
 
+	def get_lookahead(self):
+		return self.tokens[self.idx-1] if self.idx>0 else None
+
 ast_node_types=[]
 class ASTNodeMeta(type, ChainBuilderProvider):
 	def __new__(self, name, bases, classdict):
@@ -128,6 +131,7 @@ class ASTNodeMeta(type, ChainBuilderProvider):
 
 class ASTNode(metaclass=ASTNodeMeta):
 	# pattern=ChainBuilder()
+	bad_lookahead_tokens=[]
 	def __init__(self, elements):
 		pass
 
@@ -135,8 +139,8 @@ class ASTNode(metaclass=ASTNodeMeta):
 		return False
 
 	def _get_interesting_keys(self):
-		return [k for k in self.__dict__.keys() if not k.startswith("_") or k in \
-		["pattern", "get_interesting_keys", "prettypring"]]
+		return sorted([k for k in self.__dict__.keys() if not k.startswith("_") or k in \
+		["pattern", "get_interesting_keys", "prettypring"]])
 
 	def __str__(self):
 		interesting_keys=self._get_interesting_keys()

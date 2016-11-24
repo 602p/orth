@@ -1,7 +1,7 @@
 from tokenize import tokenize
 import grammar
 from grammarutil import Token, TokenView, TokenType, ASTNodeMeta, ChainBuilder, ASTNode
-from grammar import ast_node_types
+from grammar import ast_node_types, NoopExpr, BunchaExpressions
 
 import sys
 # sys.setrecursionlimit(60)
@@ -51,11 +51,16 @@ def parse(tokens):
 			# print("#####",view.get_forward_slice())
 			progress=False
 			for atype in real_types:
+				print(view.get_lookahead(), atype.bad_lookahead_tokens)
+				if view.get_lookahead() and view.get_lookahead().type in atype.bad_lookahead_tokens:
+					print("\tSkipping...")
+					continue
 				match = chain_matches(atype.pattern.chain, view.get_forward_slice())
 				
 				# print(atype, match, view.idx, str(atype.pattern), view.get_forward_slice())
 				if match:
 					node=atype(view.get_forward_slice()[0:match])
+					print("Emitting", str(node))
 					rep=node.replace()
 					if rep:
 						node=rep
@@ -65,23 +70,4 @@ def parse(tokens):
 					break
 		view.next()
 
-	return view.tokens
-
-string=r"""
-a(1, b, c(z,x+2)*5)
-c(b)
-b+=1
-c(b^2)
-"""
-
-tokens=tokenize(string)
-
-# print(ast_node_types)
-print(string)
-print()
-print()
-print(tokens)
-print()
-result=parse(tokens)
-print()
-print("\n\n".join(item.prettyprint() if isinstance(item, ASTNode) else str(item) for item in result))
+	return BunchaExpressions([item for item in view.tokens if not isinstance(item, NoopExpr)])

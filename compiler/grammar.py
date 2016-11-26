@@ -121,16 +121,7 @@ class SepExpr(Expression):
 	pattern=T_ENDOFSTATEMENT
 	bad_lookahead_tokens=[T_ENDOFSTATEMENT]
 
-class JSepExpr(SepExpr):
-	pattern=SepExpr+SepExpr
-
-class J2SepExpr(SepExpr):
-	pattern=T_ENDOFSTATEMENT+T_ENDOFSTATEMENT
-
-class J3SepExpr(SepExpr):
-	pattern=T_ENDOFSTATEMENT+SepExpr
-
-class J4SepExpr(SepExpr):
+class 4SepExpr(SepExpr):
 	pattern=SepExpr+T_ENDOFSTATEMENT
 
 class GroupingExpr(ValueExpression):

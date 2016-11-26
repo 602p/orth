@@ -64,7 +64,7 @@ def parse(tokens):
 				# print(atype, match, view.idx, str(atype.pattern), view.get_forward_slice())
 				if match:
 					# print(atype)
-					node=atype(view.get_forward_slice()[0:match])
+					node=atype(view.get_forward_slice()[0:match-atype.dont_consume])
 					print("Emitting", str(node))
 					rep=node.replace()
 					if rep:

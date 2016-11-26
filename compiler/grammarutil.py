@@ -134,6 +134,7 @@ class ASTNodeMeta(type, ChainBuilderProvider):
 class ASTNode(metaclass=ASTNodeMeta):
 	# pattern=ChainBuilder()
 	bad_lookahead_tokens=[]
+	dont_consume=0
 	def __init__(self, elements):
 		pass
 

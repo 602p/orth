@@ -32,8 +32,10 @@ class Tokens(metaclass=TokenHolder):
 	T_VAR_DECL = TokenType(R_IDENTIFIER+" +"+R_IDENTIFIER, ["T_ENDOFSTATEMENT"], capture=True)
 	T_NAME = TokenType(R_IDENTIFIER, capture=True)
 
-	T_AUGASSIGN = TokenType(r"(\+=)|(-=)|(\*=)|(/=)", ["T_NAME", "T_VAR_DECL"], capture=True)
-	T_BINARY_OPERATOR = TokenType(r"(>=)|(<=)|(!=)|(==)|[/\*\-\+%|\^><]", capture=True)
+	T_AUGASSIGN = TokenType(r"(\+=)|(-=)|(\*=)|(/=)", ["T_NAME", "T_VAR_DECL", "T_LIST_STOP"], capture=True)
+	T_BINARY_OPERATOR = TokenType(r"(>=)|(<=)|(!=)|(==)|[/\*\-\+%|\^><]", [
+			"T_NAME", "T_LIST_STOP", "T_PAREN_CLOSE", "T_INTEGER_LITERAL", "T_STRING_LITERAL"
+		], capture=True)
 	T_ASSIGNMENT = TokenType("=")
 	T_PAREN_OPEN = TokenType(r"\(")
 	T_PAREN_CLOSE = TokenType(r"\)")
@@ -46,7 +48,7 @@ class Tokens(metaclass=TokenHolder):
 
 
 	
-	T_UNARY_OPERATOR = TokenType(r"\-", capture=True)
+	T_UNARY_OPERATOR = TokenType(r"[\-~!]", capture=True)
 
 	T_INTEGER_LITERAL = TokenType(r"[0-9]+", capture=True)
 	T_STRING_LITERAL = TokenType(r"\"[(#-~)|( \!)]*\"", capture=True)
@@ -67,16 +69,19 @@ class BlockExpression(Expression):
 	pass
 
 class NameExpr(IdentifierExpr, ValueExpression):
-	pattern=T_NAME|T_VAR_DECL
+	pattern=T_NAME
 
 	def __init__(self, elements):
-		if elements[0].type == T_NAME:
-			self.name=elements[0].value
-			self.type="?"
-		else:
-			type, *_, name = elements[0].value.split(" ")
-			self.name=name
-			self.type=type
+		self.name=elements[0].value
+		self.type="?"
+
+class DeclExpr(NameExpr):
+	pattern=T_VAR_DECL
+
+	def __init__(self, elements):
+		type, *_, name = elements[0].value.split(" ")
+		self.name=name
+		self.type=type
 
 class BinOpExpr(ValueExpression):
 	pattern=ValueExpression+T_BINARY_OPERATOR+ValueExpression
@@ -92,7 +97,7 @@ class UnOpExpr(ValueExpression):
 
 	def __init__(self, elements):
 		self.operator=elements[0].value
-		self.expression=elements[1]
+		self.expr=elements[1]
 
 class AssignmentExpr(Expression):
 	pattern=IdentifierExpr+T_ASSIGNMENT+ValueExpression
@@ -199,7 +204,7 @@ class AccessorExpr(ValueExpression, IdentifierExpr):
 
 	def __init__(self, elements):
 		self.object=elements[0]
-		self.field=elements[2]
+		self.field=elements[2].name
 		self.type="?"
 
 class IndexExpr(AccessorExpr):

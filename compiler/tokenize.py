@@ -1,6 +1,7 @@
 from grammar import Tokens
 
 def tokenize(text, verbose=False):
+	text+="\n "
 	position=0
 	tokens=[Tokens.T_ENDOFSTATEMENT.make_token('')]
 	while position<len(text):
@@ -15,9 +16,7 @@ def tokenize(text, verbose=False):
 			position+=1
 			continue
 
-		if text[position] in " \t":
-			position+=1
-			continue
+		
 
 		for token in Tokens.values():
 			if verbose: print(token.name)
@@ -30,6 +29,9 @@ def tokenize(text, verbose=False):
 				position+=len(token.regex.match(text[position:]).group())
 				break
 		else:
+			if text[position] in " \t":
+				position+=1
+				continue
 			raise SyntaxError("No match at %i: %s" % (position, text[position:]))
 
 	return tokens[1:]

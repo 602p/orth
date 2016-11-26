@@ -1,0 +1,38 @@
+if simple do
+	do_a_simple_thing()
+elif (more+complex)>=3 do
+	slightly(more_complex+1)
+elif quite[3](complex(1,2+2,3^4)-foo) do
+	if nested_ifs do
+		woohoo()
+	else do
+		woo(hoo, ":(")
+		#testing if these break on parsing
+		donuts <#for `do`#> +=1
+		whilenuts <#for `while`#> +=1
+		whiledo+=1
+		nutswhile+=1
+		if_a_thing=2
+	done
+	regardless+=1
+elif hella()[3][2][foo[bar]][quux()].complex.now() do
+	wow+=kill+me
+else do
+	yikes("dude")
+done
+
+while foo<bar do
+	if foo%2 do
+		print("foo not divisible by 2")
+	else do
+		foos_divisible_by_2.append(foo)
+	done
+
+	inner_loop=0
+
+	while inner_loop<foo do
+		foo-=1
+	done
+
+	do_a_thing()
+done

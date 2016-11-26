@@ -65,7 +65,9 @@ class ChainBuilderProvider:
 	def cm_match(self, values, ast_type_blacklist=[]): return ChainBuilder([self]).cm_match(values, ast_type_blacklist)
 
 class TokenType(ChainBuilderProvider):
-	def __init__(self, regex, preceeding_in=None, capture=False, emit=True):
+	def __init__(self, regex, preceeding_in=None, capture=False, emit=True, keyword=False):
+		if keyword:
+			regex=regex+r"(?=\s)"
 		self.regex=re.compile(regex)
 		self.preceeding_in=preceeding_in
 		self.capture=capture
@@ -164,7 +166,7 @@ class ASTNode(metaclass=ASTNodeMeta):
 						r+=v.prettyprint(_depth+1)
 					elif isinstance(v, list) and len(v)>0:
 						r+="[\n\t\t"+spacing
-						r+=(",\n\t\t"+spacing).join(ele.prettyprint(_depth+2) if isinstance(ele, ASTNode) else str(v) for ele in v)
+						r+=(",\n\t\t"+spacing).join(ele.prettyprint(_depth+2) if isinstance(ele, ASTNode) else str(ele) for ele in v)
 						r+="\n\t"+spacing+"]"
 					else:
 						r+=str(v)

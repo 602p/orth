@@ -1,5 +1,0 @@
-with system
-
-function() main -> int does
-	print("Hello World!")
-return 0

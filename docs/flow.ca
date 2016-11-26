@@ -1,9 +1,0 @@
-with system
-
-function() main -> int does
-	if 1>2 do
-		print("1 is greater than 2")
-	else
-		print("1 is not greater than 2")
-	done
-return 0

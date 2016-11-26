@@ -1,4 +1,0 @@
-
-if !a do
-	print("not a")
-done

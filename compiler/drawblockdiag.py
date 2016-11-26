@@ -42,6 +42,9 @@ def emit_node(fd, node, color=None, one_box_per_object=False):
 	else:
 		desc=str(node)
 
+	if isinstance(node, ValueExpression):
+		color="pink"
+
 	if isinstance(node, IdentifierExpr):
 		color="yellow"
 
@@ -57,13 +60,15 @@ def emit_node(fd, node, color=None, one_box_per_object=False):
 	if isinstance(node, BunchaExpressions):
 		color="grey"
 
+
+
 	emit_item(fd, nodename, desc, color)
 
 	return nodename
 
 def emit_node_file(fd, node, one_box_per_object=False, portrait_mode=False):
 	emit(fd, "blockdiag{\n")
-	emit(fd, "node_width=112\n")
+	emit(fd, "node_width=200\n")
 	emit(fd, "node_height=48\n")
 	if portrait_mode: emit(fd, "orientation = portrait\n")
 	emit_node(fd, node, "pink", one_box_per_object)

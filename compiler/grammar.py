@@ -121,7 +121,7 @@ class SepExpr(Expression):
 	pattern=T_ENDOFSTATEMENT
 	bad_lookahead_tokens=[T_ENDOFSTATEMENT]
 
-class 4SepExpr(SepExpr):
+class JSepExpr(SepExpr):
 	pattern=SepExpr+T_ENDOFSTATEMENT
 
 class GroupingExpr(ValueExpression):
@@ -199,7 +199,7 @@ class AccessorExpr(ValueExpression, IdentifierExpr):
 
 	def __init__(self, elements):
 		self.object=elements[0]
-		self.field=elements[2].name
+		self.field=elements[2]
 		self.type="?"
 
 class IndexExpr(AccessorExpr):
@@ -221,13 +221,16 @@ class BlockBunchaExpressionsBase(BunchaExpressions):
 		self.exprs=[elements[1]]
 		
 class BlockBunchaExpressionsExt(BlockBunchaExpressionsBase):
-	pattern=SepExpr+Expression+[SepExpr]+BunchaExpressions
+	pattern=SepExpr+Expression+[SepExpr]+BlockBunchaExpressionsBase
 
 	def __init__(self, elements):
+		print("***", elements)
 		if len(elements)==4:
 			self.exprs=[elements[1]]+elements[3].exprs
+			# print(elements[3])
 		else:
 			self.exprs=[elements[1]]+elements[2].exprs
+			# print(elements[2])
 
 class XIfBunchaExpressionsBase(BunchaExpressions):
 	pattern=SepExpr+Expression+SepExpr+(T_IF_BLOCK_END_ON_ELIF|T_IF_BLOCK_END_ON_ELSE)
@@ -236,7 +239,7 @@ class XIfBunchaExpressionsBase(BunchaExpressions):
 		self.exprs=[elements[1]]
 		self.end=elements[3]
 		
-class XIfBunchaExpressionsExt(BlockBunchaExpressionsBase):
+class XIfBunchaExpressionsExt(XIfBunchaExpressionsBase):
 	pattern=SepExpr+Expression+[SepExpr]+XIfBunchaExpressionsBase
 
 	def __init__(self, elements):

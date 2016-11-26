@@ -36,3 +36,19 @@ while foo<bar do
 
 	do_a_thing()
 done
+
+if a do
+ while b do
+  if c do 
+   while e do
+    if f do
+     foo()
+    elif g do
+     bar()
+    else do
+     baz()
+    done
+   done
+  done
+ done
+done

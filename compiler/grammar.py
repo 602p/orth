@@ -5,7 +5,7 @@ R_IDENTIFIER="[a-zA-Z_]\w*"
 class Tokens(metaclass=TokenHolder):
 	T_LINE_COMMENT = TokenType(r"#.*(?=\n)", emit=False)
 	T_BLOCK_COMMENT = TokenType(r"<#[\s\S]*#>", emit=False)
-	
+
 	T_FUNCTIONDECL=TokenType("function")
 	T_ARGLIST_START = TokenType(r"\(", ["T_FUNCTIONDECL"])
 	T_ARGLIST_SEPERATOR = TokenType(",", ["T_ARGLIST_ELEMENT"])
@@ -266,7 +266,7 @@ class IfExpr(BlockExpression):
 	def __init__(self, elements):
 		self.cond=elements[1]
 		self.block=elements[3]
-		self.then=None if len(elements)==4 else elements[4]
+		self.else_=None if len(elements)==4 else elements[4]
 
 class ElIfExpr(BlockExpression, IfContinuation):
 	pattern=T_IF_ELIF+ValueExpression+T_BLOCK_DO+\
@@ -275,7 +275,7 @@ class ElIfExpr(BlockExpression, IfContinuation):
 	def __init__(self, elements):
 		self.cond=elements[1]
 		self.block=elements[3]
-		self.then=None if len(elements)==4 else elements[4]
+		self.else_=None if len(elements)==4 else elements[4]
 
 class ElseExpr(IfExpr, IfContinuation):
 	pattern=T_IF_ELSE+T_BLOCK_DO+BlockBunchaExpressionsBase
@@ -283,7 +283,7 @@ class ElseExpr(IfExpr, IfContinuation):
 	def __init__(self, elements):
 		self.cond=True
 		self.block=elements[2]
-		self.then=None
+		self.else_=None
 
 class WhileExpr(BlockExpression):
 	pattern=T_WHILE_START+ValueExpression+T_BLOCK_DO+BlockBunchaExpressionsBase

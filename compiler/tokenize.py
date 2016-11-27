@@ -1,8 +1,9 @@
 from grammar import Tokens
 
-def tokenize(text, verbose=False):
+def tokenize(text, file="_in", verbose=False):
 	text+="\n "
 	position=0
+	line=0
 	tokens=[Tokens.T_ENDOFSTATEMENT.make_token('')]
 	while position<len(text):
 		if verbose: print(text[position:])
@@ -12,8 +13,9 @@ def tokenize(text, verbose=False):
 
 		if text[position] in "\r\n":
 			if verbose: print("(adding T_ENDOFSTATEMENT)")
-			tokens.append(Tokens.T_ENDOFSTATEMENT.make_token(";"))
+			tokens.append(Tokens.T_ENDOFSTATEMENT.make_token(";", line=line))
 			position+=1
+			line+=1
 			continue
 
 		
@@ -22,7 +24,7 @@ def tokenize(text, verbose=False):
 			if verbose: print(token.name)
 			if token.matches(text[position:], tokens[-1] if tokens else None):
 				
-				tok=token.make_token(text[position:])
+				tok=token.make_token(text[position:], file=file, line=line)
 				if tok:
 					if verbose: print("Adding %s"%tok)
 					tokens.append(tok)

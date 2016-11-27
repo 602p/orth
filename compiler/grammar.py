@@ -91,6 +91,7 @@ class BinOpExpr(ValueExpression):
 		self.lhs=elements[0]
 		self.rhs=elements[2]
 		self.operator=elements[1].value
+		# self.type=self.lhs.type #TODO: CHANGE
 
 class UnOpExpr(ValueExpression):
 	pattern=T_UNARY_OPERATOR+ValueExpression
@@ -106,6 +107,8 @@ class AssignmentExpr(Expression):
 	def __init__(self, elements, was_augassign=False):
 		self.lhs=elements[0]
 		self.rhs=elements[2]
+		self.type=elements[0].type
+		self.init=False
 		if isinstance(self.lhs, NameExpr):
 			if self.lhs.type!="?":
 				self.init=True
@@ -188,14 +191,16 @@ class AugmentedAssignExpression(Expression):
 		self.offset=elements[2]
 	
 	def replace(self):
-		return AssignmentExpr([
-			self.variable,
-			None,
-			BinOpExpr([
+		binop=BinOpExpr([
 				self.variable,
 				T_BINARY_OPERATOR.make_token(self.operation),
 				self.offset
 			])
+		binop.line=self.line
+		return AssignmentExpr([
+			self.variable,
+			None,
+			binop
 		], was_augassign=True)
 
 class AccessorExpr(ValueExpression, IdentifierExpr):

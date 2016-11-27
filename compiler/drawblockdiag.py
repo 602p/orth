@@ -69,7 +69,7 @@ def emit_node(fd, node, color=None, one_box_per_object=False):
 def emit_node_file(fd, node, one_box_per_object=False, portrait_mode=False):
 	emit(fd, "blockdiag{\n")
 	emit(fd, "node_width=112\n")
-	emit(fd, "node_height=48\n")
+	emit(fd, "node_height=100\n")
 	if portrait_mode: emit(fd, "orientation = portrait\n")
 	emit_node(fd, node, "pink", one_box_per_object)
 	emit(fd, "}")

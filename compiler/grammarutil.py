@@ -78,8 +78,8 @@ class TokenType(ChainBuilderProvider):
 	def matches(self, text, prev):
 		return self.regex.match(text) is not None and (self.preceeding_in is None or prev.type.name in self.preceeding_in)
 
-	def make_token(self, text):
-		return Token(self, self.regex.match(text).group() if self.capture else None) if self.emit else None
+	def make_token(self, text, line=None, file=None):
+		return Token(self, self.regex.match(text).group() if self.capture else None, line=line, file=file) if self.emit else None
 
 class Token:
 	def __init__(self, type, value=None, line=None, file=None):
@@ -184,5 +184,27 @@ class ASTNode(metaclass=ASTNodeMeta):
 	@classmethod
 	def match(self, values):
 		return self.pattern.cm_match(values)
+
+	def get_line(self):
+		for k in self._get_interesting_keys():
+			v=getattr(self, k)
+			if isinstance(v, list):
+				for item in v:
+					if isinstance(item, ASTNode):
+						return item.line
+			elif isinstance(v, ASTNode):
+				return v.line
+		return self.line
+
+	def get_file(self):
+		for k in self._get_interesting_keys():
+			v=getattr(self, k)
+			if isinstance(v, list):
+				for item in v:
+					if isinstance(item, ASTNode):
+						return item.file
+			elif isinstance(v, ASTNode):
+				return v.file
+		return self.file
 
 NotLoaded = object()

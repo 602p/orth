@@ -49,7 +49,7 @@ class LiteralExprTransformer(Transformer):
 
 	def transform(self, out):
 		name=out.get_temp_name()
-		out.emitl("%{} = {}".format(name, self.node.type.get_literal_expr(self.node.value)))
+		out.emitl("%{} = {}".format(name, self.node.type.get_literal_expr(self.node.value, out)))
 		return name
 
 	@staticmethod
@@ -241,9 +241,9 @@ class CallExprTransformer(Transformer):
 		for arg in self.node.args:
 			args.append(get_type(arg, out).get_llvm_representation()+" %"+transform.emit(out, arg, self))
 
-		out.emitl("%{} = call {} @{}({})".format(
+		out.emitl("%{} = call {}* @{}({})".format(
 			name,
-			out.signatures[self.node.method.name].returntype.get_llvm_representation(),
+			out.signatures[self.node.method.name].get_llvm_representation(),
 			self.node.method.name,
 			",".join(args)
 		))
@@ -260,7 +260,7 @@ class FileTransformer(Transformer):
 		for func in self.node.funcs:
 			if isinstance(func, FunctionDecl):
 				out.signatures[func.name]=datamodel.FunctionOType(func.name, func.args, func.type)
-		print(out.signatures)
+		# print(out.signatures)
 
 		for func in self.node.funcs:
 			transform.emit(out, func, self)
@@ -269,18 +269,9 @@ class IntrinsicTransformer(Transformer):
 	transforms=IntrinsicExpr
 
 	def transform(self, out):
-		def with_printi():
-			out.emitl("declare i32 @printf(i8*, ...)")
-			out.emitl("@.str = private unnamed_addr constant [9 x i8] c\"out: %i\\0A\\00\"")
-		def printi(varname):
-			name=out.get_temp_name()
-			var=out.get_var(varname)
-			out.emitl("%{} = load {}* %{}".format(
-				name,
-				var.type.get_llvm_representation(),
-				var.name
-			))
-			out.emitl("call i32 (i8*, ...)* @printf(i8* getelementptr inbounds ([9 x i8]* @.str, i32 0, i32 0), i32 %{})".format(name))
+		def with_printf():
+			out.emitl("declare i32 @printf(...)")
+			out.signatures["printf"]=datamodel.ManualFunctionOType("printf", "(...)", datamodel.builtin_types['int'])
 		exec(self.node.text[1:])
 
 class WhileExprTransformer(Transformer):

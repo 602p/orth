@@ -1,4 +1,4 @@
-@with_printi()
+@with_printf()
 
 function(int num) double -> int does
 return num*2
@@ -33,7 +33,7 @@ function() main -> int does
 	int cube_2=pow(2,3)
 	int double_7=double(7)
 
-	@printi("fac_4")
-	@printi("cube_2")
-	@printi("double_7")
+	printf("fac_4=%i\n", fac_4)
+	printf("cube_2=%i\n", cube_2)
+	printf("double_7=%i\n", double_7)
 return 0

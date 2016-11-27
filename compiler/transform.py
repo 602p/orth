@@ -52,6 +52,7 @@ class Emitter:
 
 		self.scopes=collections.ChainMap({})
 		self.signatures={}
+		self.global_statments=[]
 
 	def emit(self, text):
 		self.fd.write(text)
@@ -103,6 +104,13 @@ class Emitter:
 	def get_var(self, vname):
 		return self.scopes[vname]
 
+	def add_global_stmt(self, text):
+		self.global_statments.append(text)
+
+	def emit_global_statments(self):
+		for stmt in self.global_statments:
+			self.emitl(stmt)
+
 transformers={}
 class TransformerMeta(type):
 	def __new__(self, name, bases, classdict):
@@ -140,6 +148,6 @@ def get_transformer(node, parent):
 
 def emit(out, node, parent=None):
 	# print("Transforming "+str(node)+" with "+str(get_transformer(node)))
-	print("Running "+str(get_transformer(node, parent)))
+	# print("Running "+str(get_transformer(node, parent)))
 	# print(out.scopes)
 	return get_transformer(node, parent).transform(out)

@@ -137,11 +137,13 @@ class LiteralExpr(ValueExpression):
 		self.value=elements[0].value.replace("L","")
 		if elements[0].type==T_INTEGER_LITERAL:
 			if elements[0].value.endswith("L"):
+				self.value=elements[0].value.replace("L","")
 				self.type=datamodel.builtin_types['xxlong']
 			else:
 				self.type=datamodel.builtin_types['int']
 		else:
-			self.type="str"
+			self.value=elements[0].value[1:-1].replace("\\n","\n")
+			self.type=datamodel.builtin_types['cstr']
 
 class SepExpr(Expression):
 	pattern=T_ENDOFSTATEMENT
@@ -252,7 +254,7 @@ class BlockBunchaExpressionsExt(BlockBunchaExpressionsBase):
 	pattern=SepExpr+Expression+[SepExpr]+BlockBunchaExpressionsBase
 
 	def __init__(self, elements):
-		print("***", elements)
+		# print("***", elements)
 		if len(elements)==4:
 			self.exprs=[elements[1]]+elements[3].exprs
 			# print(elements[3])

@@ -1,0 +1,6 @@
+@with_printf()
+
+function() main -> int does
+	printf("foo\n")
+	printf("number = %i\n", 3)
+return 0

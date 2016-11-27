@@ -1,4 +1,5 @@
 from grammarutil import TokenType, TokenHolder, ASTNode, NotLoaded, ast_node_types
+import datamodel
 
 R_IDENTIFIER="[a-zA-Z_]\w*"
 
@@ -33,7 +34,7 @@ class Tokens(metaclass=TokenHolder):
 	T_NAME = TokenType(R_IDENTIFIER, capture=True)
 
 	T_AUGASSIGN = TokenType(r"(\+=)|(-=)|(\*=)|(/=)", ["T_NAME", "T_VAR_DECL", "T_LIST_STOP"], capture=True)
-	T_BINARY_OPERATOR = TokenType(r"(>=)|(<=)|(!=)|(==)|[/\*\-\+%|\^><]", [
+	T_BINARY_OPERATOR = TokenType(r"(>=)|(<=)|(!=)|(==)|[/\*\-\+%\^><]", [
 			"T_NAME", "T_LIST_STOP", "T_PAREN_CLOSE", "T_INTEGER_LITERAL", "T_STRING_LITERAL"
 		], capture=True)
 	T_ASSIGNMENT = TokenType("=")
@@ -43,14 +44,16 @@ class Tokens(metaclass=TokenHolder):
 	T_LIST_START = TokenType(r"\[")
 	T_LIST_STOP = TokenType(r"\]")
 
+	T_CAST = TokenType(r"\|")
+
 	T_COMMA = TokenType(r",")
 	T_DOT = TokenType(r"\.")
 
-
+	T_INTRINSIC = TokenType(r"@\w*\(.*\)", capture=True) 
 	
 	T_UNARY_OPERATOR = TokenType(r"[\-~!]", capture=True)
 
-	T_INTEGER_LITERAL = TokenType(r"[0-9]+", capture=True)
+	T_INTEGER_LITERAL = TokenType(r"[0-9]+L?", capture=True)
 	T_STRING_LITERAL = TokenType(r"\"[(#-~)|( \!)]*\"", capture=True)
 	T_ENDOFSTATEMENT = TokenType(";")
 
@@ -68,6 +71,12 @@ class IdentifierExpr(Expression):
 class BlockExpression(Expression):
 	pass
 
+class IntrinsicExpr(ValueExpression):
+	pattern=T_INTRINSIC
+
+	def __init__(self, elements):
+		self.text=elements[0].value
+
 class NameExpr(IdentifierExpr, ValueExpression):
 	pattern=T_NAME
 
@@ -81,17 +90,24 @@ class DeclExpr(NameExpr):
 	def __init__(self, elements):
 		type, *_, name = elements[0].value.split(" ")
 		self.name=name
-		self.type=type
+		self.type=datamodel.builtin_types[type]
+
+class CastExpr(ValueExpression):
+	pattern=ValueExpression+T_CAST+NameExpr
+	bad_lookahead_tokens=[T_DOT]
+
+	def __init__(self, elements):
+		self.value=elements[0]
+		self.to=datamodel.builtin_types[elements[2].name]
 
 class BinOpExpr(ValueExpression):
 	pattern=ValueExpression+T_BINARY_OPERATOR+ValueExpression
-	bad_lookahead_tokens=[T_DOT]
+	bad_lookahead_tokens=[T_DOT, T_CAST]
 
 	def __init__(self, elements):
 		self.lhs=elements[0]
 		self.rhs=elements[2]
 		self.operator=elements[1].value
-		# self.type=self.lhs.type #TODO: CHANGE
 
 class UnOpExpr(ValueExpression):
 	pattern=T_UNARY_OPERATOR+ValueExpression
@@ -107,7 +123,6 @@ class AssignmentExpr(Expression):
 	def __init__(self, elements, was_augassign=False):
 		self.lhs=elements[0]
 		self.rhs=elements[2]
-		self.type=elements[0].type
 		self.init=False
 		if isinstance(self.lhs, NameExpr):
 			if self.lhs.type!="?":
@@ -119,9 +134,12 @@ class LiteralExpr(ValueExpression):
 	pattern=T_INTEGER_LITERAL|T_STRING_LITERAL
 
 	def __init__(self, elements):
-		self.value=elements[0].value
+		self.value=elements[0].value.replace("L","")
 		if elements[0].type==T_INTEGER_LITERAL:
-			self.type="int"
+			if elements[0].value.endswith("L"):
+				self.type=datamodel.builtin_types['xxlong']
+			else:
+				self.type=datamodel.builtin_types['int']
 		else:
 			self.type="str"
 

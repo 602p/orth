@@ -1,0 +1,7 @@
+
+int foo = 2
+int bar = 2
+
+int baz = @_ir_add("i32", "i32", "foo", "bar")
+
+print(baz)

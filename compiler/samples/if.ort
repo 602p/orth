@@ -1,0 +1,23 @@
+int a = 4
+int b = 5
+
+int c = 0
+
+int d = 0
+
+int res = 42
+
+if a>b do
+	res = 3
+	if c|bool do
+		res = 6
+	done
+elif a==b do
+	res = 2
+else do
+	res = 1
+done
+
+if d|bool do
+	res+=1
+done

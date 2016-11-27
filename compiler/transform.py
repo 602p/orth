@@ -3,6 +3,17 @@ import contextlib
 import collections
 import util
 
+class Variable:
+	def __init__(self, var, type):
+		self.name=var
+		self.type=type
+
+	def __str__(self):
+		return "Var({} {})".format(self.type, self.name)
+
+	def __repr__(self):
+		return str(self)
+
 class Emitter:
 	class _IndentContext:
 		def __init__(self, emitter):
@@ -79,11 +90,14 @@ class Emitter:
 		self.scopes.maps.insert(0, {})
 		return self.scope_context_manager
 
-	def set_var_name(self, vname, aname):
-		self.scopes.maps[0][vname]=aname
+	def set_var_name(self, vname, aname, type):
+		self.scopes.maps[0][vname]=Variable(aname, type)
 
 	def get_var_name(self, vname):
-		return self.scopes[vname]
+		return self.scopes[vname].name
+
+	def get_var_type(self, vname):
+		return self.scopes[vname].type
 
 transformers={}
 class TransformerMeta(type):
@@ -106,7 +120,7 @@ class Transformer(metaclass=TransformerMeta):
 	def transform(self, out):
 		pass
 
-def get_transformer(node):
+def get_transformer_cls(node):
 	match=None
 	for item in transformers.keys():
 		if isinstance(node, item) and (match is None or issubclass(item, match)):
@@ -117,7 +131,11 @@ def get_transformer(node):
 
 	return transformers[match]
 
+def get_transformer(node, parent):
+	return get_transformer_cls(node)(node, parent)
+
 def emit(out, node, parent=None):
 	# print("Transforming "+str(node)+" with "+str(get_transformer(node)))
-	# print("Running "+str(get_transformer(node)))
-	return get_transformer(node)(node, parent).transform(out)
+	print("Running "+str(get_transformer(node, parent)))
+	# print(out.scopes)
+	return get_transformer(node, parent).transform(out)

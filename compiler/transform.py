@@ -151,3 +151,12 @@ def emit(out, node, parent=None):
 	# print("Running "+str(get_transformer(node, parent)))
 	# print(out.scopes)
 	return get_transformer(node, parent).transform(out)
+
+def get_type(node, out):
+	return get_transformer_cls(node).get_type(node, out)
+
+def do_var_alloc(out, varname, type):
+	name="var_"+out.get_name()+"___"+varname
+	out.emitl("%{} = alloca {}".format(name, type.get_llvm_representation()))
+	out.set_var_name(varname, name, type)
+	return name

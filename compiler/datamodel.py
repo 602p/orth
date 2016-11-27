@@ -1,5 +1,6 @@
 import collections
 
+
 class OType:
 	def __init__(self, name, fields=None):
 		self.name=name
@@ -38,32 +39,32 @@ class PrimitiveOType(OType):
 	def get_literal_expr(self, value, out):
 		return self.literal_formatter.format(value)
 
-	def implement_add(self, lhs, rhs):
+	def implement_add(self, lhs, rhs, out):
 		return "add {} %{}, %{}".format(self.get_llvm_representation(), lhs, rhs)
 
-	def implement_sub(self, lhs, rhs):
+	def implement_sub(self, lhs, rhs, out):
 		return "sub {} %{}, %{}".format(self.get_llvm_representation(), lhs, rhs)
 
-	def implement_neg(self, val):
+	def implement_neg(self, val, out):
 		return "sub {} %{}, 0".format(self.get_llvm_representation(), val)
 
-	def implement_mul(self, lhs, rhs):
+	def implement_mul(self, lhs, rhs, out):
 		return "mul {} %{}, %{}".format(self.get_llvm_representation(), lhs, rhs)
 
-	def implement_div(self, lhs, rhs):
+	def implement_div(self, lhs, rhs, out):
 		return "sdiv {} %{}, %{}".format(self.get_llvm_representation(), lhs, rhs)
 
-	def implement_gt(self, lhs, rhs):
+	def implement_gt(self, lhs, rhs, out):
 		return "icmp sgt {} %{}, %{}".format(self.get_llvm_representation(), lhs, rhs)
-	def implement_ge(self, lhs, rhs):
+	def implement_ge(self, lhs, rhs, out):
 		return "icmp sge {} %{}, %{}".format(self.get_llvm_representation(), lhs, rhs)
-	def implement_lt(self, lhs, rhs):
+	def implement_lt(self, lhs, rhs, out):
 		return "icmp slt {} %{}, %{}".format(self.get_llvm_representation(), lhs, rhs)
-	def implement_le(self, lhs, rhs):
+	def implement_le(self, lhs, rhs, out):
 		return "icmp sle {} %{}, %{}".format(self.get_llvm_representation(), lhs, rhs)
-	def implement_eq(self, lhs, rhs):
+	def implement_eq(self, lhs, rhs, out):
 		return "icmp eq {} %{}, %{}".format(self.get_llvm_representation(), lhs, rhs)
-	def implement_ne(self, lhs, rhs):
+	def implement_ne(self, lhs, rhs, out):
 		return "icmp ne {} %{}, %{}".format(self.get_llvm_representation(), lhs, rhs)
 
 	def implement_cast(self, value, from_, to):
@@ -101,6 +102,18 @@ class ManualFunctionOType(FunctionOType):
 		self.argsig=argsig
 		self.llvmtype=returntype.get_llvm_representation()
 
+import transform
+
+def call_func(name, argtypes, args, out):
+	arg_values=[]
+	for idx, arg in enumerate(args):
+		arg_values.append(builtin_types[argtypes[idx]].get_llvm_representation()+" %"+arg)
+	return "call {}* @{}({})".format(
+		out.signatures[name].get_llvm_representation(),
+		name,
+		",".join(arg_values)
+	)
+
 class PrimitiveCStrOType(PrimitiveOType):
 	def __init__(self, name, llvmtype):
 		OType.__init__(self, name, {})
@@ -122,6 +135,9 @@ class PrimitiveCStrOType(PrimitiveOType):
 			name
 		)
 
+	def implement_add(self, lhs, rhs, out):
+		return call_func("__cstr_add", ["cstr", "cstr"], [lhs, rhs], out)
+
 builtin_types = {e.name:e for e in [
 	PrimitiveOType("bool", "i1", "add i1 0, {}"),
 	PrimitiveOType("int", "i32", "add i32 0, {}"),
@@ -130,6 +146,6 @@ builtin_types = {e.name:e for e in [
 	PrimitiveOType("long", "i64", "add i64 0, {}"),
 	PrimitiveOType("xlong", "i128", "add i128 0, {}"),
 	PrimitiveOType("xxlong", "i256", "add i256 0, {}"),
-	PrimitiveOType("ptr", "void*", "<notimplemented>"),
+	PrimitiveOType("ptr", "i8*", "<notimplemented>"),
 	PrimitiveCStrOType("cstr", "i8*")
 ]}

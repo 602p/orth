@@ -1,0 +1,14 @@
+@declare_c_func("printf", "int", "(...)")
+@declare_c_func("scanf", "int", "(...)")
+@declare_c_func("malloc", "ptr", "(i32)")
+
+function(cstr prompt) read_line -> cstr does
+	cstr result = malloc(256)
+	printf(prompt)
+	scanf("%s", result) #Horrible and unsafe
+return result
+
+function() main -> int does
+	cstr name = read_line("What is your name? ")
+	printf("Hello %s!\n", name)
+return 0

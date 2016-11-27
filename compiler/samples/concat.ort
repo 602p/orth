@@ -1,0 +1,11 @@
+@include("samples/strimpl.ort")
+
+function() main -> int does
+	cstr a = "Hel"
+	cstr b = "lo "
+	cstr c = "orld"
+
+	cstr result = a+b+"W"+c+"!\n"
+
+	printf(result)
+return 0

@@ -25,4 +25,4 @@ with open("out.ll", 'w') as fd:
 			transform.emit(e, node)
 	e.emit_global_statments()
 
-os.system("llc out.ll;gcc -o out out.s; rm out.ll; rm out.s; ./out")
+os.system("llc out.ll;gcc -o out out.s; rm out.s; ./out")

@@ -1,4 +1,4 @@
-@with_printf()
+@declare_c_func("printf", "int", "(...)")
 
 function(int num) double -> int does
 return num*2

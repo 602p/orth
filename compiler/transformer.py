@@ -2,15 +2,8 @@ from transform import Transformer
 from grammar import *
 import transform
 import datamodel
+from transform import get_type, do_var_alloc
 
-def get_type(node, out):
-	return transform.get_transformer_cls(node).get_type(node, out)
-
-def do_var_alloc(out, varname, type):
-	name="var_"+out.get_name()+"___"+varname
-	out.emitl("%{} = alloca {}".format(name, type.get_llvm_representation()))
-	out.set_var_name(varname, name, type)
-	return name
 
 class CastExprTransformer(Transformer):
 	transforms=CastExpr
@@ -29,6 +22,23 @@ class CastExprTransformer(Transformer):
 				get_type(self.node.value, out),
 				self.node.to
 			)
+		))
+		return name
+
+	@staticmethod
+	def get_type(node, out):
+		return node.to
+
+class PtrCastExprTransformer(Transformer):
+	transforms=PtrCastExpr
+
+	def transform(self, out):
+		assert isinstance(self.node.value, NameExpr), "Can't take address of non-var"
+		name=out.get_temp_name()
+		out.emitl("%{} = bitcast {}* %{} to i8*".format(
+			name,
+			get_type(self.node.value, out).get_llvm_representation(),
+			out.get_var_name(self.node.value.name)
 		))
 		return name
 
@@ -67,34 +77,34 @@ class BinOpExprTransformer(Transformer):
 		lhstype=get_type(self.node.lhs, out)
 
 		if self.node.operator=="+":
-			res = lhstype.implement_add(lhs, rhs)
+			res = lhstype.implement_add(lhs, rhs, out)
 
 		if self.node.operator=="-":
-			res = lhstype.implement_sub(lhs, rhs)
+			res = lhstype.implement_sub(lhs, rhs, out)
 
 		if self.node.operator=="*":
-			res = lhstype.implement_mul(lhs, rhs)
+			res = lhstype.implement_mul(lhs, rhs, out)
 
 		if self.node.operator=="/":
-			res = lhstype.implement_div(lhs, rhs)
+			res = lhstype.implement_div(lhs, rhs, out)
 
 		if self.node.operator==">":
-			res = lhstype.implement_gt(lhs, rhs)
+			res = lhstype.implement_gt(lhs, rhs, out)
 
 		if self.node.operator==">=":
-			res = lhstype.implement_ge(lhs, rhs)
+			res = lhstype.implement_ge(lhs, rhs, out)
 
 		if self.node.operator=="<":
-			res = lhstype.implement_lt(lhs, rhs)
+			res = lhstype.implement_lt(lhs, rhs, out)
 
 		if self.node.operator=="<=":
-			res = lhstype.implement_le(lhs, rhs)
+			res = lhstype.implement_le(lhs, rhs, out)
 
 		if self.node.operator=="==":
-			res = lhstype.implement_eq(lhs, rhs)
+			res = lhstype.implement_eq(lhs, rhs, out)
 
 		if self.node.operator=="!=":
-			res = lhstype.implement_ne(lhs, rhs)
+			res = lhstype.implement_ne(lhs, rhs, out)
 
 		out.emitl("%{} = {}".format(name, res))
 		return name
@@ -111,7 +121,7 @@ class UnOpTransformer(Transformer):
 		value=transform.emit(out, self.node.expr, self)
 		out.emitl("%{} = {}".format(
 			name,
-			get_type(self.node.expr, out).implement_neg(value)
+			get_type(self.node.expr, out).implement_neg(value, out)
 		))
 		return name
 
@@ -269,10 +279,20 @@ class IntrinsicTransformer(Transformer):
 	transforms=IntrinsicExpr
 
 	def transform(self, out):
-		def with_printf():
-			out.emitl("declare i32 @printf(...)")
-			out.signatures["printf"]=datamodel.ManualFunctionOType("printf", "(...)", datamodel.builtin_types['int'])
-		exec(self.node.text[1:])
+		def declare_c_func(name, type, paramstring):
+			rt=datamodel.builtin_types[type]
+			out.emitl("declare {} @{}{}".format(rt.get_llvm_representation(), name, paramstring))
+			out.signatures[name]=datamodel.ManualFunctionOType(name, paramstring, rt)
+
+		def expose_symbol(name, type):
+			out.set_var_name(name, name, datamodel.builtin_types[type])
+
+		def include(filename):
+			import tokenize, parse
+			with out.context(file=filename.split("/")[-1].split(".")[0]):
+				transform.emit(out, parse.parse(tokenize.tokenize(open(filename, 'r').read())), self)
+
+		return eval(self.node.text[1:])
 
 class WhileExprTransformer(Transformer):
 	transforms=WhileExpr

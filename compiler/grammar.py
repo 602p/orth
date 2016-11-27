@@ -44,6 +44,7 @@ class Tokens(metaclass=TokenHolder):
 	T_LIST_START = TokenType(r"\[")
 	T_LIST_STOP = TokenType(r"\]")
 
+	T_PTRCAST = TokenType(r"\|\|")
 	T_CAST = TokenType(r"\|")
 
 	T_COMMA = TokenType(r",")
@@ -94,6 +95,14 @@ class DeclExpr(NameExpr):
 
 class CastExpr(ValueExpression):
 	pattern=ValueExpression+T_CAST+NameExpr
+	bad_lookahead_tokens=[T_DOT]
+
+	def __init__(self, elements):
+		self.value=elements[0]
+		self.to=datamodel.builtin_types[elements[2].name]
+
+class PtrCastExpr(ValueExpression):
+	pattern=ValueExpression+T_PTRCAST+NameExpr
 	bad_lookahead_tokens=[T_DOT]
 
 	def __init__(self, elements):

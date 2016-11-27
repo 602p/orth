@@ -1,0 +1,39 @@
+@with_printi()
+
+function(int num) double -> int does
+return num*2
+
+function(int num) square -> int does
+	int result = num*num
+return result
+
+function(int num) factorial -> int does
+	int res = 1
+	int count = num
+	while count>1 do
+		res*=count
+		count-=1
+	done
+return res
+
+function(int a, int b) pow -> int does
+	if a==1 do
+		return 1
+	done
+
+	if b==0 do
+		return 0
+	elif b==1 do
+		return a
+	done
+return a*pow(a, b-1)
+
+function() main -> int does
+	int fac_4=factorial(4)
+	int cube_2=pow(2,3)
+	int double_7=double(7)
+
+	@printi("fac_4")
+	@printi("cube_2")
+	@printi("double_7")
+return 0

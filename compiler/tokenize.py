@@ -34,6 +34,7 @@ def tokenize(text, file="_in", verbose=False):
 			if text[position] in " \t":
 				position+=1
 				continue
+			print(tokens)
 			raise SyntaxError("No match at %i: %s" % (position, text[position:]))
 
 	return tokens[1:]

@@ -18,11 +18,8 @@ print(transform.transformers)
 
 with open("out.ll", 'w') as fd:
 	e=transform.Emitter(fd)
-	e.emit("define i32 @main(){\n")
 	with e.scope():
 		with e.context(file="in"):
 			transform.emit(e, node)
-			e.emit("\n")
-			e.emitl("%res = load i32* %"+e.get_var_name("res"))
-			e.emitl("ret i32 %res")
-	e.emit("}")
+
+print("\n\n\n")

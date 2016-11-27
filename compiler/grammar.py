@@ -313,3 +313,81 @@ class WhileExpr(BlockExpression):
 	def __init__(self, elements):
 		self.cond=elements[1]
 		self.block=elements[3]
+
+class ReturnExpr(Expression):
+	pattern=T_RETURN+ValueExpression
+
+	def __init__(self, elements):
+		self.value=elements[1]
+
+class FunctionDeclStart(ASTNode):
+	pattern=T_FUNCTIONDECL_NAME+T_FUNCTIONDECL_RETURNS+T_FUNCTIONDECL_RETURN_TYPE+T_FUNCTIONDECL_DOES
+
+	def __init__(self, elements):
+		self.name=elements[0].value
+		self.type=datamodel.builtin_types[elements[2].value]
+
+class ArgListEle(ASTNode):
+	pattern=T_ARGLIST_ELEMENT
+
+	def __init__(self, elements):
+		self.name=elements[0].value.split(" ")[-1]
+		self.type=datamodel.builtin_types[elements[0].value.split(" ")[0]]
+
+class ArgList(ASTNode):
+	pattern=T_ARGLIST_START+T_ARGLIST_END
+
+	def __init__(self, elements):
+		self.args=[]
+
+class OneArgList(ArgList):
+	pattern=T_ARGLIST_START+ArgListEle+T_ARGLIST_END
+
+	def __init__(self, elements):
+		self.args=[elements[1]]
+
+class MultiArgListStart(ArgList):
+	pattern=T_ARGLIST_SEPERATOR+ArgListEle+T_ARGLIST_END
+
+	def __init__(self, elements):
+		self.args=[elements[1]]
+
+class MultiArgListExt(MultiArgListStart):
+	pattern=T_ARGLIST_SEPERATOR+ArgListEle+MultiArgListStart
+
+	def __init__(self, elements):
+		self.args=[elements[1]]+elements[2].args
+
+class CompletedMultiArgList(ArgList):
+	pattern=T_ARGLIST_START+ArgListEle+MultiArgListStart
+
+	def __init__(self, elements):
+		self.args=[elements[1]]+elements[2].args
+
+class FunctionBody(BunchaExpressions):
+	pattern=Expression+ReturnExpr
+
+	def __init__(self, elements):
+		self.exprs=[elements[0], elements[1]]
+
+class FunctionBodyExt(FunctionBody):
+	pattern=SepExpr+Expression+[SepExpr]+FunctionBody
+
+	def __init__(self, elements):
+		if len(elements)==4:
+			self.exprs=[elements[1]]+elements[3].exprs
+		else:
+			self.exprs=[elements[1]]+elements[2].exprs
+
+class FunctionDecl(ASTNode):
+	pattern=T_FUNCTIONDECL+ArgList+FunctionDeclStart+FunctionBody
+
+	def __init__(self, elements):
+		self.name=elements[2].name
+		self.type=elements[2].type
+		self.args=elements[1].args
+		self.body=elements[3]
+
+class FileExpr(ASTNode):
+	def __init__(self, elements):
+		self.funcs=[e for e in elements if not isinstance(e, SepExpr)]

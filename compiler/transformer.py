@@ -203,3 +203,104 @@ class ElseExprTransformer(Transformer):
 
 class SepExprTransformer(Transformer):
 	transforms=SepExpr
+
+class FunctionTransformer(Transformer):
+	transforms=FunctionDecl
+
+	def transform(self, out):
+		out.emitl("define {} @{}({}){{".format(
+			self.node.type.get_llvm_representation(),
+			self.node.name,
+			",".join(arg.type.get_llvm_representation()+" %"+arg.name for arg in self.node.args)
+		))
+		with out.context(method=self.node.name):
+			for arg in self.node.args:
+				do_var_alloc(out, arg.name, arg.type)
+				out.emitl("store {t} %{v}, {t}* %{n}".format(
+					t=arg.type.get_llvm_representation(),
+					v=arg.name,
+					n=out.get_var_name(arg.name)
+				))
+			transform.emit(out, self.node.body, self)
+		out.emitl("}")
+
+class ReturnTransformer(Transformer):
+	transforms=ReturnExpr
+
+	def transform(self, out):
+		name=transform.emit(out, self.node.value, self)
+		out.emitl("ret {} %{}".format(get_type(self.node.value, out).get_llvm_representation(), name))
+
+class CallExprTransformer(Transformer):
+	transforms=CallExpr
+
+	def transform(self, out):
+		assert isinstance(self.node.method, NameExpr), "No computed calls yet :("
+		name=out.get_temp_name()
+		args=[]
+		for arg in self.node.args:
+			args.append(get_type(arg, out).get_llvm_representation()+" %"+transform.emit(out, arg, self))
+
+		out.emitl("%{} = call {} @{}({})".format(
+			name,
+			out.signatures[self.node.method.name].returntype.get_llvm_representation(),
+			self.node.method.name,
+			",".join(args)
+		))
+		return name
+
+	@staticmethod
+	def get_type(node, out):
+		return out.signatures[node.method.name].returntype
+
+class FileTransformer(Transformer):
+	transforms=FileExpr
+
+	def transform(self, out):
+		for func in self.node.funcs:
+			if isinstance(func, FunctionDecl):
+				out.signatures[func.name]=datamodel.FunctionOType(func.name, func.args, func.type)
+		print(out.signatures)
+
+		for func in self.node.funcs:
+			transform.emit(out, func, self)
+
+class IntrinsicTransformer(Transformer):
+	transforms=IntrinsicExpr
+
+	def transform(self, out):
+		def with_printi():
+			out.emitl("declare i32 @printf(i8*, ...)")
+			out.emitl("@.str = private unnamed_addr constant [9 x i8] c\"out: %i\\0A\\00\"")
+		def printi(varname):
+			name=out.get_temp_name()
+			var=out.get_var(varname)
+			out.emitl("%{} = load {}* %{}".format(
+				name,
+				var.type.get_llvm_representation(),
+				var.name
+			))
+			out.emitl("call i32 (i8*, ...)* @printf(i8* getelementptr inbounds ([9 x i8]* @.str, i32 0, i32 0), i32 %{})".format(name))
+		exec(self.node.text[1:])
+
+class WhileExprTransformer(Transformer):
+	transforms=WhileExpr
+
+	def transform(self, out):
+		assert get_type(self.node.cond, out).get_llvm_representation()=="i1", \
+		 get_type(self.node.cond, out).get_llvm_representation()+"!=i1"
+
+		loop_name=out.get_name()+"___LOOP"
+		head_label=loop_name+"___HEAD"
+		end_label=loop_name+"___END"
+
+		initial_cond=transform.emit(out, self.node.cond, self)
+		out.emitl("br i1 %{}, label %{}, label %{}".format(initial_cond, head_label, end_label))
+		with out.indent(-1):
+			out.emitl("{}:".format(head_label))
+		with out.context():
+			transform.emit(out, self.node.block, self)
+		cond=transform.emit(out, self.node.cond, self)
+		out.emitl("br i1 %{}, label %{}, label %{}".format(cond, head_label, end_label))
+		with out.indent(-1):
+			out.emitl("{}:".format(end_label))

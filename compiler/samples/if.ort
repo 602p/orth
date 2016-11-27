@@ -1,23 +1,26 @@
-int a = 4
-int b = 5
+function(int argc) main -> int does
+	int a = 6
+	int b = 5
 
-int c = 0
+	bool c = 1|bool
 
-int d = 0
+	bool d = 1|bool
 
-int res = 42
+	int res = 42
 
-if a>b do
-	res = 3
-	if c|bool do
-		res = 6
+	if a>b do
+		res = 1+1+1
+		if c do
+			res = 6
+		done
+	elif a==b do
+		res = 2
+	else do
+		res = 1
 	done
-elif a==b do
-	res = 2
-else do
-	res = 1
-done
 
-if d|bool do
-	res+=1
-done
+	if d do
+		res+=1
+	done
+
+return res

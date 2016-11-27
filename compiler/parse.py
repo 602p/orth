@@ -1,7 +1,7 @@
 from tokenize import tokenize
 import grammar
 from grammarutil import Token, TokenView, TokenType, ASTNodeMeta, ChainBuilder, ASTNode
-from grammar import ast_node_types, SepExpr, BunchaExpressions
+from grammar import ast_node_types, SepExpr, FileExpr
 
 import sys
 # sys.setrecursionlimit(60)
@@ -78,4 +78,4 @@ def parse(tokens):
 					break
 		view.next()
 
-	return BunchaExpressions(view.tokens)#[item for item in view.tokens if not isinstance(item, SepExpr)])
+	return FileExpr(view.tokens)#[item for item in view.tokens if not isinstance(item, SepExpr)])

@@ -51,6 +51,7 @@ class Emitter:
 		self.temp_count=0
 
 		self.scopes=collections.ChainMap({})
+		self.signatures={}
 
 	def emit(self, text):
 		self.fd.write(text)
@@ -98,6 +99,9 @@ class Emitter:
 
 	def get_var_type(self, vname):
 		return self.scopes[vname].type
+
+	def get_var(self, vname):
+		return self.scopes[vname]
 
 transformers={}
 class TransformerMeta(type):

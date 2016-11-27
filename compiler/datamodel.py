@@ -86,12 +86,16 @@ class FunctionOType(OType):
 	def __init__(self, name, args, returntype):
 		OType.__init__(self, name, {})
 		self.llvmtype=returntype.get_llvm_representation()+\
-		              " ("+(",".join(typ.get_llvm_representation() for typ in args))+")*"
+		              " ("+(",".join(typ.type.get_llvm_representation() for typ in args))+")"
 		self.fields=None
 		self.datalayout=None
+		self.returntype=returntype
+		self.args=args
 
 	def get_llvm_representation(self):
 		return self.llvmtype
+
+	# def get_invocation
 
 builtin_types = {e.name:e for e in [
 	PrimitiveOType("bool", "i1", "add i1 0, {}"),

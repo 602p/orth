@@ -5,6 +5,8 @@
 @declare_c_func("strcat", "cstr", "(i8*, i8*)")
 @declare_c_func("strcpy", "cstr", "(i8*, i8*)")
 @declare_c_func("strlen", "int", "(i8*)")
+@declare_c_func("strcmp", "int", "(i8*, i8*)")
+@declare_c_func("free", "int", "(...)")
 
 function(cstr a, cstr b) cstr:__add__ -> cstr does
 	cstr result = malloc(strlen(a)+strlen(b)+1)
@@ -22,6 +24,9 @@ function(cstr a, int b) cstr:__mul__ -> cstr does
 		strcat(result, a)
 	done
 return result
+
+function(cstr a, cstr b) cstr:__eq__ -> bool does
+return strcmp(a,b)==0
 
 function(int i) int:str -> cstr does
 	cstr str = malloc(20)

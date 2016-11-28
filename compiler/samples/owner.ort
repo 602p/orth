@@ -40,7 +40,7 @@ function(Person p, int year) Person:get_age_in_year -> int does
 return year-p.birthyear
 
 function() main -> int does
-	Person a = Person::from("Bob", "Spuser", 1972)
+	Person a:from("Bob", "Spuser", 1972)
 	Person b = Person::from("Jane", "Spuser", 1974)
 	Relationship mairrage=Relationship::from(a, b, "spouse")
 	printf(mairrage:report()+"\n\n")

@@ -6,5 +6,5 @@ scope: source.orth
 
 contexts:
   main:
-    - match: \b(if|else|elif|while)\b
+    - match: \b(if|else|elif|while|does|if|function|return|do)\b
       scope: keyword.control.orth

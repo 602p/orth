@@ -9,7 +9,7 @@ tokens=tokenize.tokenize(string)
 with open('tokens.txt', 'w') as fd:
 	fd.write("\n".join(str(t) for t in tokens))
 node=parse.parse(tokens)
-
+print(node)
 drawblockdiag.emit_node_file(open('out.bd', 'w'), node, portrait_mode=True)
 
 print("\033[92mCompiling...\033[0m")

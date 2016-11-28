@@ -26,24 +26,139 @@ function(cstr value) Node::new -> Node does
     new.value=value
 return new
 
-function(List l, cstr item) List:append -> void does
-    Node last = l:get_node(l.len-1)
-    Node new = Node::new()
-    l.len+=1
-    last.next=new
+function(Node n) Node:free -> void does
+    free(n)
 return
 
-<#function() main -> int does
-    List l = List::new()
-    l:append("foo")
-    l:append("bar")
-    l:append("baz")
-    l:append("quux")
-    l:append(read_line)
+function(List l, cstr item) List:append -> void does
+    Node new = Node::new(item)
+    if l.len>0 do
+        Node last = l:get_node(l.len-1)
+        last.next=new
+    else do
+        l.head=new
+    done
+    l.len+=1
+return
+
+function(List l, int i, cstr item) List:insert -> void does
+    if i==l.len do
+        l:append(item)
+        return
+    elif i>l.len do
+        printf("Can't insert past end of list!\n")
+        return
+    done
+
+    Node new = Node::new(item)
+
+    if i==0 do
+        if l.len!=0 do
+            new.next=l.head
+        done
+        l.head=new
+        l.len+=1
+        return
+    done
+
+    l.len+=1
+
+    Node prev = l:get_node(i-1)
+    new.next=prev.next
+    prev.next=new
+return
+
+function(List l, int i) List:del -> void does
+    if i>=l.len do
+        printf("No such item\n")
+        return
+    done
+
+    if i==0 do
+        l.head:free()
+        if l.len>1 do
+            l.head=l.head.next
+        done
+        l.len-=1
+        return
+    done
+
+    Node prev = l:get_node(i-1)
+    prev.next:free()
+    if i!=l.len-1 do
+        prev.next=prev.next.next
+    done
+    l.len-=1
+return
+
+function(List l) List:clear -> void does
+    int idx = l.len-1
+    while idx!=-1 do
+        l:get_node(idx):free()
+        idx-=1
+    done
+    l.len=0
+return
+
+function(List l) List:free -> void does
+    free(l)
+return
+
+function(List l) print -> void does
+    if l.len==0 do
+        printf("No items\n")
+        return
+    done
 
     int idx=0
     while idx<l.len do
-        printf("l:get(%i) = %s\n", idx, l:get(idx))
+        printf("%i) %s\n", idx, l:get(idx))
         idx+=1
     done
-return 0#>
+return
+
+function(List l, cstr str) do_cmd -> int does
+    if str=="Q" do
+        return 1
+    elif str=="A" do
+        l:append(read_line("Entry:"))
+    elif str=="I" do
+        int pos = read_int("Position:")
+        if pos<0 do
+            return -1
+        done
+        l:insert(pos, read_line("Entry:"))
+    elif str=="D" do
+        int pos = read_int("Position:")
+        if pos<0 do
+            return -1
+        done
+        l:del(pos)
+    elif str=="C" do
+        if read_line("Sure (Y/N)?")=="Y" do
+            l:clear()
+        done
+    done
+return 0
+
+function() main -> int does
+    List l = List::new()
+    cstr clear = "\n"*100
+    int run = 1
+    
+    while run==1 do
+        print(l)
+        printf("\nType Q to quit, A to append, C to clear, I to insert or D to delete\n")
+        int res = do_cmd(l, read_line(">"))
+        printf(clear)
+        if res==1 do
+            printf("Cya, nerd!\n")
+            run=0
+        elif res==-1 do
+            printf("No, silly, positive!\n")
+        done
+    done
+
+    l:clear()
+    l:free()
+return 0

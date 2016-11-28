@@ -299,7 +299,7 @@ class CallExprTransformer(Transformer):
 
 	def transform(self, out):
 		# print(self.node)
-		# 
+		#
 		implicit_first_parameter=isinstance(self.node.method, AccessorExpr)
 		method_to_invoke=self.get_method_to_invoke(self.node, out)
 		name=out.get_temp_name()
@@ -366,7 +366,7 @@ class IntrinsicTransformer(Transformer):
 
 		def declclass(name, fields):
 			out.types[name]=datamodel.StructOType(name, fields, out)
-			# print(out.types)
+			out.types[name].setup(out)
 
 		def idgafcast(name, to_):
 			val=out.get_temp_name()

@@ -164,8 +164,10 @@ class StructOType(OType):
 		OType.__init__(self, name)
 		self.fields=collections.OrderedDict(fields)
 		# print(self.fields)
+
+	def setup(self, out):
 		for field in self.fields.keys():
-			self.fields[field]=transform.get_type(self.fields[field], out)
+ 			self.fields[field]=transform.get_type(self.fields[field], out)
 		self.datalayout=[]
 
 		for field, type in self.fields.items():

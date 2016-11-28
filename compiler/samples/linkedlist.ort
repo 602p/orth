@@ -1,0 +1,49 @@
+@include("std.ort")
+@declclass("Node", [["value", "cstr"], ["next", "Node"]])
+@declclass("List", [["len", "int"], ["head", "Node"]])
+
+function() List::new -> List does
+    ptr mem = malloc(16)
+    List new = @idgafcast("mem", "%ty_List_s*")
+    new.len=0
+return new
+
+function(List l, int want) List:get_node -> Node does
+    int idx = 0
+    Node current = l.head
+    while idx!=want do
+        idx+=1
+        current=current.next
+    done
+return current
+
+function(List l, int want) List:get -> cstr does
+return l:get_node(want).value
+
+function(cstr value) Node::new -> Node does
+    ptr mem = malloc(16)
+    Node new = @idgafcast("mem", "%ty_Node_s*")
+    new.value=value
+return new
+
+function(List l, cstr item) List:append -> void does
+    Node last = l:get_node(l.len-1)
+    Node new = Node::new()
+    l.len+=1
+    last.next=new
+return
+
+<#function() main -> int does
+    List l = List::new()
+    l:append("foo")
+    l:append("bar")
+    l:append("baz")
+    l:append("quux")
+    l:append(read_line)
+
+    int idx=0
+    while idx<l.len do
+        printf("l:get(%i) = %s\n", idx, l:get(idx))
+        idx+=1
+    done
+return 0#>

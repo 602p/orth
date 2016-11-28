@@ -43,7 +43,7 @@ class Emitter:
 		self.scope_context_manager=Emitter._ScopeContext(self)
 		self.context_map=collections.ChainMap({
 			"indent":0,
-			"line":-1,
+			"line":"u",
 			"file":"u",
 			"ns":"u",
 			"class":"u",
@@ -156,6 +156,7 @@ def emit(out, node, parent=None):
 	return get_transformer(node, parent).transform(out)
 
 def get_type(node, out):
+	print(node, out.types)
 	if isinstance(node, str):
 		return out.types[node]
 	if isinstance(node, datamodel.OType):

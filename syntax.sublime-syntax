@@ -1,0 +1,10 @@
+%YAML 1.2
+---
+name: Orth
+file_extensions: [ort]
+scope: source.orth
+
+contexts:
+  main:
+    - match: \b(if|else|elif|while)\b
+      scope: keyword.control.orth

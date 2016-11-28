@@ -1,12 +1,4 @@
-@declare_c_func("printf", "int", "(...)")
-@declare_c_func("scanf", "int", "(...)")
-
-function(cstr prompt) read_int -> int does
-	int result
-	ptr result_ptr=result||ptr
-	printf(prompt)
-	scanf("%d", result_ptr)
-return result
+@include("std.ort")
 
 function() main -> int does
 	int birthyear = read_int("What is your birthyear? ")

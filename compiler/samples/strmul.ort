@@ -1,0 +1,7 @@
+@include("std.ort")
+
+function() main -> int does
+	cstr foo = read_line("Name? ")
+	foo+="\n"
+	printf(foo*3)
+return 0

@@ -1,4 +1,4 @@
-@include("samples/strimpl.ort")
+@include("std.ort")
 
 function() main -> int does
 	cstr a = "Hel"

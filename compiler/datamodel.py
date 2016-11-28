@@ -1,30 +1,66 @@
-import collections
+import collections, transform, types
 
+magicmethods={
+	"add":"__add__",
+	"sub":"__sub__",
+	"mul":"__mul__",
+	"div":"__div__",
+	"gt":"__gt__",
+	"ge":"__ge__",
+	"lt":"__lt__",
+	"le":"__le__",
+	"eq":"__eq__",
+	"ne":"__ne__",
+	"neg":"__neg__"
+}
 
 class OType:
-	def __init__(self, name, fields=None):
+	def __init__(self, name):
+		def _make_caller(magic):
+			def method(self, lhs, rhs, out):
+				methname=name+"$"+magic
+				return transform.call_func(
+					methname,
+					[t.type.get_llvm_representation() for t in out.signatures[methname].args],
+					[lhs, rhs],
+					out
+				)
+			return types.MethodType(method, self)
+
 		self.name=name
-		self.fields=collections.OrderedDict() if fields is None else fields
-		self.datalayout=collections.OrderedDict()
 
-		for field in self.fields.keys():
-			self.datalayout[field]=typ=self.fields[field].get_llvm_representation()
+		for k, v in magicmethods.items():
+			if not hasattr(self, "implement_"+k):
+				setattr(self, "implement_"+k, _make_caller(v))
 
-	def get_llvm_structdef(self):
-		return "type {"+(", ".join(self.datalayout.values()))+"}"
+	def implement_neg(self, lhs, out):
+		return transform.call_func(
+			self.name+"$__neg__",
+			[t.type.get_llvm_representation() for t in out.signatures[self.name+"$__neg__"].args],
+			[lhs, rhs],
+			out
+		)
 
 	def get_llvm_representation(self):
-		return self.get_llvm_structdef()+"*"
+		pass
 
 	def __str__(self):
-		return "{"+self.name+"}"
+		return "t{"+self.name+"}"
 
 	def __repr__(self):
 		return str(self)
 
 class PrimitiveOType(OType):
+	def __init__(self, name, llvmtype):
+		OType.__init__(self, name)
+		self.llvmtype=llvmtype
+
+	def get_llvm_representation(self):
+		return self.llvmtype
+
+class IntegerPrimitiveOType(PrimitiveOType):
 	def __init__(self, name, llvmtype, literal_formatter):
-		OType.__init__(self, name, {})
+		OType.__init__(self, name)
 		self.llvmtype=llvmtype
 		self.fields=None
 		self.datalayout=None
@@ -85,7 +121,7 @@ class PrimitiveOType(OType):
 
 class FunctionOType(OType):
 	def __init__(self, name, args, returntype):
-		OType.__init__(self, name, {})
+		OType.__init__(self, name)
 		self.llvmtype=returntype.get_llvm_representation()
 		self.argsig=" ("+(",".join(typ.type.get_llvm_representation() for typ in args))+")"
 		self.fields=None
@@ -102,21 +138,9 @@ class ManualFunctionOType(FunctionOType):
 		self.argsig=argsig
 		self.llvmtype=returntype.get_llvm_representation()
 
-import transform
-
-def call_func(name, argtypes, args, out):
-	arg_values=[]
-	for idx, arg in enumerate(args):
-		arg_values.append(builtin_types[argtypes[idx]].get_llvm_representation()+" %"+arg)
-	return "call {}* @{}({})".format(
-		out.signatures[name].get_llvm_representation(),
-		name,
-		",".join(arg_values)
-	)
-
 class PrimitiveCStrOType(PrimitiveOType):
 	def __init__(self, name, llvmtype):
-		OType.__init__(self, name, {})
+		OType.__init__(self, name)
 		self.llvmtype=llvmtype
 
 	def get_literal_expr(self, value, out):
@@ -126,7 +150,7 @@ class PrimitiveCStrOType(PrimitiveOType):
 			globalname,
 			len(value)+1,
 			transformed+"\\00",
-			value
+			repr(value)
 		))
 		name=out.get_temp_name()
 		out.emitl("%{} = getelementptr [{} x i8]* @{}".format(name, len(value)+1, globalname))
@@ -135,17 +159,20 @@ class PrimitiveCStrOType(PrimitiveOType):
 			name
 		)
 
-	def implement_add(self, lhs, rhs, out):
-		return call_func("__cstr_add", ["cstr", "cstr"], [lhs, rhs], out)
+class StructOType(OType):
+	def __init__(self, name, fields):
+		OType.__init__(self, name)
+		self.fields=collections.OrderedDict(fields)
+		self.datalayout=None
 
 builtin_types = {e.name:e for e in [
-	PrimitiveOType("bool", "i1", "add i1 0, {}"),
-	PrimitiveOType("int", "i32", "add i32 0, {}"),
-	PrimitiveOType("short", "i16", "add i16 0, {}"),
-	PrimitiveOType("byte", "i8", "add i8 0, {}"),
-	PrimitiveOType("long", "i64", "add i64 0, {}"),
-	PrimitiveOType("xlong", "i128", "add i128 0, {}"),
-	PrimitiveOType("xxlong", "i256", "add i256 0, {}"),
-	PrimitiveOType("ptr", "i8*", "<notimplemented>"),
+	IntegerPrimitiveOType("bool", "i1", "add i1 0, {}"),
+	IntegerPrimitiveOType("int", "i32", "add i32 0, {}"),
+	IntegerPrimitiveOType("short", "i16", "add i16 0, {}"),
+	IntegerPrimitiveOType("byte", "i8", "add i8 0, {}"),
+	IntegerPrimitiveOType("long", "i64", "add i64 0, {}"),
+	IntegerPrimitiveOType("xlong", "i128", "add i128 0, {}"),
+	IntegerPrimitiveOType("xxlong", "i256", "add i256 0, {}"),
+	PrimitiveOType("ptr", "i8*"),
 	PrimitiveCStrOType("cstr", "i8*")
 ]}

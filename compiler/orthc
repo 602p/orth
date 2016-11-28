@@ -12,17 +12,17 @@ node=parse.parse(tokens)
 
 drawblockdiag.emit_node_file(open('out.bd', 'w'), node, portrait_mode=True)
 
-#print("===")
+print("Compiling...")
 
-import transform, transformer
+import transform, transformer, datamodel
 
-#print(transform.transformers)
 
 with open("out.ll", 'w') as fd:
 	e=transform.Emitter(fd)
+	# e.types['Person']=datamodel.UserOType()
 	with e.scope():
 		with e.context(file="in"):
 			transform.emit(e, node)
 	e.emit_global_statments()
 
-os.system("llc out.ll;gcc -o out out.s; rm out.s; ./out")
+os.system("llc out.ll;gcc -o "+(sys.argv[2] if len(sys.argv)==3 else "out")+" out.s; rm out.s")

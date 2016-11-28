@@ -1,0 +1,36 @@
+@declare_c_func("printf", "int", "(...)")
+@declare_c_func("scanf", "int", "(...)")
+@declare_c_func("malloc", "ptr", "(i32)")
+@declare_c_func("strcat", "cstr", "(i8*, i8*)")
+@declare_c_func("strcpy", "cstr", "(i8*, i8*)")
+@declare_c_func("strlen", "int", "(i8*)")
+
+function(cstr a, cstr b) cstr:__add__ -> cstr does
+	cstr result = malloc(strlen(a)+strlen(b)+1)
+	strcpy(result, a)
+	strcat(result, b)
+return result
+
+function(cstr a, int b) cstr:__mul__ -> cstr does
+	int sz = strlen(a)*b
+	sz+=1
+	cstr result = malloc(sz)
+	int idx=b
+	while b>0 do
+		b-=1
+		strcat(result, a)
+	done
+return result
+
+function(cstr prompt) read_int -> int does
+	int result
+	ptr result_ptr=result||ptr
+	printf(prompt)
+	scanf("%d", result_ptr)
+return result
+
+function(cstr prompt) read_line -> cstr does
+	cstr result = malloc(256)
+	printf(prompt)
+	scanf("%s", result) #Horrible and unsafe
+return result

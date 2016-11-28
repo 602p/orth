@@ -1,0 +1,5 @@
+@declclass("Person", [["first", "cstr"], ["last","cstr"], ["age","int"]])
+
+function() main -> int does
+	Person bob! = Person:new()
+return 0

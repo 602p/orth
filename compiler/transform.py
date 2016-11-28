@@ -2,6 +2,7 @@ import grammar
 import contextlib
 import collections
 import util
+import datamodel
 
 class Variable:
 	def __init__(self, var, type):
@@ -160,3 +161,13 @@ def do_var_alloc(out, varname, type):
 	out.emitl("%{} = alloca {}".format(name, type.get_llvm_representation()))
 	out.set_var_name(varname, name, type)
 	return name
+
+def call_func(name, argtypes, args, out):
+	arg_values=[]
+	for idx, arg in enumerate(args):
+		arg_values.append(argtypes[idx]+" %"+arg)
+	return "call {}* @{}({})".format(
+		out.signatures[name].get_llvm_representation(),
+		name,
+		",".join(arg_values)
+	)

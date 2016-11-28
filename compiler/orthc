@@ -12,7 +12,7 @@ node=parse.parse(tokens)
 
 drawblockdiag.emit_node_file(open('out.bd', 'w'), node, portrait_mode=True)
 
-print("Compiling...")
+print("\033[92mCompiling...\033[0m")
 
 import transform, transformer, datamodel
 

@@ -3,6 +3,7 @@ import contextlib
 import collections
 import util
 import datamodel
+import copy
 
 class Variable:
 	def __init__(self, var, type):
@@ -54,6 +55,7 @@ class Emitter:
 		self.scopes=collections.ChainMap({})
 		self.signatures={}
 		self.global_statments=[]
+		self.types=copy.copy(datamodel.builtin_types)
 
 	def emit(self, text):
 		self.fd.write(text)
@@ -154,7 +156,14 @@ def emit(out, node, parent=None):
 	return get_transformer(node, parent).transform(out)
 
 def get_type(node, out):
-	return get_transformer_cls(node).get_type(node, out)
+	if isinstance(node, str):
+		return out.types[node]
+	if isinstance(node, datamodel.OType):
+		return node
+	res = get_transformer_cls(node).get_type(node, out)
+	if isinstance(res, datamodel.OType):
+		return res
+	return out.types[res]
 
 def do_var_alloc(out, varname, type):
 	name="var_"+out.get_name()+"___"+varname

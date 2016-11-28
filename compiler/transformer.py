@@ -20,7 +20,7 @@ class CastExprTransformer(Transformer):
 			get_type(self.node.value, out).implement_cast(
 				value,
 				get_type(self.node.value, out),
-				self.node.to
+				get_type(self.node.to, out)
 			)
 		))
 		return name
@@ -59,7 +59,7 @@ class LiteralExprTransformer(Transformer):
 
 	def transform(self, out):
 		name=out.get_temp_name()
-		out.emitl("%{} = {}".format(name, self.node.type.get_literal_expr(self.node.value, out)))
+		out.emitl("%{} = {}".format(name, get_type(self.node.type, out).get_literal_expr(self.node.value, out)))
 		return name
 
 	@staticmethod
@@ -111,6 +111,7 @@ class BinOpExprTransformer(Transformer):
 
 	@staticmethod
 	def get_type(node, out):
+		# print(node)
 		return get_type(node.lhs, out) if node.operator in "+-*/" else datamodel.builtin_types['bool']
 
 class UnOpTransformer(Transformer):
@@ -125,34 +126,71 @@ class UnOpTransformer(Transformer):
 		))
 		return name
 
+	@staticmethod
+	def get_type(node, out):
+		# print(node)
+		return get_type(node.expr, out)
+
 class AssignmentExprTransformer(Transformer):
 	transforms=AssignmentExpr
 
 	def transform(self, out):
 		if self.node.init:
-			do_var_alloc(out, self.node.lhs.name, self.node.lhs.type)
+			do_var_alloc(out, self.node.lhs.name, get_type(self.node.lhs.type, out))
 
-		name=out.get_var_name(self.node.lhs.name)
+		target=transform.get_transformer(self.node.lhs, self).transform_address(out)
 
 		rhs=transform.emit(out, self.node.rhs, self)
 
-		if isinstance(self.node.lhs, NameExpr):
-			out.emitl("store {t} %{v}, {t}* %{n}".format(
-				t=get_type(self.node.lhs, out).get_llvm_representation(),
-				n=name,
-				v=rhs
-			))
+		# if self.node.
+		out.emitl("store {t} %{v}, {t}* %{n}".format(
+			t=get_type(self.node.lhs, out).get_llvm_representation(),
+			n=target,
+			v=rhs
+		))
+
+class AccessorExprTransformer(Transformer):
+	transforms=AccessorExpr
+
+	def transform_address(self, out):
+		ptrname=transform.emit(out, self.node.object, self)
+		ptrtype=get_type(self.node.object, out)
+		name=out.get_temp_name()
+		out.emitl("%{} = getelementptr {} %{}, i32 0, {}".format(
+			name,
+			ptrtype.get_llvm_representation(),
+			ptrname,
+			ptrtype.index_to(self.node.field)
+		))
+		return name
+
+	def transform(self, out):
+		addr = self.transform_address(out)
+		name=out.get_temp_name()
+		out.emitl("%{} = load {}* %{}".format(
+			name,
+			get_type(self.node, out).get_llvm_representation(),
+			addr
+		))
+		return name
+
+	@staticmethod
+	def get_type(node, out):
+		return get_type(node.object, out).fields[node.field]
 
 class DeclExprTransformer(Transformer):
 	transforms=DeclExpr
 
 	def transform(self, out):
 		# print("allocatin")
-		return do_var_alloc(out, self.node.name, self.node.type)
+		return do_var_alloc(out, self.node.name, get_type(self.node.type, out))
 
 	@staticmethod
 	def get_type(node, out):
 		return node.type
+
+	def transform_address(self, out):
+		return out.get_var_name(self.node.name)
 
 class NameExprTransformer(Transformer):
 	transforms=NameExpr
@@ -164,6 +202,9 @@ class NameExprTransformer(Transformer):
 			self.type.get_llvm_representation(),
 			out.get_var_name(self.node.name)))
 		return name
+
+	def transform_address(self, out):
+		return out.get_var_name(self.node.name)
 
 	@staticmethod
 	def get_type(node, out):
@@ -219,15 +260,15 @@ class FunctionTransformer(Transformer):
 
 	def transform(self, out):
 		out.emitl("define {} @{}({}){{".format(
-			self.node.type.get_llvm_representation(),
+			get_type(self.node.type, out).get_llvm_representation(),
 			self.node.name,
-			",".join(arg.type.get_llvm_representation()+" %"+arg.name for arg in self.node.args)
+			",".join(get_type(arg.type, out).get_llvm_representation()+" %"+arg.name for arg in self.node.args)
 		))
 		with out.context(method=self.node.name):
 			for arg in self.node.args:
-				do_var_alloc(out, arg.name, arg.type)
+				do_var_alloc(out, arg.name, get_type(arg.type, out))
 				out.emitl("store {t} %{v}, {t}* %{n}".format(
-					t=arg.type.get_llvm_representation(),
+					t=get_type(arg.type, out).get_llvm_representation(),
 					v=arg.name,
 					n=out.get_var_name(arg.name)
 				))
@@ -238,30 +279,54 @@ class ReturnTransformer(Transformer):
 	transforms=ReturnExpr
 
 	def transform(self, out):
-		name=transform.emit(out, self.node.value, self)
-		out.emitl("ret {} %{}".format(get_type(self.node.value, out).get_llvm_representation(), name))
+		if self.node.value:
+			name=transform.emit(out, self.node.value, self)
+			out.emitl("ret {} %{}".format(get_type(self.node.value, out).get_llvm_representation(), name))
+		else:
+			out.emitl("ret void")
 
 class CallExprTransformer(Transformer):
 	transforms=CallExpr
 
+	@staticmethod
+	def get_method_to_invoke(node, out):
+		if isinstance(node.method, AccessorExpr):
+			if node.method.accesses=="method":
+				return get_type(node.method.object, out).name+"$"+node.method.field
+		else:
+			assert isinstance(node.method, NameExpr), "No computed calls yet :("
+			return node.method.name
+
 	def transform(self, out):
-		assert isinstance(self.node.method, NameExpr), "No computed calls yet :("
+		# print(self.node)
+		# 
+		implicit_first_parameter=isinstance(self.node.method, AccessorExpr)
+		method_to_invoke=self.get_method_to_invoke(self.node, out)
 		name=out.get_temp_name()
 		args=[]
+		if implicit_first_parameter:
+			args.append(get_type(self.node.method.object, out).get_llvm_representation()+" %"+transform.emit(out, self.node.method.object))
 		for arg in self.node.args:
 			args.append(get_type(arg, out).get_llvm_representation()+" %"+transform.emit(out, arg, self))
 
-		out.emitl("%{} = call {}* @{}({})".format(
-			name,
-			out.signatures[self.node.method.name].get_llvm_representation(),
-			self.node.method.name,
-			",".join(args)
-		))
+		if out.signatures[method_to_invoke].returntype.get_llvm_representation()!="void":
+			out.emitl("%{} = call {}* @{}({})".format(
+				name,
+				out.signatures[method_to_invoke].get_llvm_representation(),
+				method_to_invoke,
+				",".join(args)
+			))
+		else:
+			out.emitl("call {}* @{}({})".format(
+				out.signatures[method_to_invoke].get_llvm_representation(),
+				method_to_invoke,
+				",".join(args)
+			))
 		return name
 
 	@staticmethod
 	def get_type(node, out):
-		return out.signatures[node.method.name].returntype
+		return out.signatures[CallExprTransformer.get_method_to_invoke(node, out)].returntype
 
 class FileTransformer(Transformer):
 	transforms=FileExpr
@@ -269,16 +334,23 @@ class FileTransformer(Transformer):
 	def transform(self, out):
 		for func in self.node.funcs:
 			if isinstance(func, FunctionDecl):
-				out.signatures[func.name]=datamodel.FunctionOType(func.name, func.args, func.type)
+				out.signatures[func.name]=datamodel.FunctionOType(
+					func.name,
+					[get_type(t.type, out) for t in func.args],
+					get_type(func.type, out))
+			else:
+				transform.emit(out, func, self)
 		# print(out.signatures)
 
 		for func in self.node.funcs:
-			transform.emit(out, func, self)
+			if isinstance(func, FunctionDecl):
+				transform.emit(out, func, self)
 
 class IntrinsicTransformer(Transformer):
 	transforms=IntrinsicExpr
 
 	def transform(self, out):
+		# print(self.node)
 		def declare_c_func(name, type, paramstring):
 			rt=datamodel.builtin_types[type]
 			out.emitl("declare {} @{}{}".format(rt.get_llvm_representation(), name, paramstring))
@@ -291,6 +363,26 @@ class IntrinsicTransformer(Transformer):
 			import tokenize, parse
 			with out.context(file=filename.split("/")[-1].split(".")[0]):
 				transform.emit(out, parse.parse(tokenize.tokenize(open(filename, 'r').read())), self)
+
+		def declclass(name, fields):
+			out.types[name]=datamodel.StructOType(name, fields, out)
+			# print(out.types)
+
+		def idgafcast(name, to_):
+			val=out.get_temp_name()
+			out.emitl("%{} = load {}* %{}".format(
+				val,
+				out.get_var_type(name).get_llvm_representation(),
+				out.get_var_name(name)
+			))
+			res=out.get_temp_name()
+			out.emitl("%{} = bitcast {} %{} to {}".format(
+				res,
+				out.get_var_type(name).get_llvm_representation(),
+				val,
+				to_
+			))
+			return res
 
 		return eval(self.node.text[1:])
 

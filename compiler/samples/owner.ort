@@ -1,5 +1,6 @@
 @include("std.ort")
 @declclass("Person", [["first", "cstr"], ["last","cstr"], ["birthyear","int"]])
+@declclass("Relationship", [["type", "cstr"], ["a", "Person"], ["b", "Person"]])
 
 function(cstr first, cstr last, int birthyear) Person::from -> Person does
 	ptr mem = malloc(50)
@@ -9,11 +10,22 @@ function(cstr first, cstr last, int birthyear) Person::from -> Person does
 	new.birthyear=birthyear
 return new
 
+function(Person a, Person b, cstr type) Relationship::from -> Relationship does
+	ptr mem = malloc(50)
+	Relationship new = @idgafcast("mem", "%ty_Relationship_s*")
+	new.a=a
+	new.b=b
+	new.type=type
+return new
+
+function(Relationship r) Relationship:report -> cstr does
+return "Relationship of type `"+r.type+"` between\na)"+r.a:report()+" and \nb)"+r.b:report()
+
 function(Person p) Person:get_age -> int does
 return 2016-p.birthyear
 
 function(Person p) Person:report -> cstr does
-	cstr fmt = "%s %s was born in %i, he is now %i years old."
+	cstr fmt = "%s %s was born in %i, they are now %i years old."
 	cstr report = malloc(strlen(p.first)+strlen(p.last)+strlen(fmt)+5)
 	sprintf(report, fmt, p.first, p.last, p.birthyear, p:get_age())
 return report
@@ -22,14 +34,8 @@ function(Person p, int year) Person:get_age_in_year -> int does
 return year-p.birthyear
 
 function() main -> int does
-	Person user = Person::from(read_line("First Name:"), read_line("Last Name:"), read_int("Birthyear:"))
-
-	printf(user:report()+"\n")
-
-	Person user2 = Person::from(read_line("First Name:"), read_line("Last Name:"), read_int("Birthyear:"))
-
-	printf(user2:report()+"\n")
-
-	printf("The age difference between user1 and user2 is %i\n", user:get_age()-user2:get_age())
-	printf("Next year user 1 will be %i\n", user:get_age_in_year(2017)+1)
+	Person a = Person::from("Bob", "Spuser", 1972)
+	Person b = Person::from("Jane", "Spuser", 1974)
+	Relationship mairrage=Relationship::from(a, b, "mairrage")
+	printf(mairrage:report()+"\n")
 return 0

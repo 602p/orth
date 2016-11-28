@@ -1,0 +1,35 @@
+@include("std.ort")
+@declclass("Fraction", [["top", "int"], ["bottom", "int"]])
+
+function(int top, int bottom) Fraction::create -> Fraction does
+	ptr mem = malloc(50)
+	Fraction new = @idgafcast("mem", "%ty_Fraction_s*")
+	new.top=top
+	new.bottom=bottom
+return new
+
+function(Fraction f) Fraction:str -> cstr does
+return f.top:str()+"/"+f.bottom:str()
+
+function(Fraction a, Fraction b) Fraction:__mul__ -> Fraction does
+return Fraction::create(a.top*b.top, a.bottom*b.bottom)
+
+function(Fraction f) Fraction:__neg__ -> Fraction does
+return Fraction::create(-f.top, f.bottom)
+
+function() main -> int does
+	printf("Fraction multiplier! :)\n")
+	bool run = 1|bool
+	Fraction f1
+	Fraction f2
+	Fraction res
+	while run do
+		f1=Fraction::create(read_int("Fraction 1 Numerator: "), read_int("Fraction 1 Denominator: "))
+		f2=Fraction::create(read_int("Fraction 2 Numerator: "), read_int("Fraction 2 Denominator: "))
+		printf("You have input the fractions %s and %s\n", f1:str(), f2:str())
+		printf("The product of %s and %s is %s\n", f1:str(), f2:str(), (f1*f2):str())
+		printf("To prove that -a*-b=a*b, the negatives of your fractions are %s and %s...\n", (-f1):str(), (-f2):str())
+		printf("And therefore the product of %s and %s is %s\n", (-f1):str(), (-f2):str(), ((-f1)*(-f2)):str())
+		read_line("Press enter to calculate another, or ^C to quit")
+	done
+return 0

@@ -1,4 +1,4 @@
-from grammarutil import TokenType, TokenHolder, ASTNode, NotLoaded, ast_node_types
+from grammarutil import TokenType, TokenHolder, ASTNode, NotLoaded, ast_node_types, Token
 import datamodel
 
 R_IDENTIFIER="[a-zA-Z_]\w*"
@@ -37,7 +37,7 @@ class Tokens(metaclass=TokenHolder):
 	T_BINARY_OPERATOR = TokenType(r"(>=)|(<=)|(!=)|(==)|[/\*\-\+%\^><]", [
 			"T_NAME", "T_LIST_STOP", "T_PAREN_CLOSE", "T_INTEGER_LITERAL", "T_STRING_LITERAL"
 		], capture=True)
-	T_ASSIGNMENT = TokenType(r"(=)|(=:)", capture=True)
+	T_ASSIGNMENT = TokenType(r"(=)|(<-)", capture=True)
 	T_PAREN_OPEN = TokenType(r"\(")
 	T_PAREN_CLOSE = TokenType(r"\)")
 
@@ -49,7 +49,9 @@ class Tokens(metaclass=TokenHolder):
 
 	T_COMMA = TokenType(r",")
 	T_DOT = TokenType(r"\.")
+	T_DOUBLECOLON = TokenType("::")
 	T_COLON= TokenType(":")
+
 
 	T_INTRINSIC = TokenType(r"@\w*\(.*\)", capture=True)
 
@@ -89,29 +91,30 @@ class NameExpr(IdentifierExpr, ValueExpression):
 		self.type="?"
 
 class DeclExpr(NameExpr):
-	pattern=[T_HEAP_ALLOCATION]+T_VAR_DECL
+	pattern=T_VAR_DECL+[T_HEAP_ALLOCATION]
 
 	def __init__(self, elements):
-		type, *_, name = elements[-1].value.split(" ")
+		# print(elements)
+		type, *_, name = elements[0].value.split(" ")
 		self.name=name
-		self.type=datamodel.builtin_types[type]
+		self.type=type
 		self.heap=len(elements)==2
 
 class CastExpr(ValueExpression):
 	pattern=ValueExpression+T_CAST+NameExpr
-	bad_lookahead_tokens=[T_DOT, T_COLON]
+	bad_lookahead_tokens=[T_DOT, T_COLON, T_DOUBLECOLON]
 
 	def __init__(self, elements):
 		self.value=elements[0]
-		self.to=datamodel.builtin_types[elements[2].name]
+		self.to=elements[2].name
 
 class PtrCastExpr(ValueExpression):
 	pattern=ValueExpression+T_PTRCAST+NameExpr
-	bad_lookahead_tokens=[T_DOT, T_COLON]
+	bad_lookahead_tokens=[T_DOT, T_COLON, T_DOUBLECOLON]
 
 	def __init__(self, elements):
 		self.value=elements[0]
-		self.to=datamodel.builtin_types[elements[2].name]
+		self.to=elements[2].name
 
 class BinOpExpr(ValueExpression):
 	pattern=ValueExpression+T_BINARY_OPERATOR+ValueExpression
@@ -131,7 +134,7 @@ class UnOpExpr(ValueExpression):
 
 class AssignmentExpr(Expression):
 	pattern=IdentifierExpr+T_ASSIGNMENT+ValueExpression
-	bad_lookahead_tokens=[T_DOT, T_COLON]
+	bad_lookahead_tokens=[T_DOT, T_COLON, T_DOUBLECOLON]
 
 	def __init__(self, elements, was_augassign=False):
 		self.lhs=elements[0]
@@ -142,7 +145,7 @@ class AssignmentExpr(Expression):
 				self.init=True
 		if was_augassign:
 			self.augassign=True
-		self.construct=elements[1].value==":="
+		self.construct=elements[1].value=="<-"
 
 class LiteralExpr(ValueExpression):
 	pattern=T_INTEGER_LITERAL|T_STRING_LITERAL
@@ -152,12 +155,12 @@ class LiteralExpr(ValueExpression):
 		if elements[0].type==T_INTEGER_LITERAL:
 			if elements[0].value.endswith("L"):
 				self.value=elements[0].value.replace("L","")
-				self.type=datamodel.builtin_types['xxlong']
+				self.type='xxlong'
 			else:
-				self.type=datamodel.builtin_types['int']
+				self.type='int'
 		else:
 			self.value=elements[0].value[1:-1].replace("\\n","\n")
-			self.type=datamodel.builtin_types['cstr']
+			self.type='cstr'
 
 class SepExpr(Expression):
 	pattern=T_ENDOFSTATEMENT
@@ -206,7 +209,7 @@ class ZeroTupleExpr(TupleExpr):
 
 class CallExpr(ValueExpression):
 	pattern=ValueExpression+(TupleExpr|GroupingExpr)
-	bad_lookahead_tokens=[T_DOT, T_COLON]
+	bad_lookahead_tokens=[T_DOT, T_COLON, T_DOUBLECOLON]
 
 	def __init__(self, elements):
 		self.method=elements[0]
@@ -217,7 +220,7 @@ class CallExpr(ValueExpression):
 
 class AugmentedAssignExpression(Expression):
 	pattern=IdentifierExpr+T_AUGASSIGN+ValueExpression
-	bad_lookahead_tokens=[T_DOT, T_COLON]
+	bad_lookahead_tokens=[T_DOT, T_COLON, T_DOUBLECOLON]
 
 	def __init__(self, elements):
 		self.variable=elements[0]
@@ -238,21 +241,29 @@ class AugmentedAssignExpression(Expression):
 		], was_augassign=True)
 
 class AccessorExpr(ValueExpression, IdentifierExpr):
-	pattern=ValueExpression+(T_DOT|T_COLON)+IdentifierExpr
-	bad_lookahead_tokens=[T_DOT, T_COLON]
+	pattern=ValueExpression+(T_DOT|T_COLON|T_DOUBLECOLON)+IdentifierExpr
+	bad_lookahead_tokens=[T_DOT, T_COLON, T_DOUBLECOLON]
 
 	def __init__(self, elements):
 		self.object=elements[0]
 		self.field=elements[2].name
 		self.type="?"
 		if elements[1].type==T_DOT:
-			self.class_accessor=False
+			self.accesses="var"
+		elif elements[1].type==T_COLON:
+			self.accesses="method"
 		else:
-			self.class_accessor=True
+			self.accesses="classmethod"
+
+	def replace(self):
+		if self.accesses=="classmethod":
+			return NameExpr([Token(T_NAME, self.object.name+"$$"+self.field, self.object.line, None)])
+		# elif self.accesses=="classmethod":
+		# 	return NameExpr([Token(T_NAME, self.object.name+"$$"+self.field, self.object.line, None)])
 
 class IndexExpr(AccessorExpr):
 	pattern=ValueExpression+T_LIST_START+ValueExpression+T_LIST_STOP
-	bad_lookahead_tokens=[T_DOT, T_COLON]
+	bad_lookahead_tokens=[T_DOT, T_COLON, T_DOUBLECOLON]
 
 	def __init__(self, elements):
 		self.object=elements[0]
@@ -335,24 +346,24 @@ class WhileExpr(BlockExpression):
 		self.block=elements[3]
 
 class ReturnExpr(Expression):
-	pattern=T_RETURN+ValueExpression
+	pattern=T_RETURN+[ValueExpression]
 
 	def __init__(self, elements):
-		self.value=elements[1]
+		self.value=elements[1] if len(elements)==2 else None
 
 class FunctionDeclStart(ASTNode):
 	pattern=T_FUNCTIONDECL_NAME+T_FUNCTIONDECL_RETURNS+T_FUNCTIONDECL_RETURN_TYPE+T_FUNCTIONDECL_DOES
 
 	def __init__(self, elements):
 		self.name=elements[0].value.replace(":","$")
-		self.type=datamodel.builtin_types[elements[2].value]
+		self.type=elements[2].value
 
 class ArgListEle(ASTNode):
 	pattern=T_ARGLIST_ELEMENT
 
 	def __init__(self, elements):
 		self.name=elements[0].value.split(" ")[-1]
-		self.type=datamodel.builtin_types[elements[0].value.split(" ")[0]]
+		self.type=elements[0].value.split(" ")[0]
 
 class ArgList(ASTNode):
 	pattern=T_ARGLIST_START+T_ARGLIST_END

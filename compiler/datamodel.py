@@ -21,7 +21,7 @@ class OType:
 				methname=name+"$"+magic
 				return transform.call_func(
 					methname,
-					[t.type.get_llvm_representation() for t in out.signatures[methname].args],
+					[t.get_llvm_representation() for t in out.signatures[methname].args],
 					[lhs, rhs],
 					out
 				)
@@ -36,8 +36,8 @@ class OType:
 	def implement_neg(self, lhs, out):
 		return transform.call_func(
 			self.name+"$__neg__",
-			[t.type.get_llvm_representation() for t in out.signatures[self.name+"$__neg__"].args],
-			[lhs, rhs],
+			[t.get_llvm_representation() for t in out.signatures[self.name+"$__neg__"].args],
+			[lhs],
 			out
 		)
 
@@ -82,7 +82,7 @@ class IntegerPrimitiveOType(PrimitiveOType):
 		return "sub {} %{}, %{}".format(self.get_llvm_representation(), lhs, rhs)
 
 	def implement_neg(self, val, out):
-		return "sub {} %{}, 0".format(self.get_llvm_representation(), val)
+		return "sub {} 0, %{}".format(self.get_llvm_representation(), val)
 
 	def implement_mul(self, lhs, rhs, out):
 		return "mul {} %{}, %{}".format(self.get_llvm_representation(), lhs, rhs)
@@ -123,7 +123,7 @@ class FunctionOType(OType):
 	def __init__(self, name, args, returntype):
 		OType.__init__(self, name)
 		self.llvmtype=returntype.get_llvm_representation()
-		self.argsig=" ("+(",".join(typ.type.get_llvm_representation() for typ in args))+")"
+		self.argsig=" ("+(",".join(typ.get_llvm_representation() for typ in args))+")"
 		self.fields=None
 		self.datalayout=None
 		self.returntype=returntype
@@ -160,10 +160,30 @@ class PrimitiveCStrOType(PrimitiveOType):
 		)
 
 class StructOType(OType):
-	def __init__(self, name, fields):
+	def __init__(self, name, fields, out):
 		OType.__init__(self, name)
 		self.fields=collections.OrderedDict(fields)
-		self.datalayout=None
+		# print(self.fields)
+		for field in self.fields.keys():
+			self.fields[field]=transform.get_type(self.fields[field], out)
+		self.datalayout=[]
+
+		for field, type in self.fields.items():
+			self.datalayout.append(type.get_llvm_representation())
+
+		out.emitl(self.get_decl())
+
+	def get_name(self):
+		return "ty_"+self.name+"_s"
+
+	def index_to(self, field):
+		return "i32 "+str(list(self.fields.keys()).index(field))
+
+	def get_decl(self):
+		return "%"+self.get_name()+" = type{"+(",".join(self.datalayout))+"}"
+
+	def get_llvm_representation(self):
+		return "%"+self.get_name()+"*"
 
 builtin_types = {e.name:e for e in [
 	IntegerPrimitiveOType("bool", "i1", "add i1 0, {}"),
@@ -174,5 +194,6 @@ builtin_types = {e.name:e for e in [
 	IntegerPrimitiveOType("xlong", "i128", "add i128 0, {}"),
 	IntegerPrimitiveOType("xxlong", "i256", "add i256 0, {}"),
 	PrimitiveOType("ptr", "i8*"),
+	PrimitiveOType("void", "void"),
 	PrimitiveCStrOType("cstr", "i8*")
 ]}

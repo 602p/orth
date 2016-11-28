@@ -1,4 +1,5 @@
 @declare_c_func("printf", "int", "(...)")
+@declare_c_func("sprintf", "int", "(...)")
 @declare_c_func("scanf", "int", "(...)")
 @declare_c_func("malloc", "ptr", "(i32)")
 @declare_c_func("strcat", "cstr", "(i8*, i8*)")
@@ -21,6 +22,11 @@ function(cstr a, int b) cstr:__mul__ -> cstr does
 		strcat(result, a)
 	done
 return result
+
+function(int i) int:str -> cstr does
+	cstr str = malloc(20)
+	sprintf(str, "%i", i)
+return str
 
 function(cstr prompt) read_int -> int does
 	int result

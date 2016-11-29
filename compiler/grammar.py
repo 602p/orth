@@ -53,7 +53,7 @@ class Tokens(metaclass=TokenHolder):
 	T_COLON= TokenType(":")
 
 
-	T_INTRINSIC = TokenType(r"@\w*\(.*\)", capture=True)
+	T_INTRINSIC = TokenType(r"@\w*\(.*\)@", capture=True)
 
 	T_HEAP_ALLOCATION = TokenType("!", ["T_VAR_DECL"])
 	

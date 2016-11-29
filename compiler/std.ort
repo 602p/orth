@@ -1,12 +1,12 @@
-@declare_c_func("printf", "int", "(...)")
-@declare_c_func("sprintf", "int", "(...)")
-@declare_c_func("scanf", "int", "(...)")
-@declare_c_func("malloc", "ptr", "(i32)")
-@declare_c_func("strcat", "cstr", "(i8*, i8*)")
-@declare_c_func("strcpy", "cstr", "(i8*, i8*)")
-@declare_c_func("strlen", "int", "(i8*)")
-@declare_c_func("strcmp", "int", "(i8*, i8*)")
-@declare_c_func("free", "int", "(...)")
+@declare_c_func("printf", "int", "(...)")@
+@declare_c_func("sprintf", "int", "(...)")@
+@declare_c_func("scanf", "int", "(...)")@
+@declare_c_func("malloc", "ptr", "(i32)")@
+@declare_c_func("strcat", "cstr", "(i8*, i8*)")@
+@declare_c_func("strcpy", "cstr", "(i8*, i8*)")@
+@declare_c_func("strlen", "int", "(i8*)")@
+@declare_c_func("strcmp", "int", "(i8*, i8*)")@
+@declare_c_func("free", "int", "(...)")@
 
 function(cstr a, cstr b) cstr:__add__ -> cstr does
 	cstr result = malloc(strlen(a)+strlen(b)+1)

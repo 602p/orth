@@ -2,6 +2,7 @@ from transform import Transformer
 from grammar import *
 import transform
 import datamodel
+import intrinsics
 from transform import get_type, do_var_alloc
 
 
@@ -351,47 +352,12 @@ class IntrinsicTransformer(Transformer):
 
 	def transform(self, out):
 		# print(self.node)
-		def declare_c_func(name, type, paramstring):
-			rt=datamodel.builtin_types[type]
-			out.emitl("declare {} @{}{}".format(rt.get_llvm_representation(), name, paramstring))
-			out.signatures[name]=datamodel.ManualFunctionOType(name, paramstring, rt)
+		return intrinsics.process_intrinsic(out, self.node.text)
 
-		def expose_symbol(name, type):
-			out.set_var_name(name, name, datamodel.builtin_types[type])
+	@staticmethod
+	def get_type(node, out):
+		return intrinsics.get_type(out, node.text)
 
-		def include(filename):
-			import tokenize, parse
-			with out.context(file=filename.split("/")[-1].split(".")[0]):
-				transform.emit(out, parse.parse(tokenize.tokenize(open(filename, 'r').read())), self)
-
-		def declclass(name, fields):
-			out.types[name]=datamodel.StructOType(name, fields, out)
-			out.types[name].setup(out)
-
-		def idgafcast(name, to_):
-			val=out.get_temp_name()
-			out.emitl("%{} = load {}* %{}".format(
-				val,
-				out.get_var_type(name).get_llvm_representation(),
-				out.get_var_name(name)
-			))
-			res=out.get_temp_name()
-			out.emitl("%{} = bitcast {} %{} to {}".format(
-				res,
-				out.get_var_type(name).get_llvm_representation(),
-				val,
-				to_
-			))
-			return res
-
-		locals().update(out.types)
-
-		def sizeof(cls):
-			name=out.get_temp_name()
-			out.emitl("%{} = add i32 0, {}".format(name, int(cls.get_size())))
-			return name
-
-		return eval(self.node.text[1:])
 
 class WhileExprTransformer(Transformer):
 	transforms=WhileExpr

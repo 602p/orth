@@ -384,6 +384,13 @@ class IntrinsicTransformer(Transformer):
 			))
 			return res
 
+		locals().update(out.types)
+
+		def sizeof(cls):
+			name=out.get_temp_name()
+			out.emitl("%{} = add i32 0, {}".format(name, int(cls.get_size())))
+			return name
+
 		return eval(self.node.text[1:])
 
 class WhileExprTransformer(Transformer):

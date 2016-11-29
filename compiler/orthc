@@ -2,20 +2,35 @@
 
 import sys, drawblockdiag, tokenize, parse, grammarutil, json, os
 
+_print=print
+def print(*a, **k):
+	_print(*a, **k)
+	sys.stdout.flush()
+
+print("Reading...                       ", end="")
+
 string=open(sys.argv[1], 'r').read()
 
+print("\rTokenizing...                       ", end="")
+
 tokens=tokenize.tokenize(string)
+
+print("\rTokenizing... [Dumping Tokens]             ", end="")
 #print(tokens)
 with open('tokens.txt', 'w') as fd:
 	fd.write("\n".join(str(t) for t in tokens))
+
+print("\rParsing...                       ", end="")
 node=parse.parse(tokens)
-print(node)
+# print(node)
+print("\rParsing... [Drawing BD]                 ", end="")
 drawblockdiag.emit_node_file(open('out.bd', 'w'), node, portrait_mode=True)
 
-print("\033[92mCompiling...\033[0m")
+print("\rPreparing Transformer...                       ", end="")
 
 import transform, transformer, datamodel
 
+print("\rTransforming...                       ", end="")
 
 with open("out.ll", 'w') as fd:
 	e=transform.Emitter(fd)
@@ -25,4 +40,12 @@ with open("out.ll", 'w') as fd:
 			transform.emit(e, node)
 	e.emit_global_statments()
 
-os.system("llc out.ll;gcc -o "+(sys.argv[2] if len(sys.argv)==3 else "out")+" out.s; rm out.s")
+print("\rCompiling...                       ", end="")
+
+os.system("llc out.ll;")
+
+print("\rLinking...                       ", end="")
+
+os.system("gcc -o "+(sys.argv[2] if len(sys.argv)==3 else "out")+" out.s; rm out.s")
+
+print("\r\033[92mDone!\033[0m                                        ")

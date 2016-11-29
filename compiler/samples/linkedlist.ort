@@ -3,8 +3,8 @@
 @declclass("List", [["len", "int"], ["head", "Node"]])
 
 function() List::new -> List does
-    ptr mem = malloc(16)
-    List new = @idgafcast("mem", "%ty_List_s*")
+    int sz = @sizeof(List)
+    List new = malloc(sz)|List
     new.len=0
 return new
 
@@ -21,8 +21,8 @@ function(List l, int want) List:get -> cstr does
 return l:get_node(want).value
 
 function(cstr value) Node::new -> Node does
-    ptr mem = malloc(16)
-    Node new = @idgafcast("mem", "%ty_Node_s*")
+    int sz = @sizeof(Node)
+    Node new = malloc(sz)|Node
     new.value=value
 return new
 

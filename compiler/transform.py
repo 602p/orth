@@ -156,7 +156,7 @@ def emit(out, node, parent=None):
 	return get_transformer(node, parent).transform(out)
 
 def get_type(node, out):
-	print(node, out.types)
+	# print(node, out.types)
 	if isinstance(node, str):
 		return out.types[node]
 	if isinstance(node, datamodel.OType):

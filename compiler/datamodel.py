@@ -119,6 +119,9 @@ class IntegerPrimitiveOType(PrimitiveOType):
 				to.get_llvm_representation()
 			)
 
+	def get_size(self):
+		return max(self.get_bit_width()/8, 1)
+
 class FunctionOType(OType):
 	def __init__(self, name, args, returntype):
 		OType.__init__(self, name)
@@ -138,7 +141,14 @@ class ManualFunctionOType(FunctionOType):
 		self.argsig=argsig
 		self.llvmtype=returntype.get_llvm_representation()
 
-class PrimitiveCStrOType(PrimitiveOType):
+class PointerPrimitiveOType(PrimitiveOType):
+	def implement_cast(self, value, from_, to):
+		return "bitcast {} %{} to {}".format(from_.get_llvm_representation(), value, to.get_llvm_representation())
+
+	def get_size(self):
+		return 8
+
+class PrimitiveCStrOType(PointerPrimitiveOType):
 	def __init__(self, name, llvmtype):
 		OType.__init__(self, name)
 		self.llvmtype=llvmtype
@@ -187,6 +197,9 @@ class StructOType(OType):
 	def get_llvm_representation(self):
 		return "%"+self.get_name()+"*"
 
+	def get_size(self):
+		return sum(e.get_size() if isinstance(e, PrimitiveOType) else 8 for e in self.fields.values())
+
 builtin_types = {e.name:e for e in [
 	IntegerPrimitiveOType("bool", "i1", "add i1 0, {}"),
 	IntegerPrimitiveOType("int", "i32", "add i32 0, {}"),
@@ -195,7 +208,7 @@ builtin_types = {e.name:e for e in [
 	IntegerPrimitiveOType("long", "i64", "add i64 0, {}"),
 	IntegerPrimitiveOType("xlong", "i128", "add i128 0, {}"),
 	IntegerPrimitiveOType("xxlong", "i256", "add i256 0, {}"),
-	PrimitiveOType("ptr", "i8*"),
-	PrimitiveOType("void", "void"),
+	PointerPrimitiveOType("ptr", "i8*"),
+	PointerPrimitiveOType("void", "void"),
 	PrimitiveCStrOType("cstr", "i8*")
 ]}

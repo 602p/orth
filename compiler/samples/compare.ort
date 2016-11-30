@@ -1,6 +1,0 @@
-int a = 4
-int b = 3
-
-bool a_gt_b = a!=b
-
-int res = a_gt_b|int

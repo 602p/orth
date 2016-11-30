@@ -1,4 +1,4 @@
-@include("std.ort")
+@include("std.ort")@
 
 function() main -> int does
 	int birthyear = read_int("What is your birthyear? ")

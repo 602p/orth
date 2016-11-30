@@ -1,9 +1,9 @@
-@include("std.ort")
-@declclass("Fraction", [["top", "int"], ["bottom", "int"]])
+@include("std.ort")@
+@declclass("Fraction", [["top", "int"], ["bottom", "int"]])@
 
 function(int top, int bottom) Fraction::create -> Fraction does
 	ptr mem = malloc(50)
-	Fraction new = @idgafcast("mem", "%ty_Fraction_s*")
+	Fraction new = mem|Fraction
 	new.top=top
 	new.bottom=bottom
 return new

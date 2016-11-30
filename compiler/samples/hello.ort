@@ -1,4 +1,4 @@
-@include("std.ort")
+@include("std.ort")@
 
 function() main -> int does
 	cstr name = read_line("What is your name? ")

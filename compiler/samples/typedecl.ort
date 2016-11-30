@@ -1,0 +1,9 @@
+@include("std.ort")@
+
+type Person is
+	int age
+
+	function(Person p) get_age -> int does
+	return p.age
+
+endtype

@@ -31,6 +31,10 @@ def process_intrinsic(out, text):
 		out.set_var_name(name, name, datamodel.builtin_types[type])
 
 	def include(filename):
+		if filename in out.included_files:
+			out.emitl(";;;OMITTING INCLUDE `"+filename+"`, PREVIOUSLY INCLUDED")
+			return
+		out.included_files.append(filename)
 		import tokenize, parse
 		with out.context(file=filename.split("/")[-1].split(".")[0]):
 			transform.emit(out, parse.parse(tokenize.tokenize(open(filename, 'r').read())), "imp")

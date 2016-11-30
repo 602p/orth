@@ -50,6 +50,9 @@ class OType:
 	def __repr__(self):
 		return str(self)
 
+	def implement_cast(self, value, from_, to):
+		return "bitcast {} %{} to {}".format(from_.get_llvm_representation(), value, to.get_llvm_representation())
+
 class PrimitiveOType(OType):
 	def __init__(self, name, llvmtype):
 		OType.__init__(self, name)
@@ -57,6 +60,8 @@ class PrimitiveOType(OType):
 
 	def get_llvm_representation(self):
 		return self.llvmtype
+
+	
 
 class IntegerPrimitiveOType(PrimitiveOType):
 	def __init__(self, name, llvmtype, literal_formatter):
@@ -104,20 +109,23 @@ class IntegerPrimitiveOType(PrimitiveOType):
 		return "icmp ne {} %{}, %{}".format(self.get_llvm_representation(), lhs, rhs)
 
 	def implement_cast(self, value, from_, to):
-		if to.get_bit_width()>from_.get_bit_width():
-			return "zext {} %{} to {}".format(
-				from_.get_llvm_representation(),
-				value,
-				to.get_llvm_representation()
-			)
-		elif to.get_bit_width()==from_.get_bit_width():
-			return "%"+value
+		if isinstance(to, IntegerPrimitiveOType):
+			if to.get_bit_width()>from_.get_bit_width():
+				return "zext {} %{} to {}".format(
+					from_.get_llvm_representation(),
+					value,
+					to.get_llvm_representation()
+				)
+			elif to.get_bit_width()==from_.get_bit_width():
+				return "%"+value
+			else:
+				return "trunc {} %{} to {}".format(
+					from_.get_llvm_representation(),
+					value,
+					to.get_llvm_representation()
+				)
 		else:
-			return "trunc {} %{} to {}".format(
-				from_.get_llvm_representation(),
-				value,
-				to.get_llvm_representation()
-			)
+			return PrimitiveOType.implement_cast(self, value, from_, to)
 
 	def get_size(self):
 		return max(self.get_bit_width()/8, 1)
@@ -142,9 +150,6 @@ class ManualFunctionOType(FunctionOType):
 		self.llvmtype=returntype.get_llvm_representation()
 
 class PointerPrimitiveOType(PrimitiveOType):
-	def implement_cast(self, value, from_, to):
-		return "bitcast {} %{} to {}".format(from_.get_llvm_representation(), value, to.get_llvm_representation())
-
 	def get_size(self):
 		return 8
 
@@ -178,8 +183,8 @@ class StructOType(OType):
 	def setup(self, out):
 		for field in self.fields.keys():
  			self.fields[field]=transform.get_type(self.fields[field], out)
-		self.datalayout=[]
 
+		self.datalayout=[]
 		for field, type in self.fields.items():
 			self.datalayout.append(type.get_llvm_representation())
 

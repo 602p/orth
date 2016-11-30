@@ -15,7 +15,7 @@ class CastExprTransformer(Transformer):
 			out,
 			self.node.value,
 			self
-		)
+		) #From CastExpr
 		out.emitl("%{} = {}".format(
 			name,
 			get_type(self.node.value, out).implement_cast(
@@ -53,14 +53,14 @@ class GroupExprTransformer(Transformer):
 	def transform(self, out):
 		for expr in self.node.exprs:
 			with out.context(line=expr.line):
-				transform.emit(out, expr, self)
+				transform.emit(out, expr, self) #From GroupExpr
 
 class LiteralExprTransformer(Transformer):
 	transforms=LiteralExpr
 
 	def transform(self, out):
 		name=out.get_temp_name()
-		out.emitl("%{} = {}".format(name, get_type(self.node.type, out).get_literal_expr(self.node.value, out)))
+		out.emitl("%{} = {}".format(name, get_type(self.node.type, out).get_literal_expr(self.node.value, out))) #From Literal
 		return name
 
 	@staticmethod
@@ -72,8 +72,8 @@ class BinOpExprTransformer(Transformer):
 
 	def transform(self, out):
 		name=out.get_temp_name()
-		lhs=transform.emit(out, self.node.lhs, self)
-		rhs=transform.emit(out, self.node.rhs, self)
+		lhs=transform.emit(out, self.node.lhs, self) #From BinOp
+		rhs=transform.emit(out, self.node.rhs, self) #From BinOp
 
 		lhstype=get_type(self.node.lhs, out)
 
@@ -120,7 +120,7 @@ class UnOpTransformer(Transformer):
 
 	def transform(self, out):
 		name=out.get_temp_name()
-		value=transform.emit(out, self.node.expr, self)
+		value=transform.emit(out, self.node.expr, self) #From UnOp
 		out.emitl("%{} = {}".format(
 			name,
 			get_type(self.node.expr, out).implement_neg(value, out)
@@ -141,7 +141,7 @@ class AssignmentExprTransformer(Transformer):
 
 		target=transform.get_transformer(self.node.lhs, self).transform_address(out)
 
-		rhs=transform.emit(out, self.node.rhs, self)
+		rhs=transform.emit(out, self.node.rhs, self) #From Assignment
 
 		# if self.node.
 		out.emitl("store {t} %{v}, {t}* %{n}".format(
@@ -154,8 +154,8 @@ class AccessorExprTransformer(Transformer):
 	transforms=AccessorExpr
 
 	def transform_address(self, out):
-		ptrname=transform.emit(out, self.node.object, self)
-		ptrtype=get_type(self.node.object, out)
+		ptrname=transform.emit(out, self.node.object, self) #From Accessor
+		ptrtype=get_type(self.node.object, out) #From Accessor
 		name=out.get_temp_name()
 		out.emitl("%{} = getelementptr {} %{}, i32 0, {}".format(
 			name,
@@ -198,10 +198,11 @@ class NameExprTransformer(Transformer):
 
 	def transform(self, out):
 		name=out.get_temp_name()
-		self.type=out.get_var_type(self.node.name)
+		# print(out.scopes, self.parent.node if self.parent else "")
+		self.type=out.get_var_type(self.node.name) #From NameExpr
 		out.emitl("%{} = load {}* %{}".format(name,
 			self.type.get_llvm_representation(),
-			out.get_var_name(self.node.name)))
+			out.get_var_name(self.node.name))) #From NameExpr
 		return name
 
 	def transform_address(self, out):
@@ -266,14 +267,15 @@ class FunctionTransformer(Transformer):
 			",".join(get_type(arg.type, out).get_llvm_representation()+" %"+arg.name for arg in self.node.args)
 		))
 		with out.context(method=self.node.name):
-			for arg in self.node.args:
-				do_var_alloc(out, arg.name, get_type(arg.type, out))
-				out.emitl("store {t} %{v}, {t}* %{n}".format(
-					t=get_type(arg.type, out).get_llvm_representation(),
-					v=arg.name,
-					n=out.get_var_name(arg.name)
-				))
-			transform.emit(out, self.node.body, self)
+			with out.scope():
+				for arg in self.node.args:
+					do_var_alloc(out, arg.name, get_type(arg.type, out))
+					out.emitl("store {t} %{v}, {t}* %{n}".format(
+						t=get_type(arg.type, out).get_llvm_representation(),
+						v=arg.name,
+						n=out.get_var_name(arg.name)
+					))
+				transform.emit(out, self.node.body, self)
 		out.emitl("}")
 
 class ReturnTransformer(Transformer):
@@ -310,7 +312,7 @@ class CallExprTransformer(Transformer):
 		for arg in self.node.args:
 			args.append(get_type(arg, out).get_llvm_representation()+" %"+transform.emit(out, arg, self))
 
-		if out.signatures[method_to_invoke].returntype.get_llvm_representation()!="void":
+		if out.signatures[method_to_invoke].returntype.get_llvm_representation()!="void": #From CallExpr
 			out.emitl("%{} = call {}* @{}({})".format(
 				name,
 				out.signatures[method_to_invoke].get_llvm_representation(),
@@ -380,3 +382,18 @@ class WhileExprTransformer(Transformer):
 		out.emitl("br i1 %{}, label %{}, label %{}".format(cond, head_label, end_label))
 		with out.indent(-1):
 			out.emitl("{}:".format(end_label))
+
+class TypeTransformer(Transformer):
+	transforms=TypeDecl
+
+	def transform(self, out):
+		out.types[self.node.name]=datamodel.StructOType(self.node.name, self.node.fields, out)
+		out.types[self.node.name].setup(out)
+		for method in self.node.methods:
+			out.signatures[method.name]=datamodel.FunctionOType(
+				method.name,
+				[get_type(t.type, out) for t in method.args],
+				get_type(method.type, out))
+			# print("emitting "+method.name)
+			transform.emit(out, method, self)
+		

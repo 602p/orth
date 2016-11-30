@@ -1,0 +1,233 @@
+@include("std.ort")@
+@include("samples/linkedlist.ort")@
+
+type Record is
+    cstr first
+    cstr last
+    bool has_email
+    cstr email
+    int birthyear
+
+    function() Record::blank -> Record does
+        Record new = malloc(@sizeof(Record)@)|Record
+    return new
+
+    function(cstr first, cstr last, int byear) Record::new_noemail -> Record does
+        Record new = Record::blank()
+        new.first=first
+        new.last=last
+        new.has_email=0|bool
+        new.birthyear=byear
+    return new
+
+    function(cstr first, cstr last, cstr email, int byear) Record::new -> Record does
+        Record new = Record::new_noemail(first, last, byear)
+        new.email=email
+        new.has_email=1|bool
+    return new
+
+    function() Record::user_create -> Record does
+        cstr first = read_line("First Name? ")
+        cstr last = read_line("Last Name? ")
+        int byear = read_int("Birth Year? ")
+        cstr has_email = read_line("Have email (Y/N)? ")
+       if has_email=="Y" do
+            return Record::new(\
+                first,\
+                last,\
+                read_line("Email? "),\
+                byear\
+            )
+        done
+        Record new = Record::new_noemail(first, last, byear)
+    return new
+
+    function(Record r) Record:get_full_name -> cstr does
+        cstr a = " "+r.last
+        cstr res = r.first+a
+        a:free()
+    return res
+
+    function(Record r, int year) Record:get_age -> int does
+    return year-r.birthyear
+
+    function(Record r, int year) Record:get_age_rep -> cstr does
+        cstr base = " (b. "+r.birthyear:str()
+        cstr next = base+", "
+        cstr age = r:get_age(year):str()
+        cstr with_age = next+age
+        cstr res = with_age+" years old)"
+        base:free()
+        next:free()
+        age:free()
+        with_age:free()
+    return res
+
+    function(Record r, int year) Record:get_report -> cstr does
+        cstr name = r:get_full_name()
+        cstr next
+        if r.has_email do
+            cstr interim = name+" <"
+            cstr with_email = interim+r.email
+            next=with_email+">"
+            with_email:free()
+            interim:free()
+        else do
+            next=name+" <no email>"
+        done
+        name:free()
+
+        cstr age_rep = r:get_age_rep(year)
+
+        cstr full = next+age_rep
+        age_rep:free()
+    return full
+
+    function(Record r, cstr email) Record:set_email -> void does
+        if r.has_email do
+            r.email:free()
+        done
+        r.has_email=1|bool
+        r.email=email
+    return
+
+    function(Record r) Record:del_email -> void does
+        if r.has_email do
+            r.email:free()
+            r.has_email=0|bool
+        done
+    return
+
+    function(Record r) Record:del -> void does
+        r.first:free()
+        r.last:free()
+        if r.has_email do
+            r.email:free()
+        done
+        free(r)
+    return
+endtype
+
+function(List l, int year) print -> void does
+    if l.len==0 do
+        printf("No items\n")
+        return
+    done
+
+    int idx=0
+    while idx<l.len do
+        cstr s = (l:get(idx)|Record):get_report(year)
+        printf("%i) %s\n", idx, s)
+        s:free()
+        idx+=1
+    done
+return
+
+function(Record r) edit_person -> void does
+    cstr field = read_line("What do you want to change (first/last/birthyear/email)?")
+    if field=="first" do
+        r.first:free()
+        r.first=read_line("First Name? ")
+    elif field=="last" do
+        r.last:free()
+        r.last=read_line("Last Name? ")
+    elif field=="email" do
+        cstr new = read_line("Email (enter NONE for no email)? ")
+        if new == "NONE" do
+            r:del_email()
+        else do
+            r:set_email(new)
+        done
+    elif field=="birthyear" do
+        r.birthyear=read_int("Birth Year? ")
+    else do
+        printf("Sorry, don't know how to deal with a `%s`\n", field)
+    done
+
+    cstr another = read_line("Edit another field (Y/N)? ")
+    if another=="Y" do
+        edit_person(r)
+    done
+    another:free()
+    field:free()
+return
+
+function(List l) delete_records -> void does
+    int idx=l.len-1
+    while idx!=-1 do
+        (l:get(idx)|Record):del()
+        idx-=1
+    done
+return
+
+function(List l, cstr str, int year) do_cmd -> int does
+    if str=="Q" do
+        return 1
+    elif str=="A" do
+        l:append(Record::user_create()|ptr)
+    elif str=="I" do
+        int pos = read_int("Position:")
+        if pos<0 do
+            return -1
+        done
+        l:insert(pos, Record::user_create()|ptr)
+    elif str=="D" do
+        int pos = read_int("Position:")
+        if pos<0 do
+            return -1
+        done
+        l:del(pos)
+    elif str=="M" do
+        int from = read_int("From:")
+        int to = read_int("To:")
+        Record r = l:get(from)|Record
+        cstr s = r:get_report(year)
+        printf("Sure you want to move %s from %i to %i?\n", s, from, to)
+        s:free()
+        cstr sure = read_line("(Y/N)? ")
+        if sure=="Y" do
+            l:del(from)
+            l:insert(to, r|ptr)
+        done
+    elif str=="E" do
+        int pos = read_int("Position:")
+        Record r = l:get(pos)|Record
+        cstr s = r:get_report(year)
+        printf("Editing %s...\n", s)
+        s:free()
+        edit_person(r)
+    elif str=="C" do
+        if read_line("Sure (Y/N)?")=="Y" do
+            delete_records(l)
+            l:clear()
+        done
+    done
+return 0
+
+function() main -> int does
+    cstr year_str = read_line("What year is it? ")
+    int year = year_str:int()
+    year_str:free()
+
+    List l = List::new()
+    cstr clear = "\n"*100
+    int run = 1
+    cstr req
+    
+    while run==1 do
+        print(l, year)
+        printf("\nType Q to quit, A to append, C to clear, M to move, E to edit, I to insert or D to delete\n")
+        req=read_line(">")
+        int res = do_cmd(l, req, year)
+        printf(clear)
+        if res==1 do
+            printf("Cya, nerd!\n")
+            run=0
+        done
+        req:free()
+    done
+
+    delete_records(l)
+    l:clear()
+    l:free()
+return 0

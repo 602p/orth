@@ -55,6 +55,7 @@ class Emitter:
 		self.scopes=collections.ChainMap({})
 		self.signatures={}
 		self.global_statments=[]
+		self.included_files=[]
 		self.types=copy.copy(datamodel.builtin_types)
 
 	def emit(self, text):

@@ -1,5 +1,6 @@
 from grammarutil import TokenType, TokenHolder, ASTNode, NotLoaded, ast_node_types, Token
 import datamodel
+import collections
 
 R_IDENTIFIER="[a-zA-Z_]\w*"
 
@@ -16,6 +17,11 @@ class Tokens(metaclass=TokenHolder):
 	T_FUNCTIONDECL_RETURNS = TokenType("->", ["T_FUNCTIONDECL_NAME"])
 	T_FUNCTIONDECL_DOES = TokenType("does", ["T_FUNCTIONDECL_NAME", "T_FUNCTIONDECL_RETURN_TYPE"])
 	T_FUNCTIONDECL_RETURN_TYPE = TokenType(R_IDENTIFIER, ["T_FUNCTIONDECL_RETURNS"], capture=True)
+
+	T_TYPEDECL=TokenType("type", keyword=True)
+	T_TYPEDECL_NAME=TokenType(R_IDENTIFIER, ["T_TYPEDECL"], capture=True)
+	T_TYPEDECL_IS=TokenType("is", keyword=True)
+	T_TYPEDECL_END=TokenType("endtype", keyword=True)
 
 	T_IF_START = TokenType("if", ["T_ENDOFSTATEMENT"], keyword=True)
 	T_BLOCK_DONE = TokenType("done", ["T_ENDOFSTATEMENT"], keyword=True)
@@ -51,7 +57,6 @@ class Tokens(metaclass=TokenHolder):
 	T_DOT = TokenType(r"\.")
 	T_DOUBLECOLON = TokenType("::")
 	T_COLON= TokenType(":")
-
 
 	T_INTRINSIC = TokenType(r"@\w*\(.*\)@", capture=True)
 
@@ -269,6 +274,12 @@ class IndexExpr(AccessorExpr):
 		self.object=elements[0]
 		self.index=elements[2]
 
+class ReturnExpr(Expression):
+	pattern=T_RETURN+[ValueExpression]
+
+	def __init__(self, elements):
+		self.value=elements[1] if len(elements)==2 else None
+
 class BunchaExpressions(Expression):
 	def __init__(self, elements):
 		self.exprs=elements
@@ -345,12 +356,6 @@ class WhileExpr(BlockExpression):
 		self.cond=elements[1]
 		self.block=elements[3]
 
-class ReturnExpr(Expression):
-	pattern=T_RETURN+[ValueExpression]
-
-	def __init__(self, elements):
-		self.value=elements[1] if len(elements)==2 else None
-
 class FunctionDeclStart(ASTNode):
 	pattern=T_FUNCTIONDECL_NAME+T_FUNCTIONDECL_RETURNS+T_FUNCTIONDECL_RETURN_TYPE+T_FUNCTIONDECL_DOES
 
@@ -397,6 +402,7 @@ class CompletedMultiArgList(ArgList):
 
 class FunctionBody(BunchaExpressions):
 	pattern=Expression+ReturnExpr
+	bad_lookahead_tokens=[T_BLOCK_DO]
 
 	def __init__(self, elements):
 		self.exprs=[elements[0], elements[1]]
@@ -422,3 +428,34 @@ class FunctionDecl(ASTNode):
 class FileExpr(ASTNode):
 	def __init__(self, elements):
 		self.funcs=[e for e in elements if not isinstance(e, SepExpr)]
+
+class TypeDeclStart(ASTNode):
+	pattern=T_TYPEDECL+T_TYPEDECL_NAME+T_TYPEDECL_IS
+	def __init__(self, elements):
+		self.name=elements[1].value
+		self.elements=elements
+
+class TypeDeclExt(TypeDeclStart):
+	pattern=TypeDeclStart+ASTNode
+	def __init__(self, elements):
+		self.elements=elements[0].elements+[elements[1]]
+		self.name=elements[0].name
+
+class TypeDecl(ASTNode):
+	pattern=TypeDeclStart+T_TYPEDECL_END
+
+	def __init__(self, elements):
+		self.name=elements[0].name
+		self.fields=collections.OrderedDict()
+		self.methods=[]
+		for ele in elements[0].elements:
+			if isinstance(ele, DeclExpr):
+				self.fields[ele.name]=ele.type
+			elif isinstance(ele, FunctionDecl):
+				self.methods.append(ele)
+			elif isinstance(ele, SepExpr):pass
+			elif isinstance(ele, Token):
+				if ele.type not in [T_TYPEDECL_IS, T_TYPEDECL_NAME, T_TYPEDECL]:
+					raise SyntaxError("Token "+str(ele)+" found in class")
+			else:
+				raise SyntaxError("IDK how to handle a "+str(type(ele))+" in a type")

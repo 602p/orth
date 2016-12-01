@@ -61,8 +61,6 @@ class PrimitiveOType(OType):
 	def get_llvm_representation(self):
 		return self.llvmtype
 
-	
-
 class IntegerPrimitiveOType(PrimitiveOType):
 	def __init__(self, name, llvmtype, literal_formatter):
 		OType.__init__(self, name)
@@ -124,6 +122,12 @@ class IntegerPrimitiveOType(PrimitiveOType):
 					value,
 					to.get_llvm_representation()
 				)
+		elif isinstance(to, PointerPrimitiveOType):
+			return "inttoptr {} %{} to {}".format(
+				from_.get_llvm_representation(),
+				value,
+				to.get_llvm_representation()
+			)
 		else:
 			return PrimitiveOType.implement_cast(self, value, from_, to)
 
@@ -152,6 +156,21 @@ class ManualFunctionOType(FunctionOType):
 class PointerPrimitiveOType(PrimitiveOType):
 	def get_size(self):
 		return 8
+
+	def implement_cast(self, value, from_, to):
+		if isinstance(to, IntegerPrimitiveOType):
+			return "ptrtoint {} %{} to {}".format(
+				from_.get_llvm_representation(),
+				value,
+				to.get_llvm_representation()
+			)
+		else:
+			return "bitcast {} %{} to {}".format(
+				from_.get_llvm_representation(),
+				value,
+				to.get_llvm_representation()
+			)
+
 
 class PrimitiveCStrOType(PointerPrimitiveOType):
 	def __init__(self, name, llvmtype):

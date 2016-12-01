@@ -64,7 +64,7 @@ class Tokens(metaclass=TokenHolder):
 	
 	T_UNARY_OPERATOR = TokenType(r"[\-~!]", capture=True)
 
-	T_INTEGER_LITERAL = TokenType(r"[0-9]+L?", capture=True)
+	T_INTEGER_LITERAL = TokenType(r"[0-9xXa-fA-F]+L?", capture=True)
 	T_STRING_LITERAL = TokenType(r"\"[(#-~)|( \!)]*\"", capture=True)
 	T_ENDOFSTATEMENT = TokenType(";")
 
@@ -156,12 +156,12 @@ class LiteralExpr(ValueExpression):
 	pattern=T_INTEGER_LITERAL|T_STRING_LITERAL
 
 	def __init__(self, elements):
-		self.value=elements[0].value.replace("L","")
 		if elements[0].type==T_INTEGER_LITERAL:
-			if elements[0].value.endswith("L"):
-				self.value=elements[0].value.replace("L","")
-				self.type='xxlong'
+			if "X" in elements[0].value.upper():
+				self.value=int(elements[0].value.replace("L",""), 16)
+				self.type='int'
 			else:
+				self.value=int(elements[0].value.replace("L",""))
 				self.type='int'
 		else:
 			self.value=elements[0].value[1:-1].replace("\\n","\n")
@@ -266,7 +266,7 @@ class AccessorExpr(ValueExpression, IdentifierExpr):
 		# elif self.accesses=="classmethod":
 		# 	return NameExpr([Token(T_NAME, self.object.name+"$$"+self.field, self.object.line, None)])
 
-class IndexExpr(AccessorExpr):
+class IndexExpr(IdentifierExpr, ValueExpression):
 	pattern=ValueExpression+T_LIST_START+ValueExpression+T_LIST_STOP
 	bad_lookahead_tokens=[T_DOT, T_COLON, T_DOUBLECOLON]
 

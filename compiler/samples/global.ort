@@ -1,0 +1,14 @@
+@include("std.ort")@
+
+int i
+
+function(int a) add -> void does
+	i+=a
+return
+
+function() main -> int does
+	i=0
+	add(3)
+	add(4)
+	printf("i=%i\n", i)
+return 0

@@ -1,10 +1,18 @@
 from grammar import Tokens
 
 def tokenize(text, file="_in", verbose=False):
-	text+="\n "
+	"""Dead simple regex stream parser. Try parsing all of the patterns in the grammar
+	(in ordereddict Tokens) in order, until one matches. Tokens match if their regex match
+	and they are preeceded by a token that they have in their preeceding_in list (or that
+	list is None.) The token is then emitted into the (seperate) output stream. Eventually
+	that is returned. Being unable to match the stream at any point is an error."""
+
+	text+="\n " #Trailing newline required for correct ENDOFSTATMENT insertion
 	position=0
 	line=0
+	#Start with a ENDOFSTATMENT for stuff like function declarations to bind after
 	tokens=[Tokens.T_ENDOFSTATEMENT.make_token('')]
+
 	while position<len(text):
 		if verbose: print(text[position:])
 		if text[position:].startswith("\\"):
@@ -17,8 +25,6 @@ def tokenize(text, file="_in", verbose=False):
 			position+=1
 			line+=1
 			continue
-
-		
 
 		for token in Tokens.values():
 			if verbose: print(token.name)

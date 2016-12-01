@@ -43,6 +43,13 @@ def process_intrinsic(out, text):
 		out.types[name]=datamodel.StructOType(name, fields, out)
 		out.types[name].setup(out)
 
+	def storeb(from_, to):
+		ptr=out.get_temp_name()
+		out.emitl("%{} = load i8** %{}".format(ptr, out.get_var_name(to)))
+		val=out.get_temp_name()
+		out.emitl("%{} = load i8* %{}".format(val, out.get_var_name(from_)))
+		out.emitl("store i8 %{}, i8* %{}".format(val, ptr))
+
 	locals().update(out.types) #TODO: Change
 
 	return eval(text[1:-1])

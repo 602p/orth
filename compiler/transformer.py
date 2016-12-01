@@ -30,6 +30,7 @@ class CastExprTransformer(Transformer):
 	def get_type(node, out):
 		return node.to
 
+
 class PtrCastExprTransformer(Transformer):
 	transforms=PtrCastExpr
 
@@ -179,6 +180,36 @@ class AccessorExprTransformer(Transformer):
 	def get_type(node, out):
 		return get_type(node.object, out).fields[node.field]
 
+class IndexExprTransformer(Transformer):
+	transforms=IndexExpr
+
+	def transform_address(self, out): #TODO: Improve
+		base=out.get_temp_name()
+		out.emitl("%{} = ptrtoint {} %{} to i32 ;IndexExpr:transform_address".format(
+			base,
+			transform.get_transformer(self.node.object, self).get_type(self.node.object, out).get_llvm_representation(),
+			transform.emit(out, self.node.object, self)
+		))
+		pos=out.get_temp_name()
+		out.emitl("%{} = add i32 %{}, %{} ;IndexExpr:transform_address".format(
+			pos,
+			base,
+			transform.emit(out, self.node.index, self)
+		))
+		ptr=out.get_temp_name()
+		out.emitl("%{} = inttoptr i32 %{} to i8* ;IndexExpr:transform_address".format(ptr, pos))
+		return ptr
+
+	def transform(self, out):
+		value=out.get_temp_name()
+		out.emitl("%{} = load i8* %{}".format(value, self.transform_address(out)))
+		return value
+
+	@staticmethod
+	def get_type(node, out):
+		return datamodel.builtin_types['byte']
+
+
 class DeclExprTransformer(Transformer):
 	transforms=DeclExpr
 
@@ -275,6 +306,12 @@ class FunctionTransformer(Transformer):
 						v=arg.name,
 						n=out.get_var_name(arg.name)
 					))
+				for vname, var in out.globals.items():
+					localname="imp_gvar_"+out.get_name()+"__"+vname
+					out.set_var_name(vname, localname, var.type)
+					out.emitl("%{} = getelementptr {}* @{}, i32 0".format(
+						localname, var.type.get_llvm_representation(), var.name
+					))
 				transform.emit(out, self.node.body, self)
 		out.emitl("}")
 
@@ -341,6 +378,14 @@ class FileTransformer(Transformer):
 					func.name,
 					[get_type(t.type, out) for t in func.args],
 					get_type(func.type, out))
+			elif isinstance(func, DeclExpr):
+				name="gvar_"+out.get_name()+"__"+func.name
+				out.emitl("@{} = global {} {}".format(
+					name,
+					get_type(func, out).get_llvm_representation(),
+					"0" if isinstance(get_type(func, out), datamodel.IntegerPrimitiveOType) else "null"
+				))
+				out.set_global_var_name(func.name, name, get_type(func, out))
 			else:
 				transform.emit(out, func, self)
 		# print(out.signatures)
@@ -359,7 +404,6 @@ class IntrinsicTransformer(Transformer):
 	@staticmethod
 	def get_type(node, out):
 		return intrinsics.get_type(out, node.text)
-
 
 class WhileExprTransformer(Transformer):
 	transforms=WhileExpr

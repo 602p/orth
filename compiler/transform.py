@@ -54,6 +54,7 @@ class Emitter:
 
 		self.scopes=collections.ChainMap({})
 		self.signatures={}
+		self.globals={}
 		self.global_statments=[]
 		self.included_files=[]
 		self.types=copy.copy(datamodel.builtin_types)
@@ -99,6 +100,9 @@ class Emitter:
 	def set_var_name(self, vname, aname, type):
 		self.scopes.maps[0][vname]=Variable(aname, type)
 
+	def set_global_var_name(self, vname, aname, type):
+		self.globals[vname]=Variable(aname, type)
+
 	def get_var_name(self, vname):
 		return self.scopes[vname].name
 
@@ -143,7 +147,7 @@ def get_transformer_cls(node):
 			match=item
 
 	if match is None:
-		raise IndexError("No transformer for %s"%str(type(node)))
+		raise IndexError("No transformer for %s of type %s"%(str(node), str(type(node))))
 
 	return transformers[match]
 

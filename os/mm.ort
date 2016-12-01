@@ -1,0 +1,13 @@
+
+ptr mm_head
+ptr mm_pos
+
+function(int start) KMM::init -> void does
+	mm_head=start|ptr
+	mm_pos=mm_pos
+return
+
+function(int amt) malloc -> ptr does
+	ptr ret=mm_pos
+	mm_pos=((mm_pos|int)+amt)|ptr
+return ret

@@ -1,0 +1,43 @@
+@include("mm.ort")@
+
+type Terminal is
+	ptr baseaddr
+	int width
+	int height
+	int cursor_x
+	int cursor_y
+
+	function(int base, int width, int height) Terminal::new -> Terminal does
+		Terminal new = malloc(@sizeof(Terminal)@)|Terminal
+		new.baseaddr=base|ptr
+		new.width=width
+		new.height=height
+		new.cursor_x=0
+		new.cursor_y=0
+	return new
+
+	function(Terminal t, int x, int y, byte value) Terminal:setchar -> void does
+		t.baseaddr[(t.width*y*2)+(x*2)]=value
+	return
+
+	function(Terminal t, cstr string) Terminal:print -> void does
+		int pos = 0
+		while string[pos]!=0|byte do
+			if string[pos]!=10|byte do
+				t:setchar(t.cursor_x, t.cursor_y, string[pos])
+				t.cursor_x+=1
+			else do
+				t.cursor_x=0
+				t.cursor_y+=1
+			done
+			pos+=1
+		done
+	return
+endtype
+
+function() kernel_main -> void does
+	Terminal term = Terminal::new(0xB8000, 80, 25)
+	term:print("Deez Nuts!\n")
+	term:print("Ha! Goteem!\n")
+	term:print("\n\n\nOrth is sick")
+return

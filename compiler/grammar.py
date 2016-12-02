@@ -22,6 +22,7 @@ class Tokens(metaclass=TokenHolder):
 	T_TYPEDECL_NAME=TokenType(R_IDENTIFIER, ["T_TYPEDECL"], capture=True)
 	T_TYPEDECL_IS=TokenType("is", keyword=True)
 	T_TYPEDECL_END=TokenType("endtype", keyword=True)
+	T_TYPEDECL_PACKED=TokenType("packed", ["T_TYPEDECL_IS"], keyword=True)
 
 	T_IF_START = TokenType("if", ["T_ENDOFSTATEMENT"], keyword=True)
 	T_BLOCK_DONE = TokenType("done", ["T_ENDOFSTATEMENT"], keyword=True)
@@ -430,16 +431,18 @@ class FileExpr(ASTNode):
 		self.funcs=[e for e in elements if not isinstance(e, SepExpr)]
 
 class TypeDeclStart(ASTNode):
-	pattern=T_TYPEDECL+T_TYPEDECL_NAME+T_TYPEDECL_IS
+	pattern=T_TYPEDECL+T_TYPEDECL_NAME+T_TYPEDECL_IS+[T_TYPEDECL_PACKED]
 	def __init__(self, elements):
 		self.name=elements[1].value
 		self.elements=elements
+		self.packed=len(elements)==4
 
 class TypeDeclExt(TypeDeclStart):
 	pattern=TypeDeclStart+ASTNode
 	def __init__(self, elements):
 		self.elements=elements[0].elements+[elements[1]]
 		self.name=elements[0].name
+		self.packed=elements[0].packed
 
 class TypeDecl(ASTNode):
 	pattern=TypeDeclStart+T_TYPEDECL_END
@@ -448,6 +451,7 @@ class TypeDecl(ASTNode):
 		self.name=elements[0].name
 		self.fields=collections.OrderedDict()
 		self.methods=[]
+		self.packed=elements[0].packed
 		for ele in elements[0].elements:
 			if isinstance(ele, DeclExpr):
 				self.fields[ele.name]=ele.type

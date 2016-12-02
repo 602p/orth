@@ -70,6 +70,7 @@ _start:
 	# aligned above and we've since pushed a multiple of 16 bytes to the
 	# stack since (pushed 0 bytes so far) and the alignment is thus
 	# preserved and the call is well defined.
+
 	call kernel_main
 
 	# If the system has nothing more to do, put the computer into an
@@ -89,3 +90,8 @@ _start:
 # Set the size of the _start symbol to the current location '.' minus its start.
 # This is useful when debugging or when you implement call tracing.
 .size _start, . - _start
+
+.global _read_kbd
+_read_kbd:
+	in $0x60, %al
+    ret

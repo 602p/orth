@@ -90,6 +90,9 @@ class BinOpExprTransformer(Transformer):
 		if self.node.operator=="/":
 			res = lhstype.implement_div(lhs, rhs, out)
 
+		if self.node.operator=="%":
+			res = lhstype.implement_rem(lhs, rhs, out)
+
 		if self.node.operator==">":
 			res = lhstype.implement_gt(lhs, rhs, out)
 
@@ -431,7 +434,7 @@ class TypeTransformer(Transformer):
 	transforms=TypeDecl
 
 	def transform(self, out):
-		out.types[self.node.name]=datamodel.StructOType(self.node.name, self.node.fields, out)
+		out.types[self.node.name]=datamodel.StructOType(self.node.name, self.node.fields, out, packed=self.node.packed)
 		out.types[self.node.name].setup(out)
 		for method in self.node.methods:
 			out.signatures[method.name]=datamodel.FunctionOType(

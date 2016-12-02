@@ -1,43 +1,132 @@
 @include("mm.ort")@
+@include("term.ort")@
+@include("kbd.ort")@
 
-type Terminal is
-	ptr baseaddr
-	int width
-	int height
-	int cursor_x
-	int cursor_y
-
-	function(int base, int width, int height) Terminal::new -> Terminal does
-		Terminal new = malloc(@sizeof(Terminal)@)|Terminal
-		new.baseaddr=base|ptr
-		new.width=width
-		new.height=height
-		new.cursor_x=0
-		new.cursor_y=0
-	return new
-
-	function(Terminal t, int x, int y, byte value) Terminal:setchar -> void does
-		t.baseaddr[(t.width*y*2)+(x*2)]=value
-	return
-
-	function(Terminal t, cstr string) Terminal:print -> void does
-		int pos = 0
-		while string[pos]!=0|byte do
-			if string[pos]!=10|byte do
-				t:setchar(t.cursor_x, t.cursor_y, string[pos])
-				t.cursor_x+=1
-			else do
-				t.cursor_x=0
-				t.cursor_y+=1
-			done
-			pos+=1
-		done
-	return
-endtype
+function() __halt -> void does
+	while 1|bool do
+		;0;
+	done
+return #lol
 
 function() kernel_main -> void does
+	KMM::init(0xA00000)
 	Terminal term = Terminal::new(0xB8000, 80, 25)
-	term:print("Deez Nuts!\n")
-	term:print("Ha! Goteem!\n")
-	term:print("\n\n\nOrth is sick")
+
+    
+	term:printl("  ..---..")
+	term:printl(" /       \")
+	term:printl("|         |")
+	term:printl(":         ;")
+	term:print(" \  \")
+	term:printa(0x0E, "~")
+	term:printl("/  /")
+	term:printl("  `, Y ,'")
+	term:printl("   |_|_|")
+	term:printl("   |===|")
+	term:printl("   |===|")
+	term:printl("    \_/")
+	term:printl("\nOrth OS. Louis G.")
+
+	term:print("Numbers 1, 2, 13, 24, 176, 19283, 65537: ")
+
+	term:printi(1);term:print(", ")
+	term:printi(2);term:print(", ")
+	term:printi(13);term:print(", ")
+	term:printi(24);term:print(", ")
+	term:printi(176);term:print(", ")
+	term:printi(19283);term:print(", ")
+	term:printi(65537);term:print("\n")
+
+	term:print("BG Colors 0-16:")
+
+	int bg_idx=0x0F
+
+	while bg_idx<=0xFF do
+		term:printa(bg_idx, " ")
+		bg_idx+=0x10
+	done
+
+	term:print("\nFG Colors 0-16:")
+
+	int fg_idx=0x00
+
+	while fg_idx<=0x0F do
+		term:printa(fg_idx, "X")
+		fg_idx+=1
+	done
+
+	term:printl("\nChars 0-255:")
+
+	cstr temp=" "
+
+	int char_idx = 0
+	while char_idx<256 do
+		temp[0]=char_idx|byte
+		term:print(temp)
+		char_idx+=1
+	done
+
+	long last_keycode=0|long
+	bool pressed=0|bool
+	int presses=0
+
+	term:printl("\n\n")
+	term:print("Last Keycode: ?")
+
+	int kc_x = term.cursor_x-1
+	int kc_y = term.cursor_y
+	term:print("\nRunning... ")
+	int li_x=term.cursor_x
+	int li_y=term.cursor_y
+	int li_value=1
+
+
+
+	long val=0|long
+	int wait=0
+	int ticker_idx
+	while 1|bool do
+		wait=0
+		while wait<5000000 do
+			wait+=1
+		done
+		
+		val=_read_kbd()|long
+		if val<100|long do
+			if val!=last_keycode do
+				last_keycode=val
+				presses=1
+			elif pressed==0|bool do
+				presses+=1
+			done
+			pressed=1|bool
+		else do
+			pressed=0|bool
+		done
+
+		term.cursor_x=kc_x
+		term.cursor_y=kc_y
+		term:printi(last_keycode|int)
+		term:print(" Presses: ")
+		term:printi(presses)
+		term:print("                 ")
+		
+		ticker_idx=0
+
+		while ticker_idx<30 do
+			term:setchar(li_x+ticker_idx, li_y, (li_value+ticker_idx)|byte)
+			ticker_idx+=1
+		done
+
+		term.cursor_y=li_y+2
+		term.cursor_x=li_x
+		term:printi(li_value)
+
+		term:print("   ")
+		li_value+=1
+		if li_value>255 do
+			li_value=1
+		done
+
+	done
 return

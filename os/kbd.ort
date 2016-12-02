@@ -1,0 +1,4 @@
+@declare_func("_read_kbd", "byte", "()")@
+
+function() key_down -> byte does 
+return _read_kbd()

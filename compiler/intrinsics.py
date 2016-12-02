@@ -27,6 +27,8 @@ def process_intrinsic(out, text):
 		out.emitl("declare {} @{}{}".format(rt.get_llvm_representation(), name, paramstring))
 		out.signatures[name]=datamodel.ManualFunctionOType(name, paramstring, rt)
 
+	declare_func=declare_c_func
+
 	def expose_symbol(name, type):
 		out.set_var_name(name, name, datamodel.builtin_types[type])
 
@@ -49,6 +51,9 @@ def process_intrinsic(out, text):
 		val=out.get_temp_name()
 		out.emitl("%{} = load i8* %{}".format(val, out.get_var_name(from_)))
 		out.emitl("store i8 %{}, i8* %{}".format(val, ptr))
+
+	def addressof_function(fname):
+		pass
 
 	locals().update(out.types) #TODO: Change
 

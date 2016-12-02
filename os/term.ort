@@ -1,0 +1,93 @@
+@include("mm.ort")@
+
+type Terminal is
+	ptr baseaddr
+	int width
+	int height
+	int cursor_x
+	int cursor_y
+	byte attributes
+
+	function(int base, int width, int height) Terminal::new -> Terminal does
+		Terminal new = malloc(@sizeof(Terminal)@)|Terminal
+		new.baseaddr=base|ptr
+		new.width=width
+		new.height=height
+		new.cursor_x=0
+		new.cursor_y=0
+		new.attributes=0x0F|byte
+	return new
+
+	function(Terminal t, int x, int y, byte value) Terminal:setchar -> void does
+		t.baseaddr[(t.width*y*2)+(x*2)]=value
+		t.baseaddr[(t.width*y*2)+(x*2)+1]=t.attributes
+	return
+
+	function(Terminal t, int attrs) Terminal:setattrs -> void does
+		t.attributes=attrs|byte
+	return
+
+	function(Terminal t, cstr string) Terminal:print -> void does
+		int pos = 0
+		while string[pos]!=0|byte do
+			if string[pos]!=10|byte do
+				t:setchar(t.cursor_x, t.cursor_y, string[pos])
+				t.cursor_x+=1
+			else do
+				t.cursor_x=0
+				t.cursor_y+=1
+			done
+			pos+=1
+		done
+	return
+
+	function(Terminal t, cstr string) Terminal:printl -> void does
+		t:print(string)
+		t.cursor_x=0
+		t.cursor_y+=1
+	return
+
+	function(Terminal t, int attrs, cstr string) Terminal:printa -> void does
+		byte prev = t.attributes
+		t.attributes=attrs|byte
+		t:print(string)
+		t.attributes=prev
+	return
+
+	function(Terminal t, long val) Terminal:printlong -> void does
+		if val==0|long do
+			t:print("0")
+			return
+		done
+
+		if val<0|long do
+			t:print("-")
+			val=-val
+		done
+
+		long temp
+		int idx=9
+		cstr str = malloc(11)
+		cstr q="?"
+		str[10]=0|byte
+		int sidx=0
+		while sidx<10 do
+			str[sidx]=q[0]
+			sidx+=1
+		done
+		while val>0|long do
+			temp=val%10|long
+			val/=10|long
+			str[idx]=(48+temp|int)|byte
+			idx-=1
+		done
+		t:print(((str|int)+idx+1)|ptr)
+
+		KMM::malloc_undo(11)
+	return
+
+	function(Terminal t, int val) Terminal:printi -> void does
+		t:printlong(val|long)
+	return
+
+endtype

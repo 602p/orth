@@ -93,6 +93,9 @@ class IntegerPrimitiveOType(PrimitiveOType):
 	def implement_div(self, lhs, rhs, out):
 		return "sdiv {} %{}, %{}".format(self.get_llvm_representation(), lhs, rhs)
 
+	def implement_rem(self, lhs, rhs, out):
+		return "srem {} %{}, %{}".format(self.get_llvm_representation(), lhs, rhs)
+
 	def implement_gt(self, lhs, rhs, out):
 		return "icmp sgt {} %{}, %{}".format(self.get_llvm_representation(), lhs, rhs)
 	def implement_ge(self, lhs, rhs, out):
@@ -194,9 +197,10 @@ class PrimitiveCStrOType(PointerPrimitiveOType):
 		)
 
 class StructOType(OType):
-	def __init__(self, name, fields, out):
+	def __init__(self, name, fields, out, packed=False):
 		OType.__init__(self, name)
 		self.fields=collections.OrderedDict(fields)
+		self.packed=packed
 		# print(self.fields)
 
 	def setup(self, out):
@@ -216,7 +220,10 @@ class StructOType(OType):
 		return "i32 "+str(list(self.fields.keys()).index(field))
 
 	def get_decl(self):
-		return "%"+self.get_name()+" = type{"+(",".join(self.datalayout))+"}"
+		if self.packed:
+			return "%"+self.get_name()+" = type<{"+(",".join(self.datalayout))+"}>"
+		else:
+			return "%"+self.get_name()+" = type{"+(",".join(self.datalayout))+"}"
 
 	def get_llvm_representation(self):
 		return "%"+self.get_name()+"*"

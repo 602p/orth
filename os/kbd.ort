@@ -1,4 +1,7 @@
-@declare_func("_read_kbd", "byte", "()")@
+@declare_func("__kreadpb", "byte", "(i32)")@
 
-function() key_down -> byte does 
-return _read_kbd()
+function() _read_kbd_data -> byte does 
+return __kreadpb(0x60)
+
+function() _read_kbd_status -> byte does
+return __kreadpb(0x64)

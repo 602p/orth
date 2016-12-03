@@ -37,13 +37,15 @@ class Tokens(metaclass=TokenHolder):
 		
 	T_RETURN = TokenType("return", ["T_ENDOFSTATEMENT"], keyword=True)
 
-	T_VAR_DECL = TokenType(R_IDENTIFIER+" +"+R_IDENTIFIER, ["T_ENDOFSTATEMENT"], capture=True)
-	T_NAME = TokenType(R_IDENTIFIER, capture=True)
-
 	T_AUGASSIGN = TokenType(r"(\+=)|(-=)|(\*=)|(/=)", ["T_NAME", "T_VAR_DECL", "T_LIST_STOP"], capture=True)
 	T_BINARY_OPERATOR = TokenType(r"(>=)|(<=)|(!=)|(==)|[/\*\-\+%\^><]", [
 			"T_NAME", "T_LIST_STOP", "T_PAREN_CLOSE", "T_INTEGER_LITERAL", "T_STRING_LITERAL"
 		], capture=True)
+
+	T_VAR_DECL = TokenType(R_IDENTIFIER+" +"+R_IDENTIFIER, ["T_ENDOFSTATEMENT"], capture=True)
+	T_NAME = TokenType(R_IDENTIFIER, capture=True)
+
+	
 	T_ASSIGNMENT = TokenType(r"(=)|(<-)", capture=True)
 	T_PAREN_OPEN = TokenType(r"\(")
 	T_PAREN_CLOSE = TokenType(r"\)")

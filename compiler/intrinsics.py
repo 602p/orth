@@ -29,7 +29,7 @@ def process_intrinsic(out, text):
 
 	declare_func=declare_c_func
 
-	def expose_symbol(name, type):
+	def declare_symbol(name, type):
 		out.set_var_name(name, name, datamodel.builtin_types[type])
 
 	def include(filename):

@@ -1,17 +1,23 @@
 
 ptr mm_head
 ptr mm_pos
+ptr last_alloc
 
 function(int start) KMM::init -> void does
 	mm_head=start|ptr
 	mm_pos=mm_head
+	last_alloc=0xDEADBEEF|ptr
 return
 
 function(int amt) malloc -> ptr does
 	ptr ret=mm_pos
 	mm_pos=((mm_pos|int)+amt)|ptr
+	last_alloc=ret
 return ret
 
-function(int amt) KMM::malloc_undo -> void does
-	mm_pos=((mm_pos|int)-amt)|ptr
+function(ptr idx) free -> void does
+	if last_alloc|int==idx|int do
+		mm_pos=last_alloc
+		last_alloc=0xDEADBEEF|ptr
+	done
 return

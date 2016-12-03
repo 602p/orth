@@ -83,7 +83,7 @@ type Terminal is
 		done
 		t:print(((str|int)+idx+1)|ptr)
 
-		KMM::malloc_undo(11)
+		free(str)
 	return
 
 	function(Terminal t, int val) Terminal:printi -> void does

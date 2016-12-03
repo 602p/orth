@@ -3,6 +3,8 @@
 @include("kbd.ort")@
 
 int base_vma
+Terminal kterm
+
 
 function() __halt -> void does
 	while 1|bool do
@@ -15,80 +17,82 @@ function() kernel_main -> void does
 
 	KMM::init(base_vma+0x200000)
 
-	Terminal term = Terminal::new(base_vma+0xB8000, 80, 25)
+	kterm = Terminal::new(base_vma+0xB8000, 80, 25)
 
-	term:printl("  ..---..")
+	kterm:printl("  ..---..")
 
-	term:printl(" /       \")
-	term:printl("|         |")
-	term:printl(":         ;")
-	term:print(" \  \")
-	term:printa(0x0E, "~")
-	term:printl("/  /")
-	term:printl("  `, Y ,'")
-	term:printl("   |_|_|")
-	term:printl("   |===|")
-	term:printl("   |===|")
-	term:printl("    \_/")
-	term:printl("\nOrth OS. Louis G.")
-	term:print("Testing Memory... ")
+	kterm:printl(" /       \")
+	kterm:printl("|         |")
+	kterm:printl(":         ;")
+	kterm:print(" \  \")
+	kterm:printa(0x0E, "~")
+	kterm:printl("/  /")
+	kterm:printl("  `, Y ,'")
+	kterm:printl("   |_|_|")
+	kterm:printl("   |===|")
+	kterm:printl("   |===|")
+	kterm:printl("    \_/")
+	kterm:printl("\nOrth OS. Louis G.")
+	kterm:print("Testing Memory... ")
 
-	int mt_x=term.cursor_x
+	int mt_x=kterm.cursor_x
 
 	int i = 0
 	while i<((1024*1024*2)-64) do
-		malloc(8)
-		term:printi(i)
-		term.cursor_x=mt_x
+		(((mm_pos|int)+i)|ptr)[0]=0|byte
+		kterm:printi(i)
+		kterm.cursor_x=mt_x
 		i+=8
 	done
 
-	term:print("Done, at least ")
-	term:printi(i)
-	term:printl("b accessible off 'heap'")
+	kterm:print("Done, at least ")
+	kterm:printi(i)
+	kterm:printl("b accessible off 'heap'")
 
-	term:print("Heap ptr at ")
-	term:printi(mm_head|int)
-	term:print(" , heap pos at ")
-	term:printi(mm_pos|int)
-	term:printl("")
+	kterm:print("Heap ptr at ")
+	kterm:printi(mm_head|int)
+	kterm:print(" , heap pos at ")
+	kterm:printi(mm_pos|int)
+	kterm:print(" (")
+	kterm:printi((mm_pos|int)-(mm_head|int))
+	kterm:printl("b consumed)")
 
-	term:print("Numbers 1, 2, 13, 24, 176, 19283, 65537: ")
+	kterm:print("Numbers 1, 2, 13, 24, 176, 19283, 65537: ")
 
-	term:printi(1);term:print(", ")
-	term:printi(2);term:print(", ")
-	term:printi(13);term:print(", ")
-	term:printi(24);term:print(", ")
-	term:printi(176);term:print(", ")
-	term:printi(19283);term:print(", ")
-	term:printi(65537);term:print("\n")
+	kterm:printi(1);kterm:print(", ")
+	kterm:printi(2);kterm:print(", ")
+	kterm:printi(13);kterm:print(", ")
+	kterm:printi(24);kterm:print(", ")
+	kterm:printi(176);kterm:print(", ")
+	kterm:printi(19283);kterm:print(", ")
+	kterm:printi(65537);kterm:print("\n")
 
-	term:print("BG Colors 0-16:")
+	kterm:print("BG Colors 0-16:")
 
 	int bg_idx=0x0F
 
 	while bg_idx<=0xFF do
-		term:printa(bg_idx, " ")
+		kterm:printa(bg_idx, " ")
 		bg_idx+=0x10
 	done
 
-	term:print("\nFG Colors 0-16:")
+	kterm:print("\nFG Colors 0-16:")
 
 	int fg_idx=0x00
 
 	while fg_idx<=0x0F do
-		term:printa(fg_idx, "X")
+		kterm:printa(fg_idx, "X")
 		fg_idx+=1
 	done
 
-	term:printl("\nChars 0-255:")
+	kterm:printl("\nChars 0-255:")
 
 	cstr temp=" "
 
 	int char_idx = 0
 	while char_idx<256 do
 		temp[0]=char_idx|byte
-		term:print(temp)
+		kterm:print(temp)
 		char_idx+=1
 	done
 
@@ -96,14 +100,14 @@ function() kernel_main -> void does
 	bool pressed=0|bool
 	int presses=0
 
-	term:printl("\n\n")
-	term:print("Last Keycode: ?")
+	kterm:printl("\n\n")
+	kterm:print("Last Keycode: ?")
 
-	int kc_x = term.cursor_x-1
-	int kc_y = term.cursor_y
-	term:print("\nRunning... ")
-	int li_x=term.cursor_x
-	int li_y=term.cursor_y
+	int kc_x = kterm.cursor_x-1
+	int kc_y = kterm.cursor_y
+	kterm:print("\nRunning... ")
+	int li_x=kterm.cursor_x
+	int li_y=kterm.cursor_y
 	int li_value=1
 
 
@@ -117,7 +121,7 @@ function() kernel_main -> void does
 			wait+=1
 		done
 		
-		val=key_down()|long
+		val=_read_kbd_data()|long
 		if val<100|long do
 			if val!=last_keycode do
 				last_keycode=val
@@ -130,34 +134,34 @@ function() kernel_main -> void does
 			pressed=0|bool
 		done
 
-		term.cursor_x=kc_x
-		term.cursor_y=kc_y
-		term:printi(last_keycode|int)
-		term:print(" Presses: ")
-		term:printi(presses)
-		term:print("                 ")
+		kterm.cursor_x=kc_x
+		kterm.cursor_y=kc_y
+		kterm:printi(last_keycode|int)
+		kterm:print(" Presses: ")
+		kterm:printi(presses)
+		kterm:print("                 ")
 		
 		ticker_idx=0
 
 		while ticker_idx<60 do
-			term:setchar(li_x+ticker_idx, li_y, (li_value+ticker_idx)|byte)
+			kterm:setchar(li_x+ticker_idx, li_y, (li_value+ticker_idx)|byte)
 			ticker_idx+=1
 		done
 
-		term.cursor_y=li_y+1
-		term.cursor_x=li_x
-		term:printi(li_value)
-		term:print(" -> ")
-		term:printi(li_value+60)
-		term:print(" (")
+		kterm.cursor_y=li_y+1
+		kterm.cursor_x=li_x
+		kterm:printi(li_value)
+		kterm:print(" -> ")
+		kterm:printi(li_value+60)
+		kterm:print(" (")
 		if (li_value+60)<255 do
-			term:printi(li_value+60)
+			kterm:printi(li_value+60)
 		else do
-			term:printi(li_value+60-255)
+			kterm:printi(li_value+60-255)
 		done
-		term:print(")      ")
+		kterm:print(")      ")
 
-		term:print("   ")
+		kterm:print("   ")
 		li_value+=1
 		if li_value>255 do
 			li_value=1

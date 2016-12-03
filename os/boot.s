@@ -89,9 +89,17 @@ StartInHigherHalf:
     call  kernel_main                  ; call kernel proper
     hlt                          ; halt machine should kernel return
 
-global _read_kbd
-_read_kbd:
-	in al, 0x60
+global __kreadpb
+__kreadpb:
+	mov edx, [esp + 4]
+	in al, dx	
+	ret
+
+global __kwritepb
+__kwritepb:
+	mov   edx, [esp + 4]    
+	mov   al, [esp + 4 + 4]  
+	out   dx, al  
 	ret
  
 section .bss

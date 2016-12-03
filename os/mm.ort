@@ -4,7 +4,7 @@ ptr mm_pos
 
 function(int start) KMM::init -> void does
 	mm_head=start|ptr
-	mm_pos=mm_pos
+	mm_pos=mm_head
 return
 
 function(int amt) malloc -> ptr does

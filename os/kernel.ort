@@ -2,18 +2,23 @@
 @include("term.ort")@
 @include("kbd.ort")@
 
+int base_vma
+
 function() __halt -> void does
 	while 1|bool do
 		;0;
 	done
-return #lol
+return
 
 function() kernel_main -> void does
-	KMM::init(0xA00000)
-	Terminal term = Terminal::new(0xB8000, 80, 25)
+	base_vma=0xC0000000
 
-    
+	KMM::init(base_vma+0x200000)
+
+	Terminal term = Terminal::new(base_vma+0xB8000, 80, 25)
+
 	term:printl("  ..---..")
+
 	term:printl(" /       \")
 	term:printl("|         |")
 	term:printl(":         ;")
@@ -26,6 +31,27 @@ function() kernel_main -> void does
 	term:printl("   |===|")
 	term:printl("    \_/")
 	term:printl("\nOrth OS. Louis G.")
+	term:print("Testing Memory... ")
+
+	int mt_x=term.cursor_x
+
+	int i = 0
+	while i<((1024*1024*2)-64) do
+		malloc(8)
+		term:printi(i)
+		term.cursor_x=mt_x
+		i+=8
+	done
+
+	term:print("Done, at least ")
+	term:printi(i)
+	term:printl("b accessible off 'heap'")
+
+	term:print("Heap ptr at ")
+	term:printi(mm_head|int)
+	term:print(" , heap pos at ")
+	term:printi(mm_pos|int)
+	term:printl("")
 
 	term:print("Numbers 1, 2, 13, 24, 176, 19283, 65537: ")
 
@@ -87,11 +113,11 @@ function() kernel_main -> void does
 	int ticker_idx
 	while 1|bool do
 		wait=0
-		while wait<5000000 do
+		while wait<7000000 do
 			wait+=1
 		done
 		
-		val=_read_kbd()|long
+		val=key_down()|long
 		if val<100|long do
 			if val!=last_keycode do
 				last_keycode=val
@@ -113,14 +139,23 @@ function() kernel_main -> void does
 		
 		ticker_idx=0
 
-		while ticker_idx<30 do
+		while ticker_idx<60 do
 			term:setchar(li_x+ticker_idx, li_y, (li_value+ticker_idx)|byte)
 			ticker_idx+=1
 		done
 
-		term.cursor_y=li_y+2
+		term.cursor_y=li_y+1
 		term.cursor_x=li_x
 		term:printi(li_value)
+		term:print(" -> ")
+		term:printi(li_value+60)
+		term:print(" (")
+		if (li_value+60)<255 do
+			term:printi(li_value+60)
+		else do
+			term:printi(li_value+60-255)
+		done
+		term:print(")      ")
 
 		term:print("   ")
 		li_value+=1

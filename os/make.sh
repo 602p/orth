@@ -4,7 +4,7 @@ mkdir isodir
 mkdir isodir/boot
 mkdir isodir/boot/grub
 export PATH="$PATH:$HOME/Documents/louos/crosscc/out_bin/bin:$HOME/Documents/caste/compiler"
-i686-elf-as boot.s -o boot.o
+nasm -f elf boot.s -o boot.o
 orthc kernel.ort _ nolink nobuild
 llc out.ll -march=x86
 i686-elf-as out.s -o kernel.o

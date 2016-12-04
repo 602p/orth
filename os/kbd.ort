@@ -1,7 +1,0 @@
-@declare_func("__kreadpb", "byte", "(i32)")@
-
-function() _read_kbd_data -> byte does 
-return __kreadpb(0x60)
-
-function() _read_kbd_status -> byte does
-return __kreadpb(0x64)

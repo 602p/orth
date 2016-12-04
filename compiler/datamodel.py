@@ -96,6 +96,15 @@ class IntegerPrimitiveOType(PrimitiveOType):
 	def implement_rem(self, lhs, rhs, out):
 		return "srem {} %{}, %{}".format(self.get_llvm_representation(), lhs, rhs)
 
+	def implement_lsh(self, lhs, rhs, out):
+		return "shl {} %{}, %{}".format(self.get_llvm_representation(), lhs, rhs)
+
+	def implement_rsh(self, lhs, rhs, out):
+		return "lshr {} %{}, %{}".format(self.get_llvm_representation(), lhs, rhs)
+
+	def implement_band(self, lhs, rhs, out):
+		return "and {} %{}, %{}".format(self.get_llvm_representation(), lhs, rhs)
+
 	def implement_gt(self, lhs, rhs, out):
 		return "icmp sgt {} %{}, %{}".format(self.get_llvm_representation(), lhs, rhs)
 	def implement_ge(self, lhs, rhs, out):

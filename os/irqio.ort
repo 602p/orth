@@ -1,0 +1,101 @@
+@declare_func("__kget_keyboard_handler_addr", "ptr", "()")@
+@declare_func("__klidt", "void", "(i8*)")@
+@declare_func("__kwritepb", "void", "(i8, i8)")@
+@include("mm.ort")@
+
+type IDTEntry is packed
+	short offset_low
+	short selector
+	byte  zero
+	byte  type
+	short offset_high
+
+	function(ptr irupt_handler) IDTEntry::new -> IDTEntry does
+		int irupt_addr=irupt_handler|int
+		IDTEntry entry = malloc(@sizeof(IDTEntry)@)|IDTEntry
+		entry.offset_low=(irupt_addr & 0xFFFF)|short
+		entry.selector=0x08|short
+		entry.zero=0|byte
+		entry.type=0x8E|byte
+		entry.offset_high=((irupt_addr&0xFFFF0000) >> 16)|short
+	return entry
+endtype
+
+type IDT is packed
+	int idt_size
+	int idt_address
+
+	function() IDT::create -> IDT does
+		IDT new = malloc(@sizeof(IDT)@)|IDT
+		new.idt_size=(@sizeof(IDTEntry)@)*256
+		new.idt_address=malloc(new.idt_size)|int
+		memset(new.idt_address|ptr, new.idt_size, 0|byte)
+	return new
+
+	function(IDT table, IDTEntry entry, int idx) IDT:install_entry -> void does
+		int entry_sz=@sizeof(IDTEntry)@
+		ptr target=(table.idt_address|ptr):offset(entry_sz*idx)
+		memcpy(entry|ptr, target, entry_sz)
+	return
+
+	function(IDT table) IDT:get_addr -> ptr does
+	return (((table|ptr)|int)-base_vma)|ptr
+endtype
+
+function(int p, int d) write_port -> void does
+	__kwritepb(p|byte, d|byte)
+return
+
+IDT idt
+
+function() setup_irq -> void does
+	kterm:print("*")
+	idt=IDT::create()
+
+	kterm:print("IDT@")
+	kterm:printi(idt.idt_address)
+	kterm:print(",")
+	kterm:printi(idt.idt_size)
+
+	kterm:print("*")
+	IDTEntry kbd_handler = IDTEntry::new(__kget_keyboard_handler_addr())
+
+	kterm:print("kbdh@")
+	kterm:printi(__kget_keyboard_handler_addr()|int)
+	kterm:print("*")
+	idt:install_entry(kbd_handler, 0x21)
+	free(kbd_handler|ptr)
+
+	#Mask interrupts we Don't have handlers for
+	setup_kbd()
+
+	kterm:print("!")
+	__klidt(idt|ptr)
+	kterm:print("*")
+
+	start_kbd()
+
+	kterm:print("#")
+return
+
+function() setup_kbd -> void does
+	write_port(0x20 , 0x11)
+	write_port(0xA0 , 0x11)
+	write_port(0x21 , 0x20)
+	write_port(0xA1 , 0x28)
+	write_port(0x21 , 0x00)
+	write_port(0xA1 , 0x00)
+	write_port(0x21 , 0x01)
+	write_port(0xA1 , 0x01)
+	write_port(0x21 , 0xff)
+	write_port(0xA1 , 0xff)
+return
+
+function() start_kbd -> void does
+	write_port(0x21 , 0xFD)
+return
+
+function() __irq_keyboard_handler -> void does
+	write_port(0x20, 0x20)
+	#kterm:printl("Keyboard IRQ!")
+return

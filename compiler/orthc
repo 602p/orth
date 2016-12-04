@@ -31,7 +31,21 @@ with open("out.ll", 'w') as fd:
 	e=transform.Emitter(fd)
 	with e.scope():
 		with e.context(file="in"):
-			transform.emit(e, node)
+			try:
+				transform.emit(e, node)
+			except BaseException as ex:
+				print("*********************************************\n"*10)
+				print(ex)
+				print("SCOPES: ", e.scopes)
+				print("SIGNAT: ", e.signatures)
+				print("GLOBAL: ", e.globals)
+				print("INCLUD: ", e.included_files)
+				print("TYPE  : ", e.types)
+				print("LASTLI: ", e.last_line)
+				print("LASTFI: ", e.last_file)
+				print("LASTME: ", e.last_method)
+				sys.exit(1)
+
 	e.emit_global_statments()
 
 if not "nobuild" in sys.argv:

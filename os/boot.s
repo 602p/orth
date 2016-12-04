@@ -13,7 +13,7 @@ CHECKSUM    equ -(MAGIC + FLAGS)  ; checksum required
 ; the virtual address where the kernel image itself is loaded -- just the amount that must
 ; be subtracted from a virtual address to get a physical address.
 KERNEL_VIRTUAL_BASE equ 0xC0000000                  ; 3GB
-KERNEL_PAGE_NUMBER equ (KERNEL_VIRTUAL_BASE >> 22)  ; Page directory index of kernel's 4MB PTE.
+KERNEL_PAGE_NUMBER equ (KERNEL_VIRTUAL_BASE >> 22)  ; Page directory index of kernels 4MB PTE.
  
  
 section .data
@@ -25,7 +25,7 @@ BootPageDirectory:
     ; bit 1: RW The kernel page is read/write.
     ; bit 0: P  The kernel page is present.
     ; This entry must be here -- otherwise the kernel will crash immediately after paging is
-    ; enabled because it can't fetch the next instruction! It's ok to unmap this page later.
+    ; enabled because it cant fetch the next instruction! Its ok to unmap this page later.
     dd 0x00000083
     times (KERNEL_PAGE_NUMBER - 1) dd 0                 ; Pages before kernel space.
     ; This page directory entry defines a 4MB page containing the kernel.
@@ -40,7 +40,7 @@ MultiBootHeader:
     dd FLAGS
     dd CHECKSUM
  
-; reserve initial kernel stack space -- that's 16k.
+; reserve initial kernel stack space -- thats 16k.
 STACKSIZE equ 0x4000
  
 ; setting up entry point for linker
@@ -101,6 +101,23 @@ __kwritepb:
 	mov   al, [esp + 4 + 4]  
 	out   dx, al  
 	ret
+
+extern __irq_keyboard_handler
+keyboard_handler_irupt_internal:                 
+    call    __irq_keyboard_handler
+    iretd
+
+global __kget_keyboard_handler_addr
+__kget_keyboard_handler_addr:
+    mov eax, keyboard_handler_irupt_internal
+    ret
+
+global __klidt
+__klidt:
+    mov edx, [esp + 4]
+    lidt [edx]
+    sti
+    ret
  
 section .bss
 align 32

@@ -1,0 +1,7 @@
+@include("std.ort")@
+
+function() main -> int does
+	int a = 72
+	printf("72>>2=%i, 72<<2=%i\n", a>>2, a<<2)
+	printf("72&17=%i, 72&2=%i, 72&199=%i\n", a&17, a&2, a&199)
+return 0

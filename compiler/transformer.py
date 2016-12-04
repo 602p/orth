@@ -93,6 +93,15 @@ class BinOpExprTransformer(Transformer):
 		if self.node.operator=="%":
 			res = lhstype.implement_rem(lhs, rhs, out)
 
+		if self.node.operator==">>":
+			res = lhstype.implement_rsh(lhs, rhs, out)
+
+		if self.node.operator=="<<":
+			res = lhstype.implement_lsh(lhs, rhs, out)
+
+		if self.node.operator=="&":
+			res = lhstype.implement_band(lhs, rhs, out)
+
 		if self.node.operator==">":
 			res = lhstype.implement_gt(lhs, rhs, out)
 
@@ -117,7 +126,7 @@ class BinOpExprTransformer(Transformer):
 	@staticmethod
 	def get_type(node, out):
 		# print(node)
-		return get_type(node.lhs, out) if node.operator in "+-*/" else datamodel.builtin_types['bool']
+		return get_type(node.lhs, out) if node.operator in ["+","-","*","-",">>","<<","&"] else datamodel.builtin_types['bool']
 
 class UnOpTransformer(Transformer):
 	transforms=UnOpExpr

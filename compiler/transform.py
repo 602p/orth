@@ -51,6 +51,9 @@ class Emitter:
 			"astblock":"u"
 		})
 		self.temp_count=0
+		self.last_line=-1
+		self.last_file=-1
+		self.last_method=-1
 
 		self.scopes=collections.ChainMap({})
 		self.signatures={}
@@ -76,6 +79,9 @@ class Emitter:
 		if 'indent' not in kwargs:
 			kwargs['indent']=self.context_map['indent']+indent_by
 		self.context_map.maps.insert(0, kwargs)
+		self.last_line=self.context_map["line"]
+		self.last_file=self.context_map["file"]
+		self.last_method=self.context_map["method"]
 		return self.indent_context_manager
 
 	def indent(self, by=1):

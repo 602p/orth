@@ -21,3 +21,22 @@ function(ptr idx) free -> void does
 		last_alloc=0xDEADBEEF|ptr
 	done
 return
+
+function(ptr addr, int len, byte value) memset -> void does
+	int idx=0
+	while idx<len do
+		addr[idx]=value
+		idx+=1
+	done
+return
+
+function(ptr source, ptr dest, int len) memcpy -> void does
+	int idx=0
+	while idx<len do
+		dest[idx]=source[idx]
+		idx+=1
+	done
+return
+
+function(ptr p, int amt) ptr:offset -> ptr does
+return ((p|int)+amt)|ptr

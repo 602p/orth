@@ -1,9 +1,14 @@
 @include("mm.ort")@
 @include("term.ort")@
-@include("kbd.ort")@
 
-int base_vma
 Terminal kterm
+int base_vma
+
+@include("paging.ort")@
+@include("irqio.ort")@
+
+
+
 
 
 function() __halt -> void does
@@ -33,6 +38,7 @@ function() kernel_main -> void does
 	kterm:printl("   |===|")
 	kterm:printl("    \_/")
 	kterm:printl("\nOrth OS. Louis G.")
+
 	kterm:print("Testing Memory... ")
 
 	int mt_x=kterm.cursor_x
@@ -42,7 +48,7 @@ function() kernel_main -> void does
 		(((mm_pos|int)+i)|ptr)[0]=0|byte
 		kterm:printi(i)
 		kterm.cursor_x=mt_x
-		i+=8
+		i+=16
 	done
 
 	kterm:print("Done, at least ")
@@ -57,17 +63,13 @@ function() kernel_main -> void does
 	kterm:printi((mm_pos|int)-(mm_head|int))
 	kterm:printl("b consumed)")
 
-	kterm:print("Numbers 1, 2, 13, 24, 176, 19283, 65537: ")
+	kterm:print("Load IDT+Kbd... ")
 
-	kterm:printi(1);kterm:print(", ")
-	kterm:printi(2);kterm:print(", ")
-	kterm:printi(13);kterm:print(", ")
-	kterm:printi(24);kterm:print(", ")
-	kterm:printi(176);kterm:print(", ")
-	kterm:printi(19283);kterm:print(", ")
-	kterm:printi(65537);kterm:print("\n")
+	setup_irq()
 
-	kterm:print("BG Colors 0-16:")
+	kterm:printl("Installed!")
+
+	kterm:print("BG Colors 0-16, FG Colors:")
 
 	int bg_idx=0x0F
 
@@ -76,8 +78,6 @@ function() kernel_main -> void does
 		bg_idx+=0x10
 	done
 
-	kterm:print("\nFG Colors 0-16:")
-
 	int fg_idx=0x00
 
 	while fg_idx<=0x0F do
@@ -85,32 +85,11 @@ function() kernel_main -> void does
 		fg_idx+=1
 	done
 
-	kterm:printl("\nChars 0-255:")
-
-	cstr temp=" "
-
-	int char_idx = 0
-	while char_idx<256 do
-		temp[0]=char_idx|byte
-		kterm:print(temp)
-		char_idx+=1
-	done
-
-	long last_keycode=0|long
-	bool pressed=0|bool
-	int presses=0
-
-	kterm:printl("\n\n")
-	kterm:print("Last Keycode: ?")
-
-	int kc_x = kterm.cursor_x-1
-	int kc_y = kterm.cursor_y
 	kterm:print("\nRunning... ")
 	int li_x=kterm.cursor_x
 	int li_y=kterm.cursor_y
-	int li_value=1
 
-
+	__halt()
 
 	long val=0|long
 	int wait=0
@@ -120,52 +99,41 @@ function() kernel_main -> void does
 		while wait<7000000 do
 			wait+=1
 		done
-		
-		val=_read_kbd_data()|long
-		if val<100|long do
-			if val!=last_keycode do
-				last_keycode=val
-				presses=1
-			elif pressed==0|bool do
-				presses+=1
-			done
-			pressed=1|bool
-		else do
-			pressed=0|bool
-		done
 
-		kterm.cursor_x=kc_x
-		kterm.cursor_y=kc_y
-		kterm:printi(last_keycode|int)
-		kterm:print(" Presses: ")
-		kterm:printi(presses)
-		kterm:print("                 ")
-		
-		ticker_idx=0
-
-		while ticker_idx<60 do
-			kterm:setchar(li_x+ticker_idx, li_y, (li_value+ticker_idx)|byte)
-			ticker_idx+=1
-		done
-
-		kterm.cursor_y=li_y+1
 		kterm.cursor_x=li_x
-		kterm:printi(li_value)
-		kterm:print(" -> ")
+		kterm.cursor_y=li_y
+
+		disp_fancy_ticker()
+	done
+return
+
+int li_value
+
+function() disp_fancy_ticker -> void does
+	int ticker_idx=0
+
+	kterm:print("[")
+
+	while ticker_idx<40 do
+		kterm:putchar((li_value+ticker_idx)|byte)
+		ticker_idx+=1
+	done
+
+	kterm:print("] ")
+	kterm:printi(li_value)
+	kterm:print(" -> ")
+	kterm:printi(li_value+60)
+	kterm:print(" (")
+	if (li_value+60)<255 do
 		kterm:printi(li_value+60)
-		kterm:print(" (")
-		if (li_value+60)<255 do
-			kterm:printi(li_value+60)
-		else do
-			kterm:printi(li_value+60-255)
-		done
-		kterm:print(")      ")
+	else do
+		kterm:printi(li_value+60-255)
+	done
+	kterm:print(")      ")
 
-		kterm:print("   ")
-		li_value+=1
-		if li_value>255 do
-			li_value=1
-		done
-
+	kterm:print("   ")
+	li_value+=1
+	if li_value>255 do
+		li_value=1
 	done
 return

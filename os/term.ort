@@ -27,12 +27,20 @@ type Terminal is
 		t.attributes=attrs|byte
 	return
 
+	function(Terminal t, byte char) Terminal:putchar -> void does
+		t:setchar(t.cursor_x, t.cursor_y, char)
+		t.cursor_x+=1
+	return
+
 	function(Terminal t, cstr string) Terminal:print -> void does
 		int pos = 0
 		while string[pos]!=0|byte do
 			if string[pos]!=10|byte do
 				t:setchar(t.cursor_x, t.cursor_y, string[pos])
 				t.cursor_x+=1
+			elif t.cursor_x>=t.width do
+				t.cursor_x=0
+				t.cursor_y+=1
 			else do
 				t.cursor_x=0
 				t.cursor_y+=1

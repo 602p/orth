@@ -38,7 +38,7 @@ class Tokens(metaclass=TokenHolder):
 	T_RETURN = TokenType("return", ["T_ENDOFSTATEMENT"], keyword=True)
 
 	T_AUGASSIGN = TokenType(r"(\+=)|(-=)|(\*=)|(/=)", ["T_NAME", "T_VAR_DECL", "T_LIST_STOP"], capture=True)
-	T_BINARY_OPERATOR = TokenType(r"(>=)|(<=)|(!=)|(==)|[/\*\-\+%\^><]", [
+	T_BINARY_OPERATOR = TokenType(r"(>>)|(<<)|(>=)|(<=)|(!=)|(==)|[&/\*\-\+%\^><]", [
 			"T_NAME", "T_LIST_STOP", "T_PAREN_CLOSE", "T_INTEGER_LITERAL", "T_STRING_LITERAL"
 		], capture=True)
 
@@ -461,7 +461,7 @@ class TypeDecl(ASTNode):
 				self.methods.append(ele)
 			elif isinstance(ele, SepExpr):pass
 			elif isinstance(ele, Token):
-				if ele.type not in [T_TYPEDECL_IS, T_TYPEDECL_NAME, T_TYPEDECL]:
+				if ele.type not in [T_TYPEDECL_IS, T_TYPEDECL_NAME, T_TYPEDECL, T_TYPEDECL_PACKED]:
 					raise SyntaxError("Token "+str(ele)+" found in class")
 			else:
 				raise SyntaxError("IDK how to handle a "+str(type(ele))+" in a type")

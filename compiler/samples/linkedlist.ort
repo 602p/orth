@@ -1,4 +1,4 @@
-@include("std.ort")@
+import std
 
 type Node is
     ptr value

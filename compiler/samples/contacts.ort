@@ -1,5 +1,5 @@
-@include("std.ort")@
-@include("samples/linkedlist.ort")@
+import std
+import "samples/linkedlist.ort"
 
 type Record is
     cstr first

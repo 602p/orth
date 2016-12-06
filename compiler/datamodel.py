@@ -45,7 +45,7 @@ class OType:
 		pass
 
 	def __str__(self):
-		return "t{"+self.name+"}"
+		return "TY{"+self.name+"}"
 
 	def __repr__(self):
 		return str(self)

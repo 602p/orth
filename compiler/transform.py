@@ -4,6 +4,7 @@ import collections
 import util
 import datamodel
 import copy
+import os
 
 class Variable:
 	def __init__(self, var, type):
@@ -25,6 +26,7 @@ class Emitter:
 			pass
 
 		def __exit__(self, type, value, traceback):
+			if traceback: return
 			del self.emitter.context_map.maps[0]
 
 	class _ScopeContext:
@@ -35,6 +37,7 @@ class Emitter:
 			pass
 
 		def __exit__(self, type, value, traceback):
+			if traceback: return
 			del self.emitter.scopes.maps[0]
 
 	def __init__(self, fd):
@@ -61,6 +64,7 @@ class Emitter:
 		self.global_statments=[]
 		self.included_files=[]
 		self.types=copy.copy(datamodel.builtin_types)
+		self.searchpath=["."]
 
 	def emit(self, text):
 		self.fd.write(text)
@@ -192,3 +196,12 @@ def call_func(name, argtypes, args, out):
 		name,
 		",".join(arg_values)
 	)
+
+def resolve_import(import_node, out):
+	if import_node.absolute:
+		return import_node.identifier
+	else:
+		for dir in out.searchpath:
+			if import_node.identifier+".ort" in os.listdir(dir):
+				return os.path.join(dir, import_node.identifier+".ort")
+		raise ImportError("No module `%s' found on search path"%import_node.identifier)

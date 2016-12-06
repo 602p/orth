@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-import sys, drawblockdiag, tokenize, parse, grammarutil, json, os
+import sys, drawblockdiag, tokenize, parse, grammarutil, json, os, traceback
 
 _print=print
 def print(*a, **k):
@@ -34,14 +34,24 @@ with open("out.ll", 'w') as fd:
 			try:
 				transform.emit(e, node)
 			except BaseException as ex:
-				print("*********************************************\n"*10)
+				print()
+				print("*****************************************\n"*2, end='')
+				print("******************ERROR******************")
+				print("*****************************************\n"*2)
 				print(ex)
-				print("SCOPES: ", e.scopes)
+				print("SCOPES: (most recent first)")
+				for map in e.scopes.maps:
+					print("\t"+str(map))
+				print("CONTEX: (most recent first)")
+				for map in e.context_map.maps:
+					print("\t"+str(map))
 				print("SIGNAT: ", e.signatures)
 				print("GLOBAL: ", e.globals)
 				print("INCLUD: ", e.included_files)
-				print("TYPE  : ", e.types)
-				print("LASTLI: ", e.last_line)
+				print("TYPES : ", end="")
+				for type in e.types.values():
+					print(str(type)+" -> "+type.get_llvm_representation(), end=";  ")
+				print("\nLASTLI: ", e.last_line)
 				print("LASTFI: ", e.last_file)
 				print("LASTME: ", e.last_method)
 				sys.exit(1)

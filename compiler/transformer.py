@@ -383,7 +383,7 @@ class CallExprTransformer(Transformer):
 class FileTransformer(Transformer):
 	transforms=FileExpr
 
-	def transform(self, out):
+	def prepare(self, out):
 		for func in self.node.funcs:
 			if isinstance(func, FunctionDecl):
 				out.signatures[func.name]=datamodel.FunctionOType(
@@ -398,12 +398,15 @@ class FileTransformer(Transformer):
 					"0" if isinstance(get_type(func, out), datamodel.IntegerPrimitiveOType) else "null"
 				))
 				out.set_global_var_name(func.name, name, get_type(func, out))
+			elif isinstance(func, ImportExpr):
+				transform.get_transformer(func, self).prepare(out)
 			else:
 				transform.emit(out, func, self)
-		# print(out.signatures)
 
+	def transform(self, out):
+		self.prepare(out)
 		for func in self.node.funcs:
-			if isinstance(func, FunctionDecl):
+			if isinstance(func, FunctionDecl) or isinstance(func, ImportExpr):
 				transform.emit(out, func, self)
 
 class IntrinsicTransformer(Transformer):
@@ -443,13 +446,42 @@ class TypeTransformer(Transformer):
 	transforms=TypeDecl
 
 	def transform(self, out):
-		out.types[self.node.name]=datamodel.StructOType(self.node.name, self.node.fields, out, packed=self.node.packed)
-		out.types[self.node.name].setup(out)
-		for method in self.node.methods:
-			out.signatures[method.name]=datamodel.FunctionOType(
-				method.name,
-				[get_type(t.type, out) for t in method.args],
-				get_type(method.type, out))
-			# print("emitting "+method.name)
-			transform.emit(out, method, self)
+		if self.node.name not in out.types:
+			out.types[self.node.name]=datamodel.StructOType(self.node.name, self.node.fields, out, packed=self.node.packed)
+			out.types[self.node.name].setup(out)
+			for method in self.node.methods:
+				out.signatures[method.name]=datamodel.FunctionOType(
+					method.name,
+					[get_type(t.type, out) for t in method.args],
+					get_type(method.type, out))
+				# print("emitting "+method.name)
+				transform.emit(out, method, self)
+
+class ImportTransformer(Transformer):
+	transforms=ImportExpr
+
+	def prepare(self, out):
+		filename=transform.resolve_import(self.node, out)
+		if filename in out.included_files:
+			out.emitl(";;;OMITTING INCLUDE `"+filename+"`, PREVIOUSLY INCLUDED")
+			self.node=None
+			return
 		
+		import tokenize, parse
+		with out.context(file=filename.split("/")[-1].split(".")[0]):
+			self.import_file_transformer=transform.get_transformer(
+				parse.parse(
+					tokenize.tokenize(
+						open(filename, 'r').read()
+					)
+				),
+				self
+			)
+			self.import_file_transformer.prepare(out)
+
+	def transform(self, out):
+		filename=transform.resolve_import(self.node, out)
+		self.prepare(out)
+		if filename not in out.included_files:
+			self.import_file_transformer.transform(out)
+		out.included_files.append(filename)

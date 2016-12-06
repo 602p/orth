@@ -23,9 +23,10 @@ def process_intrinsic(out, text):
 		return res
 
 	def declare_c_func(name, type, paramstring):
-		rt=datamodel.builtin_types[type]
-		out.emitl("declare {} @{}{}".format(rt.get_llvm_representation(), name, paramstring))
-		out.signatures[name]=datamodel.ManualFunctionOType(name, paramstring, rt)
+		if name not in out.signatures:
+			rt=datamodel.builtin_types[type]
+			out.emitl("declare {} @{}{}".format(rt.get_llvm_representation(), name, paramstring))
+			out.signatures[name]=datamodel.ManualFunctionOType(name, paramstring, rt)
 
 	declare_func=declare_c_func
 

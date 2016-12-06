@@ -8,6 +8,8 @@ class Tokens(metaclass=TokenHolder):
 	T_LINE_COMMENT = TokenType(r"#.*(?=\n)", emit=False)
 	T_BLOCK_COMMENT = TokenType(r"<#[\s\S]*#>", emit=False)
 
+	T_IMPORT = TokenType("import +([a-zA-Z]\w*|\".+\")", keyword=True, capture=True)
+
 	T_FUNCTIONDECL=TokenType("function")
 	T_ARGLIST_START = TokenType(r"\(", ["T_FUNCTIONDECL"])
 	T_ARGLIST_SEPERATOR = TokenType(",", ["T_ARGLIST_ELEMENT"])
@@ -465,3 +467,14 @@ class TypeDecl(ASTNode):
 					raise SyntaxError("Token "+str(ele)+" found in class")
 			else:
 				raise SyntaxError("IDK how to handle a "+str(type(ele))+" in a type")
+
+class ImportExpr(ASTNode):
+	pattern=T_IMPORT
+
+	def __init__(self, elements):
+		if '"' in elements[0].value:
+			self.absolute=True
+			self.identifier=elements[0].value.split('"')[1].strip()
+		else:
+			self.absolute=False
+			self.identifier=elements[0].value.split("import ")[1].strip()

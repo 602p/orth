@@ -22,14 +22,14 @@ type IDTEntry is packed
 endtype
 
 type IDT is packed
-	int idt_size
+	short idt_size
 	int idt_address
 
 	function() IDT::create -> IDT does
 		IDT new = malloc(@sizeof(IDT)@)|IDT
-		new.idt_size=(@sizeof(IDTEntry)@)*256
-		new.idt_address=malloc(new.idt_size)|int
-		memset(new.idt_address|ptr, new.idt_size, 0|byte)
+		new.idt_size=(((@sizeof(IDTEntry)@)*256)-1)|short #Said -1
+		new.idt_address=malloc((new.idt_size|int)+1)|int
+		memset(new.idt_address|ptr, (new.idt_size|int)+1, 0|byte)
 	return new
 
 	function(IDT table, IDTEntry entry, int idx) IDT:install_entry -> void does
@@ -55,7 +55,7 @@ function() setup_irq -> void does
 	kterm:print("IDT@")
 	kterm:printi(idt.idt_address)
 	kterm:print(",")
-	kterm:printi(idt.idt_size)
+	kterm:printi(idt.idt_size|int)
 
 	kterm:print("*")
 	IDTEntry kbd_handler = IDTEntry::new(__kget_keyboard_handler_addr())
@@ -66,7 +66,7 @@ function() setup_irq -> void does
 	idt:install_entry(kbd_handler, 0x21)
 	free(kbd_handler|ptr)
 
-	#Mask interrupts we Don't have handlers for
+	#Mask interrupts we don't have handlers for
 	setup_kbd()
 
 	kterm:print("!")
@@ -96,6 +96,6 @@ function() start_kbd -> void does
 return
 
 function() __irq_keyboard_handler -> void does
-	write_port(0x20, 0x20)
-	#kterm:printl("Keyboard IRQ!")
+	#write_port(0x20, 0x20)
+	kterm:printl("Keyboard IRQ!")
 return

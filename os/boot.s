@@ -51,7 +51,7 @@ _loader:
     ; NOTE: Until paging is set up, the code must be position-independent and use physical
     ; addresses, not virtual ones!
     mov ecx, (BootPageDirectory - KERNEL_VIRTUAL_BASE)
-    mov cr3, ecx                                        ; Load Page Directory Base Register.
+    mov cr3, ecx                                    ; Load Page Directory Base Register.
  
     mov ecx, cr4
     or ecx, 0x00000010                          ; Set PSE bit in CR4 to enable 4MB pages.
@@ -103,7 +103,7 @@ __kwritepb:
 	ret
 
 extern __irq_keyboard_handler
-keyboard_handler_irupt_internal:                 
+keyboard_handler_irupt_internal:
     call    __irq_keyboard_handler
     iretd
 

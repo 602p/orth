@@ -8,9 +8,6 @@ int base_vma
 @include("irqio.ort")@
 
 
-
-
-
 function() __halt -> void does
 	while 1|bool do
 		;0;
@@ -55,6 +52,12 @@ function() kernel_main -> void does
 	kterm:printi(i)
 	kterm:printl("b accessible off 'heap'")
 
+	kterm:print("Load IDT+Kbd... ")
+
+	setup_irq()
+
+	kterm:printl("Installed!")
+
 	kterm:print("Heap ptr at ")
 	kterm:printi(mm_head|int)
 	kterm:print(" , heap pos at ")
@@ -62,12 +65,6 @@ function() kernel_main -> void does
 	kterm:print(" (")
 	kterm:printi((mm_pos|int)-(mm_head|int))
 	kterm:printl("b consumed)")
-
-	kterm:print("Load IDT+Kbd... ")
-
-	setup_irq()
-
-	kterm:printl("Installed!")
 
 	kterm:print("BG Colors 0-16, FG Colors:")
 

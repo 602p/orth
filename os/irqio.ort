@@ -14,7 +14,7 @@ type IDTEntry is packed
 		int irupt_addr=irupt_handler|int
 		IDTEntry entry = malloc(@sizeof(IDTEntry)@)|IDTEntry
 		entry.offset_low=(irupt_addr & 0xFFFF)|short
-		entry.selector=0x08|short
+		entry.selector=16|short
 		entry.zero=0|byte
 		entry.type=0x8E|byte
 		entry.offset_high=((irupt_addr&0xFFFF0000) >> 16)|short

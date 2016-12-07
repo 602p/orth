@@ -1,3 +1,5 @@
+@declare_func("__kgetcs", "int", "()")@
+@declare_func("__kgetds", "int", "()")@
 
 ptr mm_head
 ptr mm_pos
@@ -40,3 +42,6 @@ return
 
 function(ptr p, int amt) ptr:offset -> ptr does
 return ((p|int)+amt)|ptr
+
+#GDT Stuff
+

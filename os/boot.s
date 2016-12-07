@@ -118,6 +118,16 @@ __klidt:
     lidt [edx]
     sti
     ret
+
+global __kgetcs
+__kgetcs:
+    mov eax, cs
+    ret
+
+global __kgetds
+__kgetds:
+    mov eax, ds
+    ret
  
 section .bss
 align 32

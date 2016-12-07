@@ -4,7 +4,6 @@ import term
 Terminal kterm
 int base_vma
 
-import paging
 import irqio
 
 
@@ -36,6 +35,12 @@ function() kernel_main -> void does
 	kterm:printl("    \_/")
 	kterm:printl("\nOrth OS. Louis G.")
 
+
+	kterm:print("CS=")
+	kterm:printi(__kgetcs())
+	kterm:print(" DS=")
+	kterm:printi(__kgetds())
+	kterm:print("\n")
 	kterm:print("Testing Memory... ")
 
 	int mt_x=kterm.cursor_x

@@ -1,7 +1,7 @@
 @declare_func("__kget_keyboard_handler_addr", "ptr", "()")@
 @declare_func("__klidt", "void", "(i8*)")@
 @declare_func("__kwritepb", "void", "(i8, i8)")@
-@include("mm.ort")@
+import mm
 
 type IDTEntry is packed
 	short offset_low

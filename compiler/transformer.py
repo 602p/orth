@@ -404,7 +404,6 @@ class FileTransformer(Transformer):
 				transform.emit(out, func, self)
 
 	def transform(self, out):
-		self.prepare(out)
 		for func in self.node.funcs:
 			if isinstance(func, FunctionDecl) or isinstance(func, ImportExpr):
 				transform.emit(out, func, self)
@@ -446,42 +445,47 @@ class TypeTransformer(Transformer):
 	transforms=TypeDecl
 
 	def transform(self, out):
-		if self.node.name not in out.types:
-			out.types[self.node.name]=datamodel.StructOType(self.node.name, self.node.fields, out, packed=self.node.packed)
-			out.types[self.node.name].setup(out)
-			for method in self.node.methods:
-				out.signatures[method.name]=datamodel.FunctionOType(
-					method.name,
-					[get_type(t.type, out) for t in method.args],
-					get_type(method.type, out))
-				# print("emitting "+method.name)
-				transform.emit(out, method, self)
+		out.types[self.node.name]=datamodel.StructOType(self.node.name, self.node.fields, out, packed=self.node.packed)
+		out.types[self.node.name].setup(out)
+		for method in self.node.methods:
+			out.signatures[method.name]=datamodel.FunctionOType(
+				method.name,
+				[get_type(t.type, out) for t in method.args],
+				get_type(method.type, out))
+			# print("emitting "+method.name)
+			transform.emit(out, method, self)
 
 class ImportTransformer(Transformer):
 	transforms=ImportExpr
 
-	def prepare(self, out):
-		filename=transform.resolve_import(self.node, out)
-		if filename in out.included_files:
-			out.emitl(";;;OMITTING INCLUDE `"+filename+"`, PREVIOUSLY INCLUDED")
-			self.node=None
-			return
-		
+	def get_file_transformer(self, out):
 		import tokenize, parse
-		with out.context(file=filename.split("/")[-1].split(".")[0]):
-			self.import_file_transformer=transform.get_transformer(
-				parse.parse(
-					tokenize.tokenize(
-						open(filename, 'r').read()
-					)
-				),
-				self
-			)
-			self.import_file_transformer.prepare(out)
+		filename=transform.resolve_import(self.node, out)
+		return transform.get_transformer(
+			parse.parse(
+				tokenize.tokenize(
+					open(filename, 'r').read()
+				)
+			),
+			self
+		)
+
+	def prepare(self, out):
+		filename=transform.sanitize_fn(transform.resolve_import(self.node, out))
+		if filename in out.prepared_files:
+			out.emitl(";;;OMITTING INCLUDE `"+filename+"`, PREVIOUSLY INCLUDED")
+			return
+		out.prepared_files.append(filename)
+		
+		with out.context(file=filename):
+			self.get_file_transformer(out).prepare(out)
 
 	def transform(self, out):
-		filename=transform.resolve_import(self.node, out)
+		filename=transform.sanitize_fn(transform.resolve_import(self.node, out))
 		self.prepare(out)
 		if filename not in out.included_files:
-			self.import_file_transformer.transform(out)
-		out.included_files.append(filename)
+			out.included_files.append(filename)
+			with out.context(file=filename):
+				print("Importing "+filename)
+				self.get_file_transformer(out).transform(out)
+			

@@ -32,7 +32,7 @@ with open("out.ll", 'w') as fd:
 	with e.scope():
 		with e.context(file="in"):
 			try:
-				transform.emit(e, node)
+				transform.emit_project(e, node)
 			except BaseException as ex:
 				print()
 				print("*****************************************\n"*2, end='')
@@ -67,3 +67,4 @@ if not "nolink" in sys.argv:
 	os.system("gcc -o "+(sys.argv[2] if len(sys.argv)==3 else "out")+" out.s; rm out.s")
 
 print("\r\033[92mDone!\033[0m                                        ")
+print(e.included_files)

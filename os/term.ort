@@ -1,4 +1,4 @@
-@include("mm.ort")@
+import mm
 
 type Terminal is
 	ptr baseaddr

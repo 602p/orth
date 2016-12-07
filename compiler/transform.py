@@ -63,6 +63,7 @@ class Emitter:
 		self.globals={}
 		self.global_statments=[]
 		self.included_files=[]
+		self.prepared_files=[]
 		self.types=copy.copy(datamodel.builtin_types)
 		self.searchpath=["."]
 
@@ -165,9 +166,13 @@ def get_transformer(node, parent):
 	return get_transformer_cls(node)(node, parent)
 
 def emit(out, node, parent=None):
+	return get_transformer(node, parent).transform(out)
+
+def emit_project(out, node, parent=None):
 	# print("Transforming "+str(node)+" with "+str(get_transformer(node)))
 	# print("Running "+str(get_transformer(node, parent)))
 	# print(out.scopes)
+	get_transformer(node, parent).prepare(out)
 	return get_transformer(node, parent).transform(out)
 
 def get_type(node, out):
@@ -205,3 +210,6 @@ def resolve_import(import_node, out):
 			if import_node.identifier+".ort" in os.listdir(dir):
 				return os.path.join(dir, import_node.identifier+".ort")
 		raise ImportError("No module `%s' found on search path"%import_node.identifier)
+
+def sanitize_fn(fn):
+	return fn.replace(".ort","").strip("/.\\")

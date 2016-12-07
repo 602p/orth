@@ -1,11 +1,11 @@
-@include("mm.ort")@
-@include("term.ort")@
+import mm
+import term
 
 Terminal kterm
 int base_vma
 
-@include("paging.ort")@
-@include("irqio.ort")@
+import paging
+import irqio
 
 
 function() __halt -> void does

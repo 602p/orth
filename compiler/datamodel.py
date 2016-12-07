@@ -238,7 +238,7 @@ class StructOType(OType):
 		return "%"+self.get_name()+"*"
 
 	def get_size(self):
-		return sum(e.get_size() if isinstance(e, PrimitiveOType) else 8 for e in self.fields.values())
+		return sum(e.get_size() for e in self.fields.values())
 
 builtin_types = {e.name:e for e in [
 	IntegerPrimitiveOType("bool", "i1", "add i1 0, {}"),

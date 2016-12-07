@@ -14,7 +14,7 @@ type IDTEntry is packed
 		int irupt_addr=irupt_handler|int
 		IDTEntry entry = malloc(@sizeof(IDTEntry)@)|IDTEntry
 		entry.offset_low=(irupt_addr & 0xFFFF)|short
-		entry.selector=16|short
+		entry.selector=0x08|short
 		entry.zero=0|byte
 		entry.type=0x8E|byte
 		entry.offset_high=((irupt_addr&0xFFFF0000) >> 16)|short
@@ -37,9 +37,6 @@ type IDT is packed
 		ptr target=(table.idt_address|ptr):offset(entry_sz*idx)
 		memcpy(entry|ptr, target, entry_sz)
 	return
-
-	function(IDT table) IDT:get_addr -> ptr does
-	return (((table|ptr)|int)-base_vma)|ptr
 endtype
 
 function(int p, int d) write_port -> void does
@@ -96,6 +93,6 @@ function() start_kbd -> void does
 return
 
 function() __irq_keyboard_handler -> void does
-	#write_port(0x20, 0x20)
+	write_port(0x20, 0x20)
 	kterm:printl("Keyboard IRQ!")
 return

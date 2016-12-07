@@ -398,14 +398,14 @@ class FileTransformer(Transformer):
 					"0" if isinstance(get_type(func, out), datamodel.IntegerPrimitiveOType) else "null"
 				))
 				out.set_global_var_name(func.name, name, get_type(func, out))
-			elif isinstance(func, ImportExpr):
+			elif isinstance(func, ImportExpr) or isinstance(func, TypeDecl):
 				transform.get_transformer(func, self).prepare(out)
 			else:
 				transform.emit(out, func, self)
 
 	def transform(self, out):
 		for func in self.node.funcs:
-			if isinstance(func, FunctionDecl) or isinstance(func, ImportExpr):
+			if isinstance(func, FunctionDecl) or isinstance(func, ImportExpr) or isinstance(func, TypeDecl):
 				transform.emit(out, func, self)
 
 class IntrinsicTransformer(Transformer):
@@ -444,7 +444,7 @@ class WhileExprTransformer(Transformer):
 class TypeTransformer(Transformer):
 	transforms=TypeDecl
 
-	def transform(self, out):
+	def prepare(self, out):
 		out.types[self.node.name]=datamodel.StructOType(self.node.name, self.node.fields, out, packed=self.node.packed)
 		out.types[self.node.name].setup(out)
 		for method in self.node.methods:
@@ -452,6 +452,9 @@ class TypeTransformer(Transformer):
 				method.name,
 				[get_type(t.type, out) for t in method.args],
 				get_type(method.type, out))
+
+	def transform(self, out):
+		for method in self.node.methods:
 			# print("emitting "+method.name)
 			transform.emit(out, method, self)
 

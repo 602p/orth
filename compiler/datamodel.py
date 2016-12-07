@@ -127,7 +127,10 @@ class IntegerPrimitiveOType(PrimitiveOType):
 					to.get_llvm_representation()
 				)
 			elif to.get_bit_width()==from_.get_bit_width():
-				return "%"+value
+				return "add {} 0, %{}".format(
+					to.get_llvm_representation(),
+					value
+				)
 			else:
 				return "trunc {} %{} to {}".format(
 					from_.get_llvm_representation(),
@@ -145,6 +148,22 @@ class IntegerPrimitiveOType(PrimitiveOType):
 
 	def get_size(self):
 		return max(self.get_bit_width()/8, 1)
+
+class UnsignedIntegerPrimitiveOType(IntegerPrimitiveOType):
+	def implement_div(self, lhs, rhs, out):
+		return "sdiv {} %{}, %{}".format(self.get_llvm_representation(), lhs, rhs)
+
+	def implement_rem(self, lhs, rhs, out):
+		return "srem {} %{}, %{}".format(self.get_llvm_representation(), lhs, rhs)
+
+	def implement_gt(self, lhs, rhs, out):
+		return "icmp ugt {} %{}, %{}".format(self.get_llvm_representation(), lhs, rhs)
+	def implement_ge(self, lhs, rhs, out):
+		return "icmp uge {} %{}, %{}".format(self.get_llvm_representation(), lhs, rhs)
+	def implement_lt(self, lhs, rhs, out):
+		return "icmp ult {} %{}, %{}".format(self.get_llvm_representation(), lhs, rhs)
+	def implement_le(self, lhs, rhs, out):
+		return "icmp ule {} %{}, %{}".format(self.get_llvm_representation(), lhs, rhs)
 
 class FunctionOType(OType):
 	def __init__(self, name, args, returntype):
@@ -248,6 +267,12 @@ builtin_types = {e.name:e for e in [
 	IntegerPrimitiveOType("long", "i64", "add i64 0, {}"),
 	IntegerPrimitiveOType("xlong", "i128", "add i128 0, {}"),
 	IntegerPrimitiveOType("xxlong", "i256", "add i256 0, {}"),
+	UnsignedIntegerPrimitiveOType("uint", "i32", "add i32 0, {}"),
+	UnsignedIntegerPrimitiveOType("ushort", "i16", "add i16 0, {}"),
+	UnsignedIntegerPrimitiveOType("ubyte", "i8", "add i8 0, {}"),
+	UnsignedIntegerPrimitiveOType("ulong", "i64", "add i64 0, {}"),
+	UnsignedIntegerPrimitiveOType("uxlong", "i128", "add i128 0, {}"),
+	UnsignedIntegerPrimitiveOType("uxxlong", "i256", "add i256 0, {}"),
 	PointerPrimitiveOType("ptr", "i8*"),
 	PointerPrimitiveOType("void", "void"),
 	PrimitiveCStrOType("cstr", "i8*")

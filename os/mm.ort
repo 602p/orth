@@ -1,5 +1,7 @@
 @declare_func("__kgetcs", "int", "()")@
 @declare_func("__kgetds", "int", "()")@
+@declare_func("__kreloadselectors", "int", "()")@
+@declare_func("__klgdt", "void", "(i32)")@
 
 ptr mm_head
 ptr mm_pos
@@ -13,9 +15,13 @@ return
 
 function(int amt) malloc -> ptr does
 	ptr ret=mm_pos
-	mm_pos=((mm_pos|int)+amt)|ptr
+	mm_pos=mm_pos:offset(amt)
 	last_alloc=ret
 return ret
+
+function(int to) malign -> void does
+	mm_pos=mm_pos:offset(to-((mm_pos|int)%to))
+return
 
 function(ptr idx) free -> void does
 	if last_alloc|int==idx|int do
@@ -45,3 +51,121 @@ return ((p|int)+amt)|ptr
 
 #GDT Stuff
 
+type GDTEntry is packed
+	short limit_low
+	short base_low
+	byte  base_mid
+	byte  access_flags
+	byte  monstrosity #bits 0-3 are limit 16:19 (limit high,) and bits 4-7 are flags
+	byte  base_high
+
+	function(int base, int to, bool exec, bool user) GDTEntry::new -> GDTEntry does
+		GDTEntry new = malloc(@sizeof(GDTEntry)@)|GDTEntry
+		uint limit = (to|uint)-(base|uint)
+		
+		bool page_granularity = 0|bool
+
+		if limit > 0xFFFFF|uint do
+			#in this case, can't store it as bytes, need to set the granularity flag
+			# and store in units of 4KiB blocks (pages)
+			limit = limit >> 12 #convert to units of 4KiB
+			page_granularity = 1|bool
+		done
+
+		new.limit_low   = (limit & 0xFFFF)|short
+		new.monstrosity = ((limit >> 16) & 0xF)|byte
+
+		new.base_low  = (base & 0xFFFF)|short
+		new.base_mid  = ((base >> 16) & 0xFF)|byte
+		new.base_high = ((base >> 24) & 0xFF)|byte
+
+		new.monstrosity += 0b01000000 |byte
+		#                     ^- 32-bit entry
+
+		new.access_flags = 0b10010010 |byte
+		#                    ^  ^  ^- Can read code/write data, yes!
+		#                     \  \- Must be 1
+		#                      \- Present, yes!
+
+		if user do
+			new.access_flags += 0b01100000 |byte
+			#                      ^^- Set privelage mode to 3 (userland)
+		done #Privelage (bits 5:6) already set to 0 for kernel code
+
+		if exec do
+			new.access_flags += 0b00001000 |byte
+			#                         ^- Exec bit - Is code
+		done
+
+		if page_granularity do
+			new.monstrosity += 0b10000000 |byte
+			#                    ^- Granularity bit - Limit is in units of 4KiB blocks instead now
+		done
+
+	return new
+
+	function(GDTEntry e) GDTEntry:print -> void does
+		kterm:print("GDTEntry<")
+		kterm:printi(e.limit_low|int)
+		kterm:print(",")
+		kterm:printi(e.base_low|int)
+		kterm:print(",")
+		kterm:printi(e.base_mid|int)
+		kterm:print(",")
+		kterm:printi(e.access_flags|int)
+		kterm:print(",")
+		kterm:printi(e.monstrosity|int)
+		kterm:print(",")
+		kterm:printi(e.base_high|int)
+		kterm:printl(">")
+	return
+endtype
+
+type GDT is packed
+	short size
+	int   pointer
+	int   current_idx
+
+	function(int entries) GDT::new -> GDT does
+		malign(256)
+		GDT new=malloc(@sizeof(GDT)@)|GDT
+		new.size=((entries+1)*@sizeof(GDTEntry)@)|short #Include space for null entry
+		malign(256)
+		new.pointer=malloc(new.size|int)|int
+		new.current_idx=1
+		memset(new.pointer|ptr, new.size|int, 0|byte)
+		new.size-=1|short #x86 is dumb and wants size-1
+	return new
+
+	function(GDT table, int idx, GDTEntry entry) GDT:insert -> void does
+		int entry_sz=@sizeof(GDTEntry)@
+		ptr target=(table.pointer|ptr):offset(entry_sz*idx)
+		memcpy(entry|ptr, target, entry_sz)
+	return
+
+	function(GDT table, GDTEntry entry) GDT:add -> void does
+		table:insert(table.current_idx, entry)
+		table.current_idx+=1
+	return
+endtype
+
+function() install_gdt -> void does
+	GDT gdt = GDT::new(2)
+
+	GDTEntry kernel_code = GDTEntry::new(0x0, 0xFFFFFFFF, 1|bool, 0|bool)
+	kterm:print(".")
+	gdt:add(kernel_code)
+	kterm:print(".")
+	free(kernel_code|ptr)
+
+	GDTEntry kernel_data = GDTEntry::new(0x0, 0xFFFFFFFF, 0|bool, 0|bool)
+	kterm:print(".")
+	gdt:add(kernel_data)
+	kterm:print(".")
+	free(kernel_data|ptr)
+
+	kterm:printi((gdt|ptr)|int)
+	kterm:print("!")
+	__klgdt((gdt|ptr)|int)
+	kterm:print("*")
+return

@@ -69,7 +69,7 @@ class Tokens(metaclass=TokenHolder):
 	
 	T_UNARY_OPERATOR = TokenType(r"[\-~!]", capture=True)
 
-	T_INTEGER_LITERAL = TokenType(r"[0-9xXa-fA-F]+L?", capture=True)
+	T_INTEGER_LITERAL = TokenType(r"[0-9xbBXa-fA-F]+L?", capture=True)
 	T_STRING_LITERAL = TokenType(r"\"[(#-~)|( \!)]*\"", capture=True)
 	T_ENDOFSTATEMENT = TokenType(";")
 
@@ -164,6 +164,9 @@ class LiteralExpr(ValueExpression):
 		if elements[0].type==T_INTEGER_LITERAL:
 			if "X" in elements[0].value.upper():
 				self.value=int(elements[0].value.replace("L",""), 16)
+				self.type='int'
+			elif "B" in elements[0].value.upper():
+				self.value=int(elements[0].value.replace("L",""), 2)
 				self.type='int'
 			else:
 				self.value=int(elements[0].value.replace("L",""))

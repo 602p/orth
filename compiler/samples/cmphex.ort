@@ -1,0 +1,9 @@
+import std
+
+function() main -> int does
+	if (0xFFFFFFFF|uint)>(0xFFFFF|uint) do
+		printf("Yes\n")
+	else do
+		printf("No\n")
+	done
+return 0

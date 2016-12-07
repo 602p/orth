@@ -48,6 +48,7 @@ loader equ (_loader - 0xC0000000)
 global loader
  
 _loader:
+    cli
     ; NOTE: Until paging is set up, the code must be position-independent and use physical
     ; addresses, not virtual ones!
     mov ecx, (BootPageDirectory - KERNEL_VIRTUAL_BASE)
@@ -117,6 +118,20 @@ __klidt:
     mov edx, [esp + 4]
     lidt [edx]
     sti
+    ret
+
+global __klgdt
+__klgdt:
+    mov edx, [esp + 4]
+    lgdt [edx]
+    jmp   0x08:__klgdt_newcs
+__klgdt_newcs:
+    mov   ax, 0x10
+    mov   ds, ax
+    mov   es, ax
+    mov   fs, ax
+    mov   gs, ax
+    mov   ss, ax
     ret
 
 global __kgetcs

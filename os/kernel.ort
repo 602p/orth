@@ -40,14 +40,24 @@ function() kernel_main -> void does
 	kterm:printi(__kgetcs())
 	kterm:print(" DS=")
 	kterm:printi(__kgetds())
-	kterm:print("\n")
-	kterm:print("Testing Memory... ")
+	kterm:print(" Installing GDT... ")
+
+	install_gdt()
+
+	kterm:print(" Done! ")
+
+	kterm:print("CS=")
+	kterm:printi(__kgetcs())
+	kterm:print(" DS=")
+	kterm:printi(__kgetds())
+
+	kterm:print("\nTesting Memory... ")
 
 	int mt_x=kterm.cursor_x
 
 	int i = 0
-	while i<((1024*1024*2)-64) do
-		(((mm_pos|int)+i)|ptr)[0]=0|byte
+	while i<(0xFFFFF) do
+		#mm_pos:offset(i)[0]=0|byte
 		kterm:printi(i)
 		kterm.cursor_x=mt_x
 		i+=16

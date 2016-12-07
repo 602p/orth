@@ -38,7 +38,7 @@ with open("out.ll", 'w') as fd:
 				print("*****************************************\n"*2, end='')
 				print("******************ERROR******************")
 				print("*****************************************\n"*2)
-				print(ex)
+				print(ex, type(ex))
 				print("SCOPES: (most recent first)")
 				for map in e.scopes.maps:
 					print("\t"+str(map))
@@ -54,7 +54,7 @@ with open("out.ll", 'w') as fd:
 				print("\nLASTLI: ", e.last_line)
 				print("LASTFI: ", e.last_file)
 				print("LASTME: ", e.last_method)
-				sys.exit(1)
+				raise ex
 
 	e.emit_global_statments()
 

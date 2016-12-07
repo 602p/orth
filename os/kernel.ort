@@ -51,20 +51,20 @@ function() kernel_main -> void does
 	kterm:print(" DS=")
 	kterm:printi(__kgetds())
 
-	kterm:print("\nTesting Memory... ")
+	kterm:print("\nTesting (some) Memory... ")
 
 	int mt_x=kterm.cursor_x
 
-	int i = 0
-	while i<(0xFFFFF) do
-		mm_pos:offset(i)[0]=0|byte
-		kterm:printi(i)
+	int testpos = 0
+	while testpos|int<0x100000 do
+		mm_pos:offset(testpos)[0]=0|byte
+		kterm:printi(testpos)
 		kterm.cursor_x=mt_x
-		i+=16
+		testpos+=1
 	done
 
 	kterm:print("Done, at least ")
-	kterm:printi(i)
+	kterm:printi(testpos)
 	kterm:printl("b accessible off 'heap'")
 
 	kterm:print("Load IDT+Kbd... ")
@@ -113,7 +113,7 @@ function() kernel_main -> void does
 		kterm.cursor_x=li_x
 		kterm.cursor_y=li_y
 
-		kterm:print("")
+		disp_fancy_ticker()
 	done
 return
 

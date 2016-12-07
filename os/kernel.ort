@@ -57,7 +57,7 @@ function() kernel_main -> void does
 
 	int i = 0
 	while i<(0xFFFFF) do
-		#mm_pos:offset(i)[0]=0|byte
+		mm_pos:offset(i)[0]=0|byte
 		kterm:printi(i)
 		kterm.cursor_x=mt_x
 		i+=16
@@ -101,21 +101,20 @@ function() kernel_main -> void does
 	int li_x=kterm.cursor_x
 	int li_y=kterm.cursor_y
 
-	__halt()
-
 	long val=0|long
 	int wait=0
 	int ticker_idx
 	while 1|bool do
-		wait=0
+		<#wait=0
 		while wait<7000000 do
 			wait+=1
-		done
+		done#>
 
 		kterm.cursor_x=li_x
 		kterm.cursor_y=li_y
+		kterm:printi((mm_pos|int)-(mm_head|int))
 
-		disp_fancy_ticker()
+		#disp_fancy_ticker()
 	done
 return
 
@@ -141,7 +140,8 @@ function() disp_fancy_ticker -> void does
 	else do
 		kterm:printi(li_value+60-255)
 	done
-	kterm:print(")      ")
+	kterm:print(") ")
+
 
 	kterm:print("   ")
 	li_value+=1

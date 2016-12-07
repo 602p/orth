@@ -156,13 +156,11 @@ function() install_gdt -> void does
 	kterm:print(".")
 	gdt:add(kernel_code)
 	kterm:print(".")
-	free(kernel_code|ptr)
 
 	GDTEntry kernel_data = GDTEntry::new(0x0, 0xFFFFFFFF, 0|bool, 0|bool)
 	kterm:print(".")
 	gdt:add(kernel_data)
 	kterm:print(".")
-	free(kernel_data|ptr)
 
 	kterm:printi((gdt|ptr)|int)
 	kterm:print("!")

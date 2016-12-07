@@ -345,6 +345,8 @@ class CallExprTransformer(Transformer):
 		if isinstance(node.method, AccessorExpr):
 			if node.method.accesses=="method":
 				return get_type(node.method.object, out).name+"$"+node.method.field
+			else:
+				raise Exception("Don't know how to translate AccessorExpr %s in get_method_to_invoke"%str(node.method))
 		else:
 			assert isinstance(node.method, NameExpr), "No computed calls yet :("
 			return node.method.name

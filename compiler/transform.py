@@ -212,4 +212,4 @@ def resolve_import(import_node, out):
 		raise ImportError("No module `%s' found on search path"%import_node.identifier)
 
 def sanitize_fn(fn):
-	return fn.replace(".ort","").strip("/.\\")
+	return fn.replace(".ort","").replace("/","").replace(".","").replace("\\","")

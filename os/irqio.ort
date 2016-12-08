@@ -1,4 +1,5 @@
 @declare_func("__kget_keyboard_handler_addr", "ptr", "()")@
+@declare_func("__kget_pf_handler_addr", "ptr", "()")@
 @declare_func("__klidt", "void", "(i8*)")@
 @declare_func("__kwritepb", "void", "(i8, i8)")@
 @declare_func("__kreadpb", "ubyte", "(i8)")@
@@ -60,11 +61,13 @@ function() setup_irq -> void does
 
 	kterm:print("*")
 	IDTEntry kbd_handler = IDTEntry::new(__kget_keyboard_handler_addr())
+	IDTEntry pf_handler = IDTEntry::new(__kget_pf_handler_addr())
 
 	kterm:print("kbdh@")
 	kterm:printi(__kget_keyboard_handler_addr()|int)
 	kterm:print("*")
 	idt:install_entry(kbd_handler, 0x21)
+	idt:install_entry(pf_handler, 0x0E)
 
 	#Mask interrupts we don't have handlers for
 	setup_kbd()
@@ -74,6 +77,7 @@ function() setup_irq -> void does
 	kterm:print("*")
 
 	start_kbd()
+	read_port(0x60)
 
 	kterm:print("#")
 return
@@ -97,18 +101,6 @@ return
 
 function() __irq_keyboard_handler -> void does
 	write_port(0x20, 0x20)
-	<#kterm:print("Keyboard IRQ! S=")
-	int status = read_port(0x64)
-	kterm:printi(status)
-	kterm:print(", D=")
-	if (status&1)>0 do
-		kterm:printi(read_port(0x60))
-	else do
-		kterm:print("?")
-	done
-	kterm:print("\n")
-	kterm:setchar(0, 0, read_port(0x64)|byte)
-	kterm:setchar(0, 1, read_port(0x60)|byte)#>
 
 	int status = read_port(0x64)
 	int x = kterm.cursor_x

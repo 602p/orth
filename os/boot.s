@@ -105,8 +105,21 @@ __kwritepb:
 
 extern __irq_keyboard_handler
 keyboard_handler_irupt_internal:
+    pushfd
+    pushad
     call    __irq_keyboard_handler
-    iretd
+    popad
+    popfd
+    iret
+
+extern __irq_pagefault_handler
+pagefault_handler_irupt_internal:
+    iret
+
+global __kget_pf_handler_addr
+__kget_pf_handler_addr:
+    mov eax, pagefault_handler_irupt_internal
+    ret
 
 global __kget_keyboard_handler_addr
 __kget_keyboard_handler_addr:

@@ -60,7 +60,7 @@ function() kernel_main -> void does
 		mm_pos:offset(testpos)[0]=0|byte
 		kterm:printi(testpos)
 		kterm.cursor_x=mt_x
-		testpos+=1
+		testpos+=16
 	done
 
 	kterm:print("Done, at least ")
@@ -106,7 +106,7 @@ function() kernel_main -> void does
 	int ticker_idx
 	while 1|bool do
 		wait=0
-		while wait<7000000 do
+		while wait<1 do
 			wait+=1
 		done
 

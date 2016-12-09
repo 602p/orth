@@ -6,7 +6,10 @@ import datamodel
 import copy
 import os
 
+#Underlying machinery for tracking TU state and emitting LLVM code.
+
 class Variable:
+	#Holds a LLVM identifier, OType pair
 	def __init__(self, var, type):
 		self.name=var
 		self.type=type
@@ -18,7 +21,13 @@ class Variable:
 		return str(self)
 
 class Emitter:
+	#Workhorse of the actual emitting process. Passed around as out so as to be theoretically reentrant.
+	#Tracks variables, globals, function prototypes, included files, contexts (indent etc), scopes
 	class _IndentContext:
+		#Helper so that one can write
+		#with out.context():
+		#	#Do something
+		#Just pops the last context off the context map chain when it returns (if no error)
 		def __init__(self, emitter):
 			self.emitter=emitter
 
@@ -30,6 +39,7 @@ class Emitter:
 			del self.emitter.context_map.maps[0]
 
 	class _ScopeContext:
+		#Same as above, but for scope
 		def __init__(self, emitter):
 			self.emitter=emitter
 
@@ -41,9 +51,20 @@ class Emitter:
 			del self.emitter.scopes.maps[0]
 
 	def __init__(self, fd):
+		#Construct an emitter, outputting to the file fd
 		self.fd=fd
 		self.indent_context_manager=Emitter._IndentContext(self)
 		self.scope_context_manager=Emitter._ScopeContext(self)
+		#The context chainmap is a series of maps, where the current state
+		# (file, line, class, method, etc) is readable by indexing into the
+		# chain. This allows nested contexts, for example a method in a class
+		# in a included file in an included file in an included file, and for
+		# it all to be sorted out at the end of those scopes.
+		#Create a scope by doing
+		#with emitter.scope(line=foo, file=bar, method=baz):
+		#	#Do stuff that will call emitter.emit*
+		# and then the emitted lines will have the correct context/debugging
+		# info attached
 		self.context_map=collections.ChainMap({
 			"indent":0,
 			"line":"u",
@@ -53,19 +74,28 @@ class Emitter:
 			"method":"u",
 			"astblock":"u"
 		})
-		self.temp_count=0
-		self.last_line=-1
-		self.last_file=-1
-		self.last_method=-1
+		self.temp_count=0 #Number of temporary (for SSA) variables we've allocated
+		self.last_line=-1 #Debug helper
+		self.last_file=-1 #Debug helper
+		self.last_method=-1 #Debug helper
 
+		#Same idea as the context maps. Provides a stack of orth_var_name:Variable
+		# mappings that (as a virtue of being a stack) respects local declarations over
+		# global names)
 		self.scopes=collections.ChainMap({})
-		self.signatures={}
-		self.globals={}
-		self.global_statments=[]
-		self.included_files=[]
-		self.prepared_files=[]
-		self.types=copy.copy(datamodel.builtin_types)
-		self.searchpath=["."]
+		self.signatures={} #Mapping of mangled_function_name:FunctionOType prototypes
+		self.globals={} #Mapping of orth_var_name:Variable pairs for global variables. Basically, this is a hack
+				# because LLVM globals start with @ and all the identifier-value code assumes they start
+				# with %, as locals do. Therefore, I kludged this in and had it create locals that shadow
+				# the globals (as they are pointers to their actual values to start with)
+		self.global_statments=[] #Stuff to stick at the end of the file (e.g. string literals)
+		self.included_files=[] #Files whose contents have actually been emitted
+		self.prepared_files=[] #Files whose prototypes/globals have been emitted, and signatures loaded
+					#(all files will have that preparation transformation applied before _any_ are actually
+					# "included")
+		self.types=copy.copy(datamodel.builtin_types) #Dictionary of orth_type_name:OTypes of the types availible (globally)
+								#in the program
+		self.searchpath=["."] #Search path for imported modules (using import name, as opposed to import "relative_path")
 
 	def emit(self, text):
 		self.fd.write(text)
@@ -80,19 +110,20 @@ class Emitter:
 		self.emit("\n")
 
 	def context(self, indent_by=1, **kwargs):
-		# self.emitl(";////////////////////////////////")
+		#Create and push a context on to the context map chain stack. Automatically indents +1 if not otherwise specified
 		if 'indent' not in kwargs:
 			kwargs['indent']=self.context_map['indent']+indent_by
 		self.context_map.maps.insert(0, kwargs)
 		self.last_line=self.context_map["line"]
 		self.last_file=self.context_map["file"]
 		self.last_method=self.context_map["method"]
-		return self.indent_context_manager
+		return self.indent_context_manager #This function returns a context manager that automatically pops the context when the block ends
 
 	def indent(self, by=1):
 		return self.context(indent_by=by)
 
 	def get_name(self):
+		#Get a non-conficting SSA name
 		self.temp_count+=1
 		return "f{}_m{}_l{}_n{}".format(
 			self.context_map['file'],
@@ -102,36 +133,51 @@ class Emitter:
 		)
 
 	def get_temp_name(self):
+		#Get a non-conflicting SSA name for an intermidiate variable
 		return "temp_"+self.get_name()
 
 	def scope(self):
+		#Create a scope and push it onto the scope chain map stack
 		self.scopes.maps.insert(0, {})
 		return self.scope_context_manager
 
 	def set_var_name(self, vname, aname, type):
+		#Create a variable (in the topmost scope) and register it's type
 		self.scopes.maps[0][vname]=Variable(aname, type)
 
 	def set_global_var_name(self, vname, aname, type):
+		#Create a global and register it's type
 		self.globals[vname]=Variable(aname, type)
 
 	def get_var_name(self, vname):
+		#Get the llvm identifer for a variable (returns the identifier (which never
+		# shadow each other) of the variable in the topmost scope containing one named
+		# `vname`)
 		return self.scopes[vname].name
 
 	def get_var_type(self, vname):
+		#Same behavior as get_var_name, but returns the OType of the variable
 		return self.scopes[vname].type
 
 	def get_var(self, vname):
+		#Same behavior as get_var_name, but returns the whole Variable object
 		return self.scopes[vname]
 
 	def add_global_stmt(self, text):
+		#Stick a glbal statment for emitting at the end onto the list (e.g. string literals)
 		self.global_statments.append(text)
 
 	def emit_global_statments(self):
+		#Emit all the cached global statments
 		for stmt in self.global_statments:
 			self.emitl(stmt)
 
+#Mapping of ASTNode type -> Transformer type
+#Is a one-to-one mapping, but in some cases a transformer may match a more specific subclass of a ASTNode than another
+# (in that case we always want the more specific match)
 transformers={}
 class TransformerMeta(type):
+	#Metaclass for transformers that registers it
 	def __new__(self, name, bases, classdict):
 		cls = type.__new__(self, name, bases, classdict)
 		if cls.transforms is not None:
@@ -143,13 +189,31 @@ class TransformerMeta(type):
 		return cls
 
 class Transformer(metaclass=TransformerMeta):
-	transforms=None
+	transforms=None #This is either a single ASTNode subclass or a list of them that this Transofmrer is capable of matching
 	def __init__(self, node, parent):
 		self.node=node
 		self.parent=parent
 
 	def transform(self, out):
+		#Returns a LLVM identifier string for the value of this ASTNode (assuming it has one) otherwise None
 		pass
+
+	def transform_address(self, out):
+		#Required for stuff that can be the LHS of an AssignmentExpr. Should return a LLVM identifier string
+		# for a local variable of type <get_type()>*, reffering to the memory address of the location it's value
+		# is stored at
+		pass
+
+	def prepare(self, out):
+		#Not required. For functiondecls and global decls, and file this will be called at import-resolution time
+		# (as opposed to include-time) and should be used to declare types and variables etc
+		pass 
+	
+	@staticmethod
+	def get_type(node, out):
+		#Returns a OType that is the type of the variable returned by transform()
+		pass
+
 
 def get_transformer_cls(node):
 	match=None

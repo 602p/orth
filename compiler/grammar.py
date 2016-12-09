@@ -70,7 +70,7 @@ class Tokens(metaclass=TokenHolder):
 	T_UNARY_OPERATOR = TokenType(r"[\-~!]", capture=True)
 
 	T_INTEGER_LITERAL = TokenType(r"[0-9xbBXa-fA-F]+L?", capture=True)
-	T_STRING_LITERAL = TokenType(r"\"[(#-~)|( \!)]*\"", capture=True)
+	T_STRING_LITERAL = TokenType(r"r?\"[(#-~)|( \!)]*\"", capture=True)
 	T_ENDOFSTATEMENT = TokenType(";")
 
 globals().update(Tokens)
@@ -172,7 +172,7 @@ class LiteralExpr(ValueExpression):
 				self.value=int(elements[0].value.replace("L",""))
 				self.type='int'
 		else:
-			self.value=elements[0].value[1:-1].replace("\\n","\n")
+			self.value=eval(elements[0].value) #Hack to allow escapes
 			self.type='cstr'
 
 class SepExpr(Expression):

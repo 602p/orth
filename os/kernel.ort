@@ -1,6 +1,7 @@
 import mm
 import term
 import panic
+import keymap_us
 
 Terminal kterm
 int base_vma
@@ -16,17 +17,17 @@ function() kernel_main -> void does
 
 	kterm:printl("  ..---..")
 
-	kterm:printl(" /       \")
+	kterm:printl(" /       \\")
 	kterm:printl("|         |")
 	kterm:printl(":         ;")
-	kterm:print(" \  \")
+	kterm:print(" \\  \\")
 	kterm:printa(0x0E, "~")
 	kterm:printl("/  /")
 	kterm:printl("  `, Y ,'")
 	kterm:printl("   |_|_|")
 	kterm:printl("   |===|")
 	kterm:printl("   |===|")
-	kterm:printl("    \_/")
+	kterm:printl("    \\_/")
 	kterm:printl("\nOrth OS. Louis G.")
 
 	kterm:print("CS=")
@@ -90,24 +91,18 @@ function() kernel_main -> void does
 		fg_idx+=1
 	done
 
+	init_keymap()
 	kterm:printl("\nPress F1 to cause a Page Fault. Press F2 to cause a Double Fault (via 1/0)")
-	kterm:print("Running... ")
+	kterm:print("Type! ")
 	int li_x=kterm.cursor_x
 	int li_y=kterm.cursor_y
 
-	long val=0|long
-	int wait=0
-	int ticker_idx
 	while 1|bool do
-		wait=0
-		while wait<7000000 do
-			wait+=1
-		done
-
 		kterm.cursor_x=li_x
 		kterm.cursor_y=li_y
 
-		disp_fancy_ticker()
+		kterm:print(system_kbdstate.buffer:stringview())
+		kterm:print("                                 ")
 	done
 return
 

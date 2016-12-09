@@ -26,7 +26,7 @@ drawblockdiag.emit_node_file(open('out.bd', 'w'), node, portrait_mode=True)
 print("\rPreparing Transformer...                       ", end="")
 import transform, transformer, datamodel
 
-print("\rTransforming...                       ", end="")
+print("\rTransforming...                       \n", end="")
 with open("out.ll", 'w') as fd:
 	e=transform.Emitter(fd)
 	with e.scope():

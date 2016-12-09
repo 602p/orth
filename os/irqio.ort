@@ -101,40 +101,82 @@ function() setup_kbd -> void does
 	write_port(0xA1 , 0xff)
 return
 
+type KeyboardBuf is
+	int waiting
+	int bufsize
+	ptr buffer
+	ptr scratch
+
+	function(int bufsize) KeyboardBuf::new -> KeyboardBuf does
+		KeyboardBuf new = malloc(@sizeof(KeyboardBuf)@)|KeyboardBuf
+		new.waiting=0
+		new.bufsize=bufsize
+		new.buffer=malloc(bufsize)
+	return new
+
+	function(KeyboardBuf b, byte char) KeyboardBuf:append -> void does
+		b.buffer[b.waiting]=char
+		b.buffer[b.waiting+1]=0|byte
+		b.waiting+=1
+	return
+
+	function(KeyboardBuf b) KeyboardBuf:delete1 -> void does
+		if b.waiting>0 do
+			b.waiting-=1
+			b.buffer[b.waiting]=0|byte
+		done
+	return
+
+	function(KeyboardBuf b) KeyboardBuf:stringview -> cstr does
+	return b.buffer|cstr
+endtype
+
+type KeyboardState is
+	bool shifted
+	KeyboardBuf buffer
+
+	function(KeyboardBuf buf) KeyboardState::new -> KeyboardState does
+		KeyboardState new = malloc(@sizeof(KeyboardState)@)|KeyboardState
+		new.shifted=0|bool
+		new.buffer=buf
+	return new
+endtype
+
+KeyboardState system_kbdstate
+
 function() start_kbd -> void does
+	system_kbdstate=KeyboardState::new(KeyboardBuf::new(2048))
 	write_port(0x21 , 0xFD)
 return
 
 function() __irq_keyboard_handler -> void does
 	write_port(0x20, 0x20)
-
 	int status = read_port(0x64)
-	int x = kterm.cursor_x
-	int y = kterm.cursor_y
-	kterm.cursor_x=0
-	kterm.cursor_y=20
-	kterm:print("KBD IRQ:")
-	kterm:printi(status)
 	if (status&1) > 0 do
 		int value = read_port(0x60)
-		int pos = (21*80*2)+((value&0b01111111)*2)
-		if (value&0b10000000) > 0 do
-			kterm:print("U")
-			kterm.baseaddr[pos]=32|byte
+		int keycode = value&0b01111111
+		if (value&0b10000000) == 0 do #On keydown
+			if keycode==42 do
+				system_kbdstate.shifted=1|bool
+			elif keycode==54 do
+				system_kbdstate.shifted=1|bool
+			elif keycode==14 do
+				system_kbdstate.buffer:delete1()
+			elif keycode==59 do
+				(0|ptr)[0xDEADBEEF]=0|byte
+			elif keycode==60 do
+				int bad = 1/0
+			else do
+				system_kbdstate.buffer:append(translate_keycode(keycode, system_kbdstate.shifted))
+			done
 		else do
-			kterm:print("D")
-			kterm.baseaddr[pos]=88|byte
-		done
-		kterm:printi((value&0b01111111))
-		kterm:print("   ")
-		if (value&0b01111111)==59 do
-			(0|ptr)[0xDEADBEEF]=0|byte
-		elif (value&0b01111111)==60 do
-			int bad = 1/0
+			if keycode==42 do
+				system_kbdstate.shifted=0|bool
+			elif keycode==54 do
+				system_kbdstate.shifted=0|bool
+			done
 		done
 	done
-	kterm.cursor_x=x
-	kterm.cursor_y=y
 return
 
 function(int addr, int errorcode) __irq_pagefault_handler -> void does

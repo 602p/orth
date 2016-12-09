@@ -1,0 +1,13 @@
+
+function(cstr s) cstr:len -> int does
+	int len=0
+	while (s|ptr)[len]!=0|byte do
+		len+=1
+	done
+return len
+
+function(cstr s) cstr:ord -> int does
+return (s|ptr)[0]|int
+
+function(cstr s, int idx) cstr:idxi -> int does
+return (s|ptr)[idx]|int

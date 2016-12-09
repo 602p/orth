@@ -1,0 +1,108 @@
+import strutil
+
+type Keymap is
+	byte K_ESCAPE
+	byte K_BACKSPACE
+	byte K_F1
+	byte K_F2
+
+	function() Keymap::init -> Keymap does
+		Keymap k=malloc(@sizeof(Keymap)@)|Keymap
+		k.K_ESCAPE=27|byte
+		k.K_F1=17|byte
+		k.K_F2=18|byte
+	return k
+
+	function(Keymap map, int keycode, bool shifted) Keymap:translate_keycode -> byte does
+		int v="?":ord()
+		if keycode==1 do
+			v=27
+		elif (keycode>1)&(keycode<14) do
+			if shifted do
+				v="!@#$%^&*()_+":idxi(keycode-2)
+			else do
+				v="1234567890-=":idxi(keycode-2)
+			done
+		elif keycode==15 do
+			v=9
+		elif (keycode>15)&(keycode<29) do
+			if shifted do
+				v="QWERTYUIOP{}|\n":idxi(keycode-16)
+			else do
+				v="qwertyuiop[]\n":idxi(keycode-16)
+			done
+		#CONTROL GOES HERE
+		elif (keycode>29)&(keycode<42) do
+			if shifted do
+				v="ASDFGHJKL:\x22~":idxi(keycode-30)
+			else do
+				v="asdfghjkl;'`":idxi(keycode-30)
+			done
+		#LSHIFT GOES HERE
+		elif (keycode>42)&(keycode<54) do
+			if shifted do
+				v="|ZXCVBNM<>?":idxi(keycode-43)
+			else do
+				v="\\zxcvbnm,./":idxi(keycode-43)
+			done
+		#RSHIFT GOES HERE
+		elif keycode==55 do
+			v="*":ord()
+		elif keycode==57 do
+			v=" ":ord()
+		elif keycode==59 do
+			v=map.K_F1|int
+		elif keycode==60 do
+			v=map.K_F2|int
+		done
+	return v|byte
+endtype
+
+Keymap keymap
+
+function() init_keymap -> void does
+	keymap=Keymap::init()
+return
+
+function(int keycode, bool shifted) translate_keycode -> byte does
+return keymap:translate_keycode(keycode, shifted)
+
+<#unsigned char keyboard_map[128] =
+{
+0,  27, '1', '2', '3', '4', '5', '6', '7', '8', /* 9 */
+'9', '0', '-', '=', '\b', /* Backspace */
+'\t',     /* Tab */
+'q', 'w', 'e', 'r', /* 19 */
+'t', 'y', 'u', 'i', 'o', 'p', '[', ']', '\n', /* Enter key */
+	0,      /* 29   - Control */
+'a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l', ';', /* 39 */
+'\'', '`',   0,    /* Left shift */
+'\\', 'z', 'x', 'c', 'v', 'b', 'n',      /* 49 */
+'m', ',', '.', '/',   0,        /* Right shift */
+'*',
+0,  /* Alt */
+' ',  /* Space bar */
+0,  /* Caps lock */
+0,  /* 59 - F1 key ... > */
+0,   0,   0,   0,   0,   0,   0,   0,
+0,  /* < ... F10 */
+0,  /* 69 - Num lock*/
+0,  /* Scroll Lock */
+0,  /* Home key */
+0,  /* Up Arrow */
+0,  /* Page Up */
+'-',
+0,  /* Left Arrow */
+0,
+0,  /* Right Arrow */
+'+',
+0,  /* 79 - End key*/
+0,  /* Down Arrow */
+0,  /* Page Down */
+0,  /* Insert Key */
+0,  /* Delete Key */
+0,   0,   0,
+0,  /* F11 Key */
+0,  /* F12 Key */
+0,  /* All other keys are undefined */
+};#> #Ref. from osdev wiki

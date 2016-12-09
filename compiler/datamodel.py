@@ -212,11 +212,15 @@ class IntegerPrimitiveOType(PrimitiveOType):
 		return max(self.get_bit_width()/8, 1) #If it's an i1 (bool) it'll take up a whole byte anyway
 
 class UnsignedIntegerPrimitiveOType(IntegerPrimitiveOType):
+	#Behaves largely the same as uints, but uses unsigned versions of division/modulo/comparison operators
+	#A signed int and unsigned int of the same size have the same LLVM representation, but the logic orth
+	# provides to interact with them is different (i.e. signed respects the sign and unsigned treats it
+	# as another bit of the number) 
 	def implement_div(self, lhs, rhs, out):
-		return "sdiv {} %{}, %{}".format(self.get_llvm_representation(), lhs, rhs)
+		return "udiv {} %{}, %{}".format(self.get_llvm_representation(), lhs, rhs)
 
 	def implement_rem(self, lhs, rhs, out):
-		return "srem {} %{}, %{}".format(self.get_llvm_representation(), lhs, rhs)
+		return "urem {} %{}, %{}".format(self.get_llvm_representation(), lhs, rhs)
 
 	def implement_gt(self, lhs, rhs, out):
 		return "icmp ugt {} %{}, %{}".format(self.get_llvm_representation(), lhs, rhs)
@@ -228,6 +232,7 @@ class UnsignedIntegerPrimitiveOType(IntegerPrimitiveOType):
 		return "icmp ule {} %{}, %{}".format(self.get_llvm_representation(), lhs, rhs)
 
 class FunctionOType(OType):
+	#Used for the signatures cache. Tells callers how to invoke stuff.
 	def __init__(self, name, args, returntype):
 		OType.__init__(self, name)
 		self.llvmtype=returntype.get_llvm_representation()
@@ -241,14 +246,17 @@ class FunctionOType(OType):
 		return self.llvmtype+" "+self.argsig
 
 class ManualFunctionOType(FunctionOType):
+	#Used for @declare_func@ intrinsics (for calling out to external functions)
+	#Basically just lets users specify the parts of the LLVM decl
 	def __init__(self, name, argsig, returntype):
 		FunctionOType.__init__(self, name, [], returntype)
 		self.argsig=argsig
 		self.llvmtype=returntype.get_llvm_representation()
 
 class PointerPrimitiveOType(PrimitiveOType):
+	#A pointer to something. All it does is implement pointer-to-pointer bitcasts and pointer-to-int casts
 	def get_size(self):
-		return 8
+		return 8 #TODO: Detect arch compiling for and adjust appropriatley, 4 bytes on 32-bit systems
 
 	def implement_cast(self, value, from_, to):
 		if isinstance(to, IntegerPrimitiveOType):
@@ -266,11 +274,15 @@ class PointerPrimitiveOType(PrimitiveOType):
 
 
 class PrimitiveCStrOType(PointerPrimitiveOType):
+	#A cstr (C-String) is functionally equivilint to a pointer, but has a literal form (A quoted string)
 	def __init__(self, name, llvmtype):
 		OType.__init__(self, name)
 		self.llvmtype=llvmtype
 
 	def get_literal_expr(self, value, out):
+		#Create a global name for the literal value (will eventually end up in .rodata,) cache it for writing at the end
+		# then return a reference to it casting it as a i8* (instead of array of i8s)
+		#Only supports ASCII
 		globalname="strglobal_"+out.get_name()
 		transformed="".join("\\{}".format(("0" if ord(char)<16 else "") + hex(ord(char))[2:]) for char in value)
 		out.add_global_stmt("@{} = private unnamed_addr constant [{} x i8] c\"{}\" ; c={}".format(
@@ -287,6 +299,11 @@ class PrimitiveCStrOType(PointerPrimitiveOType):
 		)
 
 class StructOType(OType):
+	#Meat-n-taters of the user type system here. Implements a structure class as defined by a user
+	# with a LLVM structure type. User classes can ovveride the methods for add/sub/etc by defining functions
+	# (optinally within the typedecl) named name:op that become "instance" methods. These are then callable
+	# by doing instance:op(foo, bar), and this then internally calls class$op(instance, foo, bar)
+	#Provides aggregate size, and typedecl setup
 	def __init__(self, name, fields, out, packed=False):
 		OType.__init__(self, name)
 		self.fields=collections.OrderedDict(fields)
@@ -294,6 +311,8 @@ class StructOType(OType):
 		# print(self.fields)
 
 	def setup(self, out):
+		#This is a seperate step, because classes like linkedlist nodes may refer to themselves, so
+		# this needs to be run after the class is in the out.types cache
 		for field in self.fields.keys():
  			self.fields[field]=transform.get_type(self.fields[field], out)
 
@@ -307,35 +326,49 @@ class StructOType(OType):
 		return "ty_"+self.name+"_s"
 
 	def index_to(self, field):
-		return "i32 "+str(list(self.fields.keys()).index(field))
+		#Return the fragment of a getelementptr instruction to access the field named field
+		try:
+			return "i32 "+str(list(self.fields.keys()).index(field))
+		except ValueError:
+			raise KeyError("Programmer Error: Type %s has no field %s"%(self.name, field))
+
 
 	def get_decl(self):
+		#Return the declaration string for this type, as a LLVM aggregate structure.
+		#Packed instructs the compiler to add no padding to the outgoing structure
 		if self.packed:
 			return "%"+self.get_name()+" = type<{"+(",".join(self.datalayout))+"}>"
 		else:
 			return "%"+self.get_name()+" = type{"+(",".join(self.datalayout))+"}"
 
 	def get_llvm_representation(self):
+		#All "instances" of a user type are pointers to it
 		return "%"+self.get_name()+"*"
 
 	def get_size(self):
+		#If we have a reference to ourselves (or another StructOType that indirectly references us)
+		# we would get a infininite loop here recursivley calling get_size() in in.
+		#Also, that would be wrong even if it worked because we are holding a pointer to it, not 
+		# embedding it
 		return sum(e.get_size() if not isinstance(e, StructOType) else builtin_types['ptr'].get_size() for e in self.fields.values())
 
+
+#Initilize the builtin types. Nativley we support...
 builtin_types = {e.name:e for e in [
-	IntegerPrimitiveOType("bool", "i1", "add i1 0, {}"),
-	IntegerPrimitiveOType("int", "i32", "add i32 0, {}"),
-	IntegerPrimitiveOType("short", "i16", "add i16 0, {}"),
-	IntegerPrimitiveOType("byte", "i8", "add i8 0, {}"),
-	IntegerPrimitiveOType("long", "i64", "add i64 0, {}"),
-	IntegerPrimitiveOType("xlong", "i128", "add i128 0, {}"),
-	IntegerPrimitiveOType("xxlong", "i256", "add i256 0, {}"),
-	UnsignedIntegerPrimitiveOType("uint", "i32", "add i32 0, {}"),
-	UnsignedIntegerPrimitiveOType("ushort", "i16", "add i16 0, {}"),
-	UnsignedIntegerPrimitiveOType("ubyte", "i8", "add i8 0, {}"),
-	UnsignedIntegerPrimitiveOType("ulong", "i64", "add i64 0, {}"),
-	UnsignedIntegerPrimitiveOType("uxlong", "i128", "add i128 0, {}"),
+	IntegerPrimitiveOType("bool", "i1", "add i1 0, {}"),			#Boolean values
+	IntegerPrimitiveOType("int", "i32", "add i32 0, {}"),			#Int's are 4-bytes
+	IntegerPrimitiveOType("short", "i16", "add i16 0, {}"),			#Shorts are two
+	IntegerPrimitiveOType("byte", "i8", "add i8 0, {}"),			#Bytes (char in C)
+	IntegerPrimitiveOType("long", "i64", "add i64 0, {}"),			#Longs are 8 bytes
+	IntegerPrimitiveOType("xlong", "i128", "add i128 0, {}"),		#Hella big
+	IntegerPrimitiveOType("xxlong", "i256", "add i256 0, {}"),		#Hella Hella big
+	UnsignedIntegerPrimitiveOType("uint", "i32", "add i32 0, {}"),		#Same as above, but unsigned
+	UnsignedIntegerPrimitiveOType("ushort", "i16", "add i16 0, {}"),	# (note that they have the same LLVM types
+	UnsignedIntegerPrimitiveOType("ubyte", "i8", "add i8 0, {}"),		# but the orth type metadata is different
+	UnsignedIntegerPrimitiveOType("ulong", "i64", "add i64 0, {}"),		# resulting in the correct u* operations
+	UnsignedIntegerPrimitiveOType("uxlong", "i128", "add i128 0, {}"),	# being applied for mul, mod and cmp stuff)
 	UnsignedIntegerPrimitiveOType("uxxlong", "i256", "add i256 0, {}"),
-	PointerPrimitiveOType("ptr", "i8*"),
-	PointerPrimitiveOType("void", "void"),
-	PrimitiveCStrOType("cstr", "i8*")
+	PointerPrimitiveOType("ptr", "i8*"),					#No parameterization for pointers (so no need for void*)
+	PointerPrimitiveOType("void", "void"),					#Nil return value type (only valid in function decls)
+	PrimitiveCStrOType("cstr", "i8*")					#Cstr is just a ptr with a literal constructor
 ]}

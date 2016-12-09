@@ -1,17 +1,11 @@
 import mm
 import term
+import panic
 
 Terminal kterm
 int base_vma
 
 import irqio
-
-
-function() __halt -> void does
-	while 1|bool do
-		;0;
-	done
-return
 
 function() kernel_main -> void does
 	base_vma=0xC0000000
@@ -34,7 +28,6 @@ function() kernel_main -> void does
 	kterm:printl("   |===|")
 	kterm:printl("    \_/")
 	kterm:printl("\nOrth OS. Louis G.")
-
 
 	kterm:print("CS=")
 	kterm:printi(__kgetcs())
@@ -106,7 +99,7 @@ function() kernel_main -> void does
 	int ticker_idx
 	while 1|bool do
 		wait=0
-		while wait<1 do
+		while wait<7000000 do
 			wait+=1
 		done
 
@@ -148,3 +141,4 @@ function() disp_fancy_ticker -> void does
 		li_value=1
 	done
 return
+

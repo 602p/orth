@@ -1,5 +1,6 @@
 @declare_func("__kgetcs", "int", "()")@
 @declare_func("__kgetds", "int", "()")@
+@declare_func("__kgetss", "int", "()")@
 @declare_func("__kreloadselectors", "int", "()")@
 @declare_func("__klgdt", "void", "(i32)")@
 

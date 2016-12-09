@@ -1,5 +1,7 @@
 @declare_func("__kget_keyboard_handler_addr", "ptr", "()")@
 @declare_func("__kget_pf_handler_addr", "ptr", "()")@
+@declare_func("__kget_gpf_handler_addr", "ptr", "()")@
+@declare_func("__kget_df_handler_addr", "ptr", "()")@
 @declare_func("__klidt", "void", "(i8*)")@
 @declare_func("__kwritepb", "void", "(i8, i8)")@
 @declare_func("__kreadpb", "ubyte", "(i8)")@
@@ -62,12 +64,16 @@ function() setup_irq -> void does
 	kterm:print("*")
 	IDTEntry kbd_handler = IDTEntry::new(__kget_keyboard_handler_addr())
 	IDTEntry pf_handler = IDTEntry::new(__kget_pf_handler_addr())
+	IDTEntry gpf_handler = IDTEntry::new(__kget_gpf_handler_addr())
+	IDTEntry df_handler = IDTEntry::new(__kget_df_handler_addr())
 
 	kterm:print("kbdh@")
 	kterm:printi(__kget_keyboard_handler_addr()|int)
 	kterm:print("*")
 	idt:install_entry(kbd_handler, 0x21)
 	idt:install_entry(pf_handler, 0x0E)
+	idt:install_entry(gpf_handler, 0x0D)
+	idt:install_entry(df_handler, 0x08)
 
 	#Mask interrupts we don't have handlers for
 	setup_kbd()
@@ -123,4 +129,16 @@ function() __irq_keyboard_handler -> void does
 	done
 	kterm.cursor_x=x
 	kterm.cursor_y=y
+return
+
+function(int addr, int errorcode) __irq_pagefault_handler -> void does
+	kpanic(errorcode, addr, "Unrecoverable Page Fault Error", "???")
+return
+
+function(int addr, int errorcode) __irq_protectionfault_handler -> void does
+	kpanic(errorcode, addr, "Unrecoverable Page Fault Error", "???")
+return
+
+function(int addr, int errorcode) __irq_doublefault_handler -> void does
+	kpanic(errorcode, addr, "Unrecoverable Double Fault Error", "???")
 return

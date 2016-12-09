@@ -114,11 +114,56 @@ keyboard_handler_irupt_internal:
 
 extern __irq_pagefault_handler
 pagefault_handler_irupt_internal:
+    pop eax ;Grab error code
+    pushad
+    pushfd
+    push eax
+    mov eax, cr2
+    push eax
+    call __irq_pagefault_handler
+    popfd
+    popad
     iret
 
 global __kget_pf_handler_addr
 __kget_pf_handler_addr:
     mov eax, pagefault_handler_irupt_internal
+    ret
+
+extern __irq_protectionfault_handler
+gpf_handler_irupt_internal:
+    pop eax ;Grab error code
+    pushad
+    pushfd
+    push eax
+    mov eax, cr2
+    push eax
+    call __irq_protectionfault_handler
+    popfd
+    popad
+    iret
+
+global __kget_gpf_handler_addr
+__kget_gpf_handler_addr:
+    mov eax, gpf_handler_irupt_internal
+    ret
+
+extern __irq_doublefault_handler
+df_handler_irupt_internal:
+    pop eax ;Grab error code
+    pushad
+    pushfd
+    push eax
+    mov eax, cr2
+    push eax
+    call __irq_doublefault_handler
+    popfd
+    popad
+    iret
+
+global __kget_df_handler_addr
+__kget_df_handler_addr:
+    mov eax, df_handler_irupt_internal
     ret
 
 global __kget_keyboard_handler_addr
@@ -147,6 +192,11 @@ __klgdt_newcs:
     mov   ss, ax
     ret
 
+global __khalt
+__khalt:
+    hlt
+    jmp __khalt
+
 global __kgetcs
 __kgetcs:
     mov eax, cs
@@ -155,6 +205,32 @@ __kgetcs:
 global __kgetds
 __kgetds:
     mov eax, ds
+    ret
+
+global __kgetss
+__kgetss:
+    mov eax, ss
+    ret
+
+global __kgetes
+__kgetes:
+    mov eax, es
+    ret
+
+global __kgetfs
+__kgetfs:
+    mov eax, fs
+    ret
+
+global __kgetgs
+__kgetgs:
+    mov eax, gs
+    ret
+
+global __kgeteflags
+__kgeteflags:
+    pushfd
+    pop eax
     ret
  
 section .bss

@@ -1,0 +1,36 @@
+@declare_func("__kgetcs", "int", "()")@
+@declare_func("__kgetds", "int", "()")@
+@declare_func("__kgetss", "int", "()")@
+@declare_func("__kgetes", "int", "()")@
+@declare_func("__kgetfs", "int", "()")@
+@declare_func("__kgetgs", "int", "()")@
+@declare_func("__kgeteflags", "int", "()")@
+@declare_func("__khalt", "void", "()")@
+
+function(int errorcode, int addr, cstr type, cstr message) kpanic -> void does
+	kterm:bsod()
+	kterm:printl("********************************************************************************")
+	kterm:printl(type)
+	kterm:printl(message)
+	kterm:printl("********************************************************************************")
+	kterm:print("\nError Code: ")
+	kterm:dumpbin(errorcode)
+	kterm:print("\nAddress:    ")
+	kterm:dumphexi(addr)
+	kterm:print("\n\nCS:")
+	kterm:dumphex(__kgetcs(), 2)
+	kterm:print(" DS:")
+	kterm:dumphex(__kgetds(), 2)
+	kterm:print(" SS:")
+	kterm:dumphex(__kgetss(), 2)
+	kterm:print(" ES:")
+	kterm:dumphex(__kgetes(), 2)
+	kterm:print(" FS:")
+	kterm:dumphex(__kgetfs(), 2)
+	kterm:print(" GS:")
+	kterm:dumphex(__kgetgs(), 2)
+	kterm:print("\nEFLAGS:")
+	kterm:dumpbin(__kgeteflags())
+	kterm:print("\n\nSystem halt")
+	__khalt()
+return

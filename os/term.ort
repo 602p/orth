@@ -94,8 +94,54 @@ type Terminal is
 		free(str)
 	return
 
+	function(Terminal t, uint val) Terminal:dumpbin -> void does
+		t:print("0b")
+		int pos = 4*8
+		while pos>0 do
+			pos-=1
+			if (val&(1<<pos))>0 do
+				t:print("1")
+			else do
+				t:print("0")
+			done
+		done
+	return
+
+	function(Terminal t, uint val, int len) Terminal:dumphex -> void does
+		t:print("0x")
+		int pos = len
+		while pos>0 do
+			pos-=1
+			int digit = (val>>(pos*4))&0b1111
+			if digit<10 do
+				t:putchar((48+digit)|byte)
+			else do
+				t:putchar((65+digit-10)|byte)
+			done
+		done
+	return
+
+	function(Terminal t, uint val) Terminal:dumphexi -> void does
+		t:dumphex(val, 8)
+	return
+
 	function(Terminal t, int val) Terminal:printi -> void does
 		t:printlong(val|long)
 	return
 
+	function(Terminal t) Terminal:blank -> void does
+		int pos = 0
+		while pos<(t.width*t.height*2) do
+			t.baseaddr[pos]=32|byte
+			t.baseaddr[pos+1]=t.attributes
+			pos+=2
+		done
+	return
+
+	function(Terminal t) Terminal:bsod -> void does
+		t.attributes=0xB0|byte
+		t:blank()
+		t.cursor_x=0
+		t.cursor_y=0
+	return
 endtype

@@ -128,7 +128,7 @@ function() __irq_keyboard_handler -> void does
 		kterm:printi((value&0b01111111))
 		kterm:print("   ")
 		if (value&0b01111111)==59 do
-			(0|ptr)[0]=0|byte
+			(0|ptr)[0xDEADBEEF]=0|byte
 		elif (value&0b01111111)==60 do
 			int bad = 1/0
 		done

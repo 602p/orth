@@ -90,6 +90,7 @@ function() kernel_main -> void does
 		fg_idx+=1
 	done
 
+	kterm:printl("Press F1 to cause a Page Fault")
 	kterm:print("\nRunning... ")
 	int li_x=kterm.cursor_x
 	int li_y=kterm.cursor_y

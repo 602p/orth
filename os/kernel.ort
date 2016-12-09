@@ -90,7 +90,7 @@ function() kernel_main -> void does
 		fg_idx+=1
 	done
 
-	kterm:printl("\nPress F1 to cause a Page Fault")
+	kterm:printl("\nPress F1 to cause a Page Fault. Press F2 to cause a Double Fault (via 1/0)")
 	kterm:print("Running... ")
 	int li_x=kterm.cursor_x
 	int li_y=kterm.cursor_y

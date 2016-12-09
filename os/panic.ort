@@ -4,6 +4,10 @@
 @declare_func("__kgetes", "int", "()")@
 @declare_func("__kgetfs", "int", "()")@
 @declare_func("__kgetgs", "int", "()")@
+@declare_func("__kgetcr0", "int", "()")@
+@declare_func("__kgetcr2", "int", "()")@
+@declare_func("__kgetcr3", "int", "()")@
+@declare_func("__kgetcr4", "int", "()")@
 @declare_func("__kgeteflags", "int", "()")@
 @declare_func("__khalt", "void", "()")@
 
@@ -32,6 +36,14 @@ function(int errorcode, int addr, cstr type, cstr message) kpanic -> void does
 	kterm:dumphex(__kgetgs(), 2)
 	kterm:print("\nEFLAGS:")
 	kterm:dumpbin(__kgeteflags())
-	kterm:print("\n\nSystem halt")
+	kterm:print("\nCR0:")
+	kterm:dumpbin(__kgetcr0())
+	kterm:print("\nCR2:")
+	kterm:dumphexi(__kgetcr2())
+	kterm:print(" CR3:")
+	kterm:dumphexi(__kgetcr3())
+	kterm:print("\nCR4:")
+	kterm:dumpbin(__kgetcr4())
+	kterm:print("\n\nSystem halted")
 	__khalt()
 return

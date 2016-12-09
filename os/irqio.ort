@@ -136,13 +136,13 @@ function() __irq_keyboard_handler -> void does
 return
 
 function(int addr, int errorcode) __irq_pagefault_handler -> void does
-	kpanic(errorcode, addr, "Unrecoverable Page Fault Error", "???")
+	kpanic(errorcode, addr, "Unrecoverable Page Fault Error - INT 0x0E - #PF", "???")
 return
 
 function(int addr, int errorcode) __irq_protectionfault_handler -> void does
-	kpanic(errorcode, addr, "Unrecoverable Page Fault Error", "???")
+	kpanic(errorcode, addr, "Unrecoverable Page Fault Error - INT 0x0D - #GPF", "???")
 return
 
 function(int addr, int errorcode) __irq_doublefault_handler -> void does
-	kpanic(errorcode, addr, "Unrecoverable Double Fault Error", "???")
+	kpanic(errorcode, addr, "Unrecoverable Double Fault Error - INT 0x08 - #DF", "???")
 return

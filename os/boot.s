@@ -227,6 +227,26 @@ __kgetgs:
     mov eax, gs
     ret
 
+global __kgetcr0
+__kgetcr0:
+    mov eax, cr0
+    ret
+
+global __kgetcr2
+__kgetcr2:
+    mov eax, cr2
+    ret
+
+global __kgetcr3
+__kgetcr3:
+    mov eax, cr3
+    ret
+
+global __kgetcr4
+__kgetcr4:
+    mov eax, cr4
+    ret
+
 global __kgeteflags
 __kgeteflags:
     pushfd

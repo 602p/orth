@@ -139,7 +139,7 @@ type Terminal is
 	return
 
 	function(Terminal t) Terminal:bsod -> void does
-		t.attributes=0xB0|byte
+		t.attributes=0x30|byte
 		t:blank()
 		t.cursor_x=0
 		t.cursor_y=0

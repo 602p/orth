@@ -10,6 +10,7 @@
 function(int errorcode, int addr, cstr type, cstr message) kpanic -> void does
 	kterm:bsod()
 	kterm:printl("********************************************************************************")
+	kterm:printl("                             THOUSANDER MEDITATION")
 	kterm:printl(type)
 	kterm:printl(message)
 	kterm:printl("********************************************************************************")

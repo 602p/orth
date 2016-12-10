@@ -241,18 +241,32 @@ class NameExprTransformer(Transformer):
 
 	def transform(self, out):
 		name=out.get_temp_name()
-		# print(out.scopes, self.parent.node if self.parent else "")
-		self.type=out.get_var_type(self.node.name) #From NameExpr
-		out.emitl("%{} = load {}* %{}".format(name,
-			self.type.get_llvm_representation(),
-			out.get_var_name(self.node.name))) #From NameExpr
+		if self.node.name in out.globals:
+			self.type=out.globals[self.node.name].type
+			out.emitl("%{} = load {}* @{}".format(name,
+				self.type.get_llvm_representation(),
+				out.globals[self.node.name].name)) #From NameExpr
+		else:
+			self.type=out.get_var_type(self.node.name) #From NameExpr
+			out.emitl("%{} = load {}* %{}".format(name,
+				self.type.get_llvm_representation(),
+				out.get_var_name(self.node.name))) #From NameExpr
 		return name
 
 	def transform_address(self, out):
-		return out.get_var_name(self.node.name)
+		if self.node.name in out.globals:
+			localname="imp_gvar_"+out.get_name()+"__"+self.node.name
+			out.emitl("%{} = getelementptr {}* @{}, i32 0".format(
+				localname, out.globals[self.node.name].type.get_llvm_representation(), out.globals[self.node.name].name
+			))
+			return localname
+		else:
+			return out.get_var_name(self.node.name)
 
 	@staticmethod
 	def get_type(node, out):
+		if node.name in out.globals:
+			return out.globals[node.name].type
 		return out.get_var_type(node.name)
 
 class GroupingExprTransformer(Transformer):
@@ -318,12 +332,6 @@ class FunctionTransformer(Transformer):
 						v=arg.name,
 						n=out.get_var_name(arg.name)
 					))
-				for vname, var in out.globals.items():
-					localname="imp_gvar_"+out.get_name()+"__"+vname
-					out.set_var_name(vname, localname, var.type)
-					out.emitl("%{} = getelementptr {}* @{}, i32 0".format(
-						localname, var.type.get_llvm_representation(), var.name
-					))
 				transform.emit(out, self.node.body, self)
 		out.emitl("}")
 
@@ -352,8 +360,6 @@ class CallExprTransformer(Transformer):
 			return node.method.name
 
 	def transform(self, out):
-		# print(self.node)
-		#
 		implicit_first_parameter=isinstance(self.node.method, AccessorExpr)
 		method_to_invoke=self.get_method_to_invoke(self.node, out)
 		name=out.get_temp_name()
@@ -459,6 +465,18 @@ class TypeTransformer(Transformer):
 		for method in self.node.methods:
 			# print("emitting "+method.name)
 			transform.emit(out, method, self)
+
+class TypeAliasTransformer(Transformer):
+	transforms=AliasTypeDecl
+
+	def prepare(self, out):
+		if self.node.aliases_fpointer:
+			out.types[self.node.name]=datamodel.BlackBoxFunctionOType(
+				self.node.name,
+				out.types[self.node.returntype]
+			)
+		else:
+			out.types[self.node.name]=out.types[self.node.aliasing]
 
 class ImportTransformer(Transformer):
 	transforms=ImportExpr

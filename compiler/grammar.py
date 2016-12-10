@@ -10,13 +10,17 @@ class Tokens(metaclass=TokenHolder):
 
 	T_IMPORT = TokenType("import +([a-zA-Z]\w*|\".+\")", keyword=True, capture=True)
 
+	T_TYPEDECL_FUNCTIONPOINTER=TokenType(r"\w*function\w*->\w*"+R_IDENTIFIER, capture=True)
+	#^Must match before function
+
 	T_FUNCTIONDECL=TokenType("function")
 	T_ARGLIST_START = TokenType(r"\(", ["T_FUNCTIONDECL"])
-	T_ARGLIST_SEPERATOR = TokenType(",", ["T_ARGLIST_ELEMENT"])
+	T_ARGLIST_SEPERATOR = TokenType(",", ["T_ARGLIST_ELEMENT", "T_ARGLIST_TYPEELEMENT"])
 	T_ARGLIST_ELEMENT = TokenType(R_IDENTIFIER+" +"+R_IDENTIFIER, ["T_ARGLIST_START", "T_ARGLIST_SEPERATOR"], capture=True)
+	T_ARGLIST_TYPEELEMENT = TokenType(R_IDENTIFIER, ["T_ARGLIST_START", "T_ARGLIST_SEPERATOR"], capture=True)
 	T_ARGLIST_END = TokenType(r"\)", ["T_ARGLIST_START", "T_ARGLIST_ELEMENT"])
 	T_FUNCTIONDECL_NAME = TokenType("[a-zA-Z_][\w:]*", ["T_ARGLIST_END"], capture=True)
-	T_FUNCTIONDECL_RETURNS = TokenType("->", ["T_FUNCTIONDECL_NAME"])
+	T_FUNCTIONDECL_RETURNS = TokenType("->", keyword=True)
 	T_FUNCTIONDECL_DOES = TokenType("does", ["T_FUNCTIONDECL_NAME", "T_FUNCTIONDECL_RETURN_TYPE"])
 	T_FUNCTIONDECL_RETURN_TYPE = TokenType(R_IDENTIFIER, ["T_FUNCTIONDECL_RETURNS"], capture=True)
 
@@ -25,6 +29,9 @@ class Tokens(metaclass=TokenHolder):
 	T_TYPEDECL_IS=TokenType("is", keyword=True)
 	T_TYPEDECL_END=TokenType("endtype", keyword=True)
 	T_TYPEDECL_PACKED=TokenType("packed", ["T_TYPEDECL_IS"], keyword=True)
+	T_TYPEDECL_ALIAS=TokenType("a", ["T_TYPEDECL_IS"], keyword=True)
+	T_TYPEDECL_PACKED=TokenType("packed", ["T_TYPEDECL_IS"], keyword=True)
+
 
 	T_IF_START = TokenType("if", ["T_ENDOFSTATEMENT"], keyword=True)
 	T_BLOCK_DONE = TokenType("done", ["T_ENDOFSTATEMENT"], keyword=True)
@@ -438,18 +445,25 @@ class FileExpr(ASTNode):
 		self.funcs=[e for e in elements if not isinstance(e, SepExpr)]
 
 class TypeDeclStart(ASTNode):
-	pattern=T_TYPEDECL+T_TYPEDECL_NAME+T_TYPEDECL_IS+[T_TYPEDECL_PACKED]
+	pattern=T_TYPEDECL+T_TYPEDECL_NAME+T_TYPEDECL_IS+[T_TYPEDECL_PACKED|T_TYPEDECL_ALIAS]
 	def __init__(self, elements):
 		self.name=elements[1].value
 		self.elements=elements
-		self.packed=len(elements)==4
+		self.packed=False
+		self.alias=False
+		if len(elements)==4:
+			if elements[3].type==T_TYPEDECL_PACKED:
+				self.packed=True
+			else:
+				self.alias=True
 
 class TypeDeclExt(TypeDeclStart):
-	pattern=TypeDeclStart+ASTNode
+	pattern=TypeDeclStart+ASTNode#(DeclExpr|FunctionDecl|T_ENDOFSTATEMENT)
 	def __init__(self, elements):
 		self.elements=elements[0].elements+[elements[1]]
 		self.name=elements[0].name
 		self.packed=elements[0].packed
+		self.alias=elements[0].alias
 
 class TypeDecl(ASTNode):
 	pattern=TypeDeclStart+T_TYPEDECL_END
@@ -470,6 +484,17 @@ class TypeDecl(ASTNode):
 					raise SyntaxError("Token "+str(ele)+" found in class")
 			else:
 				raise SyntaxError("IDK how to handle a "+str(type(ele))+" in a type")
+
+class AliasTypeDecl(TypeDecl):
+	pattern=TypeDeclStart+(NameExpr|T_TYPEDECL_FUNCTIONPOINTER)
+
+	def __init__(self, elements):
+		self.name=elements[0].name
+		assert elements[0].alias, "Got an invalid (name or functionpointertype) token inside a non-alias class. Syntax Error"
+		self.aliasing=elements[1].name if isinstance(elements[1], ASTNode) else elements[1].value
+		self.aliases_fpointer="->" in self.aliasing
+		if self.aliases_fpointer:
+			self.returntype=self.aliasing.split("->")[1].strip()
 
 class ImportExpr(ASTNode):
 	pattern=T_IMPORT

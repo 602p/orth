@@ -1,4 +1,4 @@
-@include("std.ort")@
+import std
 @declclass("Fraction", [["top", "int"], ["bottom", "int"]])@
 
 function(int top, int bottom) Fraction::create -> Fraction does

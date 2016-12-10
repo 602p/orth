@@ -19,7 +19,7 @@ with open('tokens.txt', 'w') as fd:
 
 print("\rParsing...                       ", end="")
 node=parse.parse(tokens)
-
+print(node)
 print("\rParsing... [Drawing BD]                 ", end="")
 drawblockdiag.emit_node_file(open('out.bd', 'w'), node, portrait_mode=True)
 

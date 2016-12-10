@@ -245,6 +245,13 @@ class FunctionOType(OType):
 	def get_llvm_representation(self):
 		return self.llvmtype+" "+self.argsig
 
+class BlackBoxFunctionOType(FunctionOType):
+	#Used for function pointers, or varargs functions (in future)
+	def __init__(self, name, returntype):
+		FunctionOType.__init__(self, name, [], returntype)
+		self.argsig="(...)"
+		self.llvmtype=returntype.get_llvm_representation()
+
 class ManualFunctionOType(FunctionOType):
 	#Used for @declare_func@ intrinsics (for calling out to external functions)
 	#Basically just lets users specify the parts of the LLVM decl

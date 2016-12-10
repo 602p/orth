@@ -1,0 +1,8 @@
+import std
+
+type char is a ubyte
+
+function() main -> int does
+	char a=("a"|ptr)[0]
+	printf("ord(a)=%i\n", a)
+return 0

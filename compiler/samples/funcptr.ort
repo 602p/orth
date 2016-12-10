@@ -1,0 +1,16 @@
+import std
+
+type myproto is a function->void
+
+function(int i) a -> void does
+	printf("A called with %i\n", i)
+return
+
+function(int i) b -> void does
+	printf("B called with %i\n", i)
+return
+
+function() main -> int does
+	myproto fptr = a|myproto
+	fptr(7)
+return

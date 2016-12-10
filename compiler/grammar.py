@@ -119,7 +119,7 @@ class DeclExpr(NameExpr):
 
 class CastExpr(ValueExpression):
 	pattern=ValueExpression+T_CAST+NameExpr
-	bad_lookahead_tokens=[T_DOT, T_COLON, T_DOUBLECOLON]
+	bad_lookahead_tokens=[T_DOT, T_COLON, T_DOUBLECOLON, T_CAST, T_PTRCAST]
 
 	def __init__(self, elements):
 		self.value=elements[0]
@@ -127,7 +127,7 @@ class CastExpr(ValueExpression):
 
 class PtrCastExpr(ValueExpression):
 	pattern=ValueExpression+T_PTRCAST+NameExpr
-	bad_lookahead_tokens=[T_DOT, T_COLON, T_DOUBLECOLON]
+	bad_lookahead_tokens=[T_DOT, T_COLON, T_DOUBLECOLON, T_CAST, T_PTRCAST]
 
 	def __init__(self, elements):
 		self.value=elements[0]

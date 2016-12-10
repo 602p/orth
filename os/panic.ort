@@ -47,3 +47,11 @@ function(int errorcode, int addr, cstr type, cstr message) kpanic -> void does
 	kterm:print("\n\nSystem halted")
 	__khalt()
 return
+
+function(cstr message, int num) ikpanici -> void does
+	kpanic(num, 0, message, "Internal Kernel Error :(")
+return
+
+function(cstr message) ikpanic -> void does
+	ikpanici(message, 0)
+return

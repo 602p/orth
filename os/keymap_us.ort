@@ -56,6 +56,9 @@ type Keymap is
 			v=map.K_F2|int
 		done
 	return v|byte
+
+	function(Keymap m, KeyboardState s) Keymap:is_shifted -> bool does
+	return (s.button_state_map[42]+s.button_state_map[54])!=0|byte
 endtype
 
 Keymap keymap

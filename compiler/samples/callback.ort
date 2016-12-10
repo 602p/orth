@@ -1,0 +1,25 @@
+import std
+
+type testsig is a function->void
+function(int arg, int arg2) ameth -> void does
+	printf("Test %i %i", arg, arg2)
+return
+
+type TSH is
+	testsig meth
+	int foo
+	int bar
+	function(TSH t, testsig arg) TSH:set -> void does
+		t.meth=arg
+	return
+
+	function(TSH t) TSH:ivk -> void does
+		t.meth(7,11)
+	return
+endtype
+
+function() main -> int does
+	TSH test = malloc(@sizeof(TSH)@)|TSH
+	test:set(ameth|testsig)
+	test:ivk()
+return 0

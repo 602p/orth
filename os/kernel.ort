@@ -1,12 +1,13 @@
 import mm
 import term
 import panic
-import keymap_us
+
 
 Terminal kterm
 int base_vma
 
 import irqio
+import keymap_us
 
 function() kernel_main -> void does
 	base_vma=0xC0000000
@@ -97,44 +98,22 @@ function() kernel_main -> void does
 	int li_x=kterm.cursor_x
 	int li_y=kterm.cursor_y
 
+	system_kbdstate:set_handler(hi|KeyboardConsumerCallback)
+
+	int idx
 	while 1|bool do
-		kterm.cursor_x=li_x
-		kterm.cursor_y=li_y
-
-		kterm:print(system_kbdstate.buffer:stringview())
-		kterm:print("                                 ")
+		0
 	done
 return
 
-int li_value
-
-function() disp_fancy_ticker -> void does
-	int ticker_idx=0
-
-	kterm:print("[")
-
-	while ticker_idx<40 do
-		kterm:putchar((li_value+ticker_idx)|byte)
-		ticker_idx+=1
-	done
-
-	kterm:print("] ")
-	kterm:printi(li_value)
-	kterm:print(" -> ")
-	kterm:printi(li_value+60)
-	kterm:print(" (")
-	if (li_value+60)<255 do
-		kterm:printi(li_value+60)
+function(int scancode, bool state) hi -> void does
+	kterm:print("Recieved Keyboard Event, scancode=")
+	kterm:printi(scancode)
+	kterm:print(", state=")
+	if state do
+		kterm:print("YES")
 	else do
-		kterm:printi(li_value+60-255)
+		kterm:print("NO")
 	done
-	kterm:print(") uB:")
-	kterm:printi((mm_pos|int)-(mm_head|int))
-
-	kterm:print("   ")
-	li_value+=1
-	if li_value>255 do
-		li_value=1
-	done
+	kterm:print("\n")
 return
-

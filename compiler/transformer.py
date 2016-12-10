@@ -362,7 +362,7 @@ class CallExprTransformer(Transformer):
 
 	@ret_local
 	def transform(self, out):
-		implicit_first_parameter=isinstance(self.node.method, AccessorExpr)
+		implicit_first_parameter=isinstance(self.node.method, AccessorExpr) and self.node.method.accesses=="method"
 		method_to_invoke=transform.emit(out, self.node.method, self)
 		method_type=get_type(self.node.method, out)
 		result=out.get_temp_name()

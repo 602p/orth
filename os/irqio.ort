@@ -131,21 +131,56 @@ type KeyboardBuf is
 	return b.buffer|cstr
 endtype
 
-type KeyboardState is
-	bool shifted
-	KeyboardBuf buffer
+type KeyboardEvent is
+	int scancode
+	bool state
 
-	function(KeyboardBuf buf) KeyboardState::new -> KeyboardState does
-		KeyboardState new = malloc(@sizeof(KeyboardState)@)|KeyboardState
-		new.shifted=0|bool
-		new.buffer=buf
+	function(int scancode, bool state) KeyboardEvent::new -> KeyboardEvent does
+		KeyboardEvent new = malloc(@sizeof(KeyboardEvent)@)|KeyboardEvent
+		new.scancode=scancode
+		new.state=state
 	return new
+endtype
+
+type KeyboardConsumerCallback is a function->void
+
+type KeyboardState is
+	ptr button_state_map #bitmap of states (0=up, 1=down) for buttons (based on scancode)
+	KeyboardConsumerCallback handler
+
+	function() KeyboardState::new -> KeyboardState does
+		KeyboardState new = malloc(@sizeof(KeyboardState)@)|KeyboardState
+		new.button_state_map=malloc(128)
+		memset(new.button_state_map, 128, 0|byte)
+		new.handler=0|KeyboardConsumerCallback
+	return new
+
+	function(KeyboardState s, uint scancode) KeyboardState:getkey -> bool does
+		if scancode>127 do
+			ikpanici("Internal Error - Invalid Scancode in KeyboardState:getkey", scancode)
+		done
+	return s.button_state_map[scancode]!=0|byte
+
+	function(KeyboardState s, uint scancode, bool state) KeyboardState:setkey -> void does
+		if scancode>127 do
+			ikpanici("Internal Error - Invalid Scancode in KeyboardState:setkey", scancode)
+		done
+		s.button_state_map[scancode]=state|byte
+
+		if s.handler|int!=0 do
+			s.handler(scancode, state)
+		done
+	return
+
+	function(KeyboardState s, KeyboardConsumerCallback handler) KeyboardState:set_handler -> void does
+		s.handler=handler
+	return
 endtype
 
 KeyboardState system_kbdstate
 
 function() start_kbd -> void does
-	system_kbdstate=KeyboardState::new(KeyboardBuf::new(2048))
+	system_kbdstate=KeyboardState::new()
 	write_port(0x21 , 0xFD)
 return
 
@@ -155,27 +190,7 @@ function() __irq_keyboard_handler -> void does
 	if (status&1) > 0 do
 		int value = read_port(0x60)
 		int keycode = value&0b01111111
-		if (value&0b10000000) == 0 do #On keydown
-			if keycode==42 do
-				system_kbdstate.shifted=1|bool
-			elif keycode==54 do
-				system_kbdstate.shifted=1|bool
-			elif keycode==14 do
-				system_kbdstate.buffer:delete1()
-			elif keycode==59 do
-				(0|ptr)[0xDEADBEEF]=0|byte
-			elif keycode==60 do
-				int bad = 1/0
-			else do
-				system_kbdstate.buffer:append(translate_keycode(keycode, system_kbdstate.shifted))
-			done
-		else do
-			if keycode==42 do
-				system_kbdstate.shifted=0|bool
-			elif keycode==54 do
-				system_kbdstate.shifted=0|bool
-			done
-		done
+		system_kbdstate:setkey(keycode, (value&0b10000000)==0)
 	done
 return
 

@@ -179,6 +179,8 @@ class AccessorExprTransformer(Transformer):
 		return name
 
 	def transform(self, out):
+		if self.node.accesses=="method":
+			return "%s$%s".format(get_type(self.node.object, out), self.node.field)
 		addr = self.transform_address(out)
 		name=out.get_temp_name()
 		out.emitl("%{} = load {}* %{}".format(
@@ -246,6 +248,8 @@ class NameExprTransformer(Transformer):
 			out.emitl("%{} = load {}* @{}".format(name,
 				self.type.get_llvm_representation(),
 				out.globals[self.node.name].name)) #From NameExpr
+		elif self.node.name in out.signatures:
+			return "@"+self.node.name
 		else:
 			self.type=out.get_var_type(self.node.name) #From NameExpr
 			out.emitl("%{} = load {}* %{}".format(name,
@@ -265,9 +269,12 @@ class NameExprTransformer(Transformer):
 
 	@staticmethod
 	def get_type(node, out):
-		if node.name in out.globals:
+		if node.name in out.scopes:
+			return out.get_var_type(node.name)
+		elif node.name in out.globals:
 			return out.globals[node.name].type
-		return out.get_var_type(node.name)
+		elif node.name in out.signatures:
+			return out.signatures[node.name]
 
 class GroupingExprTransformer(Transformer):
 	transforms=GroupingExpr
@@ -362,7 +369,7 @@ class CallExprTransformer(Transformer):
 	def transform(self, out):
 		implicit_first_parameter=isinstance(self.node.method, AccessorExpr)
 		method_to_invoke=self.get_method_to_invoke(self.node, out)
-		name=out.get_temp_name()
+		result=out.get_temp_name()
 		args=[]
 		if implicit_first_parameter:
 			args.append(get_type(self.node.method.object, out).get_llvm_representation()+" %"+transform.emit(out, self.node.method.object))
@@ -371,7 +378,7 @@ class CallExprTransformer(Transformer):
 
 		if out.signatures[method_to_invoke].returntype.get_llvm_representation()!="void": #From CallExpr
 			out.emitl("%{} = call {}* @{}({})".format(
-				name,
+				result,
 				out.signatures[method_to_invoke].get_llvm_representation(),
 				method_to_invoke,
 				",".join(args)
@@ -382,7 +389,7 @@ class CallExprTransformer(Transformer):
 				method_to_invoke,
 				",".join(args)
 			))
-		return name
+		return result
 
 	@staticmethod
 	def get_type(node, out):
@@ -392,6 +399,7 @@ class FileTransformer(Transformer):
 	transforms=FileExpr
 
 	def prepare(self, out):
+		print("Preparing "+out.context_map['file'])
 		for func in self.node.funcs:
 			if isinstance(func, FunctionDecl):
 				out.signatures[func.name]=datamodel.FunctionOType(
@@ -412,6 +420,7 @@ class FileTransformer(Transformer):
 				transform.emit(out, func, self)
 
 	def transform(self, out):
+		print("Transforming "+out.context_map['file'])
 		for func in self.node.funcs:
 			if isinstance(func, FunctionDecl) or isinstance(func, ImportExpr) or isinstance(func, TypeDecl):
 				transform.emit(out, func, self)
@@ -509,6 +518,5 @@ class ImportTransformer(Transformer):
 		if filename not in out.included_files:
 			out.included_files.append(filename)
 			with out.context(file=filename):
-				print("Importing "+filename)
 				self.get_file_transformer(out).transform(out)
 			

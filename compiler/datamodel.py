@@ -33,10 +33,12 @@ get_size. Also implement the default cast (bitcast-and-pray)
 """
 	def __init__(self, name):
 		"""All a type is gaurenteed to have is a name, a get_llvm_representation, a get_size and a implement_cast"""
-		def _make_caller(magic):
+		def _make_caller(magic, fancyname):
 			#Create a method bound to the instance for calling the Orth method with name `magic` on the class
 			def method(self, lhs, rhs, out):
 				methname=name+"$"+magic
+				assert methname in out.signatures,\
+					"Magic method `%s` not found. Implementing operation `%s` on type `%s`"%(methname, fancyname, name)
 				return transform.call_func(
 					methname,
 					[t.get_llvm_representation() for t in out.signatures[methname].args],
@@ -52,7 +54,7 @@ get_size. Also implement the default cast (bitcast-and-pray)
 		#  and so the dynamic implemenation from here is invoked when you add strings)
 		for k, v in magicmethods.items():
 			if not hasattr(self, "implement_"+k):
-				setattr(self, "implement_"+k, _make_caller(v))
+				setattr(self, "implement_"+k, _make_caller(v, k))
 
 	def implement_neg(self, lhs, out):
 		#Special case because it has only one operand

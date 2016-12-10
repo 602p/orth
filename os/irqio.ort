@@ -101,36 +101,6 @@ function() setup_kbd -> void does
 	write_port(0xA1 , 0xff)
 return
 
-type KeyboardBuf is
-	int waiting
-	int bufsize
-	ptr buffer
-	ptr scratch
-
-	function(int bufsize) KeyboardBuf::new -> KeyboardBuf does
-		KeyboardBuf new = malloc(@sizeof(KeyboardBuf)@)|KeyboardBuf
-		new.waiting=0
-		new.bufsize=bufsize
-		new.buffer=malloc(bufsize)
-	return new
-
-	function(KeyboardBuf b, byte char) KeyboardBuf:append -> void does
-		b.buffer[b.waiting]=char
-		b.buffer[b.waiting+1]=0|byte
-		b.waiting+=1
-	return
-
-	function(KeyboardBuf b) KeyboardBuf:delete1 -> void does
-		if b.waiting>0 do
-			b.waiting-=1
-			b.buffer[b.waiting]=0|byte
-		done
-	return
-
-	function(KeyboardBuf b) KeyboardBuf:stringview -> cstr does
-	return b.buffer|cstr
-endtype
-
 type KeyboardEvent is
 	int scancode
 	bool state

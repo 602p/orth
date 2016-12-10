@@ -261,7 +261,7 @@ def call_func(name, argtypes, args, out):
 	arg_values=[]
 	for idx, arg in enumerate(args):
 		arg_values.append(argtypes[idx]+" "+arg)
-	return "call {}* @{}({})".format(
+	return "call {} @{}({}) ;call_func".format(
 		out.signatures[name].type.get_llvm_representation(),
 		name,
 		",".join(arg_values)

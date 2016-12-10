@@ -1,0 +1,64 @@
+import term
+
+type SubmitCallback is a function->void
+type KeyboardBuf is
+	int waiting
+	int bufsize
+	ptr buffer
+	ptr scratch
+	Terminal term
+	SubmitCallback callback
+
+	function(int bufsize, Terminal t, SubmitCallback callback) KeyboardBuf::new -> KeyboardBuf does
+		KeyboardBuf new = malloc(@sizeof(KeyboardBuf)@)|KeyboardBuf
+		new.waiting=0
+		new.bufsize=bufsize
+		new.buffer=malloc(bufsize)
+		new.term=t
+		new.callback=callback
+	return new
+
+	function(KeyboardBuf b, byte char) KeyboardBuf:append -> void does
+		b.buffer[b.waiting]=char
+		b.buffer[b.waiting+1]=0|byte
+		b.waiting+=1
+	return
+
+	function(KeyboardBuf b) KeyboardBuf:delete1 -> void does
+		if b.waiting>0 do
+			b.waiting-=1
+			b.buffer[b.waiting]=0|byte
+		done
+	return
+
+	function(KeyboardBuf b) KeyboardBuf:stringview -> cstr does
+	return b.buffer|cstr
+
+	function(KeyboardBuf b) KeyboardBuf:clear -> void does
+		b.waiting=0
+		b.buffer[0]=0|byte
+	return
+
+	function(KeyboardBuf b, int scancode, bool down) KeyboardBuf:handleevent -> void does
+		if down do
+			if scancode==14 do
+				b.term:movecursor(-1, 0)
+				b.term:print(" ")
+				b.term:movecursor(-1, 0)
+				b:delete1()
+			elif scancode==28 do
+				b.term:print("\n")
+				b.callback(b:stringview())
+				b:clear()
+			elif scancode==42 do
+				0#Shift
+			elif scancode==54 do
+				0#Shift
+			else do
+				ubyte char = translate_keycode(scancode, keymap:is_shifted(system_kbdstate))
+				b.term:putchar(char)
+				b:append(char)
+			done
+		done
+	return
+endtype

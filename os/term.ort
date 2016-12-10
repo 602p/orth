@@ -30,6 +30,11 @@ type Terminal is
 	function(Terminal t, byte char) Terminal:putchar -> void does
 		t:setchar(t.cursor_x, t.cursor_y, char)
 		t.cursor_x+=1
+		if t.cursor_x>=t.width do
+			t.cursor_x=0
+			t.cursor_y+=1
+		done
+		t:scroll()
 	return
 
 	function(Terminal t, cstr string) Terminal:print -> void does
@@ -38,21 +43,51 @@ type Terminal is
 			if string[pos]!=10|byte do
 				t:setchar(t.cursor_x, t.cursor_y, string[pos])
 				t.cursor_x+=1
-			elif t.cursor_x>=t.width do
+			else do
 				t.cursor_x=0
 				t.cursor_y+=1
-			else do
+			done
+			if t.cursor_x>=t.width do
 				t.cursor_x=0
 				t.cursor_y+=1
 			done
 			pos+=1
 		done
+		t:scroll()
 	return
 
 	function(Terminal t, cstr string) Terminal:printl -> void does
 		t:print(string)
-		t.cursor_x=0
-		t.cursor_y+=1
+		t:print("\n")
+		t:scroll()
+	return
+
+	function(Terminal t) Terminal:scroll -> void does
+		while t.cursor_y>=t.height do
+			int idx=0
+			while idx<t.height do
+				memcpy(t.baseaddr:offset(t.width*2*(idx+1)), t.baseaddr:offset(t.width*2*idx), t.width*2)
+				idx+=1
+			done
+			memset(t.baseaddr:offset(t.height*t.width*2), t.width*2, 0|byte)
+			t.cursor_y-=1
+		done
+	return
+
+	function(Terminal t, int relx, int rely) Terminal:movecursor -> void does
+		t.cursor_x+=relx
+		if t.cursor_x<0 do
+			t.cursor_x=0
+		elif t.cursor_x>t.width do
+			t.cursor_x-=t.width
+			t.cursor_y+=1
+		done
+
+		t.cursor_y+=rely
+		if t.cursor_y<0 do
+			t.cursor_y=0
+		done
+		t:scroll()
 	return
 
 	function(Terminal t, int attrs, cstr string) Terminal:printa -> void does

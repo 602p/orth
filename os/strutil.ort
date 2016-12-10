@@ -6,8 +6,44 @@ function(cstr s) cstr:len -> int does
 	done
 return len
 
+function(cstr a, cstr b) cstr:__eq__ -> bool does
+	if a:len()!=b:len() do
+		return 0|bool
+	done
+	int idx=0
+	while idx<a:len() do
+		if a:idxi(idx)!=b:idxi(idx) do
+			return 0|bool
+		done
+		idx+=1
+	done
+return 1|bool
+
+function(cstr a, ubyte char) cstr:index -> int does
+	int idx=0
+	while idx<a:len() do
+		if a:idxi(idx)|ubyte==char do
+			return idx
+		done
+		idx+=1
+	done
+return -1
+
 function(cstr s) cstr:ord -> int does
 return (s|ptr)[0]|int
 
+function(cstr s) char -> ubyte does
+return s:ord()|ubyte
+
 function(cstr s, int idx) cstr:idxi -> int does
 return (s|ptr)[idx]|int
+
+function(int i) hex_char_to_num -> int does
+	if i>47 do
+		if i<58 do
+			return i-48
+		else do
+			return (i-86)+10
+		done
+	done
+return -1

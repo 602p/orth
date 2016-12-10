@@ -1,0 +1,166 @@
+import "kapps/util.ort"
+
+type KConsoleCommandRunner is a function->void
+type KConsoleCommand is
+	cstr name
+	cstr desc
+	KConsoleCommandRunner command
+	KConsoleCommand _next
+
+	function(cstr name, cstr desc, KConsoleCommandRunner command) KConsoleCommand::new -> KConsoleCommand does
+		KConsoleCommand new = malloc(@sizeof(KConsoleCommand)@)|KConsoleCommand
+		new.name=name
+		new.desc=desc
+		new.command=command
+		new._next=0|ptr|KConsoleCommand
+	return new
+
+	function(KConsoleCommand c, cstr args) KConsoleCommand:run -> void does
+		c.command(args)
+	return
+endtype
+
+function() console_disp_line -> void does
+	kterm:print("\nk>")
+return
+
+function(int scancode, bool down) consolehandler -> void does
+	console_buf:handleevent(scancode, down)
+return
+
+function(cstr command) console_submit -> void does
+	cstr name
+	cstr args
+	if command:index(char(" "))==-1 do
+		name=command
+		args=""
+	else do
+		int idx=command:index(char(" "))
+		name=malloc(idx+1)
+		memcpy(command|ptr, name|ptr, idx)
+		name[idx]=0|byte
+		args=(command|ptr):offset(idx+1)|cstr
+	done
+	KConsoleCommand cmd = get_command(kcommand_head, name)
+	if cmd|ptr|int!=0 do
+		command_to_run=cmd
+		command_args=args
+	else do
+		kterm:print("Invalid Command")
+		console_disp_line()
+	done
+	
+return
+
+function(KConsoleCommand head, cstr name) get_command -> KConsoleCommand does
+	KConsoleCommand cur = head
+	while cur|ptr|int!=0 do
+		if cur.name==name do
+			return cur
+		done
+		cur=cur._next
+	done
+return 0|ptr|KConsoleCommand
+
+function(cstr args) kc_help -> void does
+	kterm:printl("Commands: ")
+	KConsoleCommand cur = kcommand_head
+	while cur|ptr|int!=0 do
+		kterm:print(" - ")
+		kterm:print(cur.name)
+		kterm:print(": ")
+		kterm:print(cur.desc)
+		kterm:print("\n")
+		cur=cur._next
+	done
+return
+
+function(cstr args) kc_dumpargs -> void does
+	kterm:print("Args: ")
+	kterm:printl(args)
+return
+
+function(cstr args) kc_mem -> void does
+	kterm:print("mm_head: ")
+	kterm:dumphexi(mm_head|int)
+	kterm:print(" mm_pos: ")
+	kterm:dumphexi(mm_pos|int)
+	kterm:print("\nUsed: ")
+	kterm:printi((mm_pos|int)-(mm_head|int))
+	kterm:print("\n")
+return
+
+function(cstr args) kc_fault -> void does
+	if args=="dbz" do
+		int a = 1/0
+	elif args=="pw" do
+		(0|ptr)[0]=0|byte
+	elif args=="pr" do
+		byte a = (0|ptr)[0]
+	else do
+		kterm:printl("Pass dbz, pw or pr")
+	done
+return
+
+function(cstr args) kc_hi -> void does
+	kterm:print("Hello ")
+	kterm:printl(args)
+return
+
+function(cstr args) kc_color -> void does
+	if args:len()==2 do
+		kterm.attributes=((hex_char_to_num(args:idxi(0))*16)+hex_char_to_num(args:idxi(1)))|byte
+		kterm:print("Set\n")
+	else do
+		kterm.attributes=0x0F|byte
+	done
+return
+
+function(cstr args) kc_colorama -> void does
+	int y=0
+	int x
+	while y<16 do
+		x=0
+		while x<16 do
+			kterm:printa((y<<4)+x, "X")
+			x+=1
+		done
+		kterm:print("\n")
+		y+=1
+	done
+return
+
+function(cstr name, cstr desc, KConsoleCommandRunner cmd) add_cmd -> void does
+	KConsoleCommand cur = kcommand_head
+	while cur._next|ptr|int!=0 do
+		cur=cur._next
+	done
+	cur._next=KConsoleCommand::new(name, desc, cmd)
+return
+
+KeyboardBuf console_buf
+KConsoleCommand command_to_run
+cstr command_args
+KConsoleCommand kcommand_head
+function() kconsole_run -> void does
+	kcommand_head=KConsoleCommand::new("help", "Display Help", kc_help|KConsoleCommandRunner)
+	add_cmd("dumpargs", "Show the passed arguments", kc_dumpargs|KConsoleCommandRunner)
+	add_cmd("mem", "Show memory statistics", kc_mem|KConsoleCommandRunner)
+	add_cmd("fault", "Cause a fault. Types are dbz, pw, pr", kc_fault|KConsoleCommandRunner)
+	add_cmd("hello", "Say hi. Give it your name", kc_hi|KConsoleCommandRunner)
+	add_cmd("color", "Set terminal color mode. Pass 2 hex digits, or no args to reset", kc_color|KConsoleCommandRunner)
+	add_cmd("colorama", "Pretty", kc_colorama|KConsoleCommandRunner)
+
+	console_buf=KeyboardBuf::new(1024, kterm, console_submit|SubmitCallback)
+	command_to_run=0|ptr|KConsoleCommand
+	system_kbdstate:set_handler(consolehandler|KeyboardConsumerCallback)
+	console_disp_line()
+	while 1|bool do
+		if command_to_run|ptr|int!=0 do
+			command_to_run:run(command_args)
+			system_kbdstate:set_handler(consolehandler|KeyboardConsumerCallback)
+			console_disp_line()
+			command_to_run=0|ptr|KConsoleCommand
+		done
+	done
+return

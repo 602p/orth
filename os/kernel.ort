@@ -2,12 +2,12 @@ import mm
 import term
 import panic
 
-
 Terminal kterm
 int base_vma
 
 import irqio
 import keymap_us
+import "kapps/console.ort"
 
 function() kernel_main -> void does
 	base_vma=0xC0000000
@@ -91,29 +91,9 @@ function() kernel_main -> void does
 		kterm:printa(fg_idx, "X")
 		fg_idx+=1
 	done
+	kterm:print("\n\nREADY")
 
 	init_keymap()
-	kterm:printl("\nPress F1 to cause a Page Fault. Press F2 to cause a Double Fault (via 1/0)")
-	kterm:print("Type! ")
-	int li_x=kterm.cursor_x
-	int li_y=kterm.cursor_y
 
-	system_kbdstate:set_handler(hi|KeyboardConsumerCallback)
-
-	int idx
-	while 1|bool do
-		0
-	done
-return
-
-function(int scancode, bool state) hi -> void does
-	kterm:print("Recieved Keyboard Event, scancode=")
-	kterm:printi(scancode)
-	kterm:print(", state=")
-	if state do
-		kterm:print("YES")
-	else do
-		kterm:print("NO")
-	done
-	kterm:print("\n")
+	kconsole_run()
 return

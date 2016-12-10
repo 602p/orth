@@ -80,7 +80,7 @@ get_size. Also implement the default cast (bitcast-and-pray)
 
 	def implement_cast(self, value, from_, to):
 		#Default cast (| operator) implementation is just to bitcast to the thing we want.
-		return "bitcast {} {} to {}".format(from_.get_llvm_representation(), value, to.get_llvm_representation())
+		return "bitcast {} {} to {};default cast impl".format(from_.get_llvm_representation(), value, to.get_llvm_representation())
 
 	def get_size(self):
 		#Unimplemented. Subclasses provide a function here that returns the size of an instance of the type in _bytes_
@@ -236,35 +236,6 @@ class UnsignedIntegerPrimitiveOType(IntegerPrimitiveOType):
 	def implement_le(self, lhs, rhs, out):
 		return "icmp ule {} {}, {}".format(self.get_llvm_representation(), lhs, rhs)
 
-class FunctionOType(OType):
-	#Used for the signatures cache. Tells callers how to invoke stuff.
-	def __init__(self, name, args, returntype):
-		OType.__init__(self, name)
-		self.llvmtype=returntype.get_llvm_representation()
-		self.argsig=" ("+(",".join(typ.get_llvm_representation() for typ in args))+")"
-		self.fields=None
-		self.datalayout=None
-		self.returntype=returntype
-		self.args=args
-
-	def get_llvm_representation(self):
-		return self.llvmtype+" "+self.argsig
-
-class BlackBoxFunctionOType(FunctionOType):
-	#Used for function pointers, or varargs functions (in future)
-	def __init__(self, name, returntype):
-		FunctionOType.__init__(self, name, [], returntype)
-		self.argsig="(...)"
-		self.llvmtype=returntype.get_llvm_representation()
-
-class ManualFunctionOType(FunctionOType):
-	#Used for @declare_func@ intrinsics (for calling out to external functions)
-	#Basically just lets users specify the parts of the LLVM decl
-	def __init__(self, name, argsig, returntype):
-		FunctionOType.__init__(self, name, [], returntype)
-		self.argsig=argsig
-		self.llvmtype=returntype.get_llvm_representation()
-
 class PointerPrimitiveOType(PrimitiveOType):
 	#A pointer to something. All it does is implement pointer-to-pointer bitcasts and pointer-to-int casts
 	def get_size(self):
@@ -284,6 +255,35 @@ class PointerPrimitiveOType(PrimitiveOType):
 				to.get_llvm_representation()
 			)
 
+
+class FunctionOType(PointerPrimitiveOType):
+	#Used for the signatures cache. Tells callers how to invoke stuff.
+	def __init__(self, name, args, returntype):
+		OType.__init__(self, name)
+		self.llvmtype=returntype.get_llvm_representation()
+		self.argsig=" ("+(",".join(typ.get_llvm_representation() for typ in args))+")"
+		self.fields=None
+		self.datalayout=None
+		self.returntype=returntype
+		self.args=args
+
+	def get_llvm_representation(self):
+		return self.llvmtype+" "+self.argsig+"*"
+
+class BlackBoxFunctionOType(FunctionOType):
+	#Used for function pointers, or varargs functions (in future)
+	def __init__(self, name, returntype):
+		FunctionOType.__init__(self, name, [], returntype)
+		self.argsig="(...)"
+		self.llvmtype=returntype.get_llvm_representation()
+
+class ManualFunctionOType(FunctionOType):
+	#Used for @declare_func@ intrinsics (for calling out to external functions)
+	#Basically just lets users specify the parts of the LLVM decl
+	def __init__(self, name, argsig, returntype):
+		FunctionOType.__init__(self, name, [], returntype)
+		self.argsig=argsig
+		self.llvmtype=returntype.get_llvm_representation()
 
 class PrimitiveCStrOType(PointerPrimitiveOType):
 	#A cstr (C-String) is functionally equivilint to a pointer, but has a literal form (A quoted string)

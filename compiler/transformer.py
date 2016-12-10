@@ -263,7 +263,7 @@ class NameExprTransformer(Transformer):
 				out.get_var_name(self.node.name))) #From NameExpr
 		elif self.node.name in out.signatures:
 			self.type=out.signatures[self.node.name].type
-			out.emitl("%{} = bitcast {}* {} to {}*".format( #Noop, because I can't see another way to 
+			out.emitl("%{} = bitcast {} {} to {}".format( #Noop, because I can't see another way to 
 				name,										#get LLVM to just give me the goddamn address
 				self.type.get_llvm_representation(),
 				out.signatures[self.node.name].name,
@@ -373,14 +373,14 @@ class CallExprTransformer(Transformer):
 			args.append(get_type(arg, out).get_llvm_representation()+" "+transform.emit(out, arg, self))
 
 		if method_type.returntype.get_llvm_representation()!="void": #From CallExpr
-			out.emitl("%{} = call {}* {}({})".format(
+			out.emitl("%{} = call {} {}({})".format(
 				result,
 				method_type.get_llvm_representation(),
 				method_to_invoke,
 				",".join(args)
 			))
 		else:
-			out.emitl("call {}* {}({})".format(
+			out.emitl("call {} {}({})".format(
 				method_type.get_llvm_representation(),
 				method_to_invoke,
 				",".join(args)

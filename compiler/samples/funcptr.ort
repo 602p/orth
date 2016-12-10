@@ -1,16 +1,16 @@
 import std
 
-type myproto is a function->void
+type myproto is a function->int
 
-function(int i) a -> void does
+function(int i) a -> int does
 	printf("A called with %i\n", i)
-return
+return 7+i
 
-function(int i) b -> void does
+function(int i) b -> int does
 	printf("B called with %i\n", i)
-return
+return 12+i
 
 function() main -> int does
 	myproto fptr = a|myproto
-	fptr(7)
-return
+	printf("Return=%i\n", fptr(3))
+return 0

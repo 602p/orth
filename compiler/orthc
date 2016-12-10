@@ -59,11 +59,10 @@ with open("out.ll", 'w') as fd:
 
 if not "nobuild" in sys.argv:
 	print("\rCompiling...                       ", end="")
-	os.system("llc out.ll;")
+	assert os.system("llc out.ll;")==0, "Command Failed"
 
 if not "nolink" in sys.argv:
 	print("\rLinking...                       ", end="")
-	os.system("gcc -o "+(sys.argv[2] if len(sys.argv)==3 else "out")+" out.s; rm out.s")
+	assert os.system("gcc -o "+(sys.argv[2] if len(sys.argv)==3 else "out")+" out.s; rm out.s")==0, "Command Failed"
 
 print("\r\033[92mDone!\033[0m                                        ")
-print(e.included_files)

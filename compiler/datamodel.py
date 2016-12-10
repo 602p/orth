@@ -38,10 +38,10 @@ get_size. Also implement the default cast (bitcast-and-pray)
 			def method(self, lhs, rhs, out):
 				methname=name+"$"+magic
 				assert methname in out.signatures,\
-					"Magic method `%s` not found. Implementing operation `%s` on type `%s`"%(methname, fancyname, name)
+					"Magic method `%s:%s` not found. Implementing operation `%s` on type `%s`"%(name, magic, fancyname, name)
 				return transform.call_func(
 					methname,
-					[t.get_llvm_representation() for t in out.signatures[methname].args],
+					[t.get_llvm_representation() for t in out.signatures[methname].type.args],
 					[lhs, rhs],
 					out
 				)
@@ -58,9 +58,12 @@ get_size. Also implement the default cast (bitcast-and-pray)
 
 	def implement_neg(self, lhs, out):
 		#Special case because it has only one operand
+		assert self.name+"$__neg__" in out.signatures,\
+					"Magic method `%s:__neg__ not found. Implementing operation `neg` on type `%s`"%(self.name, self.name)
+				
 		return transform.call_func(
 			self.name+"$__neg__",
-			[t.get_llvm_representation() for t in out.signatures[self.name+"$__neg__"].args],
+			[t.get_llvm_representation() for t in out.signatures[self.name+"$__neg__"].type.args],
 			[lhs],
 			out
 		)
@@ -77,7 +80,7 @@ get_size. Also implement the default cast (bitcast-and-pray)
 
 	def implement_cast(self, value, from_, to):
 		#Default cast (| operator) implementation is just to bitcast to the thing we want.
-		return "bitcast {} %{} to {}".format(from_.get_llvm_representation(), value, to.get_llvm_representation())
+		return "bitcast {} {} to {}".format(from_.get_llvm_representation(), value, to.get_llvm_representation())
 
 	def get_size(self):
 		#Unimplemented. Subclasses provide a function here that returns the size of an instance of the type in _bytes_
@@ -117,12 +120,12 @@ class IntegerPrimitiveOType(PrimitiveOType):
 	def implement_add(self, lhs, rhs, out):
 		#Implement addition (+ operator) with a simple addition.
 		#This is the same for signed and unsigned types because of twos-complement
-		return "add {} %{}, %{}".format(self.get_llvm_representation(), lhs, rhs)
+		return "add {} {}, {}".format(self.get_llvm_representation(), lhs, rhs)
 
 	def implement_sub(self, lhs, rhs, out):
 		#Implement subtraction (binary - operator) with a simple subtraction
 		#This is the same for signed and unsigned types because of twos-complement
-		return "sub {} %{}, %{}".format(self.get_llvm_representation(), lhs, rhs)
+		return "sub {} {}, {}".format(self.get_llvm_representation(), lhs, rhs)
 
 	def implement_neg(self, val, out):
 		#Implement negatiuon (unary - operator) with subtraction from 0
@@ -130,51 +133,51 @@ class IntegerPrimitiveOType(PrimitiveOType):
 		# just give back the two's complement - internally a signed n-byte and
 		# unsigned n-byte integer are the same, just the logic on them are
 		# different, so feel free but idk what it'd get you)
-		return "sub {} 0, %{}".format(self.get_llvm_representation(), val)
+		return "sub {} 0, {}".format(self.get_llvm_representation(), val)
 
 	def implement_mul(self, lhs, rhs, out):
 		#Implement multiplication (* operator) with simple multiplication
 		#This is the same for signed and unsigned types because of twos-compliment
 		#Returns a integer of the same size as the input operands. (If you want a
 		# 'full' product (int*int->long) cast both sides to long first)
-		return "mul {} %{}, %{}".format(self.get_llvm_representation(), lhs, rhs)
+		return "mul {} {}, {}".format(self.get_llvm_representation(), lhs, rhs)
 
 	def implement_div(self, lhs, rhs, out):
 		#Implement division (/ operator) for signed numbers
-		return "sdiv {} %{}, %{}".format(self.get_llvm_representation(), lhs, rhs)
+		return "sdiv {} {}, {}".format(self.get_llvm_representation(), lhs, rhs)
 
 	def implement_rem(self, lhs, rhs, out):
-		#Implement remainder/modulo (% operator) for signed numbers
-		return "srem {} %{}, %{}".format(self.get_llvm_representation(), lhs, rhs)
+		#Implement remainder/modulo ( operator) for signed numbers
+		return "srem {} {}, {}".format(self.get_llvm_representation(), lhs, rhs)
 
 	def implement_lsh(self, lhs, rhs, out):
 		#Implement left-shift (<< operator)
 		#Same for signed/unsigned
-		return "shl {} %{}, %{}".format(self.get_llvm_representation(), lhs, rhs)
+		return "shl {} {}, {}".format(self.get_llvm_representation(), lhs, rhs)
 
 	def implement_rsh(self, lhs, rhs, out):
 		#Implement "logical" right-shift (>> operator, bitwise)
 		#Same for signed/unsigned (it's logical, so no sign-extension)
-		return "lshr {} %{}, %{}".format(self.get_llvm_representation(), lhs, rhs)
+		return "lshr {} {}, {}".format(self.get_llvm_representation(), lhs, rhs)
 
 	def implement_band(self, lhs, rhs, out):
 		#Implement logical (bitwise) and (& operator)
 		#Same for signed/unsigned, just operates on them as bits. 
-		return "and {} %{}, %{}".format(self.get_llvm_representation(), lhs, rhs)
+		return "and {} {}, {}".format(self.get_llvm_representation(), lhs, rhs)
 
 	#Implement all the comparison operations. The `s` prefix on the comparisons indicates signed logic
 	def implement_gt(self, lhs, rhs, out):
-		return "icmp sgt {} %{}, %{}".format(self.get_llvm_representation(), lhs, rhs)
+		return "icmp sgt {} {}, {}".format(self.get_llvm_representation(), lhs, rhs)
 	def implement_ge(self, lhs, rhs, out):
-		return "icmp sge {} %{}, %{}".format(self.get_llvm_representation(), lhs, rhs)
+		return "icmp sge {} {}, {}".format(self.get_llvm_representation(), lhs, rhs)
 	def implement_lt(self, lhs, rhs, out):
-		return "icmp slt {} %{}, %{}".format(self.get_llvm_representation(), lhs, rhs)
+		return "icmp slt {} {}, {}".format(self.get_llvm_representation(), lhs, rhs)
 	def implement_le(self, lhs, rhs, out):
-		return "icmp sle {} %{}, %{}".format(self.get_llvm_representation(), lhs, rhs)
+		return "icmp sle {} {}, {}".format(self.get_llvm_representation(), lhs, rhs)
 	def implement_eq(self, lhs, rhs, out):
-		return "icmp eq {} %{}, %{}".format(self.get_llvm_representation(), lhs, rhs)
+		return "icmp eq {} {}, {}".format(self.get_llvm_representation(), lhs, rhs)
 	def implement_ne(self, lhs, rhs, out):
-		return "icmp ne {} %{}, %{}".format(self.get_llvm_representation(), lhs, rhs)
+		return "icmp ne {} {}, {}".format(self.get_llvm_representation(), lhs, rhs)
 
 	def implement_cast(self, value, from_, to):
 		#Implement casting (| operator) for integers.
@@ -185,24 +188,24 @@ class IntegerPrimitiveOType(PrimitiveOType):
 		# behavior (bitcast-and-pray)
 		if isinstance(to, IntegerPrimitiveOType):
 			if to.get_bit_width()>from_.get_bit_width():
-				return "zext {} %{} to {}".format(
+				return "zext {} {} to {}".format(
 					from_.get_llvm_representation(),
 					value,
 					to.get_llvm_representation()
 				)
 			elif to.get_bit_width()==from_.get_bit_width():
-				return "add {} 0, %{}".format(
+				return "add {} 0, {}".format(
 					to.get_llvm_representation(),
 					value
 				)
 			else:
-				return "trunc {} %{} to {}".format(
+				return "trunc {} {} to {}".format(
 					from_.get_llvm_representation(),
 					value,
 					to.get_llvm_representation()
 				)
 		elif isinstance(to, PointerPrimitiveOType):
-			return "inttoptr {} %{} to {}".format(
+			return "inttoptr {} {} to {}".format(
 				from_.get_llvm_representation(),
 				value,
 				to.get_llvm_representation()
@@ -219,19 +222,19 @@ class UnsignedIntegerPrimitiveOType(IntegerPrimitiveOType):
 	# provides to interact with them is different (i.e. signed respects the sign and unsigned treats it
 	# as another bit of the number) 
 	def implement_div(self, lhs, rhs, out):
-		return "udiv {} %{}, %{}".format(self.get_llvm_representation(), lhs, rhs)
+		return "udiv {} {}, {}".format(self.get_llvm_representation(), lhs, rhs)
 
 	def implement_rem(self, lhs, rhs, out):
-		return "urem {} %{}, %{}".format(self.get_llvm_representation(), lhs, rhs)
+		return "urem {} {}, {}".format(self.get_llvm_representation(), lhs, rhs)
 
 	def implement_gt(self, lhs, rhs, out):
-		return "icmp ugt {} %{}, %{}".format(self.get_llvm_representation(), lhs, rhs)
+		return "icmp ugt {} {}, {}".format(self.get_llvm_representation(), lhs, rhs)
 	def implement_ge(self, lhs, rhs, out):
-		return "icmp uge {} %{}, %{}".format(self.get_llvm_representation(), lhs, rhs)
+		return "icmp uge {} {}, {}".format(self.get_llvm_representation(), lhs, rhs)
 	def implement_lt(self, lhs, rhs, out):
-		return "icmp ult {} %{}, %{}".format(self.get_llvm_representation(), lhs, rhs)
+		return "icmp ult {} {}, {}".format(self.get_llvm_representation(), lhs, rhs)
 	def implement_le(self, lhs, rhs, out):
-		return "icmp ule {} %{}, %{}".format(self.get_llvm_representation(), lhs, rhs)
+		return "icmp ule {} {}, {}".format(self.get_llvm_representation(), lhs, rhs)
 
 class FunctionOType(OType):
 	#Used for the signatures cache. Tells callers how to invoke stuff.
@@ -269,13 +272,13 @@ class PointerPrimitiveOType(PrimitiveOType):
 
 	def implement_cast(self, value, from_, to):
 		if isinstance(to, IntegerPrimitiveOType):
-			return "ptrtoint {} %{} to {}".format(
+			return "ptrtoint {} {} to {}".format(
 				from_.get_llvm_representation(),
 				value,
 				to.get_llvm_representation()
 			)
 		else:
-			return "bitcast {} %{} to {}".format(
+			return "bitcast {} {} to {};PPOT:IC:2".format(
 				from_.get_llvm_representation(),
 				value,
 				to.get_llvm_representation()

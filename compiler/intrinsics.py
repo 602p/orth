@@ -5,7 +5,7 @@ def process_intrinsic(out, text):
 	def sizeof(cls):
 			name=out.get_temp_name()
 			out.emitl("%{} = add i32 0, {}".format(name, int(cls.get_size())))
-			return name
+			return "%"+name
 
 	def forcecast(name, to_):
 		#Only useful before | operator worked. Now just handy to have for cases where weird crap is needed
@@ -22,7 +22,7 @@ def process_intrinsic(out, text):
 			val,
 			to_
 		))
-		return res
+		return "%"+res
 
 	def declare_c_func(name, type, paramstring):
 		#Provide a prototype for an external function (that is, will be linked at compile-time)
@@ -30,7 +30,7 @@ def process_intrinsic(out, text):
 		if name not in out.signatures:
 			rt=datamodel.builtin_types[type]
 			out.emitl("declare {} @{}{}".format(rt.get_llvm_representation(), name, paramstring))
-			out.signatures[name]=datamodel.ManualFunctionOType(name, paramstring, rt)
+			out.set_signature(name, datamodel.ManualFunctionOType(name, paramstring, rt))
 
 	declare_func=declare_c_func #Not all externs are C
 

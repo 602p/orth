@@ -19,7 +19,7 @@ with open('tokens.txt', 'w') as fd:
 
 print("\rParsing...                       ", end="")
 node=parse.parse(tokens)
-print(node)
+
 print("\rParsing... [Drawing BD]                 ", end="")
 drawblockdiag.emit_node_file(open('out.bd', 'w'), node, portrait_mode=True)
 
@@ -46,7 +46,6 @@ with open("out.ll", 'w') as fd:
 				for map in e.context_map.maps:
 					print("\t"+str(map))
 				print("SIGNAT: ", e.signatures)
-				print("GLOBAL: ", e.globals)
 				print("INCLUD: ", e.included_files)
 				print("TYPES : ", end="")
 				for type in e.types.values():

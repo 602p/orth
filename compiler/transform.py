@@ -5,6 +5,7 @@ import util
 import datamodel
 import copy
 import os
+import functools
 
 #Underlying machinery for tracking TU state and emitting LLVM code.
 
@@ -82,12 +83,9 @@ class Emitter:
 		#Same idea as the context maps. Provides a stack of orth_var_name:Variable
 		# mappings that (as a virtue of being a stack) respects local declarations over
 		# global names)
+		#Contains global variables in the last element in the chain (scopes.maps[-1])
 		self.scopes=collections.ChainMap({})
-		self.signatures={} #Mapping of mangled_function_name:FunctionOType prototypes
-		self.globals={} #Mapping of orth_var_name:Variable pairs for global variables. Basically, this is a hack
-				# because LLVM globals start with @ and all the identifier-value code assumes they start
-				# with %, as locals do. Therefore, I kludged this in and had it create locals that shadow
-				# the globals (as they are pointers to their actual values to start with)
+		self.signatures={} #Map of name->Variable for functions
 		self.global_statments=[] #Stuff to stick at the end of the file (e.g. string literals)
 		self.included_files=[] #Files whose contents have actually been emitted
 		self.prepared_files=[] #Files whose prototypes/globals have been emitted, and signatures loaded
@@ -106,7 +104,7 @@ class Emitter:
 	def emitl(self, line):
 		self.emitindent()
 		self.emit(line)
-		self.emit("\t\t;from line "+str(self.context_map['line']))
+		self.emit("\t\t;from "+self.context_map['file']+":"+str(self.context_map['line']))
 		self.emit("\n")
 
 	def context(self, indent_by=1, **kwargs):
@@ -145,9 +143,12 @@ class Emitter:
 		#Create a variable (in the topmost scope) and register it's type
 		self.scopes.maps[0][vname]=Variable(aname, type)
 
+	def set_signature(self, fname, type):
+		self.signatures[fname]=Variable("@"+fname, type)
+
 	def set_global_var_name(self, vname, aname, type):
 		#Create a global and register it's type
-		self.globals[vname]=Variable(aname, type)
+		self.scopes.maps[-1][vname]=Variable(aname, type)
 
 	def get_var_name(self, vname):
 		#Get the llvm identifer for a variable (returns the identifier (which never
@@ -253,15 +254,15 @@ def get_type(node, out):
 def do_var_alloc(out, varname, type):
 	name="var_"+out.get_name()+"___"+varname
 	out.emitl("%{} = alloca {}".format(name, type.get_llvm_representation()))
-	out.set_var_name(varname, name, type)
-	return name
+	out.set_var_name(varname, "%"+name, type)
+	return "%"+name
 
 def call_func(name, argtypes, args, out):
 	arg_values=[]
 	for idx, arg in enumerate(args):
-		arg_values.append(argtypes[idx]+" %"+arg)
+		arg_values.append(argtypes[idx]+" "+arg)
 	return "call {}* @{}({})".format(
-		out.signatures[name].get_llvm_representation(),
+		out.signatures[name].type.get_llvm_representation(),
 		name,
 		",".join(arg_values)
 	)
@@ -277,3 +278,11 @@ def resolve_import(import_node, out):
 
 def sanitize_fn(fn):
 	return fn.replace(".ort","").replace("/","").replace(".","").replace("\\","")
+
+def ret_local(fn):
+	#Wrap a transform or transform_addres function that returns the name of a local SSA ariable
+	# sans-% and adds one.
+	@functools.wraps(fn)
+	def _wrapped(*a, **k):
+		return "%"+fn(*a, **k)
+	return _wrapped

@@ -3,12 +3,13 @@ from grammar import *
 import transform
 import datamodel
 import intrinsics
-from transform import get_type, do_var_alloc
+from transform import get_type, do_var_alloc, ret_local
 
 
 class CastExprTransformer(Transformer):
 	transforms=CastExpr
 
+	@ret_local
 	def transform(self, out):
 		name=out.get_temp_name()
 		value=transform.emit(
@@ -30,14 +31,14 @@ class CastExprTransformer(Transformer):
 	def get_type(node, out):
 		return node.to
 
-
 class PtrCastExprTransformer(Transformer):
 	transforms=PtrCastExpr
 
+	@ret_local
 	def transform(self, out):
 		assert isinstance(self.node.value, NameExpr), "Can't take address of non-var"
 		name=out.get_temp_name()
-		out.emitl("%{} = bitcast {}* %{} to i8*".format(
+		out.emitl("%{} = bitcast {}* {} to i8*".format(
 			name,
 			get_type(self.node.value, out).get_llvm_representation(),
 			out.get_var_name(self.node.value.name)
@@ -59,6 +60,7 @@ class GroupExprTransformer(Transformer):
 class LiteralExprTransformer(Transformer):
 	transforms=LiteralExpr
 
+	@ret_local
 	def transform(self, out):
 		name=out.get_temp_name()
 		out.emitl("%{} = {}".format(name, get_type(self.node.type, out).get_literal_expr(self.node.value, out))) #From Literal
@@ -71,6 +73,7 @@ class LiteralExprTransformer(Transformer):
 class BinOpExprTransformer(Transformer):
 	transforms=BinOpExpr
 
+	@ret_local
 	def transform(self, out):
 		name=out.get_temp_name()
 		lhs=transform.emit(out, self.node.lhs, self) #From BinOp
@@ -131,6 +134,7 @@ class BinOpExprTransformer(Transformer):
 class UnOpTransformer(Transformer):
 	transforms=UnOpExpr
 
+	@ret_local
 	def transform(self, out):
 		name=out.get_temp_name()
 		value=transform.emit(out, self.node.expr, self) #From UnOp
@@ -157,7 +161,7 @@ class AssignmentExprTransformer(Transformer):
 		rhs=transform.emit(out, self.node.rhs, self) #From Assignment
 
 		# if self.node.
-		out.emitl("store {t} %{v}, {t}* %{n}".format(
+		out.emitl("store {t} {v}, {t}* {n};AXET:t".format(
 			t=get_type(self.node.lhs, out).get_llvm_representation(),
 			n=target,
 			v=rhs
@@ -166,11 +170,16 @@ class AssignmentExprTransformer(Transformer):
 class AccessorExprTransformer(Transformer):
 	transforms=AccessorExpr
 
+	@staticmethod
+	def get_method_name(node, out):
+		return get_type(node.object, out).name+"$"+node.field
+
+	@ret_local
 	def transform_address(self, out):
 		ptrname=transform.emit(out, self.node.object, self) #From Accessor
 		ptrtype=get_type(self.node.object, out) #From Accessor
 		name=out.get_temp_name()
-		out.emitl("%{} = getelementptr {} %{}, i32 0, {}".format(
+		out.emitl("%{} = getelementptr {} {}, i32 0, {}".format(
 			name,
 			ptrtype.get_llvm_representation(),
 			ptrname,
@@ -180,32 +189,35 @@ class AccessorExprTransformer(Transformer):
 
 	def transform(self, out):
 		if self.node.accesses=="method":
-			return "%s$%s".format(get_type(self.node.object, out), self.node.field)
+			return "@"+AccessorExprTransformer.get_method_name(self.node, out)
 		addr = self.transform_address(out)
 		name=out.get_temp_name()
-		out.emitl("%{} = load {}* %{}".format(
+		out.emitl("%{} = load {}* {} ;AX:t".format(
 			name,
 			get_type(self.node, out).get_llvm_representation(),
 			addr
 		))
-		return name
+		return "%"+name
 
 	@staticmethod
 	def get_type(node, out):
+		if node.accesses=="method":
+			return out.signatures[AccessorExprTransformer.get_method_name(node, out)].type
 		return get_type(node.object, out).fields[node.field]
 
 class IndexExprTransformer(Transformer):
 	transforms=IndexExpr
 
+	@ret_local
 	def transform_address(self, out): #TODO: Improve
 		base=out.get_temp_name()
-		out.emitl("%{} = ptrtoint {} %{} to i32 ;IndexExpr:transform_address".format(
+		out.emitl("%{} = ptrtoint {} {} to i32 ;IndexExpr:transform_address".format(
 			base,
 			transform.get_transformer(self.node.object, self).get_type(self.node.object, out).get_llvm_representation(),
 			transform.emit(out, self.node.object, self)
 		))
 		pos=out.get_temp_name()
-		out.emitl("%{} = add i32 %{}, %{} ;IndexExpr:transform_address".format(
+		out.emitl("%{} = add i32 %{}, {} ;IndexExpr:transform_address".format(
 			pos,
 			base,
 			transform.emit(out, self.node.index, self)
@@ -214,15 +226,15 @@ class IndexExprTransformer(Transformer):
 		out.emitl("%{} = inttoptr i32 %{} to i8* ;IndexExpr:transform_address".format(ptr, pos))
 		return ptr
 
+	@ret_local
 	def transform(self, out):
 		value=out.get_temp_name()
-		out.emitl("%{} = load i8* %{}".format(value, self.transform_address(out)))
+		out.emitl("%{} = load i8* {}; IX:T".format(value, self.transform_address(out)))
 		return value
 
 	@staticmethod
 	def get_type(node, out):
 		return datamodel.builtin_types['byte']
-
 
 class DeclExprTransformer(Transformer):
 	transforms=DeclExpr
@@ -241,40 +253,33 @@ class DeclExprTransformer(Transformer):
 class NameExprTransformer(Transformer):
 	transforms=NameExpr
 
+	@ret_local
 	def transform(self, out):
 		name=out.get_temp_name()
-		if self.node.name in out.globals:
-			self.type=out.globals[self.node.name].type
-			out.emitl("%{} = load {}* @{}".format(name,
-				self.type.get_llvm_representation(),
-				out.globals[self.node.name].name)) #From NameExpr
-		elif self.node.name in out.signatures:
-			return "@"+self.node.name
-		else:
+		if self.node.name in out.scopes:
 			self.type=out.get_var_type(self.node.name) #From NameExpr
-			out.emitl("%{} = load {}* %{}".format(name,
+			out.emitl("%{} = load {}* {};NX:t".format(name,
 				self.type.get_llvm_representation(),
 				out.get_var_name(self.node.name))) #From NameExpr
+		elif self.node.name in out.signatures:
+			self.type=out.signatures[self.node.name].type
+			out.emitl("%{} = bitcast {}* {} to {}*".format( #Noop, because I can't see another way to 
+				name,										#get LLVM to just give me the goddamn address
+				self.type.get_llvm_representation(),
+				out.signatures[self.node.name].name,
+				self.type.get_llvm_representation()
+			))
 		return name
 
 	def transform_address(self, out):
-		if self.node.name in out.globals:
-			localname="imp_gvar_"+out.get_name()+"__"+self.node.name
-			out.emitl("%{} = getelementptr {}* @{}, i32 0".format(
-				localname, out.globals[self.node.name].type.get_llvm_representation(), out.globals[self.node.name].name
-			))
-			return localname
-		else:
-			return out.get_var_name(self.node.name)
+		return out.get_var_name(self.node.name)
 
 	@staticmethod
 	def get_type(node, out):
 		if node.name in out.scopes:
 			return out.get_var_type(node.name)
-		elif node.name in out.globals:
-			return out.globals[node.name].type
-		elif node.name in out.signatures:
-			return out.signatures[node.name]
+		else:
+			return out.signatures[node.name].type
 
 class GroupingExprTransformer(Transformer):
 	transforms=GroupingExpr
@@ -297,7 +302,7 @@ class IfExprTransformer(Transformer):
 		succ_label=if_name+"___SUCC"
 		fail_label=if_name+"___FAIL"
 		done_label=if_name+"___DONE"
-		out.emitl("br i1 %{}, label %{}, label %{}".format(cond, succ_label, fail_label))
+		out.emitl("br i1 {}, label %{}, label %{}".format(cond, succ_label, fail_label))
 		with out.indent(-1):
 			out.emitl("{}:".format(succ_label))
 		with out.context():
@@ -334,7 +339,7 @@ class FunctionTransformer(Transformer):
 			with out.scope():
 				for arg in self.node.args:
 					do_var_alloc(out, arg.name, get_type(arg.type, out))
-					out.emitl("store {t} %{v}, {t}* %{n}".format(
+					out.emitl("store {t} %{v}, {t}* {n};FT:t".format(
 						t=get_type(arg.type, out).get_llvm_representation(),
 						v=arg.name,
 						n=out.get_var_name(arg.name)
@@ -348,44 +353,35 @@ class ReturnTransformer(Transformer):
 	def transform(self, out):
 		if self.node.value:
 			name=transform.emit(out, self.node.value, self)
-			out.emitl("ret {} %{}".format(get_type(self.node.value, out).get_llvm_representation(), name))
+			out.emitl("ret {} {}".format(get_type(self.node.value, out).get_llvm_representation(), name))
 		else:
 			out.emitl("ret void")
 
 class CallExprTransformer(Transformer):
 	transforms=CallExpr
 
-	@staticmethod
-	def get_method_to_invoke(node, out):
-		if isinstance(node.method, AccessorExpr):
-			if node.method.accesses=="method":
-				return get_type(node.method.object, out).name+"$"+node.method.field
-			else:
-				raise Exception("Don't know how to translate AccessorExpr %s in get_method_to_invoke"%str(node.method))
-		else:
-			assert isinstance(node.method, NameExpr), "No computed calls yet :("
-			return node.method.name
-
+	@ret_local
 	def transform(self, out):
 		implicit_first_parameter=isinstance(self.node.method, AccessorExpr)
-		method_to_invoke=self.get_method_to_invoke(self.node, out)
+		method_to_invoke=transform.emit(out, self.node.method, self)
+		method_type=get_type(self.node.method, out)
 		result=out.get_temp_name()
 		args=[]
 		if implicit_first_parameter:
-			args.append(get_type(self.node.method.object, out).get_llvm_representation()+" %"+transform.emit(out, self.node.method.object))
+			args.append(get_type(self.node.method.object, out).get_llvm_representation()+" "+transform.emit(out, self.node.method.object))
 		for arg in self.node.args:
-			args.append(get_type(arg, out).get_llvm_representation()+" %"+transform.emit(out, arg, self))
+			args.append(get_type(arg, out).get_llvm_representation()+" "+transform.emit(out, arg, self))
 
-		if out.signatures[method_to_invoke].returntype.get_llvm_representation()!="void": #From CallExpr
-			out.emitl("%{} = call {}* @{}({})".format(
+		if method_type.returntype.get_llvm_representation()!="void": #From CallExpr
+			out.emitl("%{} = call {}* {}({})".format(
 				result,
-				out.signatures[method_to_invoke].get_llvm_representation(),
+				method_type.get_llvm_representation(),
 				method_to_invoke,
 				",".join(args)
 			))
 		else:
-			out.emitl("call {}* @{}({})".format(
-				out.signatures[method_to_invoke].get_llvm_representation(),
+			out.emitl("call {}* {}({})".format(
+				method_type.get_llvm_representation(),
 				method_to_invoke,
 				",".join(args)
 			))
@@ -393,7 +389,7 @@ class CallExprTransformer(Transformer):
 
 	@staticmethod
 	def get_type(node, out):
-		return out.signatures[CallExprTransformer.get_method_to_invoke(node, out)].returntype
+		return get_type(node.method, out).returntype
 
 class FileTransformer(Transformer):
 	transforms=FileExpr
@@ -402,10 +398,10 @@ class FileTransformer(Transformer):
 		print("Preparing "+out.context_map['file'])
 		for func in self.node.funcs:
 			if isinstance(func, FunctionDecl):
-				out.signatures[func.name]=datamodel.FunctionOType(
+				out.set_signature(func.name, datamodel.FunctionOType(
 					func.name,
 					[get_type(t.type, out) for t in func.args],
-					get_type(func.type, out))
+					get_type(func.type, out)))
 			elif isinstance(func, DeclExpr):
 				name="gvar_"+out.get_name()+"__"+func.name
 				out.emitl("@{} = global {} {}".format(
@@ -413,7 +409,7 @@ class FileTransformer(Transformer):
 					get_type(func, out).get_llvm_representation(),
 					"0" if isinstance(get_type(func, out), datamodel.IntegerPrimitiveOType) else "null"
 				))
-				out.set_global_var_name(func.name, name, get_type(func, out))
+				out.set_global_var_name(func.name, "@"+name, get_type(func, out))
 			elif isinstance(func, ImportExpr) or isinstance(func, TypeDecl):
 				transform.get_transformer(func, self).prepare(out)
 			else:
@@ -448,13 +444,13 @@ class WhileExprTransformer(Transformer):
 		end_label=loop_name+"___END"
 
 		initial_cond=transform.emit(out, self.node.cond, self)
-		out.emitl("br i1 %{}, label %{}, label %{}".format(initial_cond, head_label, end_label))
+		out.emitl("br i1 {}, label %{}, label %{}".format(initial_cond, head_label, end_label))
 		with out.indent(-1):
 			out.emitl("{}:".format(head_label))
 		with out.context():
 			transform.emit(out, self.node.block, self)
 		cond=transform.emit(out, self.node.cond, self)
-		out.emitl("br i1 %{}, label %{}, label %{}".format(cond, head_label, end_label))
+		out.emitl("br i1 {}, label %{}, label %{}".format(cond, head_label, end_label))
 		with out.indent(-1):
 			out.emitl("{}:".format(end_label))
 
@@ -465,10 +461,10 @@ class TypeTransformer(Transformer):
 		out.types[self.node.name]=datamodel.StructOType(self.node.name, self.node.fields, out, packed=self.node.packed)
 		out.types[self.node.name].setup(out)
 		for method in self.node.methods:
-			out.signatures[method.name]=datamodel.FunctionOType(
+			out.set_signature(method.name, datamodel.FunctionOType(
 				method.name,
 				[get_type(t.type, out) for t in method.args],
-				get_type(method.type, out))
+				get_type(method.type, out)))
 
 	def transform(self, out):
 		for method in self.node.methods:

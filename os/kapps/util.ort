@@ -42,10 +42,12 @@ type KeyboardBuf is
 	function(KeyboardBuf b, int scancode, bool down) KeyboardBuf:handleevent -> void does
 		if down do
 			if scancode==14 do
-				b.term:movecursor(-1, 0)
-				b.term:print(" ")
-				b.term:movecursor(-1, 0)
-				b:delete1()
+				if b.waiting!=0 do
+					b.term:movecursor(-1, 0)
+					b.term:print(" ")
+					b.term:movecursor(-1, 0)
+					b:delete1()
+				done
 			elif scancode==28 do
 				b.term:print("\n")
 				b.callback(b:stringview())

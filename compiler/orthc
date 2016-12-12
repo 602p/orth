@@ -2,8 +2,12 @@
 
 import sys, drawblockdiag, tokenize, parse, grammarutil, json, os, traceback
 
+#This is the actual compiler. It just chains together the tokenizing step,
+#the parsing step, and the transforming step to produce an IR file. Then it
+#invokes LLC and GCC to create a actual exectuable
+
 _print=print
-def print(*a, **k):
+def print(*a, **k): #Hack so that messages don't get truncated by a crash
 	_print(*a, **k)
 	sys.stdout.flush()
 
@@ -53,7 +57,11 @@ with open("out.ll", 'w') as fd:
 				print("\nLASTLI: ", e.last_line)
 				print("LASTFI: ", e.last_file)
 				print("LASTME: ", e.last_method)
-				raise ex
+				raise ex #Workaround. Normally one would use a traceback.* method here to pretty-print
+							#the error and continue, but for some reason the stdlib requires a module
+							#`tokenize` for that and since i have one in my working directory/sys.modules
+							#cache it gets that instead (which obviously dosen't expose the same functionaliy
+							#and therefore is bust)
 
 	e.emit_global_statments()
 

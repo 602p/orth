@@ -2,6 +2,8 @@ from grammar import *
 from grammarutil import ASTNode
 import functools, random
 
+#This just dumps out a block diagram (in blockdiag format) from an AST tree
+
 def emit(fd, text):
 	fd.write(text+"\n")
 
@@ -21,16 +23,25 @@ def emit_link(fd, start, end, label=None):
 	emit(fd, start+" -> "+end+("[label=\""+label+"\"]" if label else "")+";")
 
 def emit_node(fd, node, color=None, one_box_per_object=False):
-	nodeid=id(node) if one_box_per_object else random.randint(0, 99999999999999)
+	nodeid=id(node) if one_box_per_object else random.randint(0, 99999999999999) #If one_box_per_object is set
+																					#use the ID (gaurenteed to be the same)
+																					#for the same object (i.e. refs to the
+																					#same object.) Effectivley means that
+																					#cases where a ASTNode holds multiple
+																					#references to the same object as children
+																					#(e.g. where a Augmented Assignement has
+																					#been transformed into a regular assignment
+																					#with a operation on the RHS)
 	nodename="n_"+str(nodeid)
 	
 	if isinstance(node, ASTNode):
 		desc=type(node).__name__+"\\n"
 		for key in node._get_interesting_keys():
 			value=getattr(node, key)
-			if isinstance(value, ASTNode):
+			if isinstance(value, ASTNode): #Recursivley emit a box with it's own children etc
 				emit_link(fd, nodename, emit_node(fd, value, one_box_per_object=one_box_per_object), key)
-			elif isinstance(value, list):
+			elif isinstance(value, list): #For lists, emit a placeholder box that holds it's elements
+											#(otherwise it looks nasty)
 				interstitial="i_"+str(random.randint(0, 999999))
 				emit_item(fd, interstitial, key+("\n(empty)" if not value else ""), '#aaaaff')
 				emit_link(fd, nodename, interstitial, key)
@@ -42,6 +53,7 @@ def emit_node(fd, node, color=None, one_box_per_object=False):
 	else:
 		desc=str(node)
 
+	#Colorize nodes. Preeeeeety!
 	if isinstance(node, ValueExpression):
 		color="pink"
 
@@ -59,8 +71,6 @@ def emit_node(fd, node, color=None, one_box_per_object=False):
 
 	if isinstance(node, BunchaExpressions):
 		color="grey"
-
-
 
 	emit_item(fd, nodename, desc, color)
 

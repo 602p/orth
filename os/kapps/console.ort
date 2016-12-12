@@ -102,9 +102,23 @@ function(cstr args) kc_fault -> void does
 	done
 return
 
-function(cstr args) kc_hi -> void does
-	kterm:print("Hello ")
+function(cstr args) kc_echo -> void does
 	kterm:printl(args)
+return
+
+function(cstr args) kc_addhex -> void does
+	kterm:dumphex(hex_char_to_num(args:idxi(0))+hex_char_to_num(args:idxi(2)), 2)
+return
+
+function(cstr args) kc_clear -> void does
+	kterm:blank()
+	kterm.cursor_x=0
+	kterm.cursor_y=-1
+return
+
+function(cstr args) kc_hexnum -> void does
+	kterm:print("Read: ")
+	kterm:printi(hex_char_to_num(args:idxi(0)))
 return
 
 function(cstr args) kc_color -> void does
@@ -147,7 +161,10 @@ function() kconsole_run -> void does
 	add_cmd("dumpargs", "Show the passed arguments", kc_dumpargs|KConsoleCommandRunner)
 	add_cmd("mem", "Show memory statistics", kc_mem|KConsoleCommandRunner)
 	add_cmd("fault", "Cause a fault. Types are dbz, pw, pr", kc_fault|KConsoleCommandRunner)
-	add_cmd("hello", "Say hi. Give it your name", kc_hi|KConsoleCommandRunner)
+	add_cmd("echo", "Repeat args", kc_echo|KConsoleCommandRunner)
+	add_cmd("add", "Add two (hex) digits", kc_addhex|KConsoleCommandRunner)
+	add_cmd("clear", "Clear Screen", kc_clear|KConsoleCommandRunner)
+	add_cmd("hexnum", "Parse a hex digit", kc_hexnum|KConsoleCommandRunner)
 	add_cmd("color", "Set terminal color mode. Pass 2 hex digits, or no args to reset", kc_color|KConsoleCommandRunner)
 	add_cmd("colorama", "Pretty", kc_colorama|KConsoleCommandRunner)
 

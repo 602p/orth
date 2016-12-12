@@ -43,7 +43,7 @@ function(int i) hex_char_to_num -> int does
 		if i<58 do
 			return i-48
 		else do
-			return (i-86)+10
+			return (i-96)+10
 		done
 	done
 return -1

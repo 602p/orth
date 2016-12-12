@@ -1,6 +1,9 @@
 import re, collections
 
+#Here be metaprogramming dragons, and other scary internals.
+
 class DotAccessibleTokenDict(collections.OrderedDict):
+	#Dictionary accessible via dot-accessor
 	def __getattr__(self, a):
 		if a.startswith("T_"):
 			return self[a]
@@ -11,18 +14,27 @@ class DotAccessibleTokenDict(collections.OrderedDict):
 		object.__setattr__(self, a, v)
 
 class TokenHolder(type):
+	#Magic metaclass for the Tokens object in grammar.
+	#Just syntactic sugar around a ordereddict
 	@classmethod
 	def __prepare__(self, name, bases):
 		return DotAccessibleTokenDict()
 
 	def __new__(self, name, bases, classdict):
-		del classdict['__module__']
+		del classdict['__module__'] #Strip out stuff we don't actually want in out dict
 		del classdict['__qualname__']
 		for k, v in classdict.items():
 			v.name=k
 		return classdict
 
 class ChainBuilder:
+	#Spicy! Core of the token->AST transformation matching here.
+	#I went a little nuts with the metaprogramming.
+	#Basically, a ChainBuilder is a chain of patterns (including
+	#other chainbuilders) that describes a sequence of elements
+	#(can be tokens or AST Nodes) that matches that pattern for a
+	#AST Node (e.g. Value + Value -> BinOp, or in our terms
+	# ValueExpression T_OPERATOR(+) ValueExpression -> BinOpExpr)
 	def __init__(self, start=None):
 		self.chain=[] if start is None else start
 
@@ -53,6 +65,9 @@ class ChainBuilder:
 		return True
 
 class ChainBuilderProvider:
+	#Mixin type of something that can be composed like a chainbuilder
+	#They support addition (+) for sequence, or (|) for multiple types, and also
+	#brackets ([]) for optional
 	def __add__(self, other):
 		return ChainBuilder([self, other])
 
@@ -62,12 +77,21 @@ class ChainBuilderProvider:
 	def __or__(self, other):
 		return ChainBuilder([{self, other}])
 
-	def cm_match(self, values, ast_type_blacklist=[]): return ChainBuilder([self]).cm_match(values, ast_type_blacklist)
+	def cm_match(self, values, ast_type_blacklist=[]):
+		#Fall thru to the chainbuilder for the single-element pattern
+		#(e.g. the pattern for ImportExpr is just T_IMPORT(...))
+		return ChainBuilder([self]).cm_match(values, ast_type_blacklist)
 
 class TokenType(ChainBuilderProvider):
+	#Class that holds a regex and some parameters for parsing text into a stream of tokens.
+	#Provides the ability to match against a regex, and specify the type of the preceeding
+	#token. Also allows capturing of the value matched, wether or not to actually emit it
+	#into the tokenstream (false for e.g. comments) and wether it's a "keyword" and shouldn't
+	#match stuff in the middle of other fragments
 	def __init__(self, regex, preceeding_in=None, capture=False, emit=True, keyword=False):
 		if keyword:
-			regex=regex+r"(?=\s)"
+			regex=regex+r"(?=\s)" #look-ahead for whitespace, that is it's not part of another
+									#word (e.g. int functionname isn't a T_FUNCTIONDECL)
 		self.regex=re.compile(regex)
 		self.preceeding_in=preceeding_in
 		self.capture=capture
@@ -82,6 +106,7 @@ class TokenType(ChainBuilderProvider):
 		return Token(self, self.regex.match(text).group() if self.capture else None, line=line, file=file) if self.emit else None
 
 class Token:
+	#Holder
 	def __init__(self, type, value=None, line=None, file=None):
 		self.type=type
 		self.value=value
@@ -94,6 +119,9 @@ class Token:
 	def __repr__(self): return str(self)
 
 class TokenView:
+	#Holding class for a tokenstream. Supports snarfing a forward slice and the next item
+	#Origionally had more of a job, with a stack-machine matching system when I used
+	#LALR parsing (which didn't work out)
 	def __init__(self, tokens):
 		self.tokens=self.orig=tokens[:]
 		self.idx=len(self.tokens)-1
@@ -120,11 +148,13 @@ class TokenView:
 	def get_lookahead(self):
 		return self.tokens[self.idx-1] if self.idx>0 else None
 
-ast_node_types=[]
+ast_node_types=[] #Collects AST Node types
 class ASTNodeMeta(type, ChainBuilderProvider):
+	#Just caches 
 	def __new__(self, name, bases, classdict):
 		if 'pattern' in classdict.keys():
 			if not isinstance(classdict['pattern'], ChainBuilder):
+				#Patches classes that match just a single element
 				classdict['pattern']=ChainBuilder([classdict['pattern']])
 		cls = type.__new__(self, name, bases, classdict)
 		ast_node_types.append(cls)
@@ -132,29 +162,42 @@ class ASTNodeMeta(type, ChainBuilderProvider):
 	# pass
 
 class ASTNode(metaclass=ASTNodeMeta):
-	# pattern=ChainBuilder()
-	bad_lookahead_tokens=[]
-	dont_consume=0
+	bad_lookahead_tokens=[] #Blacklist of _tokens_ that if they are the next item in
+							#the tokenstream we won't match against (e.g. don't match
+							# `foo.bar' into a access of field `bar' on type `foo' if
+							#the next token is a T_DOT, where the expression fully is
+							# `quux.foo.bar', instead wait for the last terminal
+							#to not be a T_DOT and match recursivley forward from that)
+							#Makes this a Bottom-up RL(1) parser
+	#subclasses _should_ implement a pattern classvar holding something recognizable
+	#(eventually) as a ChainBuilderProvider (Incl. ChainBuilders)
 	def __init__(self, elements):
+		#Subclasses should implement stuff here.
+		#Called with elements=list of stuff (ASTNode instances, or Token instances)
+		#that is gaurenteed to match the pattern
 		pass
 
 	def replace(self):
+		#Can also return a truthy (indirect) instance of ASTNode that the parser
+		#will emit into the buffer instead of this object (used for e.g. replacing
+		#a AugmentedAssignment with an equivilent Assignment)
 		return False
 
 	def _get_interesting_keys(self):
 		return sorted([k for k in self.__dict__.keys() if not k.startswith("_") or k in \
-		["pattern", "get_interesting_keys", "prettypring"]])
+		["pattern", "get_interesting_keys", "prettyprint"]])
 
 	def __str__(self):
 		interesting_keys=self._get_interesting_keys()
 		r = type(self).__name__
 		r+="("
-		# print(interesting_keys)
 		r+=", ".join([k+"="+str(getattr(self, k)) for k in interesting_keys])
 		r+=")"
 		return r
 
 	def prettyprint(self, _depth=0):
+		#Pretty (read:indented) print a ASTNode and children.
+		#Basically a holdover from before I wrote drawblockdiag
 		interesting_keys=self._get_interesting_keys()
 		spacing="\t"*_depth
 		r = type(self).__name__+"("
@@ -186,6 +229,7 @@ class ASTNode(metaclass=ASTNodeMeta):
 		return self.pattern.cm_match(values)
 
 	def get_line(self):
+		#recursivley get the line this ASTNode belongs to. Buggy
 		for k in self._get_interesting_keys():
 			v=getattr(self, k)
 			if isinstance(v, list):
@@ -197,6 +241,7 @@ class ASTNode(metaclass=ASTNodeMeta):
 		return self.line
 
 	def get_file(self):
+		#recursivley get the file this ASTNode belongs to. Buggy
 		for k in self._get_interesting_keys():
 			v=getattr(self, k)
 			if isinstance(v, list):
@@ -206,5 +251,3 @@ class ASTNode(metaclass=ASTNodeMeta):
 			elif isinstance(v, ASTNode):
 				return v.file
 		return self.file
-
-NotLoaded = object()

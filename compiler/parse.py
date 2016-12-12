@@ -4,7 +4,17 @@ from grammarutil import Token, TokenView, TokenType, ASTNodeMeta, ChainBuilder, 
 from grammar import ast_node_types, SepExpr, FileExpr
 
 import sys
-# sys.setrecursionlimit(60)
+
+#Actual parsing core code here. Turns a stream of tokens into a single ASTNode.
+#Internally operates on a bighuge list of 'elements', either ASTNode instances
+#or Token instances. Effecivley, it steps backwards (starting at -1, going to 0)
+#thru the current state of the list (which starts containing the results of tokenizing,
+#a bunch of Token objects) trying all of the different subclasses of ASTNode against
+#that state (no match = advance one more step and try again,) and if one matches
+#take the number of elements it consumed and replace them with an instance of that
+#type constructed from them. This then recursivley builts a tree as ASTNode types
+#that consume other ASTNode instances match against ASTNodes and snarf them up as
+#children.
 
 def match_element(element, tokens):
 	#Match a single chainmatcher element against a stream of tokens.
@@ -38,22 +48,26 @@ def match_element(element, tokens):
 	return False
 
 def chain_matches(pattern, tokens):
+	#Implementation of a ChainMatcher.
+	#Check if a pattern (list) matches against a sequence of tokens
 	consumed=0
-	# print(pattern, tokens)
 	for element_idx, element in enumerate(pattern):
 		try:
 			match = match_element(element, tokens[consumed:])
 		except IndexError:
 			return 0
 		if not match and not type(element)==list: #isinstance is slow
+			#Exclude lists, as they denote stuff that is optional
 			return 0
 		consumed+=match
 	return consumed
 
 def parse(tokens):
+	#Meat n' potatos
 	progress=True
 	statements=[]
 	view=TokenView(tokens)
+	#Filter out meta-types (e.g. ValueExpression) that can't actually be produced
 	real_types=[ntype for ntype in ast_node_types if 'pattern' in dir(ntype)]
 	
 	while view.has_any:
@@ -65,29 +79,28 @@ def parse(tokens):
 				if atype.bad_lookahead_tokens: #Make sure it'll actually be used before we try
 												#noticible speed impact!
 					if view.get_lookahead() and view.get_lookahead().type in atype.bad_lookahead_tokens:
+						#If the lookahead token precludes matching, skip to the next type
 						continue
-				# print("#####",view.get_forward_slice())
 				match = chain_matches(atype.pattern.chain, view.get_forward_slice())
-
-				# if match>len(view.get_forward_slice()) and \
-				#    view.get_forward_slice()[match].type in atype.bad_following_tokens:
-				# 	continue
-				
-				# print(atype, match, view.idx, str(atype.pattern), view.get_forward_slice())
 				if match:
 					# print(atype)
-					node=atype(view.get_forward_slice()[0:match-atype.dont_consume])
+					node=atype(view.get_forward_slice()[0:match])
 					node.line=view.get_forward_slice()[0].line
 					rep=node.replace()
-					if rep:
+					if rep: #If we want to replace, do so
 						node=rep
 
-					node.line=view.get_forward_slice()[0].line
-					# print("***", node)
-					view.replace(match, node)
-					# print(view.tokens, view.idx)
+					node.line=view.get_forward_slice()[0].line #Snarf out the line
+					view.replace(match, node) #replace match elements from the position on
+												#with node
 					progress=True
 					break
 		view.next()
 
-	return FileExpr(view.tokens)#[item for item in view.tokens if not isinstance(item, SepExpr)])
+	for item in view.tokens:
+		if isinstance(item, Token):
+			#At least you get a more helpful error message...
+			#Error detection/informing is really not optimal
+			raise SyntaxError("Programmer Error: Got a token in the resultant tokens")
+
+	return FileExpr(view.tokens)

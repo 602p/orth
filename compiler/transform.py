@@ -236,14 +236,10 @@ def emit(out, node, parent=None):
 	return get_transformer(node, parent).transform(out)
 
 def emit_project(out, node, parent=None):
-	# print("Transforming "+str(node)+" with "+str(get_transformer(node)))
-	# print("Running "+str(get_transformer(node, parent)))
-	# print(out.scopes)
 	get_transformer(node, parent).prepare(out)
 	return get_transformer(node, parent).transform(out)
 
 def get_type(node, out):
-	# print(node, out.types)
 	if isinstance(node, str):
 		return out.types[node]
 	if isinstance(node, datamodel.OType):

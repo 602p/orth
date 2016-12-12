@@ -91,6 +91,7 @@ class Emitter:
 		self.prepared_files=[] #Files whose prototypes/globals have been emitted, and signatures loaded
 					#(all files will have that preparation transformation applied before _any_ are actually
 					# "included")
+		self.ast_cache={} #Cache of filename (non-mangled)->ASTNode for files
 		self.types=copy.copy(datamodel.builtin_types) #Dictionary of orth_type_name:OTypes of the types availible (globally)
 								#in the program
 		self.searchpath=["."] #Search path for imported modules (using import name, as opposed to import "relative_path")

@@ -489,12 +489,14 @@ class ImportTransformer(Transformer):
 	def get_file_transformer(self, out):
 		import tokenize, parse
 		filename=transform.resolve_import(self.node, out)
-		return transform.get_transformer(
-			parse.parse(
+		if filename not in out.ast_cache:
+			out.ast_cache[filename]=parse.parse(
 				tokenize.tokenize(
 					open(filename, 'r').read()
 				)
-			),
+			)
+		return transform.get_transformer(
+			out.ast_cache[filename],
 			self
 		)
 

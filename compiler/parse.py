@@ -7,21 +7,31 @@ import sys
 # sys.setrecursionlimit(60)
 
 def match_element(element, tokens):
+	#Match a single chainmatcher element against a stream of tokens.
+	#This function is called REALLY often (about 1/2 a million times
+	#for one compilation of my kernel) so it's a little weird for optimizations
+	#sake. I used to used isinstance uniformly here, but that is actually really
+	#slow, as it implies a whole (recusive) callchain of crap. But type is fast
+	#as python objects are only ever instances of one type. Use that instead where
+	#applicable. (Not always applicable, e.g. ASTNodes may be matched by any
+	#of the eventual parent types)
 	token=tokens[0]
-	if isinstance(element, set):
+	if type(element)==TokenType: #isinstance is really slow, use this narrow check instead
+		if type(token)==Token: #isinstance is really slow, use this narrow check instead
+			if token.type==element:
+				return 1
+	elif type(element)==set: #isinstance is really slow, use this narrow check instead
 		results=[match_element(i, tokens) for i in element]
 		if any(results):
 			return max(results)
-	if isinstance(element, TokenType):
-		if isinstance(token, Token):
-			if token.type==element:
-				return 1
-	if isinstance(element, ASTNodeMeta):
-		if issubclass(type(token), element):
-			return 1
-	if isinstance(element, list):
+	elif type(element)==list: #isinstance is really slow, use this narrow check instead
 		return chain_matches(element, tokens)
-	if isinstance(element, ChainBuilder):
+	elif type(element)==ASTNodeMeta: #Metaprogramming is fun!
+		if element in type(token).__bases__: #Quick check for simple cases
+			return 1
+		else:
+			return issubclass(type(token), element) #Fall back to the slow but accurate
+	else:#was if isinstance(element, ChainBuilder):, but isinstance is slow, so treat as default
 		if len(element.chain)==1:
 			return match_element(element.chain[0], tokens)
 		return match_element(element.chain, tokens)
@@ -35,7 +45,7 @@ def chain_matches(pattern, tokens):
 			match = match_element(element, tokens[consumed:])
 		except IndexError:
 			return 0
-		if not match and not isinstance(element, list):
+		if not match and not type(element)==list: #isinstance is slow
 			return 0
 		consumed+=match
 	return consumed
@@ -52,8 +62,10 @@ def parse(tokens):
 			
 			progress=False
 			for atype in real_types:
-				if view.get_lookahead() and view.get_lookahead().type in atype.bad_lookahead_tokens:
-					continue
+				if atype.bad_lookahead_tokens: #Make sure it'll actually be used before we try
+												#noticible speed impact!
+					if view.get_lookahead() and view.get_lookahead().type in atype.bad_lookahead_tokens:
+						continue
 				# print("#####",view.get_forward_slice())
 				match = chain_matches(atype.pattern.chain, view.get_forward_slice())
 

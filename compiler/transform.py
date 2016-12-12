@@ -92,6 +92,7 @@ class Emitter:
 					#(all files will have that preparation transformation applied before _any_ are actually
 					# "included")
 		self.ast_cache={} #Cache of filename (non-mangled)->ASTNode for files
+		self.path_cache={} #Cache of include_name->File path for imports
 		self.types=copy.copy(datamodel.builtin_types) #Dictionary of orth_type_name:OTypes of the types availible (globally)
 								#in the program
 		self.searchpath=["."] #Search path for imported modules (using import name, as opposed to import "relative_path")
@@ -272,9 +273,14 @@ def resolve_import(import_node, out):
 	if import_node.absolute:
 		return import_node.identifier
 	else:
+		if import_node.identifier in out.path_cache:
+			return out.path_cache[import_node.identifier]
+
 		for dir in out.searchpath:
 			if import_node.identifier+".ort" in os.listdir(dir):
-				return os.path.join(dir, import_node.identifier+".ort")
+				result=os.path.join(dir, import_node.identifier+".ort")
+				out.path_cache[import_node.identifier]=result
+				return result
 		raise ImportError("No module `%s' found on search path"%import_node.identifier)
 
 def sanitize_fn(fn):

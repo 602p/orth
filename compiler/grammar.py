@@ -184,12 +184,15 @@ class BlockExpression(Expression):
 	pass
 
 class IntrinsicExpr(ValueExpression):
+	#An intrinsic expression (e.g. @sizeof(MyType)@ or @extern_func("printf", "void", "(...)")@
+	#just gets captured and processed seperatley
 	pattern=T_INTRINSIC
 
 	def __init__(self, elements):
 		self.text=elements[0].value
 
 class NameExpr(IdentifierExpr, ValueExpression):
+	#Names, yo
 	pattern=T_NAME
 
 	def __init__(self, elements):
@@ -197,7 +200,12 @@ class NameExpr(IdentifierExpr, ValueExpression):
 		self.type="?"
 
 class DeclExpr(NameExpr):
+	#Variable declaration. Maps to a alloca in the IR.
+	#Also used for globals when at file scope,
+	#members when at type scope
 	pattern=T_VAR_DECL+[T_HEAP_ALLOCATION]
+	#The whole sepereate-syntax-for-heap-allocation thing is something
+	#i would still like to explore, but for now it dosen't do anything
 
 	def __init__(self, elements):
 		# print(elements)
@@ -207,6 +215,7 @@ class DeclExpr(NameExpr):
 		self.heap=len(elements)==2
 
 class CastExpr(ValueExpression):
+	#Cast one type to another. <some_value>|<typename> (eventually calls typeof(some_value).implement_cast(some_value, typename))
 	pattern=ValueExpression+T_CAST+NameExpr
 	bad_lookahead_tokens=[T_DOT, T_COLON, T_DOUBLECOLON, T_CAST, T_PTRCAST]
 
@@ -215,6 +224,9 @@ class CastExpr(ValueExpression):
 		self.to=elements[2].name
 
 class PtrCastExpr(ValueExpression):
+	#Syntax is <some_value>||<pointer type>, effectivley equivilient to &some_value.
+	#I don't really like this syntax, as it dosen't provide a scheme for dereferencing
+	#Mostly a kludge to allow interfacing with some glibc stuff, probably should redo
 	pattern=ValueExpression+T_PTRCAST+NameExpr
 	bad_lookahead_tokens=[T_DOT, T_COLON, T_DOUBLECOLON, T_CAST, T_PTRCAST]
 
@@ -223,6 +235,7 @@ class PtrCastExpr(ValueExpression):
 		self.to=elements[2].name
 
 class BinOpExpr(ValueExpression):
+	#Operators like +, -, *, /, ^, &, <<, >>, ==, !=, <, >, <=, >= are all Binary operators
 	pattern=ValueExpression+T_BINARY_OPERATOR+ValueExpression
 	bad_lookahead_tokens=[T_DOT, T_CAST]
 
@@ -232,6 +245,7 @@ class BinOpExpr(ValueExpression):
 		self.operator=elements[1].value
 
 class UnOpExpr(ValueExpression):
+	#Stuff like unary minus
 	pattern=T_UNARY_OPERATOR+ValueExpression
 
 	def __init__(self, elements):
@@ -239,6 +253,8 @@ class UnOpExpr(ValueExpression):
 		self.expr=elements[1]
 
 class AssignmentExpr(Expression):
+	#Assigning to somethign emits one of these. This includes assigning to computed locations, e.g.
+	#into arrays. Also is the endpoint for augmented assignments
 	pattern=IdentifierExpr+T_ASSIGNMENT+ValueExpression
 	bad_lookahead_tokens=[T_DOT, T_COLON, T_DOUBLECOLON]
 

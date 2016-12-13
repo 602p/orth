@@ -270,6 +270,7 @@ class AssignmentExpr(Expression):
 		self.construct=elements[1].value=="<-"
 
 class LiteralExpr(ValueExpression):
+	#Literal values
 	pattern=T_INTEGER_LITERAL|T_STRING_LITERAL
 
 	def __init__(self, elements):
@@ -284,36 +285,46 @@ class LiteralExpr(ValueExpression):
 				self.value=int(elements[0].value.replace("L",""))
 				self.type='int'
 		else:
-			self.value=eval(elements[0].value) #Hack to allow escapes
+			self.value=eval(elements[0].value) #Hack to allow escapes, horrible, terrible, bad
 			self.type='cstr'
 
 class SepExpr(Expression):
+	#Agglomerate ENDOFSTATMENTs into SepExprs. These are used in some cases by
+	#e.g. ifs to understand where the blocks they contain start/end.
 	pattern=T_ENDOFSTATEMENT
 	bad_lookahead_tokens=[T_ENDOFSTATEMENT]
 
 class JSepExpr(SepExpr):
+	#We never want to have more than on sepexpr in a row, so join them together
 	pattern=SepExpr+T_ENDOFSTATEMENT
 
 class GroupingExpr(ValueExpression):
+	#Order-of-operations changing parens. Just capture the enclosed value and that becomes the value of
+	#this expression
 	pattern=T_PAREN_OPEN+ValueExpression+T_PAREN_CLOSE
-	bad_lookahead_tokens=[T_NAME, T_PAREN_CLOSE]
+	bad_lookahead_tokens=[T_NAME, T_PAREN_CLOSE, T_LIST_STOP] #Cases where this could be a function invocation
 
 	def __init__(self, elements):
 		self.value=elements[1]
 
 class TupleFragment(ASTNode):
+	#This stuff's weird. Tuples are how I construct function calls, but their a little nutty
+	#The start of a 2+-tuple is ,<value>)
 	pattern=T_COMMA+ValueExpression+T_PAREN_CLOSE
 
 	def __init__(self, elements):
 		self.args=[elements[1]]
 
 class TupleFragmentContinuation(TupleFragment):
+	#Then for any further values, we match that to ,<value><fragment>
+	#this will consume all but the last value (first arg)
 	pattern=T_COMMA+ValueExpression+TupleFragment
 
 	def __init__(self, elements):
 		self.args=[elements[1]]+elements[2].args
 
 class TupleExpr(ASTNode):
+	#End case of a 2+-tuple. Consume the last element (first arg) of the tuple and the fragment
 	pattern=T_PAREN_OPEN+ValueExpression+TupleFragment
 
 	def __init__(self, elements):
@@ -321,18 +332,23 @@ class TupleExpr(ASTNode):
 		self.args.extend(elements[2].args)
 
 class OneTupleExpr(TupleExpr):
+	#Special case for single-element tuples.
 	pattern=T_PAREN_OPEN+ValueExpression+T_PAREN_CLOSE
 
 	def __init__(self, elements):
 		self.args=[elements[1]]
 
 class ZeroTupleExpr(TupleExpr):
+	#Special case for empty tuples
 	pattern=T_PAREN_OPEN+T_PAREN_CLOSE
 
 	def __init__(self, elements):
 		self.args=[]
 
 class CallExpr(ValueExpression):
+	#A function call. LHS can be anything whose value eventually resolves to a fptr
+	#so, functions, or arbitrary code. RHS is _either_ a tuple, or a groupingexpr
+	#because that's what you get if you have just one arg (kinda hacky, i know)
 	pattern=ValueExpression+(TupleExpr|GroupingExpr)
 	bad_lookahead_tokens=[T_DOT, T_COLON, T_DOUBLECOLON]
 
@@ -344,15 +360,19 @@ class CallExpr(ValueExpression):
 			self.args=[elements[1].value]
 
 class AugmentedAssignExpression(Expression):
+	#Handles cases like a+=b, by actually just turning them into
+	#a=a+b, and that gets insterted into the outgoing AST instead
 	pattern=IdentifierExpr+T_AUGASSIGN+ValueExpression
 	bad_lookahead_tokens=[T_DOT, T_COLON, T_DOUBLECOLON]
 
 	def __init__(self, elements):
+		#Grab relevent stuff, this is gaurenteed to run before replace()
 		self.variable=elements[0]
 		self.operation=elements[1].value[0]
 		self.offset=elements[2]
 	
 	def replace(self):
+		#Create the ASTNodes that will replace this
 		binop=BinOpExpr([
 				self.variable,
 				T_BINARY_OPERATOR.make_token(self.operation),
@@ -366,8 +386,17 @@ class AugmentedAssignExpression(Expression):
 		], was_augassign=True)
 
 class AccessorExpr(ValueExpression, IdentifierExpr):
+	#Accesses can be made foo.bar style, where we are accessing the value
+	#of the field bar on the type that foo is a immediate pointer to, foo:bar
+	#where it's actually refferential to the name constructed from the type
+	#of foo (at compile time) and the string $bar, e.g. for an int age:bar
+	#actually resolves to int$bar, and foo::bar, where at parse time (here)
+	#it is transparently replaced with foo$$bar. Therefore, AccessorExprs match
+	#against accesses using T_DOTs, T_COLONs, and T_DOUBLECOLONs
 	pattern=ValueExpression+(T_DOT|T_COLON|T_DOUBLECOLON)+IdentifierExpr
-	bad_lookahead_tokens=[T_DOT, T_COLON, T_DOUBLECOLON]
+	bad_lookahead_tokens=[T_DOT, T_COLON, T_DOUBLECOLON] #Don't match the bar.baz part of
+	#foo.bar.baz into it's own expression, wait until we don't have any more eventual parents,
+	#and then it will recursivley match rightwards from the leftmost terminal
 
 	def __init__(self, elements):
 		self.object=elements[0]
@@ -382,11 +411,11 @@ class AccessorExpr(ValueExpression, IdentifierExpr):
 
 	def replace(self):
 		if self.accesses=="classmethod":
+			#Replace me with a NameExpr for stuff using a :: access
 			return NameExpr([Token(T_NAME, self.object.name+"$$"+self.field, self.object.line, None)])
-		# elif self.accesses=="classmethod":
-		# 	return NameExpr([Token(T_NAME, self.object.name+"$$"+self.field, self.object.line, None)])
 
 class IndexExpr(IdentifierExpr, ValueExpression):
+	#Index into something e.g. foo[bar]
 	pattern=ValueExpression+T_LIST_START+ValueExpression+T_LIST_STOP
 	bad_lookahead_tokens=[T_DOT, T_COLON, T_DOUBLECOLON]
 
@@ -395,22 +424,28 @@ class IndexExpr(IdentifierExpr, ValueExpression):
 		self.index=elements[2]
 
 class ReturnExpr(Expression):
+	#Return a value
 	pattern=T_RETURN+[ValueExpression]
 
 	def __init__(self, elements):
 		self.value=elements[1] if len(elements)==2 else None
 
 class BunchaExpressions(Expression):
+	#Parent class for expression groups
 	def __init__(self, elements):
 		self.exprs=elements
 
 class BlockBunchaExpressionsBase(BunchaExpressions):
+	#Start snarfing from `done` term in a block, uses SepExprs to ensure
+	#it snarfs fully constructed elements
 	pattern=SepExpr+Expression+SepExpr+T_BLOCK_DONE
 
 	def __init__(self, elements):
 		self.exprs=[elements[1]]
 		
 class BlockBunchaExpressionsExt(BlockBunchaExpressionsBase):
+	#Extend a BlockBuncaExpressinosBase. This will eventually
+	#recursivley consume all the expressions in a block
 	pattern=SepExpr+Expression+[SepExpr]+BlockBunchaExpressionsBase
 
 	def __init__(self, elements):
@@ -423,6 +458,7 @@ class BlockBunchaExpressionsExt(BlockBunchaExpressionsBase):
 			# print(elements[2])
 
 class XIfBunchaExpressionsBase(BunchaExpressions):
+	#UGLY HACK WARNING. Same thing, but ends on a elif or else and keeps track of that
 	pattern=SepExpr+Expression+SepExpr+(T_IF_BLOCK_END_ON_ELIF|T_IF_BLOCK_END_ON_ELSE)
 
 	def __init__(self, elements):
@@ -430,6 +466,7 @@ class XIfBunchaExpressionsBase(BunchaExpressions):
 		self.end=elements[3]
 		
 class XIfBunchaExpressionsExt(XIfBunchaExpressionsBase):
+	#UGLY HACK WARNING. Same thing, but ends on a elif or else and keeps track of that
 	pattern=SepExpr+Expression+[SepExpr]+XIfBunchaExpressionsBase
 
 	def __init__(self, elements):
@@ -444,6 +481,10 @@ class IfContinuation(ASTNode):
 	pass
 
 class IfExpr(BlockExpression):
+	#Capture the conditional, and the stuff to run if it's true. overflow into else and elif
+	#clauses is done with the .else_ member, that holds the ASTNode to run if false (so the
+	#cascade chain of else_ looks like IfExpr->ElIfExpr->ElifExpr->[...]->ElseExpr->None
+	#(of course you can mix and match but that's the idea)
 	pattern=T_IF_START+ValueExpression+T_BLOCK_DO+\
 	        (BlockBunchaExpressionsBase|(XIfBunchaExpressionsBase+IfContinuation))
 
@@ -453,6 +494,7 @@ class IfExpr(BlockExpression):
 		self.else_=None if len(elements)==4 else elements[4]
 
 class ElIfExpr(BlockExpression, IfContinuation):
+	#Functionally identical
 	pattern=T_IF_ELIF+ValueExpression+T_BLOCK_DO+\
 	        (BlockBunchaExpressionsBase|(XIfBunchaExpressionsBase+IfContinuation))
 
@@ -462,6 +504,7 @@ class ElIfExpr(BlockExpression, IfContinuation):
 		self.else_=None if len(elements)==4 else elements[4]
 
 class ElseExpr(IfExpr, IfContinuation):
+	#Will run when control flow (from an .else_) member get's here nomatter what
 	pattern=T_IF_ELSE+T_BLOCK_DO+BlockBunchaExpressionsBase
 
 	def __init__(self, elements):
@@ -470,6 +513,7 @@ class ElseExpr(IfExpr, IfContinuation):
 		self.else_=None
 
 class WhileExpr(BlockExpression):
+	#Same as if, but while true loop back to start
 	pattern=T_WHILE_START+ValueExpression+T_BLOCK_DO+BlockBunchaExpressionsBase
 
 	def __init__(self, elements):
@@ -477,6 +521,7 @@ class WhileExpr(BlockExpression):
 		self.block=elements[3]
 
 class FunctionDeclStart(ASTNode):
+	#Header for a function declaration, captures the `name -> rettype does` part
 	pattern=T_FUNCTIONDECL_NAME+T_FUNCTIONDECL_RETURNS+T_FUNCTIONDECL_RETURN_TYPE+T_FUNCTIONDECL_DOES
 
 	def __init__(self, elements):
@@ -484,6 +529,7 @@ class FunctionDeclStart(ASTNode):
 		self.type=elements[2].value
 
 class ArgListEle(ASTNode):
+	#Snag an arglist element
 	pattern=T_ARGLIST_ELEMENT
 
 	def __init__(self, elements):
@@ -491,36 +537,46 @@ class ArgListEle(ASTNode):
 		self.type=elements[0].value.split(" ")[0]
 
 class ArgList(ASTNode):
+	#Base class for arg lists. This one also matches empty lists `function()`
 	pattern=T_ARGLIST_START+T_ARGLIST_END
 
 	def __init__(self, elements):
 		self.args=[]
 
 class OneArgList(ArgList):
+	#Matches single element arg lists
 	pattern=T_ARGLIST_START+ArgListEle+T_ARGLIST_END
 
 	def __init__(self, elements):
 		self.args=[elements[1]]
 
 class MultiArgListStart(ArgList):
+	#Same idea as the tuple matching code, but matches ArgListEles isntead of ValueExpressions
 	pattern=T_ARGLIST_SEPERATOR+ArgListEle+T_ARGLIST_END
 
 	def __init__(self, elements):
 		self.args=[elements[1]]
 
 class MultiArgListExt(MultiArgListStart):
+	#Same Here
 	pattern=T_ARGLIST_SEPERATOR+ArgListEle+MultiArgListStart
 
 	def __init__(self, elements):
 		self.args=[elements[1]]+elements[2].args
 
 class CompletedMultiArgList(ArgList):
+	#Gotta end with the T_ARGLIST_START at the beginning
 	pattern=T_ARGLIST_START+ArgListEle+MultiArgListStart
 
 	def __init__(self, elements):
 		self.args=[elements[1]]+elements[2].args
 
 class FunctionBody(BunchaExpressions):
+	#Functions contain all the expressions from the `does` to the first
+	#return expression that is unconditionally part of the control flow.
+	#That is, not in an if/elif/else/while clause. Therefore, we can match
+	#the body of functions by collecting expressions from the first ReturnExpr
+	#we find (as al subsequent ones must be contained within a block)
 	pattern=Expression+ReturnExpr
 	bad_lookahead_tokens=[T_BLOCK_DO]
 
@@ -528,6 +584,7 @@ class FunctionBody(BunchaExpressions):
 		self.exprs=[elements[0], elements[1]]
 
 class FunctionBodyExt(FunctionBody):
+	#Continue snarfing
 	pattern=SepExpr+Expression+[SepExpr]+FunctionBody
 
 	def __init__(self, elements):
@@ -537,6 +594,7 @@ class FunctionBodyExt(FunctionBody):
 			self.exprs=[elements[1]]+elements[2].exprs
 
 class FunctionDecl(ASTNode):
+	#Turn the T_FUNCTIONDECL header, plus the metadata, and the body into one Node
 	pattern=T_FUNCTIONDECL+ArgList+FunctionDeclStart+FunctionBody
 
 	def __init__(self, elements):
@@ -546,10 +604,12 @@ class FunctionDecl(ASTNode):
 		self.body=elements[3]
 
 class FileExpr(ASTNode):
+	#Holds stuff
 	def __init__(self, elements):
 		self.funcs=[e for e in elements if not isinstance(e, SepExpr)]
 
 class TypeDeclStart(ASTNode):
+	#Header part (`type name is [a|packed] ...`) of a type declaration
 	pattern=T_TYPEDECL+T_TYPEDECL_NAME+T_TYPEDECL_IS+[T_TYPEDECL_PACKED|T_TYPEDECL_ALIAS]
 	def __init__(self, elements):
 		self.name=elements[1].value
@@ -563,6 +623,7 @@ class TypeDeclStart(ASTNode):
 				self.alias=True
 
 class TypeDeclExt(TypeDeclStart):
+	#Match all the parts of the class body
 	pattern=TypeDeclStart+ASTNode#(DeclExpr|FunctionDecl|T_ENDOFSTATEMENT)
 	def __init__(self, elements):
 		self.elements=elements[0].elements+[elements[1]]
@@ -571,6 +632,7 @@ class TypeDeclExt(TypeDeclStart):
 		self.alias=elements[0].alias
 
 class TypeDecl(ASTNode):
+	#...until we get the endtype fragment
 	pattern=TypeDeclStart+T_TYPEDECL_END
 
 	def __init__(self, elements):
@@ -578,6 +640,7 @@ class TypeDecl(ASTNode):
 		self.fields=collections.OrderedDict()
 		self.methods=[]
 		self.packed=elements[0].packed
+		#Parse the body contents into a useful package
 		for ele in elements[0].elements:
 			if isinstance(ele, DeclExpr):
 				self.fields[ele.name]=ele.type
@@ -591,6 +654,7 @@ class TypeDecl(ASTNode):
 				raise SyntaxError("IDK how to handle a "+str(type(ele))+" in a type")
 
 class AliasTypeDecl(TypeDecl):
+	#...or an unadormed type/T_TYPEDECL_FUNCTIONPOINTER, where this must be what the type aliases
 	pattern=TypeDeclStart+(NameExpr|T_TYPEDECL_FUNCTIONPOINTER)
 
 	def __init__(self, elements):
@@ -602,6 +666,7 @@ class AliasTypeDecl(TypeDecl):
 			self.returntype=self.aliasing.split("->")[1].strip()
 
 class ImportExpr(ASTNode):
+	#Imports are either `import name` or `import "path.ort"`
 	pattern=T_IMPORT
 
 	def __init__(self, elements):

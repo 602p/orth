@@ -5,6 +5,28 @@ import datamodel
 import intrinsics
 from transform import get_type, do_var_alloc, ret_local
 
+"""
+ _______  ___ ________
+  )_   ( '-,) )   _(
+    )_  \_//_/  _(
+      )___  ___(
+          ))
+         ((
+          ``
+    Here be dragons
+
+This is the core logic for AST->LLVM IR transformation.
+Eatch class matches one or more type of ASTNode.
+
+transform produces a (prefixed) LLVM SSA Identifier of the
+ value of the node.
+transform_address produces a (prefixed) LLVM SSA Identifier
+ of the address of the value of the node
+get_type produces a OType instance (from datamodel.py) 
+ of the Orth view of the type of the SSA Var returned from
+ transform (Type of SSA var returned from transform_address
+ should be pointer-to-that-returned-by-get_type
+"""
 
 class CastExprTransformer(Transformer):
 	transforms=CastExpr

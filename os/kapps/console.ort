@@ -121,6 +121,34 @@ function(cstr args) kc_hexnum -> void does
 	kterm:printi(hex_char_to_num(args:idxi(0)))
 return
 
+@declare_func("__kwritepw", "void", "(i32, i32)")@
+function(cstr args) kc_shutdown -> void does
+	kterm:print("Shutting Down...")
+	__kwritepw(0xB004, 0x2000)
+return
+
+function(cstr args) kc_getpicticks -> void does
+	kterm:print("Ticks: ")
+	kterm:printlong(pic_ticks)
+	kterm:print("\nSeconds ~:")
+	kterm:printlong(pic_ticks/18|long)
+	kterm:print("\n")
+return
+
+function(cstr args) kc_picsleep -> void does
+	if args:len()!=1 do
+		kterm:printl("Pass 1 hex digit for seconds to sleep")
+		return
+	done
+	long initial=pic_ticks
+	int t=hex_char_to_num(args:idxi(0))
+	kc_getpicticks("")
+	while (pic_ticks-initial)<((19*t)|long) do
+		0
+	done
+	kc_getpicticks("")
+return
+
 function(cstr args) kc_color -> void does
 	if args:len()==2 do
 		kterm.attributes=((hex_char_to_num(args:idxi(0))*16)+hex_char_to_num(args:idxi(1)))|byte
@@ -165,6 +193,9 @@ function() kconsole_run -> void does
 	add_cmd("add2h", "Add two (hex) digits", kc_addhex|KConsoleCommandRunner)
 	add_cmd("clear", "Clear Screen", kc_clear|KConsoleCommandRunner)
 	add_cmd("hexnum", "Parse a hex digit", kc_hexnum|KConsoleCommandRunner)
+	add_cmd("pict", "View PIC interrupt count", kc_getpicticks|KConsoleCommandRunner)
+	add_cmd("pics", "Sleep for n secs. Pass 1 hex digit", kc_picsleep|KConsoleCommandRunner)
+	add_cmd("shutdown", "Try to shut down", kc_shutdown|KConsoleCommandRunner)
 	add_cmd("color", "Set terminal color mode. Pass 2 hex digits, or no args to reset", kc_color|KConsoleCommandRunner)
 	add_cmd("colorama", "Pretty", kc_colorama|KConsoleCommandRunner)
 

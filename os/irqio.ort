@@ -2,6 +2,7 @@
 @declare_func("__kget_pf_handler_addr", "ptr", "()")@
 @declare_func("__kget_gpf_handler_addr", "ptr", "()")@
 @declare_func("__kget_df_handler_addr", "ptr", "()")@
+@declare_func("__kget_pic_handler_addr", "ptr", "()")@
 @declare_func("__klidt", "void", "(i8*)")@
 @declare_func("__kwritepb", "void", "(i8, i8)")@
 @declare_func("__kreadpb", "ubyte", "(i8)")@
@@ -53,39 +54,37 @@ return __kreadpb(p|byte)|int
 IDT idt
 
 function() setup_irq -> void does
-	kterm:print("*")
 	idt=IDT::create()
 
 	kterm:print("IDT@")
-	kterm:printi(idt.idt_address)
-	kterm:print(",")
-	kterm:printi(idt.idt_size|int)
+	kterm:dumphexi(idt.idt_address)
 
-	kterm:print("*")
 	IDTEntry kbd_handler = IDTEntry::new(__kget_keyboard_handler_addr())
 	IDTEntry pf_handler = IDTEntry::new(__kget_pf_handler_addr())
 	IDTEntry gpf_handler = IDTEntry::new(__kget_gpf_handler_addr())
 	IDTEntry df_handler = IDTEntry::new(__kget_df_handler_addr())
+	IDTEntry pic_handler = IDTEntry::new(__kget_pic_handler_addr())
 
-	kterm:print("kbdh@")
-	kterm:printi(__kget_keyboard_handler_addr()|int)
-	kterm:print("*")
 	idt:install_entry(kbd_handler, 0x21)
+	kterm:print("#KBD")
+	idt:install_entry(pic_handler, 0x20)
+	kterm:print("#PIC")
 	idt:install_entry(pf_handler, 0x0E)
+	kterm:print("#PF")
 	idt:install_entry(gpf_handler, 0x0D)
+	kterm:print("#GPF")
 	idt:install_entry(df_handler, 0x08)
+	kterm:print("#DF")
 
 	#Mask interrupts we don't have handlers for
 	setup_kbd()
+	setup_pit()
 
-	kterm:print("!")
 	__klidt(idt|ptr)
-	kterm:print("*")
 
-	start_kbd()
+	start_irqs()
+	kterm:print(" KBD, PIC started. ")
 	read_port(0x60)
-
-	kterm:print("#")
 return
 
 function() setup_kbd -> void does
@@ -99,6 +98,12 @@ function() setup_kbd -> void does
 	write_port(0xA1 , 0x01)
 	write_port(0x21 , 0xff)
 	write_port(0xA1 , 0xff)
+return
+
+function() setup_pit -> void does
+	write_port(0x43 , 0x36) #Square wave mode
+	write_port(0x40, 0) #65536 ticks/sec, 54.9 ms
+	write_port(0x40, 0) #65536 ticks/sec, 54.9 ms
 return
 
 type KeyboardEvent is
@@ -148,10 +153,14 @@ type KeyboardState is
 endtype
 
 KeyboardState system_kbdstate
+long pic_ticks
 
-function() start_kbd -> void does
+function() start_irqs -> void does
 	system_kbdstate=KeyboardState::new()
-	write_port(0x21 , 0xFD)
+	pic_ticks=0|long
+	write_port(0x21 , 0b11111100)
+	#                         ^^- Enable IRQ0 (0x20 after translation) for PIT
+	#                         |- Enable IRQ1 (0x21 after translation) for keyboard
 return
 
 function() __irq_keyboard_handler -> void does
@@ -174,4 +183,9 @@ return
 
 function(int addr, int errorcode) __irq_doublefault_handler -> void does
 	kpanic(errorcode, addr, "Unrecoverable Double Fault Error - INT 0x08 - #DF", "???")
+return
+
+function() __irq_timer_handler -> void does
+	pic_ticks+=1|long
+	write_port(0x20, 0x20)
 return

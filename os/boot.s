@@ -98,10 +98,17 @@ __kreadpb:
 
 global __kwritepb
 __kwritepb:
-	mov   edx, [esp + 4]    
-	mov   al, [esp + 4 + 4]  
-	out   dx, al  
-	ret
+    mov   edx, [esp + 4]    
+    mov   al, [esp + 4 + 4]  
+    out   dx, al  
+    ret
+
+global __kwritepw
+__kwritepw:
+    mov   edx, [esp + 4]    
+    mov   eax, [esp + 4 + 4]  
+    out   dx, eax 
+    ret
 
 extern __irq_keyboard_handler
 keyboard_handler_irupt_internal:
@@ -164,6 +171,20 @@ df_handler_irupt_internal:
 global __kget_df_handler_addr
 __kget_df_handler_addr:
     mov eax, df_handler_irupt_internal
+    ret
+
+extern __irq_timer_handler
+pic_handler_irupt_internal:
+    pushad
+    pushfd
+    call __irq_timer_handler
+    popfd
+    popad
+    iret
+
+global __kget_pic_handler_addr
+__kget_pic_handler_addr:
+    mov eax, pic_handler_irupt_internal
     ret
 
 global __kget_keyboard_handler_addr

@@ -154,17 +154,12 @@ function() install_gdt -> void does
 	GDT gdt = GDT::new(2)
 
 	GDTEntry kernel_code = GDTEntry::new(0x0, 0xFFFFFFFF, 1|bool, 0|bool)
-	kterm:print(".")
 	gdt:add(kernel_code)
-	kterm:print(".")
 
 	GDTEntry kernel_data = GDTEntry::new(0x0, 0xFFFFFFFF, 0|bool, 0|bool)
-	kterm:print(".")
 	gdt:add(kernel_data)
-	kterm:print(".")
 
-	kterm:printi((gdt|ptr)|int)
-	kterm:print("!")
+	kterm:print("GDT@")
+	kterm:dumphexi((gdt|ptr)|int)
 	__klgdt((gdt|ptr)|int)
-	kterm:print("*")
 return

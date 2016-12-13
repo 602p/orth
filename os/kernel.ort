@@ -31,11 +31,16 @@ function() kernel_main -> void does
 	kterm:printl("    \\_/")
 	kterm:printl("\nOrth OS. Louis G.")
 
-	kterm:print("CS=")
+	kterm:print("Higher-Half addressing enabled, base_vma=")
+	kterm:dumphexi(base_vma)
+	kterm:print(". kterm.baseaddr=")
+	kterm:dumphexi(kterm.baseaddr|int)
+
+	kterm:print("\nCS=")
 	kterm:printi(__kgetcs())
 	kterm:print(" DS=")
 	kterm:printi(__kgetds())
-	kterm:print(" Installing GDT... ")
+	kterm:print(" Installing GDT: ")
 
 	install_gdt()
 
@@ -46,7 +51,7 @@ function() kernel_main -> void does
 	kterm:print(" DS=")
 	kterm:printi(__kgetds())
 
-	kterm:print("\nTesting (some) Memory... ")
+	kterm:print("\nTesting (some) Memory: ")
 
 	int mt_x=kterm.cursor_x
 
@@ -62,16 +67,16 @@ function() kernel_main -> void does
 	kterm:printi(testpos)
 	kterm:printl("b accessible off 'heap'")
 
-	kterm:print("Load IDT+Kbd... ")
+	kterm:print("Installing IRQs: ")
 
 	setup_irq()
 
 	kterm:printl("Installed!")
 
 	kterm:print("Heap ptr at ")
-	kterm:printi(mm_head|int)
+	kterm:dumphexi(mm_head|int)
 	kterm:print(" , heap pos at ")
-	kterm:printi(mm_pos|int)
+	kterm:dumphexi(mm_pos|int)
 	kterm:print(" (")
 	kterm:printi((mm_pos|int)-(mm_head|int))
 	kterm:printl("b consumed)")
@@ -81,7 +86,7 @@ function() kernel_main -> void does
 	int bg_idx=0x0F
 
 	while bg_idx<=0xFF do
-		kterm:printa(bg_idx, " ")
+		kterm:printa(bg_idx, ".")
 		bg_idx+=0x10
 	done
 

@@ -31,10 +31,12 @@ get_type produces a OType instance (from datamodel.py)
 class CastExprTransformer(Transformer):
 	transforms=CastExpr
 
-	@ret_local
+	@ret_local #ret_local is a compatibility adapter that prefixes the function's return with a %, indicating it's a LLVM
+			#SSA 'local' variable
 	def transform(self, out):
-		name=out.get_temp_name()
-		value=transform.emit(
+		#Very simple function, just invokes implmenet_cast on the LHS and returns that. Good example
+		name=out.get_temp_name() #Get the identifier for the output
+		value=transform.emit( #`emit' the value we are casting, getting back the prefixed LLVM SSA Var identifier to use
 			out,
 			self.node.value,
 			self

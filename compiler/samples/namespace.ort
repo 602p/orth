@@ -1,0 +1,19 @@
+import std
+
+function() MyNS::foo -> void does
+	printf("Heyo\n")
+return
+
+function() MyNS::bar -> void does
+	printf("Bar\n")
+return
+
+function() MyNS::AnotherSubNS::quux -> void does
+	printf("Quux\n")
+return
+
+function() main -> int does
+	MyNS::foo()
+	MyNS::bar()
+	MyNS::AnotherSubNS::quux()
+return

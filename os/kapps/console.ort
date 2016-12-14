@@ -1,4 +1,5 @@
 import "kapps/util.ort"
+import "mbdata.ort"
 
 type KConsoleCommandRunner is a function->void
 type KConsoleCommand is
@@ -90,6 +91,10 @@ function(cstr args) kc_mem -> void does
 	kterm:print("\n")
 return
 
+function(cstr args) kc_dump_multiboot -> void does
+	(multiboot_data_physaddr:offset(base_vma)|RawMultibootInfo):print()
+return
+
 function(cstr args) kc_fault -> void does
 	if args=="dbz" do
 		int a = 1/0
@@ -172,6 +177,30 @@ function(cstr args) kc_colorama -> void does
 	done
 return
 
+function(cstr args) kc_snowcrash_code -> void does
+	int idx
+	while 1==1 do
+		idx=0
+		while idx<0x100000 do
+			kterm:putchar((base_vma|ptr)[idx])
+			kterm.attributes=(base_vma|ptr)[idx+1]
+			idx+=2
+		done
+	done
+return
+
+function(cstr args) kc_snowcrash_data -> void does
+	ptr idx
+	while 1==1 do
+		idx=mm_head
+		while idx|int<mm_pos|int do
+			kterm:putchar(idx[0])
+			kterm.attributes=idx[1]
+			idx=idx:offset(2)
+		done
+	done
+return
+
 function(cstr name, cstr desc, KConsoleCommandRunner cmd) add_cmd -> void does
 	KConsoleCommand cur = kcommand_head
 	while cur._next|ptr|int!=0 do
@@ -193,11 +222,14 @@ function() kconsole_run -> void does
 	add_cmd("add2h", "Add two (hex) digits", kc_addhex|KConsoleCommandRunner)
 	add_cmd("clear", "Clear Screen", kc_clear|KConsoleCommandRunner)
 	add_cmd("hexnum", "Parse a hex digit", kc_hexnum|KConsoleCommandRunner)
+	add_cmd("dmpmbd", "View Multiboot info structure", kc_dump_multiboot|KConsoleCommandRunner)
 	add_cmd("pict", "View PIC interrupt count", kc_getpicticks|KConsoleCommandRunner)
 	add_cmd("pics", "Sleep for n secs. Pass 1 hex digit", kc_picsleep|KConsoleCommandRunner)
 	add_cmd("shutdown", "Try to shut down", kc_shutdown|KConsoleCommandRunner)
 	add_cmd("color", "Set terminal color mode. Pass 2 hex digits, or no args to reset", kc_color|KConsoleCommandRunner)
-	add_cmd("colorama", "Pretty", kc_colorama|KConsoleCommandRunner)
+	add_cmd("colorama", "Demo availible colors", kc_colorama|KConsoleCommandRunner)
+	add_cmd("snowcrash", "Dump kernel code into vram. *no getting out*", kc_snowcrash_code|KConsoleCommandRunner)
+	add_cmd("snowcrashd", "Dump kernel managed RAM into vram. *no getting out*", kc_snowcrash_data|KConsoleCommandRunner)
 
 	console_buf=KeyboardBuf::new(1024, kterm, console_submit|SubmitCallback)
 	command_to_run=0|ptr|KConsoleCommand

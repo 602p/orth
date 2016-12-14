@@ -85,7 +85,7 @@ StartInHigherHalf:
  	push esp
     ; pass Multiboot info structure -- WARNING: This is a physical address and may not be
     ; in the first 4MB!
-    ;push ebx
+    push ebx
  
     call  kernel_main                  ; call kernel proper
     hlt                          ; halt machine should kernel return

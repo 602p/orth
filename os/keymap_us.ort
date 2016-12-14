@@ -1,4 +1,4 @@
-import strutil
+import util
 
 type Keymap is
 	byte K_ESCAPE

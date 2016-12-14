@@ -1,0 +1,97 @@
+import util
+
+type RawMultibootInfo is packed
+	int flags
+
+	int mem_lower
+	int mem_upper
+
+	byte boot_device_p3
+	byte boot_device_p2
+	byte boot_device_p1
+	byte boot_device_id
+	
+	int cmdline
+
+	int mods_count
+	int mods_addr
+
+	int syms_0
+	int syms_1
+	int syms_2
+	int syms_zero
+
+	int mmap_len
+	int mmap_addr
+
+	int drives_len
+	int drives_addr
+
+	int config_table
+
+	int boot_loader_name
+
+	int apm_table
+
+	int vbe_control_info
+	int vbe_mode_info
+	int vbe_mode
+	int vbe_interface_seg
+	int vbe_interface_off
+	int vbe_interface_len
+
+	function(RawMultibootInfo i) RawMultibootInfo:print -> void does
+		kterm:print("Flags: ")
+		kterm:dumpbin(i.flags)
+		kterm:print("\n")
+		if i.flags:bitset(0) do
+			kterm:print("mem_lower: ")
+			kterm:printi(i.mem_lower)
+			kterm:print(" mem_upper: ")
+			kterm:printi(i.mem_upper)
+		else do
+			kterm:print("Memory information unavailible")
+		done
+
+		kterm:print("\n")
+
+		if i.flags:bitset(1) do
+			kterm:print("Boot Device is ")
+			kterm:dumphex(i.boot_device_id|int, 2)
+			kterm:print("->")
+			kterm:dumphex(i.boot_device_p1|int, 2)
+			kterm:print(":")
+			kterm:dumphex(i.boot_device_p2|int, 2)
+			kterm:print(":")
+			kterm:dumphex(i.boot_device_p3|int, 2)
+		else do
+			kterm:print("Boot device information unavailible")
+		done
+
+		kterm:print("\n")
+
+		if i.flags:bitset(2) do
+			kterm:print("cmdline: ")
+			kterm:print((i.cmdline+base_vma)|ptr|cstr)
+		else do
+			kterm:print("Command line parameters unavailible")
+		done
+
+		kterm:print("\n")
+
+		if i.flags:bitset(7) do
+			kterm:print("Drives info availible")
+		else do
+			kterm:print("Drives info unavailible")
+		done
+
+		kterm:print("\n")
+
+		if i.flags:bitset(9) do
+			kterm:print("Bootloader Name: ")
+			kterm:print((i.boot_loader_name+base_vma)|ptr|cstr)
+		else do
+			kterm:print("Bootloader Name unavailible")
+		done
+	return
+endtype

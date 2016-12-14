@@ -4,15 +4,18 @@ import panic
 
 Terminal kterm
 int base_vma
+ptr multiboot_data_physaddr
 
 import irqio
 import keymap_us
 import "kapps/console.ort"
+import mbdata
 
-function() kernel_main -> void does
+function(ptr multiboot_struct_addr) kernel_main -> void does
+	multiboot_data_physaddr=multiboot_struct_addr
 	base_vma=0xC0000000
 
-	KMM::init(base_vma+0x200000)
+	KMM::init(base_vma+0x200000) #(Hopefully) skip past all the multiboot data we care about
 
 	kterm = Terminal::new(base_vma+0xB8000, 80, 25)
 
@@ -35,6 +38,15 @@ function() kernel_main -> void does
 	kterm:dumphexi(base_vma)
 	kterm:print(". kterm.baseaddr=")
 	kterm:dumphexi(kterm.baseaddr|int)
+	kterm:print("\nMutiboot structure physaddr=")
+	kterm:dumphexi(multiboot_struct_addr|int)
+	kterm:print(". vaddr?=")
+	kterm:dumphexi(multiboot_struct_addr|int+base_vma)
+	if multiboot_struct_addr|int<0x100000 do
+		kterm:print(" OK")
+	else do
+		kterm:print(" OUTSIDE MAP!")
+	done
 
 	kterm:print("\nCS=")
 	kterm:printi(__kgetcs())

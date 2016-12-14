@@ -47,3 +47,6 @@ function(int i) hex_char_to_num -> int does
 		done
 	done
 return -1
+
+function(int val, int idx) int:bitset -> bool does
+return (val&(1<<idx))!=0

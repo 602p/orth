@@ -4,9 +4,15 @@ extern kernel_main                            ; _main is defined elsewhere
 ; setting up the Multiboot header - see GRUB docs for details
 MODULEALIGN equ  1<<0             ; align loaded modules on page boundaries
 MEMINFO     equ  1<<1             ; provide memory map
-FLAGS       equ  MODULEALIGN | MEMINFO  ; this is the Multiboot 'flag' field
+GRBOOT      equ  1<<2             ; have grub try to set a video mode
+FLAGS       equ  MODULEALIGN | MEMINFO | GRBOOT ; this is the Multiboot 'flag' field
 MAGIC       equ    0x1BADB002     ; 'magic number' lets bootloader find the header
 CHECKSUM    equ -(MAGIC + FLAGS)  ; checksum required
+
+VID_M equ 0    ; 0 - graphical, 1 - text
+VID_W equ 0
+VID_H equ 0
+VID_D equ 0
  
 ; This is the virtual base address of kernel space. It must be used to convert virtual
 ; addresses into physical addresses until paging is enabled. Note that this is not
@@ -39,6 +45,11 @@ MultiBootHeader:
     dd MAGIC
     dd FLAGS
     dd CHECKSUM
+    times 5 dd 0
+    dd VID_M
+    dd VID_W
+    dd VID_H
+    dd VID_D
  
 ; reserve initial kernel stack space -- thats 16k.
 STACKSIZE equ 0x4000

@@ -40,6 +40,9 @@ type RawMultibootInfo is packed
 	int vbe_interface_off
 	int vbe_interface_len
 
+	function(RawMultibootInfo i) RawMultibootInfo:getcmdline -> cstr does
+	return (i.cmdline+base_vma)|ptr|cstr
+
 	function(RawMultibootInfo i) RawMultibootInfo:print -> void does
 		kterm:print("Flags: ")
 		kterm:dumpbin(i.flags)
@@ -72,7 +75,7 @@ type RawMultibootInfo is packed
 
 		if i.flags:bitset(2) do
 			kterm:print("cmdline: ")
-			kterm:print((i.cmdline+base_vma)|ptr|cstr)
+			kterm:print(i:getcmdline())
 		else do
 			kterm:print("Command line parameters unavailible")
 		done
@@ -93,5 +96,138 @@ type RawMultibootInfo is packed
 		else do
 			kterm:print("Bootloader Name unavailible")
 		done
+
+		kterm:print("\n")
+
+		if i.flags:bitset(11) do
+			kterm:print("VBE Controller Info Present:")
+			((i.vbe_control_info+base_vma)|ptr|RawVBEControllerInfo):print()
+			kterm:print("\nVBE Mode Info Present. Current Mode=")
+			kterm:dumphexi(i.vbe_mode)
+			kterm:print("\n")
+			((i.vbe_mode_info+base_vma)|ptr|RawVBEModeInfo):print()
+			if i.vbe_interface_off!=0 do
+				kterm:print("\nVBE 2.0 protected mode interface availible")
+			else do
+				kterm:print("\nVBE 2.0 protected mode interface unavailible")
+			done
+		else do
+			kterm:print("VBE Mode Info unavailible")
+		done
+	return
+endtype
+
+type RawVBEControllerInfo is packed
+	byte sig_0
+	byte sig_1
+	byte sig_2
+	byte sig_3
+
+	short version
+
+	short oem_string_seg
+	short oem_string_addr
+
+	byte capabilities_0
+	byte capabilities_1
+	byte capabilities_2
+	byte capabilities_3
+
+	short vmode_seg
+	short vmode_addr
+
+	short avail_mem #number of 64kb blocks
+
+	function(RawVBEControllerInfo i) RawVBEControllerInfo:print -> void does
+		kterm:print(" Signature: ")
+		kterm:putchar(i.sig_0)
+		kterm:putchar(i.sig_1)
+		kterm:putchar(i.sig_2)
+		kterm:putchar(i.sig_3)
+		kterm:print("\n Version: ")
+		kterm:dumphex(i.version|int, 4)
+		kterm:print("\n OEM String FarPtr: ")
+		kterm:dumphex(i.oem_string_seg|int, 4)
+		kterm:print(":")
+		kterm:dumphex(i.oem_string_addr|int, 4)
+		kterm:print("\n Capabilities: ")
+		kterm:dumphex(i.capabilities_0|int, 2)
+		kterm:print(" ")
+		kterm:dumphex(i.capabilities_1|int, 2)
+		kterm:print(" ")
+		kterm:dumphex(i.capabilities_2|int, 2)
+		kterm:print(" ")
+		kterm:dumphex(i.capabilities_3|int, 2)
+		kterm:print("\n VMode FarPtr: ")
+		kterm:dumphex(i.vmode_seg|int, 4)
+		kterm:print(":")
+		kterm:dumphex(i.vmode_addr|int, 4)
+		kterm:print("\n Availible Memory (64KB units): ")
+		kterm:printi(i.avail_mem|int)
+	return
+endtype
+
+type RawVBEModeInfo is packed
+	short attributes
+	byte  attrsA
+	byte  attrsB
+	short granularity
+	short winsize
+	short segA
+	short segB
+
+	short unk_ptr_seg
+	short unk_ptr_addr
+
+	short pitch #bytes per line
+	short xres
+	short yres
+
+	byte wchar
+	byte ychar
+	byte planes
+	byte bpp
+	byte banks
+
+	byte memmodel
+	byte banksize
+	byte imgpage
+	byte res0
+
+	byte redmask
+	byte redpos
+	byte greenmask
+	byte greenpos
+	byte bluemask
+	byte bluepos
+	byte rsvmask
+	byte rsvpos
+
+	byte directcolor_attrs
+
+	int lfb_physaddr
+	int res1
+	short res2
+
+	function(RawVBEModeInfo i) RawVBEModeInfo:print -> void does
+		kterm:print(" Attributes:")
+		kterm:dumpbin(i.attributes|int)
+		kterm:print(" ")
+		kterm:dumphex(i.attrsA|int, 2)
+		kterm:print(":")
+		kterm:dumphex(i.attrsB|int, 2)
+
+		kterm:print("\n Res: ")
+		kterm:printi(i.xres|int)
+		kterm:print("x")
+		kterm:printi(i.yres|int)
+		kterm:print("x")
+		kterm:printi(i.bpp|int)
+
+		kterm:print("\n Pitch: ")
+		kterm:dumphex(i.pitch|int, 4)
+		kterm:print(" PysAddr: ")
+		kterm:dumphexi(i.lfb_physaddr)
+		kterm:print("\n")
 	return
 endtype

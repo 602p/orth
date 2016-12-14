@@ -11,13 +11,20 @@ import keymap_us
 import "kapps/console.ort"
 import mbdata
 
+import serialdbg
+import vgatest
+
 function(ptr multiboot_struct_addr) kernel_main -> void does
 	multiboot_data_physaddr=multiboot_struct_addr
 	base_vma=0xC0000000
 
 	KMM::init(base_vma+0x200000) #(Hopefully) skip past all the multiboot data we care about
 
+	init_serial()
+	kswritecstr("Kernel debugger check!\n")
+
 	kterm = Terminal::new(base_vma+0xB8000, 80, 25)
+	kterm:blank()
 
 	kterm:printl("  ..---..")
 
@@ -48,6 +55,12 @@ function(ptr multiboot_struct_addr) kernel_main -> void does
 		kterm:print(" OUTSIDE MAP!")
 	done
 
+	if (multiboot_data_physaddr:offset(base_vma)|RawMultibootInfo):getcmdline()=="text" do
+		kterm:print(" (EGA TEXT mode)")
+	else do
+		test_svga()
+	done
+
 	kterm:print("\nCS=")
 	kterm:printi(__kgetcs())
 	kterm:print(" DS=")
@@ -67,6 +80,7 @@ function(ptr multiboot_struct_addr) kernel_main -> void does
 
 	int mt_x=kterm.cursor_x
 
+	kterm.serial_debug_enabled=0|bool
 	int testpos = 0
 	while testpos|int<0x100000 do
 		mm_pos:offset(testpos)[0]=0|byte
@@ -74,6 +88,7 @@ function(ptr multiboot_struct_addr) kernel_main -> void does
 		kterm.cursor_x=mt_x
 		testpos+=16
 	done
+	kterm.serial_debug_enabled=1|bool
 
 	kterm:print("Done, at least ")
 	kterm:printi(testpos)

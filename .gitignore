@@ -98,3 +98,4 @@ os/isodir
 os/*.iso
 bochslog.txt
 orthc.prof
+serial.log

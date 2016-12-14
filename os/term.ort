@@ -1,4 +1,5 @@
 import mm
+import serialdbg
 
 type Terminal is
 	ptr baseaddr
@@ -7,6 +8,7 @@ type Terminal is
 	int cursor_x
 	int cursor_y
 	byte attributes
+	bool serial_debug_enabled
 
 	function(int base, int width, int height) Terminal::new -> Terminal does
 		Terminal new = malloc(@sizeof(Terminal)@)|Terminal
@@ -16,6 +18,7 @@ type Terminal is
 		new.cursor_x=0
 		new.cursor_y=0
 		new.attributes=0x0F|byte
+		new.serial_debug_enabled=1|bool
 	return new
 
 	function(Terminal t, int x, int y, byte value) Terminal:setchar -> void does
@@ -28,6 +31,10 @@ type Terminal is
 	return
 
 	function(Terminal t, byte char) Terminal:putchar -> void does
+		if t.serial_debug_enabled do
+			kswritebyte(char)
+		done
+		
 		t:setchar(t.cursor_x, t.cursor_y, char)
 		t.cursor_x+=1
 		if t.cursor_x>=t.width do
@@ -39,6 +46,11 @@ type Terminal is
 
 	function(Terminal t, cstr string) Terminal:print -> void does
 		int pos = 0
+
+		if t.serial_debug_enabled do
+			kswritecstr(string)
+		done
+
 		while string[pos]!=0|byte do
 			if string[pos]!=10|byte do
 				t:setchar(t.cursor_x, t.cursor_y, string[pos])

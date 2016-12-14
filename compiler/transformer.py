@@ -153,7 +153,7 @@ class BinOpExprTransformer(Transformer):
 	@staticmethod
 	def get_type(node, out):
 		# print(node)
-		return get_type(node.lhs, out) if node.operator in ["+","-","*","/","-",">>","<<","&"] else datamodel.builtin_types['bool']
+		return get_type(node.lhs, out) if node.operator in ["+","-","*","/","-",">>","<<","&", "%"] else datamodel.builtin_types['bool']
 
 class UnOpTransformer(Transformer):
 	transforms=UnOpExpr

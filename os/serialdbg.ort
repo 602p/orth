@@ -1,0 +1,28 @@
+import irqio
+
+int serial_base
+
+function(byte char) kswritebyte -> void does
+	write_port(serial_base, char|int)
+return
+
+function(cstr msg) kswritecstr -> void does
+	int idx=0
+	while idx<msg:len() do
+		kswritebyte((msg|ptr)[idx])
+		idx+=1
+	done
+return
+
+function() init_serial -> void does
+	serial_base=0x3f8
+	write_port(serial_base + 1, 0x00);    # Disable all interrupts
+	write_port(serial_base + 3, 0x80);    # Enable DLAB (set baud rate divisor)
+	write_port(serial_base + 0, 0x03);    # Set divisor to 3 (lo byte) 38400 baud
+	write_port(serial_base + 1, 0x00);    #                  (hi byte)
+	write_port(serial_base + 3, 0x03);    # 8 bits, no parity, one stop bit
+	write_port(serial_base + 2, 0xC7);    # Enable FIFO, clear them, with 14-byte threshold
+	#write_port(serial_base + 4, 0x0B);   # IRQs enabled, RTS/DSR set
+
+	kswritecstr("Serial Debugger started!\n")
+return

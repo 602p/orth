@@ -16,4 +16,4 @@ function() main -> int does
 	MyNS::foo()
 	MyNS::bar()
 	MyNS::AnotherSubNS::quux()
-return
+return 0

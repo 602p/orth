@@ -4,7 +4,7 @@ mkdir isodir
 mkdir isodir/boot
 mkdir isodir/boot/grub
 set -e
-export PATH="$PATH:$HOME/Documents/gcc-i686/builddir/bin:$HOME/Documents/caste/compiler"
+export PATH="$PATH:$HOME/Documents/gcc-i686/builddir/bin:$HOME/Documents/orth/compiler"
 nasm -f elf boot.s -o boot.o
 orthc kernel.ort _ nolink nobuild
 llc out.ll -march=x86

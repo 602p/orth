@@ -1,0 +1,5 @@
+import std
+
+function() main -> int does
+	printf("Hello World!\n")
+return 0

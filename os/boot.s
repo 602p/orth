@@ -45,7 +45,11 @@ MultiBootHeader:
     dd MAGIC
     dd FLAGS
     dd CHECKSUM
-    times 5 dd 0
+    dd 0
+    dd 0
+    dd 0
+    dd 0
+    dd 0
     dd VID_M
     dd VID_W
     dd VID_H

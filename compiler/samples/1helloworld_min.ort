@@ -1,0 +1,5 @@
+@declare_c_func("printf", "int", "(...)")@
+
+function() main -> int does
+	printf("Hello World!\n")
+return 0

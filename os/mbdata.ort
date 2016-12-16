@@ -86,6 +86,11 @@ type RawMultibootInfo is packed
 				kterm:printi((curr|MBMMAPMemTag).entry_version)
 				kterm:print(", #=")
 				kterm:printi(curr.size/(curr|MBMMAPMemTag).entry_size)
+			elif curr.type==7 do
+				kterm:print("VBE Info Tag:. Controller info:\n")
+				((curr|ptr):offset(16)|RawVBEControllerInfo):print()
+				kterm:print("\nMode info:\n")
+				((curr|ptr):offset(16+512)|RawVBEModeInfo):print()
 			elif curr.type==8 do
 				MBFBMemTag tag = curr|MBFBMemTag
 				kterm:print("FB Tag addr=")

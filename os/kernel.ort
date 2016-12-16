@@ -44,22 +44,7 @@ function(ptr multiboot_struct_addr) kernel_main -> void does
 	kterm:print("Higher-Half addressing enabled, base_vma=")
 	kterm:dumphexi(base_vma)
 	kterm:print(". kterm.baseaddr=")
-	kterm:dumphexi(kterm.baseaddr|int)
-	kterm:print("\nMutiboot structure physaddr=")
-	kterm:dumphexi(multiboot_struct_addr|int)
-	kterm:print(". vaddr?=")
-	kterm:dumphexi(multiboot_struct_addr|int+base_vma)
-	if multiboot_struct_addr|int<0x100000 do
-		kterm:print(" OK")
-	else do
-		kterm:print(" OUTSIDE MAP!")
-	done
-
-	if (multiboot_data_physaddr:offset(base_vma)|RawMultibootInfo):getcmdline()=="text" do
-		kterm:print(" (EGA TEXT mode)")
-	else do
-		test_svga()
-	done
+	kterm:dumphexi(kterm.baseaddr|int)	
 
 	kterm:print("\nCS=")
 	kterm:printi(__kgetcs())
@@ -100,6 +85,16 @@ function(ptr multiboot_struct_addr) kernel_main -> void does
 
 	kterm:printl("Installed!")
 
+	kterm:print("Mutiboot structure physaddr=")
+	kterm:dumphexi(multiboot_struct_addr|int)
+	kterm:print(". vaddr?=")
+	kterm:dumphexi(multiboot_struct_addr|int+base_vma)
+	if multiboot_struct_addr|int<0x400000 do
+		kterm:print(" OK\n")
+	else do
+		kterm:print(" OUTSIDE MAP!")
+	done
+
 	kterm:print("Heap ptr at ")
 	kterm:dumphexi(mm_head|int)
 	kterm:print(" , heap pos at ")
@@ -126,6 +121,9 @@ function(ptr multiboot_struct_addr) kernel_main -> void does
 	kterm:print("\n\nREADY")
 
 	init_keymap()
+
+	kterm:print("\nMBD Dump:\n")
+	kc_dump_multiboot("")
 
 	kconsole_run()
 return

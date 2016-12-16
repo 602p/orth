@@ -1,120 +1,197 @@
 import util
 
+#This is for parsing Multiboot _2_ data
+
+type MBTagStub is
+	int type
+	int size
+endtype
+
 type RawMultibootInfo is packed
-	int flags
+	int total_size
+	int _reserved0
 
-	int mem_lower
-	int mem_upper
+	function(RawMultibootInfo i, int idx) RawMultibootInfo:get_tag -> MBTagStub does
+		int curr_tag=0
+		int curr_off=8 #Start after header
+		ptr base=i|ptr
 
-	byte boot_device_p3
-	byte boot_device_p2
-	byte boot_device_p1
-	byte boot_device_id
-	
-	int cmdline
+		while curr_off<i.total_size do
+			if curr_tag==idx do
+				return base:offset(curr_off)|MBTagStub
+			done
 
-	int mods_count
-	int mods_addr
-
-	int syms_0
-	int syms_1
-	int syms_2
-	int syms_zero
-
-	int mmap_len
-	int mmap_addr
-
-	int drives_len
-	int drives_addr
-
-	int config_table
-
-	int boot_loader_name
-
-	int apm_table
-
-	int vbe_control_info
-	int vbe_mode_info
-	int vbe_mode
-	int vbe_interface_seg
-	int vbe_interface_off
-	int vbe_interface_len
-
-	function(RawMultibootInfo i) RawMultibootInfo:getcmdline -> cstr does
-	return (i.cmdline+base_vma)|ptr|cstr
+			curr_off+=(base:offset(curr_off)|MBTagStub).size
+			if (curr_off%8)!=0 do
+				curr_off+=8-(curr_off%8)
+			done
+			curr_tag+=1
+		done
+	return 0|ptr|MBTagStub
 
 	function(RawMultibootInfo i) RawMultibootInfo:print -> void does
-		kterm:print("Flags: ")
-		kterm:dumpbin(i.flags)
-		kterm:print("\n")
-		if i.flags:bitset(0) do
-			kterm:print("mem_lower: ")
-			kterm:printi(i.mem_lower)
-			kterm:print(" mem_upper: ")
-			kterm:printi(i.mem_upper)
-		else do
-			kterm:print("Memory information unavailible")
-		done
-
+		kterm:print("Total Size: ")
+		kterm:printi(i.total_size)
 		kterm:print("\n")
 
-		if i.flags:bitset(1) do
-			kterm:print("Boot Device is ")
-			kterm:dumphex(i.boot_device_id|int, 2)
-			kterm:print("->")
-			kterm:dumphex(i.boot_device_p1|int, 2)
-			kterm:print(":")
-			kterm:dumphex(i.boot_device_p2|int, 2)
-			kterm:print(":")
-			kterm:dumphex(i.boot_device_p3|int, 2)
-		else do
-			kterm:print("Boot device information unavailible")
-		done
+		int idx=0
+		MBTagStub curr=i:get_tag(0)
+		while curr.type!=0 do
+			kterm:printi(idx)
+			kterm:print(" - ")
 
-		kterm:print("\n")
-
-		if i.flags:bitset(2) do
-			kterm:print("cmdline: ")
-			kterm:print(i:getcmdline())
-		else do
-			kterm:print("Command line parameters unavailible")
-		done
-
-		kterm:print("\n")
-
-		if i.flags:bitset(7) do
-			kterm:print("Drives info availible")
-		else do
-			kterm:print("Drives info unavailible")
-		done
-
-		kterm:print("\n")
-
-		if i.flags:bitset(9) do
-			kterm:print("Bootloader Name: ")
-			kterm:print((i.boot_loader_name+base_vma)|ptr|cstr)
-		else do
-			kterm:print("Bootloader Name unavailible")
-		done
-
-		kterm:print("\n")
-
-		if i.flags:bitset(11) do
-			kterm:print("VBE Controller Info Present:")
-			((i.vbe_control_info+base_vma)|ptr|RawVBEControllerInfo):print()
-			kterm:print("\nVBE Mode Info Present. Current Mode=")
-			kterm:dumphexi(i.vbe_mode)
-			kterm:print("\n")
-			((i.vbe_mode_info+base_vma)|ptr|RawVBEModeInfo):print()
-			if i.vbe_interface_off!=0 do
-				kterm:print("\nVBE 2.0 protected mode interface availible")
+			if curr.type==1 do
+				kterm:print("Cmdline tag, cmdline=`")
+				kterm:print((curr|ptr):offset(8)|cstr)
+				kterm:print("'")
+			elif curr.type==2 do
+				kterm:print("Loader tag, name=`")
+				kterm:print((curr|ptr):offset(8)|cstr)
+				kterm:print("'")
+			elif curr.type==5 do
+				kterm:print("Boot Device tag, dev=")
+				kterm:dumphex((curr|MBDeviceTag).biosdev, 2)
+				kterm:print(", p=")
+				kterm:dumphex((curr|MBDeviceTag).part, 2)
+				kterm:print(":")
+				kterm:dumphex((curr|MBDeviceTag).spart, 2)
+			elif curr.type==6 do
+				kterm:print("MMAP Tag esz=")
+				kterm:printi((curr|MBMMAPMemTag).entry_size)
+				kterm:print(", ev=")
+				kterm:printi((curr|MBMMAPMemTag).entry_version)
+				kterm:print(", #=")
+				kterm:printi(curr.size/(curr|MBMMAPMemTag).entry_size)
+			elif curr.type==8 do
+				MBFBMemTag tag = curr|MBFBMemTag
+				kterm:print("FB Tag addr=")
+				kterm:dumphexi(tag.address|int)
+				kterm:print(", pitch=")
+				kterm:printi(tag.pitch)
+				kterm:print(", width=")
+				kterm:printi(tag.width)
+				kterm:print(", height=")
+				kterm:printi(tag.height)
+				kterm:print(", bpp=")
+				kterm:printi(tag.bpp|int)
+				kterm:print(", fbtype=")
+				kterm:printi(tag.fbtype|int)
+			elif curr.type==10 do
+				kterm:print("APM Tag (unk.)")
+			elif curr.type==14 do
+				kterm:print("RSDP1 Tag, oem=")
+				(curr|MBRSDP1Tag):printOEM()
+			elif curr.type==16 do
+				kterm:print("NIC Tag (unk.)")
 			else do
-				kterm:print("\nVBE 2.0 protected mode interface unavailible")
+				kterm:print("??? Tag")
 			done
-		else do
-			kterm:print("VBE Mode Info unavailible")
+
+			kterm:print(", type=")
+			kterm:printi(curr.type)
+			kterm:print(", sz=")
+			kterm:printi(curr.size)
+			kterm:print(", pos=")
+			kterm:dumphexi(curr|ptr|int)
+			kterm:print("\n")
+
+			idx+=1
+			curr=i:get_tag(idx)
+			if curr|ptr|int==0 do
+				kterm:print("\nMalformed structure, no terminator tag!\n")
+				return
+			done
+
+			if curr.type==0 do
+				kterm:print("Reached End Tag\n")
+			done
 		done
 	return
+endtype
+
+type MBBasicMemTag is packed
+	int type
+	int size
+	int mem_lower
+	int mem_upper
+endtype
+
+type MBMMAPMemTag is packed
+	int type
+	int size
+	int entry_size
+	int entry_version
+endtype
+
+type MBFBMemTag is packed
+	int type
+	int size
+	long address
+	int pitch
+	int width
+	int height
+	byte bpp
+	byte fbtype
+	byte reserved
+endtype
+
+type MBDeviceTag is packed
+	int type
+	int size
+	int biosdev
+	int part
+	int spart
+endtype
+
+type MBRSDP1Tag is packed
+	int type
+	int size
+	long sig
+	byte checksum
+	byte oem0
+	byte oem1
+	byte oem2
+	byte oem3
+	byte oem4
+	byte oem5
+
+	function(MBRSDP1Tag t) MBRSDP1Tag:printOEM -> void does
+		kterm:putchar(t.oem0)
+		kterm:putchar(t.oem1)
+		kterm:putchar(t.oem2)
+		kterm:putchar(t.oem3)
+		kterm:putchar(t.oem4)
+		kterm:putchar(t.oem5)
+	return
+endtype
+
+type MultibootInfo is
+	ptr  mb_phys_addr
+	RawMultibootInfo mb_raw
+	bool valid
+	cstr bootloader
+	cstr cmdline
+	bool text_mode
+	int  screen_w
+	int  screen_h
+	int  screen_pitch
+	int  screen_depth
+	int  fb_raw_addr
+	ptr  fb_addr
+	int  boot_device
+
+	function(ptr phys_addr) MultibootInfo::load -> MultibootInfo does
+		MultibootInfo new = malloc(@sizeof(MultibootInfo)@)|MultibootInfo
+		new.mb_phys_addr=phys_addr
+		new.mb_raw=phys_addr:offset(base_vma)|RawMultibootInfo
+
+		if phys_addr|int > 0x400000 do
+			new.valid=0|bool
+			return new
+		done
+
+		new.valid=1|bool
+	return new
 endtype
 
 type RawVBEControllerInfo is packed

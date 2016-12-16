@@ -1,19 +1,6 @@
 global _loader                          ; Make entry point visible to linker.
 extern kernel_main                            ; _main is defined elsewhere
  
-; setting up the Multiboot header - see GRUB docs for details
-MODULEALIGN equ  1<<0             ; align loaded modules on page boundaries
-MEMINFO     equ  1<<1             ; provide memory map
-GRBOOT      equ  1<<2             ; have grub try to set a video mode
-FLAGS       equ  MODULEALIGN | MEMINFO | GRBOOT ; this is the Multiboot 'flag' field
-MAGIC       equ    0x1BADB002     ; 'magic number' lets bootloader find the header
-CHECKSUM    equ -(MAGIC + FLAGS)  ; checksum required
-
-VID_M equ 0    ; 0 - graphical, 1 - text
-VID_W equ 0
-VID_H equ 0
-VID_D equ 0
- 
 ; This is the virtual base address of kernel space. It must be used to convert virtual
 ; addresses into physical addresses until paging is enabled. Note that this is not
 ; the virtual address where the kernel image itself is loaded -- just the amount that must
@@ -42,18 +29,27 @@ BootPageDirectory:
 section .text
 align 4
 MultiBootHeader:
-    dd MAGIC
-    dd FLAGS
-    dd CHECKSUM
+header_start:
+    dd 0xe85250d6
+    dd 0
+    dd header_end - header_start
+    dd 0x100000000 - (0xe85250d6 + 0 + (header_end - header_start))
+
+    align 8, db 0
+    dw 5
+    dw 0
+    dd 20
     dd 0
     dd 0
     dd 0
-    dd 0
-    dd 0
-    dd VID_M
-    dd VID_W
-    dd VID_H
-    dd VID_D
+
+    align 8, db 0
+
+    ; required end tag
+    dw 0    ; type
+    dw 0    ; flags
+    dd 8    ; size
+header_end:
  
 ; reserve initial kernel stack space -- thats 16k.
 STACKSIZE equ 0x4000
@@ -295,4 +291,4 @@ stack:
     resb STACKSIZE      ; reserve 16k stack on a uint64_t boundary
 
 heap:
-	resb 1
+	resb 1000

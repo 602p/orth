@@ -125,13 +125,6 @@ function(ptr multiboot_struct_addr) kernel_main -> void does
 		fg_idx+=1
 	done
 
-	if mbinfo.valid do
-		kterm:print("\ncmdline=")
-		kterm:print(mbinfo.cmdline)
-	else do
-		kterm:printl("<invalid parsed MBData>")
-	done
-
 	init_keymap()
 	kterm:print("\n\nREADY")
 

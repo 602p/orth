@@ -18,9 +18,8 @@ type RawMultibootInfo is packed
 
 		while curr_off<i.total_size do
 			if curr_tag==idx do
-				return base:offset(curr_off)|MBTagStub
+				return (base:offset(curr_off)|MBTagStub)
 			done
-
 			curr_off+=(base:offset(curr_off)|MBTagStub).size
 			if (curr_off%8)!=0 do
 				curr_off+=8-(curr_off%8)
@@ -28,6 +27,31 @@ type RawMultibootInfo is packed
 			curr_tag+=1
 		done
 	return 0|ptr|MBTagStub
+
+	function(RawMultibootInfo i, int reqtype) RawMultibootInfo:get_type -> MBTagStub does
+		int idx=0
+		MBTagStub curr=i:get_tag(0)
+		while curr.type!=0 do
+			if curr.type==reqtype do
+				return curr
+			done
+
+			idx+=1
+			curr=i:get_tag(idx)
+		done
+	return (0|ptr|MBTagStub)
+
+	function(RawMultibootInfo i, int reqtype) RawMultibootInfo:has_type -> bool does
+		int idx=0
+		MBTagStub curr=i:get_tag(0)
+		while curr.type!=0 do
+			if curr.type==reqtype do
+				return 1|bool
+			done
+			idx+=1
+			curr=i:get_tag(idx)
+		done
+	return (0|bool)
 
 	function(RawMultibootInfo i) RawMultibootInfo:print -> void does
 		kterm:print("Total Size: ")
@@ -80,6 +104,9 @@ type RawMultibootInfo is packed
 				kterm:print("APM Tag (unk.)")
 			elif curr.type==14 do
 				kterm:print("RSDP1 Tag, oem=")
+				(curr|MBRSDP1Tag):printOEM()
+			elif curr.type==15 do
+				kterm:print("RSDP2 Tag, oem=")
 				(curr|MBRSDP1Tag):printOEM()
 			elif curr.type==16 do
 				kterm:print("NIC Tag (unk.)")
@@ -175,7 +202,7 @@ type MultibootInfo is
 	int  screen_w
 	int  screen_h
 	int  screen_pitch
-	int  screen_depth
+	int  screen_depth #in bits
 	int  fb_raw_addr
 	ptr  fb_addr
 	int  boot_device
@@ -184,15 +211,41 @@ type MultibootInfo is
 		MultibootInfo new = malloc(@sizeof(MultibootInfo)@)|MultibootInfo
 		new.mb_phys_addr=phys_addr
 		new.mb_raw=phys_addr:offset(base_vma)|RawMultibootInfo
+		new.valid=0|bool
 
-		if phys_addr|int > 0x400000 do
-			new.valid=0|bool
+		if phys_addr|int >= 0x400000 do
 			return new
 		done
 
-		new.valid=1|bool
+		if new.mb_raw:has_type(1) do
+			if new.mb_raw:has_type(2) do
+				if new.mb_raw:has_type(5) do
+					if new.mb_raw:has_type(8) do
+						new.valid=1|bool
+						new.cmdline=(new.mb_raw:get_type(1)|ptr):offset(8)|cstr
+						new.bootloader=((new.mb_raw:get_type(2)|ptr):offset(8))|cstr
+						new.boot_device=(new.mb_raw:get_type(5)|MBDeviceTag).biosdev
+
+						MBFBMemTag fb = new.mb_raw:get_type(8)|MBFBMemTag
+
+						new.text_mode=fb.fbtype==2|byte
+						new.screen_w=fb.width
+						new.screen_h=fb.height
+						new.screen_pitch=fb.pitch
+						new.screen_depth=fb.bpp|int
+						new.fb_raw_addr=fb.address|int
+						new.fb_addr=(fb.address|int|ptr):offset(base_vma)
+						
+						return new
+					done
+				done
+			done
+		done
+
 	return new
 endtype
+
+
 
 type RawVBEControllerInfo is packed
 	byte sig_0

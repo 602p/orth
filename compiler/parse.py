@@ -101,6 +101,7 @@ def parse(tokens):
 		if isinstance(item, Token):
 			#At least you get a more helpful error message...
 			#Error detection/informing is really not optimal
+			print(item)
 			raise SyntaxError("Programmer Error: Got a token in the resultant tokens")
 
 	return FileExpr(view.tokens)

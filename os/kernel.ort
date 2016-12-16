@@ -6,6 +6,7 @@ Terminal kterm
 int base_vma
 ptr multiboot_data_physaddr
 
+
 import irqio
 import keymap_us
 import "kapps/console.ort"
@@ -14,17 +15,22 @@ import mbdata
 import serialdbg
 import vgatest
 
+MultibootInfo mbinfo
+
 function(ptr multiboot_struct_addr) kernel_main -> void does
 	multiboot_data_physaddr=multiboot_struct_addr
 	base_vma=0xC0000000
 
 	KMM::init(base_vma+0x200000) #(Hopefully) skip past all the multiboot data we care about
-
+	mbinfo = MultibootInfo::load(multiboot_struct_addr)
+	
 	init_serial()
 	kswritecstr("Kernel debugger check!\n")
 
 	kterm = Terminal::new(base_vma+0xB8000, 80, 25)
 	kterm:blank()
+
+	kterm:printl("Terminal ready")
 
 	kterm:printl("  ..---..")
 
@@ -118,12 +124,16 @@ function(ptr multiboot_struct_addr) kernel_main -> void does
 		kterm:printa(fg_idx, "X")
 		fg_idx+=1
 	done
-	kterm:print("\n\nREADY")
+
+	if mbinfo.valid do
+		kterm:print("\ncmdline=")
+		kterm:print(mbinfo.cmdline)
+	else do
+		kterm:printl("<invalid parsed MBData>")
+	done
 
 	init_keymap()
-
-	kterm:print("\nMBD Dump:\n")
-	kc_dump_multiboot("")
+	kterm:print("\n\nREADY")
 
 	kconsole_run()
 return

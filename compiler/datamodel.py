@@ -211,7 +211,7 @@ class IntegerPrimitiveOType(PrimitiveOType):
 				value,
 				to.get_llvm_representation()
 			)
-		elif isinstance(to, doublePrimitiveOType):
+		elif isinstance(to, DoublePrimitiveOType):
 			return "sitofp {} {} to double".format(from_.get_llvm_representation(), value)
 		else:
 			return PrimitiveOType.implement_cast(self, value, from_, to)

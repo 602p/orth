@@ -6,4 +6,6 @@ function() main -> int does
 	printf("2/0.5=%f\n", 2.0/0.5)
 	printf("2*0.3=%f\n", 2.*0.3)
 	printf("3.2-2.1=%f\n", 3.2-2.1)
+	printf("3.1|int=%i\n", 3.1|int)
+	printf("3|float+0.1=%f\n", (3|float)+0.1)
 return 0

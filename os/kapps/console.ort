@@ -215,9 +215,9 @@ function(cstr args) kc_snowcrash_code -> void does
 	int idx
 	while 1==1 do
 		idx=0
-		while idx<0x100000 do
+		while idx<0x300000 do
 			memcpy((base_vma+idx)|ptr, mbinfo.fb_addr, mbinfo.screen_h*mbinfo.screen_pitch)
-			idx+=(mbinfo.screen_h*mbinfo.screen_pitch)/4
+			idx+=20
 		done
 	done
 return

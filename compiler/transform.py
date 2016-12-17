@@ -96,6 +96,7 @@ class Emitter:
 		self.types=copy.copy(datamodel.builtin_types) #Dictionary of orth_type_name:OTypes of the types availible (globally)
 								#in the program
 		self.searchpath=["."] #Search path for imported modules (using import name, as opposed to import "relative_path")
+		self.emitl("@_the_zero_double = global double 0.0")
 
 	def emit(self, text):
 		self.fd.write(text)

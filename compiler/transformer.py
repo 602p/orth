@@ -84,11 +84,8 @@ class GroupExprTransformer(Transformer):
 class LiteralExprTransformer(Transformer):
 	transforms=LiteralExpr
 
-	@ret_local
 	def transform(self, out):
-		name=out.get_temp_name()
-		out.emitl("%{} = {}".format(name, get_type(self.node.type, out).get_literal_expr(self.node.value, out))) #From Literal
-		return name
+		return get_type(self.node.type, out).get_literal_expr(self.node.value, out)
 
 	@staticmethod
 	def get_type(node, out):

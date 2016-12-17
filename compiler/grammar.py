@@ -119,7 +119,7 @@ class Tokens(metaclass=TokenHolder):
 	#(also prevents some nasty issues where greater-than would match to the > in the
 	# `->' fragment of a function decl)
 	T_BINARY_OPERATOR = TokenType(r"(>>)|(<<)|(>=)|(<=)|(!=)|(==)|[&/\*\-\+%\^><]", [
-			"T_NAME", "T_LIST_STOP", "T_PAREN_CLOSE", "T_INTEGER_LITERAL", "T_STRING_LITERAL"
+			"T_NAME", "T_LIST_STOP", "T_PAREN_CLOSE", "T_INTEGER_LITERAL", "T_STRING_LITERAL", "T_FLOAT_LITERAL"
 		], capture=True)
 
 	T_VAR_DECL = TokenType(R_IDENTIFIER+" +"+R_IDENTIFIER, ["T_ENDOFSTATEMENT"], capture=True)
@@ -134,6 +134,8 @@ class Tokens(metaclass=TokenHolder):
 
 	T_PTRCAST = TokenType(r"\|\|")
 	T_CAST = TokenType(r"\|")
+
+	T_FLOAT_LITERAL = TokenType(r"[0-9]+\.[0-9]*", capture=True)
 
 	T_COMMA = TokenType(r",")
 	T_DOT = TokenType(r"\.")
@@ -271,7 +273,7 @@ class AssignmentExpr(Expression):
 
 class LiteralExpr(ValueExpression):
 	#Literal values
-	pattern=T_INTEGER_LITERAL|T_STRING_LITERAL
+	pattern=T_INTEGER_LITERAL|T_STRING_LITERAL|T_FLOAT_LITERAL
 
 	def __init__(self, elements):
 		if elements[0].type==T_INTEGER_LITERAL:
@@ -284,6 +286,9 @@ class LiteralExpr(ValueExpression):
 			else:
 				self.value=int(elements[0].value.replace("L",""))
 				self.type='int'
+		elif elements[0].type==T_FLOAT_LITERAL:
+			self.value=float(elements[0].value)
+			self.type='float'
 		else:
 			self.value=eval(elements[0].value) #Hack to allow escapes, horrible, terrible, bad
 			self.type='cstr'

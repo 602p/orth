@@ -1,4 +1,4 @@
-import collections, transform, types
+import collections, transform, types, decimal
 
 #Map of binary operation -> magic method for implementing it
 # (these get automatically implemented for those types without implementations,
@@ -99,12 +99,11 @@ class IntegerPrimitiveOType(PrimitiveOType):
 	"""An Integer type (e.g. i1, i8, i16, i123897123812) wrapper. Provides all the common
 		mathematical operations, as well as casting logic for integer->integer casts
 		(size conversions.) Signed."""
-	def __init__(self, name, llvmtype, literal_formatter):
+	def __init__(self, name, llvmtype):
 		OType.__init__(self, name)
 		self.llvmtype=llvmtype
 		self.fields=None
 		self.datalayout=None
-		self.literal_formatter=literal_formatter #Format string for creating a literal of this
 
 	def get_bit_width(self):
 		return int(self.llvmtype[1:]) #Shrewd kludge
@@ -115,7 +114,9 @@ class IntegerPrimitiveOType(PrimitiveOType):
 	def get_literal_expr(self, value, out):
 		#literal_formatter should be a format string that has a slot (`{}`) where the base-10 literal number value is inserted
 		# for creating a literal of this type. Implemented in most if not all cases with `add i<whatever> 0,{}`
-		return self.literal_formatter.format(value)
+		name="%"+out.get_temp_name()
+		out.emitl("{} = add {} 0, {}".format(name, self.get_llvm_representation(), value))
+		return name
 
 	def implement_add(self, lhs, rhs, out):
 		#Implement addition (+ operator) with a simple addition.
@@ -210,6 +211,8 @@ class IntegerPrimitiveOType(PrimitiveOType):
 				value,
 				to.get_llvm_representation()
 			)
+		elif isinstance(to, doublePrimitiveOType):
+			return "sitofp {} {} to double".format(from_.get_llvm_representation(), value)
 		else:
 			return PrimitiveOType.implement_cast(self, value, from_, to)
 
@@ -236,6 +239,58 @@ class UnsignedIntegerPrimitiveOType(IntegerPrimitiveOType):
 	def implement_le(self, lhs, rhs, out):
 		return "icmp ule {} {}, {}".format(self.get_llvm_representation(), lhs, rhs)
 
+	def implement_cast(self, value, from_, to):
+		if isinstance(to, DoublePrimitiveOType):
+			return "uitofp {} {} to double".format(from_.get_llvm_representation(), value)
+		else:
+			return IntegerPrimitiveOType.implement_cast(self, value, from_, to)
+
+class DoublePrimitiveOType(PrimitiveOType):
+	def __init__(self, name, llvmtype):
+		OType.__init__(self, name)
+		self.llvmtype=llvmtype
+		self.fields=None
+		self.datalayout=None
+
+	def implement_add(self, lhs, rhs, out):
+		return "fadd double {}, {}".format(lhs, rhs)
+	def implement_sub(self, lhs, rhs, out):
+		return "fsub double {}, {}".format(lhs, rhs)
+	def implement_mul(self, lhs, rhs, out):
+		return "fmul double {}, {}".format(lhs, rhs)
+	def implement_div(self, lhs, rhs, out):
+		return "fdiv double {}, {}".format(lhs, rhs)
+	def implement_rem(self, lhs, rhs, out):
+		return "frem double {}, {}".format(lhs, rhs)
+	def implement_eq(self, lhs, rhs, out):
+		return "fcmp oeq double {}, {}".format(lhs, rhs)
+	def implement_ne(self, lhs, rhs, out):
+		return "fcmp one double {}, {}".format(lhs, rhs)
+	def implement_lt(self, lhs, rhs, out):
+		return "fcmp olt double {}, {}".format(lhs, rhs)
+	def implement_le(self, lhs, rhs, out):
+		return "fcmp ole double {}, {}".format(lhs, rhs)
+	def implement_gt(self, lhs, rhs, out):
+		return "fcmp ogt double {}, {}".format(lhs, rhs)
+	def implement_ge(self, lhs, rhs, out):
+		return "fcmp oge double {}, {}".format(lhs, rhs)
+
+	def implement_cast(self, value, from_, to):
+		if isinstance(to, UnsignedIntegerPrimitiveOType):
+			return "fptoui double {} to {}".format(value, to.get_llvm_representation())
+		elif isinstance(to, IntegerPrimitiveOType):
+			return "fptosi double {} to {}".format(value, to.get_llvm_representation())
+
+	def get_literal_expr(self, value, out):
+		#LLVM doubles are rediculous
+		zero_name="%"+out.get_temp_name()
+		name="%"+out.get_temp_name()
+		out.emitl("; LLLVM doubleS ARESTUPID")
+		out.emitl("{} = load double* @_the_zero_double".format(zero_name))
+		out.emitl("{} = fadd double {}, {}".format(name, zero_name, value))
+		out.emitl("; /LLLVM doubleS ARESTUPID")
+		return name
+
 class PointerPrimitiveOType(PrimitiveOType):
 	#A pointer to something. All it does is implement pointer-to-pointer bitcasts and pointer-to-int casts
 	def get_size(self):
@@ -254,7 +309,6 @@ class PointerPrimitiveOType(PrimitiveOType):
 				value,
 				to.get_llvm_representation()
 			)
-
 
 class FunctionOType(PointerPrimitiveOType):
 	#Used for the signatures cache. Tells callers how to invoke stuff.
@@ -305,10 +359,13 @@ class PrimitiveCStrOType(PointerPrimitiveOType):
 		))
 		name=out.get_temp_name()
 		out.emitl("%{} = getelementptr [{} x i8]* @{}".format(name, len(value)+1, globalname))
-		return "bitcast [{} x i8]* %{} to i8*".format(
+		i8pname="%"+out.get_temp_name()
+		out.emitl("{} = bitcast [{} x i8]* %{} to i8*".format(
+			i8pname,
 			len(value)+1,
 			name
-		)
+		))
+		return i8pname
 
 class StructOType(OType):
 	#Meat-n-taters of the user type system here. Implements a structure class as defined by a user
@@ -367,19 +424,20 @@ class StructOType(OType):
 
 #Initilize the builtin types. Nativley we support...
 builtin_types = {e.name:e for e in [
-	IntegerPrimitiveOType("bool", "i1", "add i1 0, {}"),			#Boolean values
-	IntegerPrimitiveOType("int", "i32", "add i32 0, {}"),			#Int's are 4-bytes
-	IntegerPrimitiveOType("short", "i16", "add i16 0, {}"),			#Shorts are two
-	IntegerPrimitiveOType("byte", "i8", "add i8 0, {}"),			#Bytes (char in C)
-	IntegerPrimitiveOType("long", "i64", "add i64 0, {}"),			#Longs are 8 bytes
-	IntegerPrimitiveOType("xlong", "i128", "add i128 0, {}"),		#Hella big
-	IntegerPrimitiveOType("xxlong", "i256", "add i256 0, {}"),		#Hella Hella big
-	UnsignedIntegerPrimitiveOType("uint", "i32", "add i32 0, {}"),		#Same as above, but unsigned
-	UnsignedIntegerPrimitiveOType("ushort", "i16", "add i16 0, {}"),	# (note that they have the same LLVM types
-	UnsignedIntegerPrimitiveOType("ubyte", "i8", "add i8 0, {}"),		# but the orth type metadata is different
-	UnsignedIntegerPrimitiveOType("ulong", "i64", "add i64 0, {}"),		# resulting in the correct u* operations
-	UnsignedIntegerPrimitiveOType("uxlong", "i128", "add i128 0, {}"),	# being applied for mul, mod and cmp stuff)
-	UnsignedIntegerPrimitiveOType("uxxlong", "i256", "add i256 0, {}"),
+	IntegerPrimitiveOType("bool", "i1"),			#Boolean values
+	IntegerPrimitiveOType("int", "i32"),			#Int's are 4-bytes
+	IntegerPrimitiveOType("short", "i16"),			#Shorts are two
+	IntegerPrimitiveOType("byte", "i8"),			#Bytes (char in C)
+	IntegerPrimitiveOType("long", "i64"),			#Longs are 8 bytes
+	IntegerPrimitiveOType("xlong", "i128"),		#Hella big
+	IntegerPrimitiveOType("xxlong", "i256"),		#Hella Hella big
+	DoublePrimitiveOType("float", "double"),		#A lie...
+	UnsignedIntegerPrimitiveOType("uint", "i32"),		#Same as above, but unsigned
+	UnsignedIntegerPrimitiveOType("ushort", "i16"),	# (note that they have the same LLVM types
+	UnsignedIntegerPrimitiveOType("ubyte", "i8"),		# but the orth type metadata is different
+	UnsignedIntegerPrimitiveOType("ulong", "i64"),		# resulting in the correct u* operations
+	UnsignedIntegerPrimitiveOType("uxlong", "i128"),	# being applied for mul, mod and cmp stuff)
+	UnsignedIntegerPrimitiveOType("uxxlong", "i256"),
 	PointerPrimitiveOType("ptr", "i8*"),					#No parameterization for pointers (so no need for void*)
 	PointerPrimitiveOType("void", "void"),					#Nil return value type (only valid in function decls)
 	PrimitiveCStrOType("cstr", "i8*")					#Cstr is just a ptr with a literal constructor

@@ -1,0 +1,54 @@
+@declare_func("__kget_pagedir_addr", "ptr", "()")@
+@declare_func("__kreload_paging", "void", "()")@
+
+import mm
+import panic
+
+type PageEntry is packed
+	int entry
+
+	function(PageEntry e, int address, bool big) PageEntry:set -> void does
+		if address!=(address & 0b11111111111111111111000000000000) do
+			kpanic(big|int, address, "Internal PDE Error", "Address not 4KiB aligned")
+		done
+
+		e.entry=address
+		e.entry+=0b00000000000000000000000000000011 #Present, read/writable
+
+		if big do
+			e.entry+=0b00000000000000000000000010000000 #Set 4MiB granularity flag
+		done
+	return
+
+	function(PageEntry e) PageEntry:set_nonpresent -> void does
+		e.entry=0
+	return
+endtype
+
+type PageManager is
+	ptr pagedirectory
+
+	function() PageManager::new -> PageManager does
+		PageManager new = malloc(@sizeof(PageManager)@)|PageManager
+		new.pagedirectory=__kget_pagedir_addr()
+	return new
+
+	function(PageManager m, int idx) PageManager:get_pde_slot_idx -> PageEntry does
+	return m.pagedirectory:offset(idx*@sizeof(PageEntry)@)|PageEntry
+
+	function(int addr) PageManager::get_slot_for_addr -> int does
+	return addr>>22
+
+	function(PageManager m, int addr) PageManager:get_pde_slot_addr -> PageEntry does
+	return m:get_pde_slot_idx(PageManager::get_slot_for_addr(addr))
+endtype
+
+PageManager page_manager
+
+function() init_pm -> void does
+	page_manager=PageManager::new()
+	#The page (768) for the kernel should be set up already (if it's not we wouldn't be running :P)
+
+	page_manager:get_pde_slot_addr(base_vma):set(0, 1|bool)
+	__kreload_paging()
+return

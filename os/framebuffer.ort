@@ -1,0 +1,65 @@
+import mbdata
+
+type Framebuffer is
+	ptr buf
+	int w
+	int h
+	int depth #bytes per pixel
+	int stride #bytes per row (probably, but not always == w*depth)
+
+	function(int w, int h, int depth, int stride, ptr buf) Framebuffer::new_hw -> Framebuffer does
+		Framebuffer new = malloc(@sizeof(Framebuffer)@)|Framebuffer
+		new.buf=buf
+		new.w=w
+		new.h=h
+		new.depth=depth
+		new.stride=stride
+	return new
+
+	function(int w, int h, int depth, int stride) Framebuffer::new -> Framebuffer does
+	return Framebuffer::new_hw(w, h, depth, stride, malloc(h*stride))
+
+	function(MultibootInfo i) Framebuffer::from_mbinfo -> Framebuffer does
+	return Framebuffer::new_hw(i.screen_w, i.screen_h, i.screen_depth/8, i.screen_pitch, i.fb_addr)
+
+	function(Framebuffer e, int r, int g, int b) Framebuffer:fill -> void does
+		int posy=0
+		int posx
+		int posb
+		int addr
+
+		while posy<e.h do
+			posx=0
+			while posx<e.w do
+				e.buf[(posy*e.stride)+(posx*e.depth)]=b|byte
+				e.buf[(posy*e.stride)+(posx*e.depth)+1]=g|byte
+				e.buf[(posy*e.stride)+(posx*e.depth)+2]=r|byte
+				posx+=1
+			done
+			posy+=1
+		done
+	return
+
+	function(Framebuffer e, int x, int y, int r, int g, int b) Framebuffer:setpx -> void does
+		int addr=(y*e.stride)+(x*e.depth)
+		e.buf[addr]=b|byte
+		e.buf[addr+1]=g|byte
+		e.buf[addr+2]=r|byte
+	return
+
+	function(Framebuffer e, int x, int y, int w, int h, int r, int g, int b) Framebuffer:fillrect -> void does
+		int addr=(y*e.stride)+(x*e.depth)
+		int ypos=0
+		int xpos
+		while ypos<h do
+			xpos=0
+			while xpos<w do
+				e.buf[addr+(ypos*e.stride)+(xpos*e.depth)]=b|byte
+				e.buf[addr+(ypos*e.stride)+(xpos*e.depth)+1]=g|byte
+				e.buf[addr+(ypos*e.stride)+(xpos*e.depth)+2]=r|byte
+				xpos+=1
+			done
+			ypos+=1
+		done
+	return
+endtype

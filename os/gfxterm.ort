@@ -1,0 +1,49 @@
+import mbdata
+import framebuffer
+
+type VGATextModeEmulator is
+	ptr text_fb
+	Framebuffer out
+	int vga_w
+	int vga_h
+	int fontsz
+
+	function(Framebuffer screen) VGATextModeEmulator::new -> VGATextModeEmulator does
+		VGATextModeEmulator new=malloc(@sizeof(VGATextModeEmulator)@)|VGATextModeEmulator
+		new.fontsz=8
+		new.vga_w=screen.w/new.fontsz
+		new.vga_h=screen.h/new.fontsz
+		new.text_fb=malloc(new.vga_w*(new.vga_h+1)*2)
+		new.out=screen
+	return new
+
+	function(VGATextModeEmulator e) VGATextModeEmulator:clear -> void does
+		e.out:fill(0,0,0)
+	return
+
+	function(VGATextModeEmulator e) VGATextModeEmulator:update -> void does
+		int y=0
+		int x
+		while y<e.vga_h do
+			x=0
+			while x<e.vga_w do
+				e.out:fillrect(x*e.fontsz, y*e.fontsz, e.fontsz, e.fontsz, e.text_fb[(y*e.vga_w*2)+(x*2)]|int, 128*(e.text_fb[(y*e.vga_w*2)+(x*2)]!=32|byte)|int, 0)
+				x+=1
+			done
+			y+=1
+		done
+	return
+endtype
+
+VGATextModeEmulator console_emulator
+Framebuffer console_fb
+
+function(MultibootInfo mbinfo) init_emulator -> void does
+	console_fb=Framebuffer::from_mbinfo(mbinfo)
+	console_emulator=VGATextModeEmulator::new(console_fb)
+	console_emulator:clear()
+return
+
+function() _update_framebuffer -> void does
+	console_emulator:update()
+return

@@ -6,7 +6,6 @@ Terminal kterm
 int base_vma
 ptr multiboot_data_physaddr
 
-
 import irqio
 import keymap_us
 import "kapps/console.ort"
@@ -14,6 +13,9 @@ import mbdata
 
 import serialdbg
 import vgatest
+import gfxterm
+
+import paging
 
 MultibootInfo mbinfo
 
@@ -21,14 +23,33 @@ function(ptr multiboot_struct_addr) kernel_main -> void does
 	multiboot_data_physaddr=multiboot_struct_addr
 	base_vma=0xC0000000
 
-	KMM::init(base_vma+0x200000) #(Hopefully) skip past all the multiboot data we care about
-	mbinfo = MultibootInfo::load(multiboot_struct_addr)
-	
 	init_serial()
 	kswritecstr("Kernel debugger check!\n")
 
-	kterm = Terminal::new(base_vma+0xB8000, 80, 25)
+	KMM::init(base_vma+0x200000) #(Hopefully) skip past all the multiboot data we care about
+	mbinfo = MultibootInfo::load(multiboot_struct_addr)
+	init_pm() #Early PM init so we can page the screen
+	
+	if mbinfo.text_mode do
+		kswritecstr("Text Mode\n")
+		kterm = Terminal::new(mbinfo.fb_addr|int, 80, 25, _null_updater|TerminalUpdateHook)
+	else do
+		kswritecstr("Graphical mode. Paging...\n")
+		page_manager:get_pde_slot_addr(mbinfo.fb_addr|int):set(mbinfo.fb_raw_addr, 1|bool)
+		page_manager:get_pde_slot_addr(mbinfo.fb_addr|int + 0x400000):set(mbinfo.fb_raw_addr, 1|bool)
+		kswritecstr("Paged\n")
+
+		if mbinfo.cmdline=="gfxtest" do
+			test_svga()
+		done
+
+		init_emulator(mbinfo)
+		kterm = Terminal::new(console_emulator.text_fb|int, console_emulator.vga_w, console_emulator.vga_h, _update_framebuffer|TerminalUpdateHook)
+	done
+
+	kswritecstr("Blanking...")
 	kterm:blank()
+	kswritecstr("*\n")
 
 	kterm:printl("Terminal ready")
 
@@ -75,9 +96,7 @@ function(ptr multiboot_struct_addr) kernel_main -> void does
 	int testpos = 0
 	while testpos|int<0x100000 do
 		mm_pos:offset(testpos)[0]=0|byte
-		kterm:printi(testpos)
-		kterm.cursor_x=mt_x
-		testpos+=16
+		testpos+=8
 	done
 	kterm.serial_debug_enabled=1|bool
 

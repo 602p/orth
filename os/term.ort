@@ -1,6 +1,8 @@
 import mm
 import serialdbg
 
+type TerminalUpdateHook is a function->void
+
 type Terminal is
 	ptr baseaddr
 	int width
@@ -9,8 +11,9 @@ type Terminal is
 	int cursor_y
 	byte attributes
 	bool serial_debug_enabled
+	TerminalUpdateHook update_hook
 
-	function(int base, int width, int height) Terminal::new -> Terminal does
+	function(int base, int width, int height, TerminalUpdateHook hook) Terminal::new -> Terminal does
 		Terminal new = malloc(@sizeof(Terminal)@)|Terminal
 		new.baseaddr=base|ptr
 		new.width=width
@@ -19,11 +22,13 @@ type Terminal is
 		new.cursor_y=0
 		new.attributes=0x0F|byte
 		new.serial_debug_enabled=1|bool
+		new.update_hook=hook
 	return new
 
 	function(Terminal t, int x, int y, byte value) Terminal:setchar -> void does
 		t.baseaddr[(t.width*y*2)+(x*2)]=value
 		t.baseaddr[(t.width*y*2)+(x*2)+1]=t.attributes
+		t.update_hook()
 	return
 
 	function(Terminal t, int attrs) Terminal:setattrs -> void does
@@ -76,7 +81,7 @@ type Terminal is
 
 	function(Terminal t) Terminal:scroll -> void does
 		while t.cursor_y>=t.height do
-			int idx=0
+			int idx=1
 			while idx<t.height do
 				memcpy(t.baseaddr:offset(t.width*2*(idx+1)), t.baseaddr:offset(t.width*2*idx), t.width*2)
 				idx+=1
@@ -84,6 +89,7 @@ type Terminal is
 			memset(t.baseaddr:offset(t.height*t.width*2), t.width*2, 0|byte)
 			t.cursor_y-=1
 		done
+		t.update_hook()
 	return
 
 	function(Terminal t, int relx, int rely) Terminal:movecursor -> void does
@@ -183,6 +189,7 @@ type Terminal is
 			t.baseaddr[pos+1]=t.attributes
 			pos+=2
 		done
+		t.update_hook()
 	return
 
 	function(Terminal t) Terminal:bsod -> void does
@@ -192,3 +199,6 @@ type Terminal is
 		t.cursor_y=0
 	return
 endtype
+
+function() _null_updater -> void does
+return

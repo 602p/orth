@@ -1,4 +1,5 @@
 import mbdata
+import "font/font.ort"
 
 type Framebuffer is
 	ptr buf
@@ -62,4 +63,26 @@ type Framebuffer is
 			ypos+=1
 		done
 	return
+
+	function(Framebuffer e, int x, int y, int sz, int char, int r, int g, int b) Framebuffer:drawchar -> void does
+		int addr=(y*e.stride)+(x*e.depth)
+		ptr font=get_font()
+		int font_addr=(8*8)*char
+		byte YES="#":ord()|byte
+		int ypos=0
+		int xpos
+		while ypos<sz do
+			xpos=0
+			while xpos<sz do
+				if font[font_addr+(ypos*8)+xpos]==YES do
+					e.buf[addr+(ypos*e.stride)+(xpos*e.depth)]=b|byte
+					e.buf[addr+(ypos*e.stride)+(xpos*e.depth)+1]=g|byte
+					e.buf[addr+(ypos*e.stride)+(xpos*e.depth)+2]=r|byte
+				done
+				xpos+=1
+			done
+			ypos+=1
+		done
+	return
+
 endtype

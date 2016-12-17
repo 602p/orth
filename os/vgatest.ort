@@ -5,6 +5,7 @@ function() test_svga -> void does
 	f:fill(64,64,64)
 	f:setpx(10,10,255,0,0)
 	f:fillrect(20, 40, 35, 25, 0, 255, 128)
+	f:drawchar(40, 20, 8, "A":ord(), 0, 0, 255)
 
 	__khalt()
 return

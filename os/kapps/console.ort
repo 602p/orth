@@ -216,21 +216,8 @@ function(cstr args) kc_snowcrash_code -> void does
 	while 1==1 do
 		idx=0
 		while idx<0x100000 do
-			kterm:putchar((base_vma|ptr)[idx])
-			kterm.attributes=(base_vma|ptr)[idx+1]
-			idx+=2
-		done
-	done
-return
-
-function(cstr args) kc_snowcrash_data -> void does
-	ptr idx
-	while 1==1 do
-		idx=mm_head
-		while idx|int<mm_pos|int do
-			kterm:putchar(idx[0])
-			kterm.attributes=idx[1]
-			idx=idx:offset(2)
+			memcpy((base_vma+idx)|ptr, mbinfo.fb_addr, mbinfo.screen_h*mbinfo.screen_pitch)
+			idx+=(mbinfo.screen_h*mbinfo.screen_pitch)/4
 		done
 	done
 return
@@ -282,7 +269,6 @@ function() kconsole_run -> void does
 	add_cmd("color", "Set terminal color mode. Pass 2 hex digits, or no args to reset", kc_color|KConsoleCommandRunner)
 	add_cmd("colorama", "Demo availible colors", kc_colorama|KConsoleCommandRunner)
 	add_cmd("snowcrash", "Dump kernel code into vram. *no getting out*", kc_snowcrash_code|KConsoleCommandRunner)
-	add_cmd("snowcrashd", "Dump kernel managed RAM into vram. *no getting out*", kc_snowcrash_data|KConsoleCommandRunner)
 	add_cmd("draw", "Draw some stuff", kc_drawstuff|KConsoleCommandRunner)
 
 	console_buf=KeyboardBuf::new(1024, kterm, console_submit|SubmitCallback)

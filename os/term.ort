@@ -86,7 +86,7 @@ type Terminal is
 				memcpy(t.baseaddr:offset(t.width*2*(idx+1)), t.baseaddr:offset(t.width*2*idx), t.width*2)
 				idx+=1
 			done
-			memset(t.baseaddr:offset(t.height*t.width*2), t.width*2, 0|byte)
+			memset(t.baseaddr:offset(t.height*t.width*2), t.width*2, 32|byte)
 			t.cursor_y-=1
 		done
 		t.update_hook()

@@ -1,8 +1,31 @@
 import mbdata
 import framebuffer
 
+type VGABox is packed
+	byte char
+	byte attrs
+
+	function(VGABox a, VGABox b) VGABox:__eq__ -> bool does
+		if a.char!=b.char do
+			return 0|bool
+		elif a.attrs!=b.attrs do
+			return 0|bool
+		done
+	return 1|bool
+
+	function(VGABox a, VGABox b) VGABox:__ne__ -> bool does
+		if a.char==b.char do
+			if a.attrs==b.attrs do
+				return 0|bool
+			done
+		done
+	return 1|bool
+endtype
+
 type VGATextModeEmulator is
 	ptr text_fb
+	ptr old_text_fb
+	int bufsz
 	Framebuffer out
 	int vga_w
 	int vga_h
@@ -13,7 +36,12 @@ type VGATextModeEmulator is
 		new.fontsz=8
 		new.vga_w=screen.w/new.fontsz
 		new.vga_h=screen.h/new.fontsz
-		new.text_fb=malloc(new.vga_w*(new.vga_h+1)*2)
+		int bsz=new.vga_w*(new.vga_h+1)*2
+		new.bufsz=bsz
+		new.text_fb=malloc(bsz)
+		new.old_text_fb=malloc(bsz)
+		memset(new.text_fb, bsz, 0|byte)
+		memset(new.old_text_fb, bsz, 0|byte)
 		new.out=screen
 	return new
 
@@ -24,14 +52,19 @@ type VGATextModeEmulator is
 	function(VGATextModeEmulator e) VGATextModeEmulator:update -> void does
 		int y=0
 		int x
+		int pos
 		while y<e.vga_h do
 			x=0
 			while x<e.vga_w do
-				e.out:fillrect(x*e.fontsz, y*e.fontsz, e.fontsz, e.fontsz, e.text_fb[(y*e.vga_w*2)+(x*2)]|int, 128*(e.text_fb[(y*e.vga_w*2)+(x*2)]!=32|byte)|int, 0)
+				pos=(y*e.vga_w*2)+(x*2)
+				if (e.text_fb:offset(pos)|VGABox)!=(e.old_text_fb:offset(pos)|VGABox) do
+					e.out:fillrect(x*e.fontsz, y*e.fontsz, e.fontsz, e.fontsz, e.text_fb[pos]|int, 128*(e.text_fb[(y*e.vga_w*2)+(x*2)]!=32|byte)|int, 0)
+				done
 				x+=1
 			done
 			y+=1
 		done
+		memcpy(e.text_fb, e.old_text_fb, e.bufsz)
 	return
 endtype
 

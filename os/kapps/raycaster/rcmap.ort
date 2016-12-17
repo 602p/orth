@@ -1,0 +1,7 @@
+function() get_map -> cstr does
+return "#########################                      ##                      ##     # # # # # #      ##                      ##     #                ##                      ##     #        #       ##              #       ##     #        #       ##           #######    ##              #       ##              #       ##              #       ##                      ##                      ##                      ##     ### ###          ##     #     #          ##                      ##     #     #          ##     ### ###          ##                      #########################"
+
+function() get_map_w -> int does
+return 24
+function() get_map_h -> int does
+return 24

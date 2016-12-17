@@ -85,4 +85,7 @@ type Framebuffer is
 		done
 	return
 
+	function(Framebuffer me, Framebuffer other) Framebuffer:copyfrom -> void does
+		memcpy(other.buf, me.buf, me.h*me.stride)
+	return
 endtype

@@ -29,8 +29,13 @@ function(ptr multiboot_struct_addr) kernel_main -> void does
 	KMM::init(base_vma+0x200000) #(Hopefully) skip past all the multiboot data we care about
 	mbinfo = MultibootInfo::load(multiboot_struct_addr)
 	init_pm() #Early PM init so we can page the screen
-	page_manager:get_pde_slot_addr(base_vma+0x400000):set(0x400000, 1|bool)
-	page_manager:get_pde_slot_addr(base_vma+0x800000):set(0x800000, 1|bool)
+
+	int mappos=0x400000
+	while mappos < (0x400000*10) do
+		page_manager:get_pde_slot_addr(base_vma+mappos):set(mappos, 1|bool)
+		mappos+=0x400000
+	done
+
 	
 	if mbinfo.text_mode do
 		kswritecstr("Text Mode\n")

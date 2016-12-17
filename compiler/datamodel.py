@@ -275,6 +275,9 @@ class DoublePrimitiveOType(PrimitiveOType):
 	def implement_ge(self, lhs, rhs, out):
 		return "fcmp oge double {}, {}".format(lhs, rhs)
 
+	def implement_neg(self, lhs, out):
+		return "fsub double 0.0, {}".format(lhs)
+
 	def implement_cast(self, value, from_, to):
 		if isinstance(to, UnsignedIntegerPrimitiveOType):
 			return "fptoui double {} to {}".format(value, to.get_llvm_representation())

@@ -60,6 +60,12 @@ def process_intrinsic(out, text):
 		out.emitl("%{} = load i8* %{}".format(val, out.get_var_name(from_)))
 		out.emitl("store i8 %{}, i8* %{}".format(val, ptr))
 
+	def llvmraw(text):
+		out.emitl(text)
+
+	def register_func(name, rt, argstring):
+		out.set_signature(name, datamodel.ManualFunctionOType(name, argstring, datamodel.builtin_types[rt]))
+
 	#Horrible hack to allow @sizeof(SomeClass)@ without quotes
 	locals().update(out.types) #TODO: Change
 

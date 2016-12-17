@@ -1,5 +1,6 @@
 import "kapps/util.ort"
 import "mbdata.ort"
+import "kapps/raycaster/raycaster.ort"
 
 type KConsoleCommandRunner is a function->void
 type KConsoleCommand is
@@ -270,6 +271,8 @@ function() kconsole_run -> void does
 	add_cmd("colorama", "Demo availible colors", kc_colorama|KConsoleCommandRunner)
 	add_cmd("snowcrash", "Dump kernel code into vram. *no getting out*", kc_snowcrash_code|KConsoleCommandRunner)
 	add_cmd("draw", "Draw some stuff", kc_drawstuff|KConsoleCommandRunner)
+	add_cmd("rcmtest", "Test some trig", rc_mtest|KConsoleCommandRunner)
+	add_cmd("rc", "Raycaster", rc_run|KConsoleCommandRunner)
 
 	console_buf=KeyboardBuf::new(1024, kterm, console_submit|SubmitCallback)
 	command_to_run=0|ptr|KConsoleCommand

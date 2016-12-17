@@ -1,0 +1,249 @@
+import "kapps/raycaster/rcmath.ort"
+import "kapps/raycaster/rcrots.ort"
+import "kapps/raycaster/rcmap.ort"
+import framebuffer
+
+function(cstr args) rc_mtest -> void does
+	float ex=1.234
+	ptr   exm = (ex||ptr)
+	kterm:print("1.234*1000=")
+	kterm:printi((ex*1000.)|int)
+	kterm:print("\nex=")
+	kterm:printi(exm[0]|int)
+	kterm:print(" ")
+	kterm:printi(exm[1]|int)
+	kterm:print(" ")
+	kterm:printi(exm[2]|int)
+	kterm:print(" ")
+	kterm:printi(exm[3]|int)
+	kterm:print(" ")
+	kterm:printi(exm[4]|int)
+	kterm:print(" ")
+	kterm:printi(exm[5]|int)
+	kterm:print(" ")
+	kterm:printi(exm[6]|int)
+	kterm:print(" ")
+	kterm:printi(exm[7]|int)
+	kterm:print(" ")
+
+	kterm:print("\n ex via RCFloatBox=")
+	kterm:printi((((ex||ptr)|RCFloatBox).v*1000.)|int)
+
+	kterm:print("\nsin(10)=")
+	kterm:printi((rcsin(10.)*1000.)|int)
+	kterm:print("\nsin(20)=")
+	kterm:printi((rcsin(20.)*1000.)|int)
+	kterm:print("\nsin(30)=")
+	kterm:printi((rcsin(30.)*1000.)|int)
+	kterm:print("\nsin(90)=")
+	kterm:printi((rcsin(90.)*1000.)|int)
+
+	kterm:print("\ncos(10)=")
+	kterm:printi((rccos(10.)*1000.)|int)
+	kterm:print("\ncos(20)=")
+	kterm:printi((rccos(20.)*1000.)|int)
+	kterm:print("\ncos(30)=")
+	kterm:printi((rccos(30.)*1000.)|int)
+	kterm:print("\ncos(90)=")
+	kterm:printi((rccos(90.)*1000.)|int)
+
+	kterm:print("\nsqrt(4)=")
+	kterm:printi(sqrt(4.)|int)
+	kterm:print("\nsqrt(100)=")
+	kterm:printi(sqrt(100.)|int)
+	kterm:print("\nsqrt(36)=")
+	kterm:printi(sqrt(36.)|int)
+
+	kterm:print("\nsqrt(5)*1000=")
+	kterm:printi((sqrt(5.)*1000.)|int)
+return
+
+function(float r) r2d -> float does
+return r*57.324840764331206
+
+function(cstr args) rc_run -> void does
+	ptr map = get_map()|ptr
+	int map_width=get_map_w()
+	byte NONSOLID = " ":ord()|byte
+	float posX=22.
+	float posY=12.
+	float dirX=1.
+	float dirY=0.
+	float planeX=0.
+	float planeY=0.66
+
+	int rotstate=0
+
+	int time=0
+	int oldTime=0
+
+	float cameraX
+	float rayPosX
+	float rayPosY
+	float rayDirX
+	float rayDirY
+
+	int w = mbinfo.screen_w
+	int h = mbinfo.screen_h
+	int x
+
+	int fbsz=mbinfo.screen_pitch*(h+1)
+
+	kterm:print("Newbf sz=")
+	kterm:printi(fbsz)
+
+	page_manager:get_pde_slot_addr(0x400000):set(0x5000000, 1|bool)
+
+	Framebuffer buf=Framebuffer::new_hw(w, h, mbinfo.screen_depth/8, mbinfo.screen_pitch, 0x400000|ptr)
+
+	Framebuffer sysbuf=Framebuffer::from_mbinfo(mbinfo)
+
+
+
+	int mapX
+	int mapY
+
+	float deltaDistX
+	float deltaDistY
+	float sideDistX
+	float sideDistY
+	float perpWallDist
+	int stepX
+	int stepY
+	int hit
+	int side
+
+	int lineheight
+	int linetop
+	int linebottom
+
+	int color
+
+	float movespeed=1.2
+	float oldDirX
+	float oldPlaneX
+
+	long wait
+
+	system_kbdstate:set_handler(_rc_null_handler|KeyboardConsumerCallback)
+	kterm.update_hook=_rc_term_null_handler|TerminalUpdateHook
+
+	RCRotState new
+
+	while 1==1 do
+		
+		buf:fill(0,0,0)
+
+		x=0
+		while x<w do
+			cameraX = (((2 * x)|float) / (w|float)) - 1.; #?
+			rayPosX = posX;
+			rayPosY = posY;
+			rayDirX = dirX + (planeX * cameraX);
+			rayDirY = dirY + (planeY * cameraX);
+
+			mapX = rayPosX|int;
+			mapY = rayPosY|int;
+
+			deltaDistX = sqrt(1. + (rayDirY * rayDirY) / (rayDirX * rayDirX));
+     		deltaDistY = sqrt(1. + (rayDirX * rayDirX) / (rayDirY * rayDirY));
+
+     		hit=0
+     		if rayDirX < 0. do
+				stepX = -1
+				sideDistX = (rayPosX - mapX|float) * deltaDistX
+			
+			else do
+				stepX = 1
+				sideDistX = (mapX|float + 1.0 - rayPosX) * deltaDistX
+			done
+			
+			if rayDirY < 0. do
+				stepY = -1
+				sideDistY = (rayPosY - mapY|float) * deltaDistY
+			else do
+				stepY = 1
+				sideDistY = (mapY|float + 1.0 - rayPosY) * deltaDistY
+			done
+			
+
+			while hit==0 do
+				if sideDistX < sideDistY do
+					sideDistX += deltaDistX
+					mapX += stepX
+					side = 0
+				
+				else do
+					sideDistY += deltaDistY
+					mapY += stepY
+					side = 1
+				done
+				
+				if map[(mapY*map_width)+mapX]!=NONSOLID do
+					hit = 1
+				done
+			done
+
+			if side == 0 do
+				perpWallDist = (mapX|float - rayPosX + ((1. - stepX|float) / 2.)) / rayDirX
+    		else do
+      			perpWallDist = (mapY|float - rayPosY + ((1. - stepY|float) / 2.)) / rayDirY
+      		done
+
+      		lineheight = ((h|float)/perpWallDist)|int
+      		linetop=(lineheight/2)+(h/2)
+      		linebottom=(-lineheight/2)+(h/2)
+
+      		if linebottom<0 do
+      			linebottom=0
+      		done
+
+      		if linetop>h do
+      			linetop=h
+      		done
+
+      		color=255
+      		if side==1 do
+      			color=128
+      		done
+
+      		while linetop>linebottom do
+      			buf:setpx(x, linetop, color, 0, 0)
+      			linetop-=1
+      		done
+
+      		x+=1
+		done
+		if system_kbdstate:getkey(72) do #UP
+  			posX+=dirX*movespeed
+  			posY+=dirY*movespeed
+  		elif system_kbdstate:getkey(80) do #DOWN
+  			posX-=dirX*movespeed
+  			posY-=dirY*movespeed
+  		done
+
+		if system_kbdstate:getkey(75) do #LEFT
+  			rotstate-=1
+  			new=rcrot_get_for(rotstate)
+  			dirX=new.dirX
+  			dirY=new.dirY
+  			planeX=new.planeX
+  			planeY=new.planeY
+  		elif system_kbdstate:getkey(77) do #RIGHT
+  			rotstate+=1
+  			new=rcrot_get_for(rotstate)
+  			dirX=new.dirX
+  			dirY=new.dirY
+  			planeX=new.planeX
+  			planeY=new.planeY
+  		done
+
+  		sysbuf:copyfrom(buf)
+	done
+return
+
+function(uint scancode, bool state) _rc_null_handler -> void does
+return
+
+function() _rc_term_null_handler -> void does
+return

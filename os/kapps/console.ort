@@ -146,9 +146,13 @@ function(cstr args) kc_addhex -> void does
 return
 
 function(cstr args) kc_clear -> void does
+	if mbinfo.text_mode==0|bool do
+		console_emulator:clear()
+	done
 	kterm:blank()
 	kterm.cursor_x=0
 	kterm.cursor_y=-1
+
 return
 
 function(cstr args) kc_hexnum -> void does
@@ -231,6 +235,24 @@ function(cstr args) kc_snowcrash_data -> void does
 	done
 return
 
+import framebuffer
+
+function(cstr args) kc_drawstuff -> void does
+	Framebuffer f = Framebuffer::from_mbinfo(mbinfo)
+	f:fill(64,64,64)
+	f:setpx(10,10,255,0,0)
+	f:fillrect(20, 40, 35, 25, 0, 255, 128)
+	f:fillrect(25, 45, 35, 25, 255, 255, 128)
+	f:drawchar(40, 20, 8, "A":ord(), 0, 0, 255)
+
+	int i=50
+	while i<200 do
+		f:setpx(i,i,50+i,0,0)
+		f:setpx(200-i,i,0,50+i,0)
+		i+=1
+	done
+return
+
 function(cstr name, cstr desc, KConsoleCommandRunner cmd) add_cmd -> void does
 	KConsoleCommand cur = kcommand_head
 	while cur._next|ptr|int!=0 do
@@ -261,6 +283,7 @@ function() kconsole_run -> void does
 	add_cmd("colorama", "Demo availible colors", kc_colorama|KConsoleCommandRunner)
 	add_cmd("snowcrash", "Dump kernel code into vram. *no getting out*", kc_snowcrash_code|KConsoleCommandRunner)
 	add_cmd("snowcrashd", "Dump kernel managed RAM into vram. *no getting out*", kc_snowcrash_data|KConsoleCommandRunner)
+	add_cmd("draw", "Draw some stuff", kc_drawstuff|KConsoleCommandRunner)
 
 	console_buf=KeyboardBuf::new(1024, kterm, console_submit|SubmitCallback)
 	command_to_run=0|ptr|KConsoleCommand

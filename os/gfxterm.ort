@@ -66,8 +66,8 @@ type VGATextModeEmulator is
 					char=e.text_fb[pos]|int
 					bgcolor=((e.text_fb[pos+1]|int)>>4)*3
 					fgcolor=((e.text_fb[pos+1]|int)&0b1111)*3
-					e.out:fillrect(x*(e.fontsz-1), y*e.fontsz, e.fontsz-1, e.fontsz, colors[bgcolor]|int, colors[bgcolor+1]|int, colors[bgcolor+2]|int)
-					e.out:drawchar(x*(e.fontsz-1), y*e.fontsz, e.fontsz, char, colors[fgcolor]|int, colors[fgcolor+1]|int, colors[fgcolor+2]|int)
+					e.out:fillrect(x*(e.fontsz), y*e.fontsz, e.fontsz, e.fontsz, colors[bgcolor]|int, colors[bgcolor+1]|int, colors[bgcolor+2]|int)
+					e.out:drawchar(x*(e.fontsz), y*e.fontsz, e.fontsz, char, colors[fgcolor]|int, colors[fgcolor+1]|int, colors[fgcolor+2]|int)
 				done
 				x+=1
 			done

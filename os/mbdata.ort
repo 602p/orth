@@ -72,6 +72,16 @@ type RawMultibootInfo is packed
 				kterm:print("Loader tag, name=`")
 				kterm:print((curr|ptr):offset(8)|cstr)
 				kterm:print("'")
+			elif curr.type==3 do
+				kterm:print("Module tag, name=")
+				kterm:print((curr|MBModuleTag):get_name())
+				kterm:print(" content=")
+				kterm:print((curr|MBModuleTag):get_addr()|cstr)
+			elif curr.type==4 do
+				kterm:print("BasicMem tag, lower=")
+				kterm:printi((curr|MBBasicMemTag).mem_lower)
+				kterm:print(", upper=")
+				kterm:printi((curr|MBBasicMemTag).mem_upper)
 			elif curr.type==5 do
 				kterm:print("Boot Device tag, dev=")
 				kterm:dumphex((curr|MBDeviceTag).biosdev, 2)
@@ -86,6 +96,7 @@ type RawMultibootInfo is packed
 				kterm:printi((curr|MBMMAPMemTag).entry_version)
 				kterm:print(", #=")
 				kterm:printi(curr.size/(curr|MBMMAPMemTag).entry_size)
+				(curr|MBMMAPMemTag):print()
 			elif curr.type==7 do
 				kterm:print("VBE Info Tag:. Controller info:\n")
 				((curr|ptr):offset(16)|RawVBEControllerInfo):print()
@@ -148,11 +159,36 @@ type MBBasicMemTag is packed
 	int mem_upper
 endtype
 
+type MBMMAPMemTagEntry is packed
+	long base_addr
+	long length
+	int type
+	int reserved
+endtype
+
 type MBMMAPMemTag is packed
 	int type
 	int size
 	int entry_size
 	int entry_version
+
+	function(MBMMAPMemTag t) MBMMAPMemTag:print -> void does
+		int count=(t.size-8)/t.entry_size
+		int idx=0
+		MBMMAPMemTagEntry entry
+		while idx<count do
+			entry=(t|ptr):offset(16+(t.entry_size*idx))|MBMMAPMemTagEntry
+			kterm:print("\n  MMAP Tag ")
+			kterm:printi(idx)
+			kterm:print(" - type=")
+			kterm:printi(entry.type)
+			kterm:print(", start=")
+			kterm:dumphexi(entry.base_addr|int)
+			kterm:print(", len=")
+			kterm:dumphexi(entry.length|int)
+			idx+=1
+		done
+	return
 endtype
 
 type MBFBMemTag is packed
@@ -173,6 +209,19 @@ type MBDeviceTag is packed
 	int biosdev
 	int part
 	int spart
+endtype
+
+type MBModuleTag is packed
+	int type
+	int size
+	int start
+	int end
+
+	function(MBModuleTag t) MBModuleTag:get_name -> cstr does
+	return (t|ptr):offset(@sizeof(MBModuleTag)@)|cstr
+	
+	function(MBModuleTag t) MBModuleTag:get_addr -> ptr does
+	return (t.start+base_vma)|ptr
 endtype
 
 type MBRSDP1Tag is packed

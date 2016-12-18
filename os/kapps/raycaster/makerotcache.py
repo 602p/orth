@@ -39,8 +39,5 @@ return \"""")
 
 	f.write("""\"|ptr
 function(int state) rcrot_get_for -> RCRotState does
-	if state<0 do
-		state=-state
-	done
 	state=state%360
 return rcrot_get__():offset(32*state)|RCRotState""")

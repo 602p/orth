@@ -241,6 +241,30 @@ function(cstr args) kc_drawstuff -> void does
 	done
 return
 
+function(cstr args) kc_drawcolors -> void does
+	Framebuffer f = Framebuffer::from_mbinfo(mbinfo)
+	int r=0
+	int g
+	int b
+	long ticks
+	while r<=256 do
+		g=0
+		while g<=256 do
+			b=0
+			while b<=256 do
+				f:fill(r,g,b)
+				ticks=pic_ticks
+				while pic_ticks==ticks do
+					0
+				done
+				b+=64
+			done
+			g+=64
+		done
+		r+=64
+	done
+return
+
 function(cstr name, cstr desc, KConsoleCommandRunner cmd) add_cmd -> void does
 	KConsoleCommand cur = kcommand_head
 	while cur._next|ptr|int!=0 do
@@ -271,6 +295,7 @@ function() kconsole_run -> void does
 	add_cmd("colorama", "Demo availible colors", kc_colorama|KConsoleCommandRunner)
 	add_cmd("snowcrash", "Dump kernel code into vram. *no getting out*", kc_snowcrash_code|KConsoleCommandRunner)
 	add_cmd("draw", "Draw some stuff", kc_drawstuff|KConsoleCommandRunner)
+	add_cmd("drawcolors", "Draw some colors", kc_drawcolors|KConsoleCommandRunner)
 	add_cmd("rcmtest", "Test some trig", rc_mtest|KConsoleCommandRunner)
 	add_cmd("rc", "Raycaster", rc_run|KConsoleCommandRunner)
 

@@ -72,7 +72,7 @@ function(cstr args) rc_run -> void does
 	float planeX=0.
 	float planeY=0.66
 
-	int rotstate=0
+	int rotstate=10000
 
 	int time=0
 	int oldTime=0
@@ -202,13 +202,9 @@ function(cstr args) rc_run -> void does
       			linetop=h
       		done
 
-      		color=255
-      		if side==1 do
-      			color=128
-      		done
 
       		while linetop>linebottom do
-      			buf:setpx(x, linetop, color, 0, 0)
+      			buf:setpx(x, linetop, 255, (side|int)*255, 0)
       			linetop-=1
       		done
 

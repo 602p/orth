@@ -73,10 +73,8 @@ type RawMultibootInfo is packed
 				kterm:print((curr|ptr):offset(8)|cstr)
 				kterm:print("'")
 			elif curr.type==3 do
-				kterm:print("Module tag, name=")
-				kterm:print((curr|MBModuleTag):get_name())
-				kterm:print(" content=")
-				kterm:print((curr|MBModuleTag):get_addr()|cstr)
+				kterm:print("Module tag, args=")
+				kterm:print((curr|MBModuleTag):get_args())
 			elif curr.type==4 do
 				kterm:print("BasicMem tag, lower=")
 				kterm:printi((curr|MBBasicMemTag).mem_lower)
@@ -217,7 +215,7 @@ type MBModuleTag is packed
 	int start
 	int end
 
-	function(MBModuleTag t) MBModuleTag:get_name -> cstr does
+	function(MBModuleTag t) MBModuleTag:get_args -> cstr does
 	return (t|ptr):offset(@sizeof(MBModuleTag)@)|cstr
 	
 	function(MBModuleTag t) MBModuleTag:get_addr -> ptr does
@@ -246,6 +244,21 @@ type MBRSDP1Tag is packed
 	return
 endtype
 
+type MultibootModuleInfo is
+	cstr params
+	ptr  contents
+	int  size
+	MultibootModuleInfo _next
+
+	function(MBModuleTag tag) MultibootModuleInfo::new -> MultibootModuleInfo does
+		MultibootModuleInfo new = malloc(@sizeof(MultibootModuleInfo)@)|MultibootModuleInfo
+		new.params=tag:get_args()
+		new.contents=tag:get_addr()
+		new.size=tag.end-tag.start
+		new._next=0|ptr|MultibootModuleInfo
+	return new
+endtype
+
 type MultibootInfo is
 	ptr  mb_phys_addr
 	RawMultibootInfo mb_raw
@@ -260,6 +273,8 @@ type MultibootInfo is
 	int  fb_raw_addr
 	ptr  fb_addr
 	int  boot_device
+	int  module_count
+	MultibootModuleInfo _firstmodule
 
 	function(ptr phys_addr) MultibootInfo::load -> MultibootInfo does
 		MultibootInfo new = malloc(@sizeof(MultibootInfo)@)|MultibootInfo
@@ -289,14 +304,50 @@ type MultibootInfo is
 						new.screen_depth=fb.bpp|int
 						new.fb_raw_addr=fb.address|int
 						new.fb_addr=(fb.address|int|ptr):offset(base_vma)
+
+						new.module_count=0
+
+						int idx=0
+						MBTagStub tag=new.mb_raw:get_tag(0)
+						MultibootModuleInfo tail
+						while tag.type!=0 do
+							if tag.type==3 do
+								if new.module_count==0 do
+									new._firstmodule=MultibootModuleInfo::new(tag|MBModuleTag)
+									tail=new._firstmodule
+								else do
+									tail._next=MultibootModuleInfo::new(tag|MBModuleTag)
+									tail=tail._next
+								done
+								new.module_count+=1
+							done
+							idx+=1
+							tag=new.mb_raw:get_tag(idx)
+						done
 						
 						return new
 					done
 				done
 			done
 		done
-
 	return new
+
+	function(MultibootInfo i, cstr args) MultibootInfo:get_mod_by_args -> MultibootModuleInfo does
+		if i.module_count==0 do
+			return 0|ptr|MultibootModuleInfo
+		done
+
+		MultibootModuleInfo cur = i._firstmodule
+		int idx=0
+		while idx<i.module_count do
+			if cur.params==args do
+				return cur
+			done
+
+			idx+=1
+			cur=cur._next
+		done
+	return 0|ptr|MultibootModuleInfo
 endtype
 
 type RawVBEControllerInfo is packed

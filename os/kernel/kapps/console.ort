@@ -1,6 +1,7 @@
 import "kapps/util.ort"
 import "mbdata.ort"
 import "kapps/raycaster/raycaster.ort"
+import "kapps/drawbmp.ort"
 
 type KConsoleCommandRunner is a function->void
 type KConsoleCommand is
@@ -104,6 +105,8 @@ function(cstr args) kc_dump_parseed_multiboot -> void does
 		kterm:printl(mbinfo.bootloader)
 		kterm:print("boot_device=")
 		kterm:dumphex(mbinfo.boot_device, 2)
+		kterm:print("\nmodule count=")
+		kterm:printi(mbinfo.module_count)
 		kterm:printl("")
 		if mbinfo.text_mode do
 			kterm:printl("Text Mode")
@@ -298,6 +301,7 @@ function() kconsole_run -> void does
 	add_cmd("drawcolors", "Draw some colors", kc_drawcolors|KConsoleCommandRunner)
 	add_cmd("rcmtest", "Test some trig", rc_mtest|KConsoleCommandRunner)
 	add_cmd("rc", "Raycaster", rc_run|KConsoleCommandRunner)
+	add_cmd("drawbmp", "Draw a BMP that was loaded as a kernel module", kc_draw_bmp|KConsoleCommandRunner)
 
 	console_buf=KeyboardBuf::new(1024, kterm, console_submit|SubmitCallback)
 	command_to_run=0|ptr|KConsoleCommand

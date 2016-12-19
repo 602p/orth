@@ -1,0 +1,76 @@
+import framebuffer
+import mbdata
+
+type BMP24ColorCell is packed
+	byte b
+	byte g
+	byte r
+endtype
+
+type BMPImage is packed
+	byte magic_B
+	byte magic_M
+	int size
+	int reserved
+	int data_offset
+	int xhsize
+	int width
+	int height
+	short planes
+	short bits
+	int compression
+	int imgsize
+	int xres
+	int yres
+	int ncolors
+	int impcolors
+
+	function(BMPImage i) BMPImage:get_data -> ptr does
+	return (i|ptr):offset(i.data_offset)
+
+	function(BMPImage i) BMPImage:get_pitch -> int does
+		int p = (i.width*(i.bits|int/8))
+		if (p%4)!=0 do
+			p+=4-(p%4)
+		done
+	return p
+
+	function(BMPImage i, int x, int y) BMPImage:get_pixel -> BMP24ColorCell does
+	return i:get_data():offset((i:get_pitch()*(i.height-y))+(x*(i.bits|int/8)))|BMP24ColorCell
+endtype
+
+function(cstr args) kc_draw_bmp -> void does
+	MultibootModuleInfo mod = mbinfo:get_mod_by_args(args)
+
+	if mod|ptr|int == 0 do
+		kterm:printl("Invalid module")
+		return
+	done
+
+	BMPImage img = mod.contents|BMPImage
+	
+	if img.compression!=0 do
+		kterm:printl("Don't know how to handle compressed BMPs")
+		return
+	done
+
+	if img.bits|int!=24 do
+		kterm:printl("Unknown depth (must == 24)")
+		return
+	done
+
+	Framebuffer sysfb=Framebuffer::from_mbinfo(mbinfo)
+
+	int y=0
+	int x
+	BMP24ColorCell color
+	while y<img.height do
+		x=0
+		while x<img.width do
+			color=img:get_pixel(x, y)
+			sysfb:setpx(x, y, color.r|int, color.g|int, color.b|int)
+			x+=1
+		done
+		y+=1
+	done
+return

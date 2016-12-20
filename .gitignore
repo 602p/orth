@@ -93,6 +93,7 @@ out.png
 tokens.txt
 out.ll
 out
+*.o
 
 os/isodir
 os/*.iso

@@ -20,7 +20,7 @@ function(int errorcode, int addr, cstr type, cstr message) kpanic -> void does
 	kterm:printl("********************************************************************************")
 	kterm:print("\nError Code: ")
 	kterm:dumpbin(errorcode)
-	kterm:print("\nAddress:    ")
+	kterm:print("\nIdentifier: ")
 	kterm:dumphexi(addr)
 	kterm:print("\n\nCS:")
 	kterm:dumphex(__kgetcs(), 2)

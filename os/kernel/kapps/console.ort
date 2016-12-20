@@ -133,9 +133,9 @@ function(cstr args) kc_fault -> void does
 	if args=="dbz" do
 		int a = 1/0
 	elif args=="pw" do
-		(0|ptr)[0]=0|byte
+		(0xDEADBEEF|ptr)[0]=0|byte
 	elif args=="pr" do
-		byte a = (0|ptr)[0]
+		byte a = (0xDEADBEEF|ptr)[0]
 	else do
 		kterm:printl("Pass dbz, pw or pr")
 	done

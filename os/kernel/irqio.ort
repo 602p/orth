@@ -1,47 +1,19 @@
-@declare_func("__kget_keyboard_handler_addr", "ptr", "()")@
-@declare_func("__kget_pf_handler_addr", "ptr", "()")@
-@declare_func("__kget_gpf_handler_addr", "ptr", "()")@
-@declare_func("__kget_df_handler_addr", "ptr", "()")@
-@declare_func("__kget_pic_handler_addr", "ptr", "()")@
+@declare_func("__kget_internal_irq_table", "ptr", "()")@
 @declare_func("__klidt", "void", "(i8*)")@
 @declare_func("__kwritepb", "void", "(i8, i8)")@
 @declare_func("__kreadpb", "ubyte", "(i8)")@
 import mm
 
-type IDTEntry is packed
-	short offset_low
-	short selector
-	byte  zero
-	byte  type
-	short offset_high
 
-	function(ptr irupt_handler) IDTEntry::new -> IDTEntry does
-		int irupt_addr=irupt_handler|int
-		IDTEntry entry = malloc(@sizeof(IDTEntry)@)|IDTEntry
-		entry.offset_low=(irupt_addr & 0xFFFF)|short
-		entry.selector=0x08|short
-		entry.zero=0|byte
-		entry.type=0x8E|byte
-		entry.offset_high=((irupt_addr&0xFFFF0000) >> 16)|short
-	return entry
+type InternalIDTHandlerLookupTableEntry is packed
+	int addr
 endtype
 
-type IDT is packed
-	short idt_size
-	int idt_address
+type InternalIDTHandlerLookupTable is packed
+	int count
 
-	function() IDT::create -> IDT does
-		IDT new = malloc(@sizeof(IDT)@)|IDT
-		new.idt_size=(((@sizeof(IDTEntry)@)*256)-1)|short #Said -1
-		new.idt_address=malloc((new.idt_size|int)+1)|int
-		memset(new.idt_address|ptr, (new.idt_size|int)+1, 0|byte)
-	return new
-
-	function(IDT table, IDTEntry entry, int idx) IDT:install_entry -> void does
-		int entry_sz=@sizeof(IDTEntry)@
-		ptr target=(table.idt_address|ptr):offset(entry_sz*idx)
-		memcpy(entry|ptr, target, entry_sz)
-	return
+	function(InternalIDTHandlerLookupTable t, int idx) InternalIDTHandlerLookupTable:get -> int does
+	return ((t|ptr):offset(4+(4*idx))|InternalIDTHandlerLookupTableEntry).addr
 endtype
 
 function(int p, int d) write_port -> void does
@@ -51,6 +23,64 @@ return
 function(int p) read_port -> int does
 return __kreadpb(p|byte)|int
 
+type IRQHandler is a function->void
+type IRQHandlerBox is packed
+	IRQHandler handler
+endtype
+
+type IRQHandlerTable is
+	function(int count) IRQHandlerTable::new -> IRQHandlerTable does
+		IRQHandlerTable new = malloc(4*count)|IRQHandlerTable
+		memset(new|ptr, 4*count, 0|byte)
+	return new
+
+	function(IRQHandlerTable t, int idx, IRQHandler handler) IRQHandlerTable:set -> void does
+		((t|ptr):offset(4*idx)|IRQHandlerBox).handler=handler
+	return
+
+	function(IRQHandlerTable t, int idx) IRQHandlerTable:get -> IRQHandler does
+	return ((t|ptr):offset(4*idx)|IRQHandlerBox).handler
+endtype
+
+type IDTEntry is packed
+	short offset_low
+	short selector
+	byte  zero
+	byte  type
+	short offset_high
+
+	function(IDTEntry entry, int irupt_addr) IDTEntry:set -> void does
+		entry.offset_low=(irupt_addr & 0xFFFF)|short
+		entry.selector=0x08|short
+		entry.zero=0|byte
+		entry.type=0x8E|byte
+		entry.offset_high=((irupt_addr&0xFFFF0000) >> 16)|short
+	return
+endtype
+
+type IDT is packed
+	short idt_size
+	int idt_address
+	IRQHandlerTable handlers
+
+	function() IDT::create -> IDT does
+		IDT new = malloc(@sizeof(IDT)@)|IDT
+		new.idt_size=(((@sizeof(IDTEntry)@)*256)-1)|short #Said -1
+		new.idt_address=malloc((new.idt_size|int)+1)|int
+		memset(new.idt_address|ptr, (new.idt_size|int)+1, 0|byte)
+		new.handlers=IRQHandlerTable::new(256)
+	return new
+
+	function(IDT table, int internal_handler, int idx) IDT:install_internal_entry -> void does
+		int entry_sz=@sizeof(IDTEntry)@
+		ptr target=(table.idt_address|ptr):offset(entry_sz*idx)
+		(target|IDTEntry):set(internal_handler)
+	return
+endtype
+
+type IRQRegs is packed
+endtype
+
 IDT idt
 
 function() setup_irq -> void does
@@ -59,28 +89,32 @@ function() setup_irq -> void does
 	kterm:print("IDT@")
 	kterm:dumphexi(idt.idt_address)
 
-	IDTEntry kbd_handler = IDTEntry::new(__kget_keyboard_handler_addr())
-	IDTEntry pf_handler = IDTEntry::new(__kget_pf_handler_addr())
-	IDTEntry gpf_handler = IDTEntry::new(__kget_gpf_handler_addr())
-	IDTEntry df_handler = IDTEntry::new(__kget_df_handler_addr())
-	IDTEntry pic_handler = IDTEntry::new(__kget_pic_handler_addr())
+	InternalIDTHandlerLookupTable ihtbl = __kget_internal_irq_table()|InternalIDTHandlerLookupTable
+	int idx=0
+	while idx<ihtbl.count do
+		idt:install_internal_entry(ihtbl:get(idx), idx)
+		idx+=1
+	done
 
-	idt:install_entry(kbd_handler, 0x21)
-	kterm:print("#KBD")
-	idt:install_entry(pic_handler, 0x20)
-	kterm:print("#PIC")
-	idt:install_entry(pf_handler, 0x0E)
-	kterm:print("#PF")
-	idt:install_entry(gpf_handler, 0x0D)
-	kterm:print("#GPF")
-	idt:install_entry(df_handler, 0x08)
-	kterm:print("#DF")
+	kterm:print("!")
+
+	idt.handlers:set(0x00, irq_zerodivision_handler|IRQHandler)
+	idt.handlers:set(0x08, irq_doublefault_handler|IRQHandler)
+	idt.handlers:set(0x0D, irq_protectionfault_handler|IRQHandler)
+	idt.handlers:set(0x0E, irq_pagefault_handler|IRQHandler)
+
+	idt.handlers:set(0x20, irq_timer_handler|IRQHandler)
+	idt.handlers:set(0x21, irq_keyboard_handler|IRQHandler)
 
 	#Mask interrupts we don't have handlers for
 	setup_kbd()
 	setup_pit()
 
+	kterm:print(".")
+
 	__klidt(idt|ptr)
+
+	kterm:print(".")
 
 	start_irqs()
 	kterm:print(" KBD, PIC started. ")
@@ -163,8 +197,16 @@ function() start_irqs -> void does
 	#                         |- Enable IRQ1 (0x21 after translation) for keyboard
 return
 
-function() __irq_keyboard_handler -> void does
+function(int cr2, int exception_id, int errorcode) kirq_callback -> void does
+	IRQHandler h = idt.handlers:get(exception_id)
+	if (h|ptr|int)==0 do
+		kpanic(errorcode, exception_id, "No handler for IRQ", "A unregistered IRQ was fired (unhandled IRQ)")
+	done
+	h(0|ptr|IRQRegs, errorcode, cr2)
 	write_port(0x20, 0x20)
+return
+
+function(IRQRegs regs, int errorcode, int cr2) irq_keyboard_handler -> void does
 	int status = read_port(0x64)
 	if (status&1) > 0 do
 		int value = read_port(0x60)
@@ -173,19 +215,22 @@ function() __irq_keyboard_handler -> void does
 	done
 return
 
-function(int addr, int errorcode) __irq_pagefault_handler -> void does
-	kpanic(errorcode, addr, "Unrecoverable Page Fault Error - INT 0x0E - #PF", "???")
+function(IRQRegs regs, int errorcode, int cr2) irq_pagefault_handler -> void does
+	kpanic(errorcode, cr2, "Unrecoverable Page Fault Error - INT 0x0E - #PF", "???")
 return
 
-function(int addr, int errorcode) __irq_protectionfault_handler -> void does
-	kpanic(errorcode, addr, "Unrecoverable Page Fault Error - INT 0x0D - #GPF", "???")
+function(IRQRegs regs, int errorcode, int cr2) irq_protectionfault_handler -> void does
+	kpanic(errorcode, cr2, "Unrecoverable Page Fault Error - INT 0x0D - #GPF", "???")
 return
 
-function(int addr, int errorcode) __irq_doublefault_handler -> void does
-	kpanic(errorcode, addr, "Unrecoverable Double Fault Error - INT 0x08 - #DF", "???")
+function(IRQRegs regs, int errorcode, int cr2) irq_doublefault_handler -> void does
+	kpanic(errorcode, cr2, "Unrecoverable Double Fault Error - INT 0x08 - #DF", "???")
 return
 
-function() __irq_timer_handler -> void does
+function(IRQRegs regs, int errorcode, int cr2) irq_zerodivision_handler -> void does
+	kpanic(errorcode, cr2, "Unrecoverable Zero Division Error - INT 0x00 - #DBZ", "Why would you do that?")
+return
+
+function(IRQRegs regs, int errorcode, int cr2) irq_timer_handler -> void does
 	pic_ticks+=1|long
-	write_port(0x20, 0x20)
 return

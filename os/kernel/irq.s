@@ -128,12 +128,17 @@ irq35:
 
 extern kirq_callback
 irqh_main:
+	pushad
+	push dword [esp+36] ;error code
+	push dword [esp+36] ;irq id
 	mov eax, cr2
-	push eax
+	push dword eax ;cr2
 	call kirq_callback
 	pop eax
 	pop eax
 	pop eax
+	popad
+	add esp, 8 ;remove args
 	iret
 
 internal_irqh_table:

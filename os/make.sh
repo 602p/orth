@@ -11,7 +11,7 @@ nasm -f elf irq.s -o irq.o
 orthc kernel.ort _ nolink nobuild
 llc out.ll -march=x86
 i686-elf-as out.s -o kernel.o
-i686-elf-gcc -T linker.ld -o louos.bin -ffreestanding -O2 -nostdlib boot.o irq.o kernel.o -lgcc
+i686-elf-gcc -T linker.ld -o louos.bin -ffreestanding -O2 -nostdlib boot.o irq.o kernel.o -lgcc -mno-red-zone
 cd ..
 cp kernel/louos.bin isodir/boot/louos.bin
 cp grub.cfg isodir/boot/grub/grub.cfg

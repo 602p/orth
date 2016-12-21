@@ -2,11 +2,10 @@
 set -e
 export PATH="$PATH:$HOME/Documents/gcc-i686/builddir/bin:$HOME/Documents/orth/compiler"
 
-nasm -f elf strap.s -o strap.o
-orthc module.ort _ nolink nobuild
-llc out.ll -march=x86 -relocation-model=pic
+orthc module.ort _ nolink nobuild no0double
+llc out.ll -march=x86
 i686-elf-as out.s -o mod.o
 
-i686-elf-gcc -T link.ld -o mod.bin -ffreestanding -O2 -nostdlib strap.o mod.o -lgcc -fPIC
+i686-elf-gcc -o mod.bin -T linker.ld  -ffreestanding -nostdlib mod.o -lgcc -fPIE -Wl,-R ../../isodir/boot/louos.bin
 
 cp mod.bin ../../isodir/boot/test.bin

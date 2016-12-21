@@ -17,6 +17,7 @@ cp kernel/louos.bin isodir/boot/louos.bin
 cp grub.cfg isodir/boot/grub/grub.cfg
 cp modules/testimage* isodir/boot/
 grub-mkrescue -o louos.iso isodir
+false
 rm kernel/out.s
 rm kernel/out.ll
 rm kernel/kernel.o

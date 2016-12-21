@@ -51,7 +51,7 @@ class Emitter:
 			if traceback: return
 			del self.emitter.scopes.maps[0]
 
-	def __init__(self, fd):
+	def __init__(self, fd, options):
 		#Construct an emitter, outputting to the file fd
 		self.fd=fd
 		self.indent_context_manager=Emitter._IndentContext(self)
@@ -79,6 +79,7 @@ class Emitter:
 		self.last_line=-1 #Debug helper
 		self.last_file=-1 #Debug helper
 		self.last_method=-1 #Debug helper
+		self.options=options
 
 		#Same idea as the context maps. Provides a stack of orth_var_name:Variable
 		# mappings that (as a virtue of being a stack) respects local declarations over
@@ -96,7 +97,8 @@ class Emitter:
 		self.types=copy.copy(datamodel.builtin_types) #Dictionary of orth_type_name:OTypes of the types availible (globally)
 								#in the program
 		self.searchpath=["."] #Search path for imported modules (using import name, as opposed to import "relative_path")
-		self.emitl("@_the_zero_double = global double 0.0")
+		if not options.get("no0double", False):
+			self.emitl("@_the_zero_double = global double 0.0")
 
 	def emit(self, text):
 		self.fd.write(text)

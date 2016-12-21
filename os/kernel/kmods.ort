@@ -1,0 +1,66 @@
+import mbdata
+
+type ModuleEntry is a function->int
+
+type KMIntBox is packed
+	int o
+endtype
+
+type KModule is packed
+	byte magic_0x7f
+	byte magic_E
+	byte magic_L
+	byte magic_F
+	byte bits
+
+	function(KModule e) KModule:get_entry -> ModuleEntry does
+	return (e|ptr):offset(0x1000+((e|ptr):offset(24)|KMIntBox).o)|ModuleEntry
+endtype
+
+function(cstr msg) km_print -> void does
+	kterm:print("[KMOD]: ")
+	kterm:printl(msg)
+return
+
+function() km_rep -> void does
+	kterm:printl("[MODULE REPORTED]")
+return
+
+function(int i) km_printi -> void does
+	kterm:print("[MOD_I]:")
+	kterm:printi(i)
+	kterm:print("\n")
+return
+
+type PrintType is a function->void
+function(cstr modname) km_invoke -> void does
+	MultibootModuleInfo mod = mbinfo:get_mod_by_args(modname)
+	KModule kmod = mod.contents|KModule
+	ModuleEntry entry= kmod:get_entry()
+
+	kterm:print("\nModule@=")
+	kterm:dumphexi(kmod|ptr|int)
+	kterm:print(" Magic:")
+	kterm:putchar(kmod.magic_E)
+	kterm:putchar(kmod.magic_L)
+	kterm:putchar(kmod.magic_F)
+	if kmod.bits==1|byte do
+		kterm:print(" 32b")
+	else do
+		kterm:print(" 64b!")
+	done
+	kterm:print(" Entry=")
+	kterm:dumphexi(entry|ptr|int)
+
+	(0xC0106FF0|ptr|PrintType)()
+
+	kterm:print(" km_rep=")
+	kterm:dumphexi(km_rep|ptr|int)
+	kterm:print("\nInvoking...")
+	int res = entry(km_printi)
+	kterm:print(" Module return=")
+	kterm:dumphexi(res)
+	kterm:print(" delta=")
+	kterm:printi(res-km_rep|ptr|int)
+	kterm:print("\n")
+return

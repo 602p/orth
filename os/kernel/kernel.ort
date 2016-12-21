@@ -16,6 +16,7 @@ import vgatest
 import gfxterm
 
 import paging
+import kmods
 
 MultibootInfo mbinfo
 
@@ -152,7 +153,10 @@ function(ptr multiboot_struct_addr) kernel_main -> void does
 	done
 
 	init_keymap()
-	kterm:print("\n\nREADY")
+
+	km_invoke("kmtest")
+
+	kterm:print("READY")
 
 	kconsole_run()
 return

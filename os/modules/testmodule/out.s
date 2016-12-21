@@ -1,31 +1,36 @@
 	.text
 	.file	"out.ll"
+	.globl	foo
+	.align	16, 0x90
+	.type	foo,@function
+foo:                                    # @foo
+	.cfi_startproc
+# BB#0:
+	retl
+.Ltmp0:
+	.size	foo, .Ltmp0-foo
+	.cfi_endproc
+
 	.globl	mod_entry
 	.align	16, 0x90
 	.type	mod_entry,@function
 mod_entry:                              # @mod_entry
 	.cfi_startproc
 # BB#0:
-	pushl	%eax
-.Ltmp0:
-	.cfi_def_cfa_offset 8
-	movl	$3, (%esp)
-	movl	$7, (%esp)
-	movl	$10, (%esp)
-	movl	$10, %eax
-	popl	%edx
-	retl
+	subl	$12, %esp
 .Ltmp1:
-	.size	mod_entry, .Ltmp1-mod_entry
+	.cfi_def_cfa_offset 16
+	movl	16(%esp), %eax
+	movl	%eax, 8(%esp)
+	movl	$3, (%esp)
+	calll	*%eax
+	calll	foo
+	xorl	%eax, %eax
+	addl	$12, %esp
+	retl
+.Ltmp2:
+	.size	mod_entry, .Ltmp2-mod_entry
 	.cfi_endproc
-
-	.type	_the_zero_double,@object # @_the_zero_double
-	.bss
-	.globl	_the_zero_double
-	.align	8
-_the_zero_double:
-	.quad	0                       # double 0
-	.size	_the_zero_double, 8
 
 
 	.section	".note.GNU-stack","",@progbits

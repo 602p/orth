@@ -1,6 +1,11 @@
+@declare_func("km_printi", "void", "(i32)")@
 
-function() mod_entry -> int does
-	int a = 3
-	a+=4
-	a+=3
-return a
+type PrintType is a function->void
+
+function() foo -> void does
+return
+
+function(PrintType t) mod_entry -> int does
+	t(3)
+	foo()
+return 0

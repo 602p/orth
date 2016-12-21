@@ -48,6 +48,16 @@ function(cstr args) kc_draw_bmp -> void does
 	done
 
 	BMPImage img = mod.contents|BMPImage
+
+	if img.magic_B!="B":ord()|byte do
+		kterm:printl("Not a BMP ([0]!=B)")
+		return
+	done
+
+	if img.magic_M!="M":ord()|byte do
+		kterm:printl("Not a BMP ([0]!=M)")
+		return
+	done
 	
 	if img.compression!=0 do
 		kterm:printl("Don't know how to handle compressed BMPs")

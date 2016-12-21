@@ -10468,14 +10468,10 @@ kernel_main:                            # @kernel_main
 	jl	.LBB166_16
 .LBB166_17:                             # %fin_mkernel_main_l149_n7260___LOOP___END
 	calll	init_keymap
-	subl	$16, %esp
-	movl	$.Lstrglobal_fin_mkernel_main_l156_n7280, (%esp)
-	calll	km_invoke
-	addl	$16, %esp
 	movl	gvar_fin_mu_lu_n8__kterm, %eax
 	subl	$16, %esp
 	movl	%eax, (%esp)
-	movl	$.Lstrglobal_fin_mkernel_main_l158_n7285, 4(%esp)
+	movl	$.Lstrglobal_fin_mkernel_main_l156_n7280, 4(%esp)
 	calll	Terminal$print
 	addl	$16, %esp
 	calll	kconsole_run
@@ -12357,13 +12353,8 @@ gvar_fin_mu_lu_n19__mbinfo:
 
 	.type	.Lstrglobal_fin_mkernel_main_l156_n7280,@object # @strglobal_fin_mkernel_main_l156_n7280
 .Lstrglobal_fin_mkernel_main_l156_n7280:
-	.asciz	"kmtest"
-	.size	.Lstrglobal_fin_mkernel_main_l156_n7280, 7
-
-	.type	.Lstrglobal_fin_mkernel_main_l158_n7285,@object # @strglobal_fin_mkernel_main_l158_n7285
-.Lstrglobal_fin_mkernel_main_l158_n7285:
-	.asciz	"READY"
-	.size	.Lstrglobal_fin_mkernel_main_l158_n7285, 6
+	.asciz	"\n\nREADY"
+	.size	.Lstrglobal_fin_mkernel_main_l156_n7280, 8
 
 
 	.section	".note.GNU-stack","",@progbits

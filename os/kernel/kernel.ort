@@ -154,9 +154,7 @@ function(ptr multiboot_struct_addr) kernel_main -> void does
 
 	init_keymap()
 
-	km_invoke("kmtest")
-
-	kterm:print("READY")
+	kterm:print("\n\nREADY")
 
 	kconsole_run()
 return

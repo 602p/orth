@@ -16,7 +16,7 @@ import vgatest
 import gfxterm
 
 import paging
-import kmods
+#import thunk
 
 MultibootInfo mbinfo
 
@@ -27,7 +27,7 @@ function(ptr multiboot_struct_addr) kernel_main -> void does
 	init_serial()
 	kswritecstr("Kernel debugger check!\n")
 
-	KMM::init(base_vma+0x200000) #(Hopefully) skip past all the multiboot data we care about
+	KMM::init(base_vma+0x300000) #(Hopefully) skip past all the multiboot data we care about
 	mbinfo = MultibootInfo::load(multiboot_struct_addr)
 	init_pm() #Early PM init so we can page the screen
 
@@ -155,6 +155,8 @@ function(ptr multiboot_struct_addr) kernel_main -> void does
 	init_keymap()
 
 	kterm:print("\n\nREADY")
+
+	#test_thunk()
 
 	kconsole_run()
 return

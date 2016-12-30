@@ -1,0 +1,5 @@
+@declare_func("__kdo_thunk", "void", "()")@
+
+function() test_thunk -> void does
+	__kdo_thunk()
+return

@@ -8,6 +8,7 @@ export PATH="$PATH:$HOME/Documents/gcc-i686/builddir/bin:$HOME/Documents/orth/co
 cd kernel
 nasm -f elf boot.s -o boot.o
 nasm -f elf irq.s -o irq.o
+nasm -f elf thunk.s -o thunk.o
 orthc kernel.ort _ nolink nobuild
 llc out.ll -march=x86
 i686-elf-as out.s -o kernel.o

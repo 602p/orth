@@ -61,6 +61,8 @@ return
 function(float r) r2d -> float does
 return r*57.324840764331206
 
+bool rc_running
+
 function(cstr args) rc_run -> void does
 	ptr map = get_map()|ptr
 	int map_width=get_map_w()
@@ -98,8 +100,6 @@ function(cstr args) rc_run -> void does
 
 	Framebuffer sysbuf=Framebuffer::from_mbinfo(mbinfo)
 
-
-
 	int mapX
 	int mapY
 
@@ -125,12 +125,16 @@ function(cstr args) rc_run -> void does
 
 	long wait
 
-	system_kbdstate:set_handler(_rc_null_handler|KeyboardConsumerCallback)
+	TerminalUpdateHook old_tuh=kterm.update_hook
+
+	system_kbdstate:set_handler(_rc_handler|KeyboardConsumerCallback)
 	kterm.update_hook=_rc_term_null_handler|TerminalUpdateHook
 
 	RCRotState new
 
-	while 1==1 do
+	rc_running = 1|bool
+
+	while rc_running do
 		
 		buf:fill(0,0,0)
 
@@ -236,9 +240,14 @@ function(cstr args) rc_run -> void does
 
   		sysbuf:copyfrom(buf)
 	done
+
+	kterm.update_hook=old_tuh
 return
 
-function(uint scancode, bool state) _rc_null_handler -> void does
+function(uint scancode, bool state) _rc_handler -> void does
+	if (scancode==16):or(scancode==27) do #q, or ESC
+  		rc_running=0|bool
+  	done
 return
 
 function() _rc_term_null_handler -> void does

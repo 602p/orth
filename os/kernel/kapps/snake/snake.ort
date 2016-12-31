@@ -100,6 +100,61 @@ type Snake is
 
 		last._next=Segment::new(last.x, last.y)
 	return
+
+	function(Snake s, int x, int y) Snake:contains -> bool does
+		Segment curr = s.head
+		while curr._next|ptr|int!=0 do
+			if curr.x==x do
+				if curr.y==y do
+					return 1|bool
+				done
+			done
+			curr=curr._next
+		done
+	return 0|bool
+endtype
+
+type Food is
+	int x
+	int y
+	int bound_w
+	int bound_h
+
+	function(int bound_w, int bound_h) Food::new -> Food does
+		Food new = malloc(@sizeof(Food)@)|Food
+		new.bound_h=bound_h
+		new.bound_w=bound_w
+	return new
+
+	function(Food f, Snake snake) Food:gen_pos -> void does
+		f.x=s_randint(1,f.bound_w-1)
+		f.y=s_randint(1,f.bound_h-1)
+
+		while snake:contains(f.x, f.y) do
+			f.x=s_randint(1,f.bound_w-1)
+			f.y=s_randint(1,f.bound_h-1)
+		done
+	return
+
+	function(Food f, Framebuffer screen) Food:draw -> void does
+		screen:fillrect(f.x*16, f.y*16, 16, 16, 255, 0, 0)
+	return
+
+	function(Food f, Framebuffer screen) Food:clear -> void does
+		screen:fillrect(f.x*16, f.y*16, 16, 16, 0, 0, 0)
+	return
+
+	function(Food f, Framebuffer screen, Snake snake) Food:create_new -> void does
+		f:clear(screen)
+		f:gen_pos(snake)
+		f:draw(screen)
+	return
+
+	function(Food f, Snake s) Food:eaten -> bool does
+		if f.x==s.head.x do
+			return f.y==s.head.y
+		done
+	return 0|bool
 endtype
 
 bool snake_running
@@ -134,9 +189,8 @@ function(cstr args) snake_run -> void does
 		kterm:printl("Height truncated to 32")
 	done
 
-	int food_x = s_randint(1, width-1)
-	int food_y = s_randint(1, height-1)
-	screen:fillrect(food_x*16, food_y*16, 16, 16, 255, 0, 0)
+	Food food = Food::new(width, height)
+	food:create_new(screen, snake)
 
 	screen:fillrect(width*16, 0, mbinfo.screen_w-(width*16), mbinfo.screen_h, 255, 255, 255)
 	screen:fillrect(0, height*16, mbinfo.screen_w, mbinfo.screen_h-(height*16), 255, 255, 255)
@@ -178,15 +232,10 @@ function(cstr args) snake_run -> void does
   			done
   		done
 
-  		if snake.head.x==food_x do
-  			if snake.head.y==food_y do
-  				snake:grow()
-  				screen:fillrect(food_x*16, food_y*16, 16, 16, 0, 0, 0)
-  				food_x = s_randint(1, width-1)
-				food_y = s_randint(1, height-1)
-				screen:fillrect(food_x*16, food_y*16, 16, 16, 255, 0, 0)
-				score+=1
-			done
+  		if food:eaten(snake) do
+			snake:grow()
+			food:create_new(screen, snake)
+			score+=1
 		done
 	done
 

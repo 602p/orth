@@ -100,3 +100,5 @@ os/*.iso
 bochslog.txt
 orthc.prof
 serial.log
+louos.bin
+out.s

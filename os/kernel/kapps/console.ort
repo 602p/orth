@@ -2,6 +2,8 @@ import "kapps/util.ort"
 import "mbdata.ort"
 import "kapps/raycaster/raycaster.ort"
 import "kapps/drawbmp.ort"
+import "kapps/snake/rng.ort"
+import "kapps/snake/snake.ort"
 
 type KConsoleCommandRunner is a function->void
 type KConsoleCommand is
@@ -302,6 +304,8 @@ function() kconsole_run -> void does
 	add_cmd("rcmtest", "Test some trig", rc_mtest|KConsoleCommandRunner)
 	add_cmd("rc", "Raycaster", rc_run|KConsoleCommandRunner)
 	add_cmd("drawbmp", "Draw a BMP that was loaded as a kernel module", kc_draw_bmp|KConsoleCommandRunner)
+	add_cmd("rng", "Emit some (bad) random numbers", s_rngtest|KConsoleCommandRunner)
+	add_cmd("snake", "Play Snake!", snake_run|KConsoleCommandRunner)
 
 	console_buf=KeyboardBuf::new(1024, kterm, console_submit|SubmitCallback)
 	command_to_run=0|ptr|KConsoleCommand

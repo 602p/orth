@@ -47,6 +47,17 @@ function(ptr source, ptr dest, int len) memcpy -> void does
 	done
 return
 
+type __i32Box is packed
+	int i
+endtype
+
+function(ptr source, ptr dest, int len) memcpy32 -> void does
+	while len>=4 do
+		(dest:offset(len)|__i32Box).i=(source:offset(len)|__i32Box).i
+		len-=4
+	done
+return
+
 function(ptr p, int amt) ptr:offset -> ptr does
 return ((p|int)+amt)|ptr
 

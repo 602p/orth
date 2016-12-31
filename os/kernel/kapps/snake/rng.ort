@@ -1,0 +1,69 @@
+
+short s_lfsr_state
+
+function() s_lfsr_next -> int does
+	short bit = ((s_lfsr_state>>0|short):xor(s_lfsr_state>>2|short):xor(s_lfsr_state>>3|short):xor(s_lfsr_state>>5|short)) & 1|short
+	s_lfsr_state = (s_lfsr_state>>1|short)
+	if (((s_lfsr_state&(1<<15)|short)|short)==0|short):and(bit!=0|short) do
+		s_lfsr_state+=(1<<15)|short
+	done
+return s_lfsr_state|int
+
+function(int seed) s_lfsr_seed -> void does
+	s_lfsr_state=seed|short
+return
+
+function() s_lfsr_seed_time -> void does
+	long t = pic_ticks+20|long
+	int i=0
+	while pic_ticks<t do
+		i+=1
+	done
+	s_lfsr_seed(i)
+return
+
+function(int min, int max) s_randint -> int does
+return min+((max-min)|float*(s_lfsr_next()|float/(2:pow(16))|float))|int
+
+function(cstr args) s_rngtest -> void does
+	kterm:print("Seeding...")
+	s_lfsr_seed_time()
+	kterm:print(" [done, =")
+	kterm:printi(s_lfsr_state|int)
+	kterm:print("]")
+
+	int start = s_lfsr_state|int
+
+	kterm:print("\nCalculating period... ")
+	int p=0
+	while (s_lfsr_next()!=start):and(p<10000) do
+		0
+		p+=1
+	done
+	kterm:printi(p)
+	if p==10000 do
+		kterm:print(" (stopped)")
+	done
+
+	kterm:print("\n Range 0-2^16:")
+	
+	int i = 0
+	int c
+	while i<10 do
+		kterm:print("\n - ")
+		c=s_lfsr_next()
+		kterm:printi(c)
+		kterm:print(" -> ")
+		kterm:dumpbin(c)
+		i+=1
+	done
+
+	kterm:print("\n Range 1-10:")
+
+	i = 0
+	while i<10 do
+		kterm:print("\n - ")
+		kterm:printi(s_randint(1, 10))
+		i+=1
+	done
+return

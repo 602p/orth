@@ -56,3 +56,53 @@ function(bool a, bool b) bool:or -> bool does
 		return a
 	done
 return b
+
+function(bool a, bool b) bool:and -> bool does
+	if a do
+		if b do
+			return a
+		done
+	done
+return 0|bool
+
+function(int n, int p) int:pow -> int does
+	if p==0 do
+		return 1
+	done
+	int r=n
+	while p>1 do
+		p-=1
+		r*=n
+	done
+return r
+
+function(short n, short p) short:pow -> short does
+	if p==0|short do
+		return 1|short
+	done
+	short r=n
+	while p>1|short do
+		p-=1|short
+		r*=n
+	done
+return r
+
+function(short s) short:b -> bool does
+return (s!=0|short)
+
+function(short s, short o) short:xor -> short does
+	short i = 0|short
+	short out = 0|short
+	while i<16|short do
+		if (s&(1|short<<i)):b() do
+			if (o&(1|short<<i))==0|short do
+				out+=(1|short<<i)
+			done
+		else do
+			if (o&(1|short<<i)):b() do
+				out+=(1|short<<i)
+			done
+		done
+		i+=1|short
+	done
+return out

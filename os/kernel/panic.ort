@@ -12,6 +12,7 @@
 @declare_func("__khalt", "void", "()")@
 
 function(int errorcode, int addr, cstr type, cstr message) kpanic -> void does
+	kterm.update_hook=_update_framebuffer|TerminalUpdateHook
 	kterm:bsod()
 	kterm:printl("********************************************************************************")
 	kterm:printl("                             THOUSANDER MEDITATION")

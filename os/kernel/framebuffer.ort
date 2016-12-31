@@ -86,6 +86,6 @@ type Framebuffer is
 	return
 
 	function(Framebuffer me, Framebuffer other) Framebuffer:copyfrom -> void does
-		memcpy(other.buf, me.buf, me.h*me.stride)
+		memcpy32(other.buf, me.buf, me.h*me.stride)
 	return
 endtype

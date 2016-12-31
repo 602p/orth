@@ -1,0 +1,208 @@
+import framebuffer
+import "kapps/snake/rng.ort"
+import mm
+
+type Segment is
+	int x
+	int y
+	Segment _next
+
+	function(int x, int y) Segment::new -> Segment does
+		Segment new = malloc(@sizeof(Segment)@)|Segment
+		new.x=x
+		new.y=y
+		new._next=0|ptr|Segment
+	return new
+
+	function(Segment s) Segment:has_next -> bool does
+	return s._next|ptr|int!=0
+
+	function(Segment s, Framebuffer screen, bool head) Segment:draw -> void does
+		screen:fillrect(s.x*16, s.y*16, 16, 16, 0, 255, 255*head|int)
+
+		if s:has_next() do
+			s._next:draw(screen, 0|bool)
+		done
+	return
+
+	function(Segment s, Framebuffer screen) Segment:clear -> void does
+		screen:fillrect(s.x*16, s.y*16, 16, 16, 0, 0, 0)
+	return
+endtype
+
+type Snake is
+	Segment head
+	int direction #0=up, 1=down, 2=left, 3=right
+
+	function() Snake::new -> Snake does
+		Snake new = malloc(@sizeof(Snake)@)|Snake
+		new.head=Segment::new(5,5)
+		new.head._next=Segment::new(5,4)
+		new.direction=3
+	return new
+
+	function(Snake s, Framebuffer screen) Snake:draw -> void does
+		s.head:draw(screen, 1|bool)
+	return
+
+	function(Snake s, Framebuffer screen) Snake:update -> bool does
+		int new_x=s.head.x
+		int new_y=s.head.y
+
+		Segment second_to_last = s.head
+		while second_to_last._next._next|ptr|int!=0 do
+			second_to_last=second_to_last._next
+		done
+
+		second_to_last._next:clear(screen)
+
+		second_to_last._next._next=s.head
+		s.head=second_to_last._next
+		second_to_last._next=0|ptr|Segment
+
+		if s.direction==0 do
+			new_y-=1
+		elif s.direction==1 do
+			new_y+=1
+		elif s.direction==2 do
+			new_x-=1
+		else do
+			new_x+=1
+		done
+
+		s.head.x=new_x
+		s.head.y=new_y
+
+		if s.head.x<0 do
+			return 1|bool
+		elif s.head.y<0 do
+			return 1|bool
+		done
+
+		Segment curr = s.head
+		while curr._next|ptr|int != 0 do
+			curr=curr._next
+			if curr.x==s.head.x do
+				if curr.y==s.head.y do
+					return 1|bool
+				done
+			done
+		done
+
+		s:draw(screen)
+	return 0|bool
+
+	function(Snake s) Snake:grow -> void does
+		Segment last = s.head
+		while last._next|ptr|int!=0 do
+			last=last._next
+		done
+
+		last._next=Segment::new(last.x, last.y)
+	return
+endtype
+
+bool snake_running
+function(cstr args) snake_run -> void does
+	kterm:printl("Starting RNG...")
+	s_lfsr_seed_time()
+
+	Snake snake = Snake::new()
+
+	Framebuffer screen=Framebuffer::from_mbinfo(mbinfo)
+	screen:fill(0,0,0)
+
+	TerminalUpdateHook old_tuh=kterm.update_hook
+
+	system_kbdstate:set_handler(_snake_handler|KeyboardConsumerCallback)
+	kterm.update_hook=_snake_term_null_handler|TerminalUpdateHook
+
+	snake_running=1|bool
+
+	long targ_ticks
+
+	int width=mbinfo.screen_w/16
+	int height=mbinfo.screen_h/16
+
+	if width>32 do
+		width=32
+		kterm:printl("Width truncated to 32")
+	done
+
+	if height>32 do
+		height=32
+		kterm:printl("Height truncated to 32")
+	done
+
+	int food_x = s_randint(1, width-1)
+	int food_y = s_randint(1, height-1)
+	screen:fillrect(food_x*16, food_y*16, 16, 16, 255, 0, 0)
+
+	screen:fillrect(width*16, 0, mbinfo.screen_w-(width*16), mbinfo.screen_h, 255, 255, 255)
+	screen:fillrect(0, height*16, mbinfo.screen_w, mbinfo.screen_h-(height*16), 255, 255, 255)
+
+	int score = 0
+
+	while snake_running do
+		targ_ticks=pic_ticks+1|long
+		while targ_ticks>pic_ticks do
+			0
+		done
+
+		if snake:update(screen) do
+			snake_running=0|bool
+		done
+
+
+		if snake.head.x>=width do
+			snake_running=0|bool
+		elif snake.head.y>=height do
+			snake_running=0|bool
+		done
+
+		if system_kbdstate:getkey(72) do #UP
+			if snake.direction!=1 do
+  				snake.direction=0
+  			done
+  		elif system_kbdstate:getkey(80) do #DOWN
+  			if snake.direction!=0 do
+  				snake.direction=1
+  			done
+		elif system_kbdstate:getkey(75) do #LEFT
+			if snake.direction!=3 do
+  				snake.direction=2
+  			done
+  		elif system_kbdstate:getkey(77) do #RIGHT
+  			if snake.direction!=2 do
+  				snake.direction=3
+  			done
+  		done
+
+  		if snake.head.x==food_x do
+  			if snake.head.y==food_y do
+  				snake:grow()
+  				screen:fillrect(food_x*16, food_y*16, 16, 16, 0, 0, 0)
+  				food_x = s_randint(1, width-1)
+				food_y = s_randint(1, height-1)
+				screen:fillrect(food_x*16, food_y*16, 16, 16, 255, 0, 0)
+				score+=1
+			done
+		done
+	done
+
+	kterm.update_hook=old_tuh
+
+	kterm:blank()
+	kterm:printl("Game Over!")
+	kterm:print("Your Score is ")
+	kterm:printi(score)
+return
+
+function(uint scancode, bool state) _snake_handler -> void does
+	if (scancode==16):or(scancode==27) do #q, or ESC
+  		snake_running=0|bool
+  	done
+return
+
+function() _snake_term_null_handler -> void does
+return

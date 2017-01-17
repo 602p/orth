@@ -33,7 +33,8 @@ import transform, transformer, datamodel
 print("\rTransforming...                       \n", end="")
 with open("out.ll", 'w') as fd:
 	e=transform.Emitter(fd,{
-		"no0double":"no0double" in sys.argv
+		"no0double":"no0double" in sys.argv,
+		"path":sys.path+["."]
 	})
 	with e.scope():
 		with e.context(file="in"):

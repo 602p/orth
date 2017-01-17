@@ -99,6 +99,8 @@ class Emitter:
 		self.searchpath=["."] #Search path for imported modules (using import name, as opposed to import "relative_path")
 		if not options.get("no0double", False):
 			self.emitl("@_the_zero_double = global double 0.0")
+		if "path" in options:
+			self.searchpath=options["path"]
 
 	def emit(self, text):
 		self.fd.write(text)
@@ -283,7 +285,7 @@ def resolve_import(import_node, out):
 		raise ImportError("No module `%s' found on search path"%import_node.identifier)
 
 def sanitize_fn(fn):
-	return fn.replace(".ort","").replace("/","").replace(".","").replace("\\","")
+	return fn.strip().replace(".ort","").replace("/","").replace(".","").replace("\\","").replace(" ","")
 
 def ret_local(fn):
 	#Wrap a transform or transform_addres function that returns the name of a local SSA ariable

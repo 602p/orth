@@ -1,5 +1,4 @@
 #!/bin/bash
 
-python orthc "$1" nobuild nolink
-/cygdrive/c/Program\ Files\ \(x86\)/LLVM/bin/clang ./out.ll
-mv a.out out
+orthc "$1" nobuild nolink
+/cygdrive/c/Program\ Files\ \(x86\)/LLVM/bin/clang ./out.ll -o out

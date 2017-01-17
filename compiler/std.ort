@@ -1,13 +1,16 @@
 @declare_c_func("printf", "int", "(...)")@
+@declare_c_func("puts", "int", "(i8*)")@
 @declare_c_func("sprintf", "int", "(...)")@
 @declare_c_func("scanf", "int", "(...)")@
 @declare_c_func("malloc", "ptr", "(i32)")@
 @declare_c_func("strcat", "cstr", "(i8*, i8*)")@
 @declare_c_func("strcpy", "cstr", "(i8*, i8*)")@
+@declare_c_func("strncpy", "void", "(i8*, i8*, i32)")@
 @declare_c_func("strlen", "int", "(i8*)")@
 @declare_c_func("atoi", "int", "(i8*)")@
 @declare_c_func("strcmp", "int", "(i8*, i8*)")@
 @declare_c_func("free", "int", "(...)")@
+@declare_c_func("exit", "int", "(i32)")@
 
 function(cstr a, cstr b) cstr:__add__ -> cstr does
 	cstr result = malloc(strlen(a)+strlen(b)+1)
@@ -36,6 +39,18 @@ return
 function(cstr s) cstr:int -> int does
 return atoi(s)
 
+function(cstr s) cstr:len -> int does
+return strlen(s)
+
+function(cstr s, int by) cstr:offset -> cstr does
+return ((s|int)+by)|cstr
+
+function(cstr s, int start, int len) cstr:substr -> cstr does
+	cstr res = malloc(len+1)|cstr
+	strncpy(res, s:offset(start), len)
+	res[len]=0|byte
+return res
+
 function(int i) int:str -> cstr does
 	cstr str = malloc(20)
 	sprintf(str, "%i", i)
@@ -53,3 +68,6 @@ function(cstr prompt) read_line -> cstr does
 	printf(prompt)
 	scanf("%s", result) #Horrible and unsafe
 return result
+
+function(ptr p, int by) ptr:offset -> ptr does
+return ((p|int)+by)|ptr

@@ -1,0 +1,12 @@
+@declare_c_func("getline", "int", "(i8*, i8*, i8*)")@
+@declare_c_func("_w_get_stdin", "ptr", "()")@
+
+function(cstr prompt) prompt_line -> cstr does
+	printf(prompt)
+	int sz=1024
+	cstr result=malloc(1024)
+	if getline(result||ptr, sz||ptr, _w_get_stdin())==-1 do
+		return ""
+	done
+	result[result:len()-1]=0|byte #Hack to remove the trailing newline
+return result

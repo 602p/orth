@@ -1,0 +1,35 @@
+import "re/regex.ort"
+import std
+import "util.ort"
+
+function() main -> int does
+	cstr pattern=prompt_line("Pattern: ")
+
+	REPattern matcher = re::compile(pattern)
+
+	cstr subject
+	cstr match
+
+	int run=1
+
+	printf("Submit subjects to test, of `QUIT` to quit\n")
+
+	while run==1 do
+		subject=prompt_line("Subject: ")
+		if subject=="QUIT" do
+			run=0
+			subject:free()
+		else do
+			if matcher:does_match(subject) do
+				match = matcher:match(subject)
+				printf("Matched: `%s`\n", match)
+				match:free()
+			else do
+				printf("No Match\n")
+			done
+		done
+		subject:free()
+	done
+
+	matcher:free()
+return 0

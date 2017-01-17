@@ -35,7 +35,8 @@ def process_intrinsic(out, text):
 	declare_func=declare_c_func #Not all externs are C
 
 	def declare_symbol(name, type):
-		out.set_var_name(name, name, datamodel.builtin_types[type])
+		out.set_var_name(name, "@"+name, datamodel.builtin_types[type])
+		out.add_global_stmt("@"+name+" = external global "+datamodel.builtin_types[type].get_llvm_representation())
 
 	def include(filename):
 		#OLD, DEPRECATED method to split projects, now use import <name> or import "<path>"

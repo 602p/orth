@@ -1,0 +1,5 @@
+#!/bin/bash
+
+orthc shoc.ort nobuild nolink
+clang -S out.ll
+gcc -L/usr/local/lib -I/usr/local/include re/headerstub.c headerstub.c out.s -lpcre2-8 -o out

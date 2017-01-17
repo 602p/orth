@@ -1,0 +1,35 @@
+import "re/llapi.ort"
+
+type REPattern is
+	#No actual fields, this _is_ the PCRE2 code object
+
+	function(cstr pattern, int flags) REPattern::compileEx -> REPattern does
+	return re::_llcompile(pattern, flags)|REPattern
+
+	function(cstr pattern) REPattern::compile -> REPattern does
+	return REPattern::compileEx(pattern, 0)
+
+	function(REPattern pattern, cstr str, int options) REPattern:matchEx -> cstr does
+	return re::_llmatch(pattern|ptr, str, options)
+
+	function(REPattern pattern, cstr str) REPattern:match -> cstr does
+	return pattern:matchEx(str, 0)
+
+	function(REPattern pattern, cstr str, int options) REPattern:does_matchEx -> bool does
+		cstr res = pattern:matchEx(str, options)
+		if res|int!=0 do
+			res:free()
+			return 1|bool
+		done
+	return 0|bool
+
+	function(REPattern pattern, cstr str) REPattern:does_match -> bool does
+	return pattern:does_matchEx(str, 0)
+
+	function(REPattern pattern) REPattern:free -> void does
+		re::_llfreepattern(pattern|ptr)
+	return
+endtype
+
+function(cstr pattern) re::compile -> REPattern does
+return REPattern::compile(pattern)

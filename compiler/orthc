@@ -34,7 +34,7 @@ print("\rTransforming...                       \n", end="")
 with open("out.ll", 'w') as fd:
 	e=transform.Emitter(fd,{
 		"no0double":"no0double" in sys.argv,
-		"path":sys.path+["."]
+		"path":sys.path+[".", os.path.join(os.path.join(os.path.dirname(os.path.realpath(__file__)), ".."), "lib")]
 	})
 	with e.scope():
 		with e.context(file="in"):

@@ -522,20 +522,22 @@ class ImportTransformer(Transformer):
 		)
 
 	def prepare(self, out):
-		filename=transform.sanitize_fn(transform.resolve_import(self.node, out))
+		path=transform.resolve_import(self.node, out)
+		filename=transform.sanitize_fn(path)
 		if filename in out.prepared_files:
 			out.emitl(";;;OMITTING INCLUDE `"+filename+"`, PREVIOUSLY INCLUDED")
 			return
 		out.prepared_files.append(filename)
 		
-		with out.context(file=filename):
+		with out.context(file=filename, path=path):
 			self.get_file_transformer(out).prepare(out)
 
 	def transform(self, out):
-		filename=transform.sanitize_fn(transform.resolve_import(self.node, out))
+		path=transform.resolve_import(self.node, out)
+		filename=transform.sanitize_fn(path)
 		self.prepare(out)
 		if filename not in out.included_files:
 			out.included_files.append(filename)
-			with out.context(file=filename):
+			with out.context(file=filename, path=path):
 				self.get_file_transformer(out).transform(out)
 			

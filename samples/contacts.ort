@@ -1,5 +1,5 @@
 import std
-import "samples/linkedlist.ort"
+import linkedlist
 
 type Record is
     cstr first

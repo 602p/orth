@@ -73,7 +73,8 @@ class Emitter:
 			"ns":"u",
 			"class":"u",
 			"method":"u",
-			"astblock":"u"
+			"astblock":"u",
+			"path":"./"
 		})
 		self.temp_count=0 #Number of temporary (for SSA) variables we've allocated
 		self.last_line=-1 #Debug helper
@@ -272,7 +273,7 @@ def call_func(name, argtypes, args, out):
 
 def resolve_import(import_node, out):
 	if import_node.absolute:
-		return import_node.identifier
+		return import_node.identifier.replace("$",os.path.dirname(out.context_map["path"]))
 	else:
 		if import_node.identifier in out.path_cache:
 			return out.path_cache[import_node.identifier]

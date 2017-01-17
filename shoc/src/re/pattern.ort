@@ -30,6 +30,3 @@ type REPattern is
 		re::_llfreepattern(pattern|ptr)
 	return
 endtype
-
-function(cstr pattern) re::compile -> REPattern does
-return REPattern::compile(pattern)

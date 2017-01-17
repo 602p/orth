@@ -1,6 +1,7 @@
-import "re/regex.ort"
 import std
-import "util.ort"
+
+import re
+import util
 
 function() main -> int does
 	REPattern pattern = re::compile(prompt_line("Pattern: "))

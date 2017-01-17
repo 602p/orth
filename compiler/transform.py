@@ -278,10 +278,15 @@ def resolve_import(import_node, out):
 			return out.path_cache[import_node.identifier]
 
 		for dir in out.searchpath:
-			if import_node.identifier+".ort" in os.listdir(dir):
-				result=os.path.join(dir, import_node.identifier+".ort")
-				out.path_cache[import_node.identifier]=result
-				return result
+			if os.path.isdir(dir):
+				if import_node.identifier+".ort" in os.listdir(dir):
+					result=os.path.join(dir, import_node.identifier+".ort")
+					out.path_cache[import_node.identifier]=result
+					return result
+				elif import_node.identifier in os.listdir(dir):
+					result=os.path.join(os.path.join(dir, import_node.identifier), "__init__.ort")
+					out.path_cache[import_node.identifier]=result
+					return result
 		raise ImportError("No module `%s' found on search path"%import_node.identifier)
 
 def sanitize_fn(fn):

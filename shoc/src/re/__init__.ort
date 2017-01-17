@@ -1,0 +1,5 @@
+import "re/llapi.ort"
+import "re/pattern.ort"
+
+function(cstr pattern) re::compile -> REPattern does
+return REPattern::compile(pattern)

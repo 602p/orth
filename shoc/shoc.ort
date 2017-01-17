@@ -16,7 +16,6 @@ function() main -> int does
 		subject=prompt_line("Subject: ")
 		if subject=="QUIT" do
 			run=0
-			subject:free()
 		else do
 			if pattern:does_match(subject) do
 				match = pattern:match(subject)

@@ -3,9 +3,7 @@ import std
 import "util.ort"
 
 function() main -> int does
-	cstr pattern=prompt_line("Pattern: ")
-
-	REPattern matcher = re::compile(pattern)
+	REPattern pattern = re::compile(prompt_line("Pattern: "))
 
 	cstr subject
 	cstr match
@@ -20,8 +18,8 @@ function() main -> int does
 			run=0
 			subject:free()
 		else do
-			if matcher:does_match(subject) do
-				match = matcher:match(subject)
+			if pattern:does_match(subject) do
+				match = pattern:match(subject)
 				printf("Matched: `%s`\n", match)
 				match:free()
 			else do
@@ -31,5 +29,5 @@ function() main -> int does
 		subject:free()
 	done
 
-	matcher:free()
+	pattern:free()
 return 0

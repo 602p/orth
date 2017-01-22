@@ -5,5 +5,5 @@ import util
 import fileio
 
 function() main -> int does
-	File::open("nutsack.txt", "w")
+	File::open("demo.txt", "w")
 return 0

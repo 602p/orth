@@ -1,0 +1,22 @@
+@declare_c_func("fopen", "ptr", "(i8*, i8*)")@
+
+type File is
+	cstr path
+	cstr mode
+	bool writable
+	ptr  _file
+
+	function(cstr path, cstr mode) File::open -> File does
+		File f = malloc(@sizeof(File)@)|File
+		f.writable = mode:contains("w")
+		f._file=fopen(path, mode)
+
+		if f._file|ptr|int==0 do
+			printf("***FATAL fileio/File::open error, fopen->0***\n")
+			exit(1)
+		done
+
+		f.mode=mode
+		f.path=path
+	return f
+endtype

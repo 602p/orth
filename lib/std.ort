@@ -9,6 +9,7 @@
 @declare_c_func("strlen", "int", "(i8*)")@
 @declare_c_func("atoi", "int", "(i8*)")@
 @declare_c_func("strcmp", "int", "(i8*, i8*)")@
+@declare_c_func("strncmp", "int", "(i8*, i8*, i32)")@
 @declare_c_func("free", "int", "(...)")@
 @declare_c_func("exit", "int", "(i32)")@
 
@@ -50,6 +51,19 @@ function(cstr s, int start, int len) cstr:substr -> cstr does
 	strncpy(res, s:offset(start), len)
 	res[len]=0|byte
 return res
+
+function(cstr s, cstr t) cstr:find -> int does
+	int pos = 0
+	while pos<s:len() do
+		if strncmp(t, s:offset(pos), t:len())==0 do
+			return pos
+		done
+		pos+=1
+	done
+return -1
+
+function(cstr s, cstr t) cstr:contains -> bool does
+return s:find(t)!=-1
 
 function(int i) int:str -> cstr does
 	cstr str = malloc(20)

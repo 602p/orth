@@ -2,32 +2,8 @@ import std
 
 import re
 import util
+import fileio
 
 function() main -> int does
-	REPattern pattern = re::compile(prompt_line("Pattern: "))
-
-	cstr subject
-	cstr match
-
-	int run=1
-
-	printf("Submit subjects to test, of `QUIT` to quit\n")
-
-	while run==1 do
-		subject=prompt_line("Subject: ")
-		if subject=="QUIT" do
-			run=0
-		else do
-			if pattern:does_match(subject) do
-				match = pattern:match(subject)
-				printf("Matched: `%s`\n", match)
-				match:free()
-			else do
-				printf("No Match\n")
-			done
-		done
-		subject:free()
-	done
-
-	pattern:free()
+	File::open("nutsack.txt", "w")
 return 0

@@ -1,9 +1,23 @@
 import std
-
-import re
-import util
 import fileio
 
 function() main -> int does
-	File::open("demo.txt", "w")
+	File f = File::open("src/shoc.ort", "r")
+	File o = File::open("copy.txt", "w")
+
+	o:writeln("This file should be a copy of shoc.ort\n\n")
+
+	cstr line
+	int lineno=0
+
+	while f:ready() do
+		line=f:readline()
+		lineno+=1
+		printf("%03i: %s", lineno, line)
+		o:write(line)
+		free(line)
+	done
+
+	f:free()
+	o:free()
 return 0

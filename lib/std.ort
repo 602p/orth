@@ -3,7 +3,9 @@
 @declare_c_func("sprintf", "int", "(...)")@
 @declare_c_func("scanf", "int", "(...)")@
 @declare_c_func("malloc", "ptr", "(i32)")@
+@declare_c_func("realloc", "ptr", "(i8*, i32)")@
 @declare_c_func("strcat", "cstr", "(i8*, i8*)")@
+@declare_c_func("memcpy", "void", "(i8*, i8*, i32)")@
 @declare_c_func("strcpy", "cstr", "(i8*, i8*)")@
 @declare_c_func("strncpy", "void", "(i8*, i8*, i32)")@
 @declare_c_func("strlen", "int", "(i8*)")@
@@ -85,3 +87,10 @@ return result
 
 function(ptr p, int by) ptr:offset -> ptr does
 return ((p|int)+by)|ptr
+
+function(cstr c) ord -> int does
+return c[0]|int
+
+function(cstr s) prints -> void does
+	printf("%s", s)
+return

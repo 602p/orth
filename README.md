@@ -28,7 +28,7 @@ type Person is
   return new
   
   function(Person self, int year) Person:get_age -> int does
-  retrun year - self.age
+  return year - self.age
 endtype
 
 function() main -> int does

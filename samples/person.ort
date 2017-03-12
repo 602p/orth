@@ -1,0 +1,22 @@
+import std
+
+type Person is
+  cstr first_name
+  cstr last_name
+  int age
+
+  function(cstr first, cstr last, int age) Person::new -> Person does
+    Person new = malloc(@sizeof(Person)@)|Person
+    new.first_name=first
+    new.last_name=last
+    new.age=age
+  return new
+
+  function(Person self, int year) Person:get_age -> int does
+  return year - self.age
+endtype
+
+function() main -> int does
+  Person bob = Person::new("Bob", "Spuser", 1942)
+  printf("%s %s is %i years old\n", bob.first_name, bob.last_name, bob:get_age(2016))
+return 0

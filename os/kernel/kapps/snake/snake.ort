@@ -124,6 +124,8 @@ type Food is
 		Food new = malloc(@sizeof(Food)@)|Food
 		new.bound_h=bound_h
 		new.bound_w=bound_w
+		new.x=0
+		new.y=0
 	return new
 
 	function(Food f, Snake snake) Food:gen_pos -> void does
@@ -190,7 +192,10 @@ function(cstr args) snake_run -> void does
 	done
 
 	Food food = Food::new(width, height)
+	
 	food:create_new(screen, snake)
+	
+	
 
 	screen:fillrect(width*16, 0, mbinfo.screen_w-(width*16), mbinfo.screen_h, 255, 255, 255)
 	screen:fillrect(0, height*16, mbinfo.screen_w, mbinfo.screen_h-(height*16), 255, 255, 255)

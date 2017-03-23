@@ -67,6 +67,12 @@ type Framebuffer is
 	function(Framebuffer e, int x, int y, int sz, int char, int r, int g, int b) Framebuffer:drawchar -> void does
 		int addr=(y*e.stride)+(x*e.depth)
 		ptr font=get_font()
+		if char>127 do
+			char=0
+		done
+		if char<0 do
+			char=0
+		done
 		int font_addr=(8*8)*char
 		byte YES="#":ord()|byte
 		int ypos=0

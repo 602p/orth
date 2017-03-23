@@ -52,7 +52,7 @@ with open("out.ll", 'w') as fd:
 				print("CONTEX: (most recent first)")
 				for map in e.context_map.maps:
 					print("\t"+str(map))
-				print("SIGNAT: ", e.signatures)
+				print("SIGNAT: ", e.signatures.keys())
 				print("INCLUD: ", e.included_files)
 				print("TYPES : ", end="")
 				for type in e.types.values():

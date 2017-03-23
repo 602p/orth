@@ -41,4 +41,6 @@ GoRMode:
 	mov gs, ax
 	mov ss, ax
 	lidt [idt_real]
+	thunk_stop_loop:
+	jmp thunk_stop_loop
 	sti			; Restore interrupts -- be careful, unhandled int's will kill it.

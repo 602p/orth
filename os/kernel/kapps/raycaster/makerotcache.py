@@ -23,7 +23,7 @@ return \"""")
 	planeX=0
 	planeY=0.66
 	frametime=0.054
-	rotSpeed=frametime*2
+	rotSpeed=frametime
 
 	for i in range(0,360):
 		f.write(makestr(dirX))

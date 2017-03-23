@@ -159,4 +159,5 @@ function(ptr multiboot_struct_addr) kernel_main -> void does
 	#test_thunk()
 
 	kconsole_run()
+	z+=1
 return

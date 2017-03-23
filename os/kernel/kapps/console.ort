@@ -270,6 +270,28 @@ function(cstr args) kc_drawcolors -> void does
 	done
 return
 
+function(cstr args) kc_chararama -> void does
+	int high=0
+	int low
+	kterm:printl("  0123456789ABCDEF (Low Byte)")
+	kterm:printl("")
+	while high<16 do
+		if high<10 do
+			kterm:putchar((48+high)|byte)
+		else do
+			kterm:putchar((65+high-10)|byte)
+		done
+		kterm:print(" ")
+		low=0
+		while low<16 do
+			kterm:putchar(((16*high)+low)|byte)
+			low+=1
+		done
+		kterm:printl("")
+		high+=1
+	done
+return
+
 function(cstr name, cstr desc, KConsoleCommandRunner cmd) add_cmd -> void does
 	KConsoleCommand cur = kcommand_head
 	while cur._next|ptr|int!=0 do
@@ -298,6 +320,7 @@ function() kconsole_run -> void does
 	add_cmd("shutdown", "Try to shut down", kc_shutdown|KConsoleCommandRunner)
 	add_cmd("color", "Set terminal color mode. Pass 2 hex digits, or no args to reset", kc_color|KConsoleCommandRunner)
 	add_cmd("colorama", "Demo availible colors", kc_colorama|KConsoleCommandRunner)
+	add_cmd("chararama", "Demo availible chars", kc_chararama|KConsoleCommandRunner)
 	add_cmd("snowcrash", "Dump kernel code into vram. *no getting out*", kc_snowcrash_code|KConsoleCommandRunner)
 	add_cmd("draw", "Draw some stuff", kc_drawstuff|KConsoleCommandRunner)
 	add_cmd("drawcolors", "Draw some colors", kc_drawcolors|KConsoleCommandRunner)

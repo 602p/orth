@@ -74,7 +74,7 @@ function(cstr args) rc_run -> void does
 	float planeX=0.
 	float planeY=0.66
 
-	int rotstate=10000
+	int rotstate=100000
 
 	int time=0
 	int oldTime=0
@@ -132,15 +132,19 @@ function(cstr args) rc_run -> void does
 
 	RCRotState new
 
+	int STEP_WIDTH=10
+	int widedraw_w
+
 	rc_running = 1|bool
 
 	while rc_running do
 		
-		buf:fill(0,0,0)
+		buf:fillrect(0,0,buf.w,buf.h/2,100,100,255)
+		buf:fillrect(0,buf.h/2,buf.w,buf.h/2,100,100,100)
 
 		x=0
 		while x<w do
-			cameraX = (((2 * x)|float) / (w|float)) - 1.; #?
+			cameraX = (((2. * x|float)) / (w|float)) - 1.; #?
 			rayPosX = posX;
 			rayPosY = posY;
 			rayDirX = dirX + (planeX * cameraX);
@@ -149,8 +153,8 @@ function(cstr args) rc_run -> void does
 			mapX = rayPosX|int;
 			mapY = rayPosY|int;
 
-			deltaDistX = sqrt(1. + (rayDirY * rayDirY) / (rayDirX * rayDirX));
-     		deltaDistY = sqrt(1. + (rayDirX * rayDirX) / (rayDirY * rayDirY));
+			deltaDistX = sqrt(1. + ((rayDirY * rayDirY) / (rayDirX * rayDirX)));
+     		deltaDistY = sqrt(1. + ((rayDirX * rayDirX) / (rayDirY * rayDirY)));
 
      		hit=0
      		if rayDirX < 0. do
@@ -194,6 +198,10 @@ function(cstr args) rc_run -> void does
       			perpWallDist = (mapY|float - rayPosY + ((1. - stepY|float) / 2.)) / rayDirY
       		done
 
+      		if perpWallDist < 0. do
+      			perpWallDist*=-1.
+      		done
+
       		lineheight = ((h|float)/perpWallDist)|int
       		linetop=(lineheight/2)+(h/2)
       		linebottom=(-lineheight/2)+(h/2)
@@ -208,11 +216,18 @@ function(cstr args) rc_run -> void does
 
 
       		while linetop>linebottom do
-      			buf:setpx(x, linetop, 255, (side|int)*255, 0)
-      			linetop-=1
+      			widedraw_w=0
+      			while widedraw_w<STEP_WIDTH do
+	      			buf:setpx(x+widedraw_w, linetop, 255, (side|int)*255, 0)
+	      			
+	      			widedraw_w+=1
+	      		done
+	      		linetop-=1
       		done
 
-      		x+=1
+      		#buf:fillrect(x, linetop, STEP_WIDTH, linetop-linebottom, 255, (side|int)*255, 0)
+
+      		x+=STEP_WIDTH
 		done
 		if system_kbdstate:getkey(72) do #UP
   			posX+=dirX*movespeed

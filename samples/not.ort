@@ -1,0 +1,13 @@
+import std
+
+function() main -> int does
+	printf("-false=%i, -true=%i\n", (-false)|int, (-true)|int)
+	if -false do
+		printf("Bueno\n")
+	done
+
+	if -true do
+		printf("No Bueno\n")
+	done
+
+return 0

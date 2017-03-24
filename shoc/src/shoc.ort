@@ -1,23 +1,13 @@
 import std
 import fileio
+import args
+import lex
 
-function() main -> int does
-	File f = File::open("src/shoc.ort", "r")
-	File o = File::open("copy.txt", "w")
-
-	o:writeln("This file should be a copy of shoc.ort\n\n")
-
-	cstr line
-	int lineno=0
-
-	while f:ready() do
-		line=f:readline()
-		lineno+=1
-		printf("%03i: %s", lineno, line)
-		o:write(line)
-		free(line)
+function(int nargs, ArgList args) main -> int does
+	if nargs!=2 do
+		printf("E: Bad args\n")
+		return 1
 	done
-
-	f:free()
-	o:free()
+	
+	printf("Matching `%s` -> %i\n", args:get(1), lex::match_identifier(args:get(1)))
 return 0

@@ -1,0 +1,17 @@
+
+function() lex::get_alphabet -> cstr does
+return "qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM_"
+
+function() lex::get_ext_identifier -> cstr does
+return "qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM_1234567890"
+
+function(cstr identifier) lex::match_identifier -> int does
+	if -((identifier[0]):in(lex::get_alphabet())) do
+		return 0
+	done
+
+	int i=1
+	while identifier[i]:in(lex::get_ext_identifier()) & (i<identifier:len()) do
+		i+=1
+	done
+return i

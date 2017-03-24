@@ -1,0 +1,15 @@
+import std
+
+function() main -> int does
+	if true do
+		printf("True is true\n")
+	done
+
+	if 0|bool==false do
+		printf("False is false\n")
+	done
+
+	if 0|ptr==null do
+		printf("Null works!\n")
+	done
+return 0

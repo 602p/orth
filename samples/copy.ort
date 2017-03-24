@@ -1,0 +1,25 @@
+import std
+import fileio
+import args
+
+function(int argc, ArgList args) main -> int does
+	if argc!=3 do
+		printf("ERROR: Incorrect invocation. Use as ./out <src> <dest>\n")
+		return 1
+	done
+
+	File f = File::open(args:get(1), "r")
+	File o = File::open(args:get(2), "w")
+
+	cstr line
+	int lineno=0
+
+	while f:ready() do
+		line=f:readline()
+		o:write(line)
+		free(line)
+	done
+
+	f:free()
+	o:free()
+return 0

@@ -11,25 +11,25 @@ def print(*a, **k): #Hack so that messages don't get truncated by a crash
 	_print(*a, **k)
 	sys.stdout.flush()
 
-print("Reading...                       ", end="")
+print("Reading...                       ")
 string=open(sys.argv[1], 'r').read()
 
-print("\rTokenizing...                       ", end="")
+print("Tokenizing...                       ")
 tokens=tokenize.tokenize(string, sys.argv[1])
 
-print("\rTokenizing... [Dumping Tokens]             ", end="")
-with open('tokens.txt', 'w') as fd:
-	fd.write("\n".join(str(t) for t in tokens))
+if "dump_tokens" in sys.argv:
+	print("Tokenizing... [Dumping Tokens]             ")
+	with open('tokens.txt', 'w') as fd:
+		fd.write("\n".join(str(t) for t in tokens))
 
-print("\rParsing...                       ", end="")
+print("Parsing...                       ")
 node=parse.parse(tokens)
 
 
-
-print("\rPreparing Transformer...                       ", end="")
+print("Preparing Transformer...                       ")
 import transform, transformer, datamodel
 
-print("\rTransforming...                       \n", end="")
+print("Transforming...                       ")
 with open("out.ll", 'w') as fd:
 	e=transform.Emitter(fd,{
 		"no0double":"no0double" in sys.argv,
@@ -53,7 +53,7 @@ with open("out.ll", 'w') as fd:
 					print("\t"+str(map))
 				print("SIGNAT: ", e.signatures.keys())
 				print("INCLUD: ", e.included_files)
-				print("TYPES : ", end="")
+				print("TYPES : ")
 				for type in e.types.values():
 					print(str(type)+" -> "+type.get_llvm_representation(), end=";  ")
 				print("\nLASTLI: ", e.last_line)
@@ -67,15 +67,18 @@ with open("out.ll", 'w') as fd:
 
 	e.emit_global_statments()
 
-print("\rParsing... [Drawing BD]                 ", end="")
-drawblockdiag.emit_node_file(open('out.bd', 'w'), node, portrait_mode=True)
+if "dump_bd" in sys.argv:
+	print("Parsing... [Drawing BD]                 ")
+	drawblockdiag.emit_node_file(open('out.bd', 'w'), node, portrait_mode=True)
 
 if not "nobuild" in sys.argv:
-	print("\rCompiling...                       ", end="")
-	assert os.system("llc out.ll;")==0, "Command Failed"
+	print("Compiling...                       ")
+	assert os.system("llc out.ll")==0, "Command Failed"
 
 if not "nolink" in sys.argv:
-	print("\rLinking...                       ", end="")
-	assert os.system("gcc -o "+(sys.argv[2] if len(sys.argv)==3 else "out")+" out.s; rm out.s")==0, "Command Failed"
+	print("Linking...                       ")
+	assert os.system("gcc -o "+([s[2:] for s in sys.argv if s.startswith("o:") ][0] if any(s.startswith("o:") for s in sys.argv) else sys.argv[1].split("/")[-1].split(".")[0])+" out.s")==0, "Command Failed"
 
-print("\r\033[92mDone!\033[0m                                        ")
+if not "noclean" in sys.argv:
+	os.system("rm out.ll out.s")
+print("\033[92mDone!\033[0m                                        ")

@@ -277,27 +277,40 @@ class NameExprTransformer(Transformer):
 	@ret_local
 	def transform(self, out):
 		name=out.get_temp_name()
-		if self.node.name in out.scopes:
-			self.type=out.get_var_type(self.node.name) #From NameExpr
-			out.emitl("%{} = load {}* {};NX:t".format(name,
-				self.type.get_llvm_representation(),
-				out.get_var_name(self.node.name))) #From NameExpr
-		elif self.node.name in out.signatures:
-			self.type=out.signatures[self.node.name].type
-			out.emitl("%{} = bitcast {} {} to {}".format( #Noop, because I can't see another way to 
-				name,										#get LLVM to just give me the goddamn address
-				self.type.get_llvm_representation(),
-				out.signatures[self.node.name].name,
-				self.type.get_llvm_representation()
-			))
+		if self.node.name in ["true", "false"]:
+			out.emitl("%{} = add i1 0, {}".format(name, "0" if self.node.name=="false" else "1"))
+		elif self.node.name=="null":
+			temp_0=out.get_temp_name()
+			out.emitl("%{} = add i32 0, 0".format(temp_0))
+			out.emitl("%{} = inttoptr i32 %{} to i8*".format(name, temp_0))
+		else:
+			if self.node.name in out.scopes:
+				self.type=out.get_var_type(self.node.name) #From NameExpr
+				out.emitl("%{} = load {}* {};NX:t".format(name,
+					self.type.get_llvm_representation(),
+					out.get_var_name(self.node.name))) #From NameExpr
+			elif self.node.name in out.signatures:
+				self.type=out.signatures[self.node.name].type
+				out.emitl("%{} = bitcast {} {} to {}".format( #Noop, because I can't see another way to 
+					name,										#get LLVM to just give me the goddamn address
+					self.type.get_llvm_representation(),
+					out.signatures[self.node.name].name,
+					self.type.get_llvm_representation()
+				))
 		return name
 
 	def transform_address(self, out):
+		if self.node.name in ["true", "false", "null"]:
+			raise SyntaxError("Programmer Error: Can't assign to constants (true, false, null)")
 		return out.get_var_name(self.node.name)
 
 	@staticmethod
 	def get_type(node, out):
-		if node.name in out.scopes:
+		if node.name in ["true", "false"]:
+			return datamodel.builtin_types["bool"]
+		elif node.name=="null":
+			return datamodel.builtin_types["ptr"]
+		elif node.name in out.scopes:
 			return out.get_var_type(node.name)
 		else:
 			return out.signatures[node.name].type

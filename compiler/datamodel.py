@@ -245,6 +245,10 @@ class UnsignedIntegerPrimitiveOType(IntegerPrimitiveOType):
 		else:
 			return IntegerPrimitiveOType.implement_cast(self, value, from_, to)
 
+class BooleanPrimitiveOType(UnsignedIntegerPrimitiveOType):
+	def implement_neg(self, lhs, out):
+		return "xor i1 {}, 1".format(lhs)
+
 class DoublePrimitiveOType(PrimitiveOType):
 	def __init__(self, name, llvmtype):
 		OType.__init__(self, name)
@@ -427,7 +431,7 @@ class StructOType(OType):
 
 #Initilize the builtin types. Nativley we support...
 builtin_types = {e.name:e for e in [
-	IntegerPrimitiveOType("bool", "i1"),			#Boolean values
+	BooleanPrimitiveOType("bool", "i1"),			#Boolean values
 	IntegerPrimitiveOType("int", "i32"),			#Int's are 4-bytes
 	IntegerPrimitiveOType("short", "i16"),			#Shorts are two
 	IntegerPrimitiveOType("byte", "i8"),			#Bytes (char in C)

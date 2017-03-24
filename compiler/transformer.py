@@ -232,19 +232,27 @@ class IndexExprTransformer(Transformer):
 	@ret_local
 	def transform_address(self, out): #TODO: Improve
 		base=out.get_temp_name()
-		out.emitl("%{} = ptrtoint {} {} to i32 ;IndexExpr:transform_address".format(
+		out.emitl("%{} = ptrtoint {} {} to i64 ;IndexExpr:transform_address".format(
 			base,
 			transform.get_transformer(self.node.object, self).get_type(self.node.object, out).get_llvm_representation(),
 			transform.emit(out, self.node.object, self)
 		))
+		delta=out.get_temp_name()
+		out.emitl("%{} = {}".format(delta,
+			get_type(self.node.index, out).implement_cast(
+				transform.emit(out, self.node.index, self),
+				get_type(self.node.index, out),
+				datamodel.builtin_types["long"]
+			)
+		))
 		pos=out.get_temp_name()
-		out.emitl("%{} = add i32 %{}, {} ;IndexExpr:transform_address".format(
+		out.emitl("%{} = add i64 %{}, %{} ;IndexExpr:transform_address".format(
 			pos,
 			base,
-			transform.emit(out, self.node.index, self)
+			delta
 		))
 		ptr=out.get_temp_name()
-		out.emitl("%{} = inttoptr i32 %{} to i8* ;IndexExpr:transform_address".format(ptr, pos))
+		out.emitl("%{} = inttoptr i64 %{} to i8* ;IndexExpr:transform_address".format(ptr, pos))
 		return ptr
 
 	@ret_local

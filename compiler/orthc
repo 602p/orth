@@ -24,8 +24,7 @@ with open('tokens.txt', 'w') as fd:
 print("\rParsing...                       ", end="")
 node=parse.parse(tokens)
 
-print("\rParsing... [Drawing BD]                 ", end="")
-drawblockdiag.emit_node_file(open('out.bd', 'w'), node, portrait_mode=True)
+
 
 print("\rPreparing Transformer...                       ", end="")
 import transform, transformer, datamodel
@@ -67,6 +66,9 @@ with open("out.ll", 'w') as fd:
 							#and therefore is bust)
 
 	e.emit_global_statments()
+
+print("\rParsing... [Drawing BD]                 ", end="")
+drawblockdiag.emit_node_file(open('out.bd', 'w'), node, portrait_mode=True)
 
 if not "nobuild" in sys.argv:
 	print("\rCompiling...                       ", end="")

@@ -539,5 +539,6 @@ class ImportTransformer(Transformer):
 		if filename not in out.included_files:
 			out.included_files.append(filename)
 			with out.context(file=filename, path=path):
+				self.node.contents=self.get_file_transformer(out).node
 				self.get_file_transformer(out).transform(out)
 			

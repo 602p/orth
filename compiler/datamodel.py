@@ -412,10 +412,12 @@ class StructOType(OType):
 	def get_decl(self):
 		#Return the declaration string for this type, as a LLVM aggregate structure.
 		#Packed instructs the compiler to add no padding to the outgoing structure
+		#NOTE: We actually pack all structs, because i was stupid and jused summed all the sizes
+		#TODO: Fix this
 		if self.packed:
 			return "%"+self.get_name()+" = type<{"+(",".join(self.datalayout))+"}>"
 		else:
-			return "%"+self.get_name()+" = type{"+(",".join(self.datalayout))+"}"
+			return "%"+self.get_name()+" = type<{"+(",".join(self.datalayout))+"}>"
 
 	def get_llvm_representation(self):
 		#All "instances" of a user type are pointers to it

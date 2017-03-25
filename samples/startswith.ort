@@ -1,0 +1,19 @@
+import std
+
+function() main -> int does
+	if "abc":startswith("a") do
+		printf("Bueno\n")
+	done
+
+	if "abc":startswith("ab") do
+		printf("Bueno\n")
+	done
+
+	if "abc":startswith("abc") do
+		printf("Bueno\n")
+	done
+
+	if "abc":startswith("z") do
+		printf("No Bueno\n")
+	done
+return 0

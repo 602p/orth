@@ -46,8 +46,10 @@ type File is
 		while buf:len()!=last_size do
 			last_size=buf:len()
 			fgets(buf:offset(buf:len()), BLOCK_SIZE, f._file)
-
-			if buf[buf:len()-1]==ord("\n")|byte do
+			if buf:len()==0 do
+				f.reached_eof=true
+				return buf
+			elif buf[buf:len()-1]==ord("\n")|byte do
 				return buf
 			else do
 				buf_sz+=BLOCK_SIZE
@@ -62,6 +64,16 @@ type File is
 
 		f.reached_eof=1|bool
 	return buf
+
+	function(File f) File:readall -> cstr does
+		cstr contents=f:readline()
+		cstr new_contents
+		while f:ready() do
+			new_contents=contents+f:readline()
+			contents:free()
+			contents=new_contents
+		done
+	return contents
 
 	function(File f, cstr s) File:write -> void does
 		fprintf(f._file, "%s", s)

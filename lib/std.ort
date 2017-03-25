@@ -32,6 +32,12 @@ function(cstr a, int b) cstr:__mul__ -> cstr does
 	done
 return result
 
+function(ptr a, int b) ptr:offset -> ptr does
+return ((a|long)+(b|long))|ptr
+
+function(cstr a, int b) cstr:offset -> cstr does
+return (a|ptr):offset(b)|cstr
+
 function(cstr a, cstr b) cstr:__eq__ -> bool does
 return strcmp(a,b)==0
 
@@ -58,14 +64,24 @@ return 0|bool
 function(cstr s) cstr:len -> int does
 return strlen(s)
 
-function(cstr s, int by) cstr:offset -> cstr does
-return ((s|int)+by)|cstr
-
 function(cstr s, int start, int len) cstr:substr -> cstr does
 	cstr res = malloc(len+1)|cstr
 	strncpy(res, s:offset(start), len)
 	res[len]=0|byte
 return res
+
+function(cstr s, cstr o, int l) cstr:equals_l -> bool does
+	int i=0
+	while i<l do
+		if s[i]!=o[i] do
+			return false
+		done
+		i+=1
+	done
+return true
+
+function(cstr s, cstr o) cstr:startswith -> bool does
+return s:equals_l(o, o:len())
 
 function(cstr s, cstr t) cstr:find -> int does
 	int pos = 0
@@ -97,9 +113,6 @@ function(cstr prompt) read_line -> cstr does
 	printf(prompt)
 	scanf("%s", result) #Horrible and unsafe
 return result
-
-function(ptr p, int by) ptr:offset -> ptr does
-return ((p|int)+by)|ptr
 
 function(cstr c) ord -> int does
 return c[0]|int

@@ -28,6 +28,15 @@ function(cstr text) lex::match_binop -> int does
 	done
 return text[0]:in("&*/-+%<>")|int
 
+function(cstr text) lex::match_augassign -> int does
+	if text:startswith("+=") +\
+	   text:startswith("-=") +\
+	   text:startswith("*=") +\
+	   text:startswith("/=") do
+	   	return 2
+	done
+return 0
+
 function(cstr text) lex::match_int_literal -> int does
 	int i=0
 	while text[i]:in("1234567890") do
@@ -94,54 +103,145 @@ return i
 type TokenMatcher is a function->int
 type TokenType is
 	cstr name
-	bool deadsimple
-	cstr deadsimple_text
+	int simple_type
+	# 0 = Matcher Function
+	# 1 = text[0] in simple_text
+	# 2 = test:startswith(simple_text)
+	# 3 = test:startswith(simple_text) and followed by whitespace (keyword)
+	cstr simple_text
 	TokenMatcher func
+	List preceeded_opts
 
-	function(cstr name, TokenMatcher func) TokenType::new -> TokenType does
+	function(cstr name, TokenMatcher func) TokenType::new_fn -> TokenType does
 		TokenType new = malloc(@sizeof(TokenType)@)|TokenType
 		new.name=name
-		new.deadsimple=false
+		new.simple_type=0
 		new.func=func
+		new.preceeded_opts=null|List
 	return new
 
-	function(cstr name, cstr text) TokenType::new_simple_in -> TokenType does
-		TokenType new = TokenType::new(name, null|TokenMatcher)
-		new.deadsimple=true
-		new.deadsimple_text=text
+	function(cstr name, cstr text) TokenType::new_in -> TokenType does
+		TokenType new = TokenType::new_fn(name, null|TokenMatcher)
+		new.simple_type=1
+		new.simple_text=text
 	return new
 
-	function(TokenType self, cstr text) TokenType:match -> int does
-		if self.deadsimple do
-			return text[0]:in(self.deadsimple_text)|int
+	function(cstr name, cstr text) TokenType::new_eq -> TokenType does
+		TokenType new = TokenType::new_in(name, text)
+		new.simple_type=2
+	return new
+
+	function(cstr name, cstr text) TokenType::new_kw -> TokenType does
+		TokenType new = TokenType::new_in(name, text)
+		new.simple_type=3
+	return new
+
+	function(TokenType self, cstr text) TokenType:match_internal -> int does
+		if self.simple_type==1 do
+			return text[0]:in(self.simple_text)|int
+		elif self.simple_type==2 do
+			if text:startswith(self.simple_text) do
+				return self.simple_text:len()
+			done
+			return 0
+		elif self.simple_type==3 do
+			if text:startswith(self.simple_text) do
+				if text[self.simple_text:len()]:in(" \t\r\n") do
+					return self.simple_text:len()
+				done
+				return 0
+			done
+			return 0
 		done
 	return self.func(text)
+
+	function(TokenType self, List token_context, cstr text) TokenType:match -> int does
+		int count = self:match_internal(text)
+		if self.preceeded_opts|ptr!=null do
+			TokenType last_type = (token_context:get(token_context.len-1)|Token).type_
+			int opts_pos=0
+			while opts_pos<self.preceeded_opts.len do
+				if last_type.name==self.preceeded_opts:get(opts_pos)|cstr do
+					return count
+				done
+				opts_pos+=1
+			done
+		else do
+			return count
+		done
+	return 0
+
+	function(TokenType self, cstr prev_req) TokenType:after -> TokenType does
+		if self.preceeded_opts|ptr == null do
+			self.preceeded_opts=List::new()
+		done
+		self.preceeded_opts:append(prev_req|ptr)
+	return self
+
+	function(TokenType self, cstr prev_req) TokenType:or -> TokenType does
+	return self:after(prev_req)
 
 	function(TokenType self) TokenType:free -> void does
 		free(self|ptr)
 	return
+
+	function(TokenType self, TokenType other) TokenType:__eq__ -> bool does
+	return self.name==other.name
 endtype
+
+type Token is
+	cstr text
+	TokenType type_
+	cstr origin_file #TODO
+	int origin_line #TODO
+
+	function(cstr text, TokenType type_) Token::_new -> Token does
+		Token new = malloc(@sizeof(Token)@)|Token
+		new.text=text
+		new.type_=type_
+	return new
+endtype
+
+function(TokenType self, cstr text) TokenType:make_token -> Token does
+return Token::_new(text:substr(0, self:match_internal(text)), self)
 
 List lex_token_types
 
 function() lex::init -> void does
 	lex_token_types=List::new()
-	lex_token_types:append(TokenType::new("T_VAR_DECL", lex::match_var_decl|TokenMatcher)|ptr)
-	lex_token_types:append(TokenType::new("T_NAME", lex::match_identifier|TokenMatcher)|ptr)
 
-	lex_token_types:append(TokenType::new("T_INT_LITERAL", lex::match_int_literal|TokenMatcher)|ptr)
-	lex_token_types:append(TokenType::new("T_FLOAT_LITERAL", lex::match_float_literal|TokenMatcher)|ptr)
-	lex_token_types:append(TokenType::new("T_STRING_LITERAL", lex::match_string_literal|TokenMatcher)|ptr)
+	lex_token_types:append(TokenType::new_kw("T_IF", "if")|ptr)
+	lex_token_types:append(TokenType::new_kw("T_DONE", "done")|ptr)
+	lex_token_types:append(TokenType::new_kw("T_DO", "do")|ptr)
 
-	lex_token_types:append(TokenType::new("T_BINOP", lex::match_binop|TokenMatcher)|ptr)
+	lex_token_types:append(TokenType::new_fn("T_VAR_DECL", lex::match_var_decl|TokenMatcher):after("T_ENDOFSTATEMENT")|ptr)
+	lex_token_types:append(TokenType::new_fn("T_NAME", lex::match_identifier|TokenMatcher)|ptr)
 
-	lex_token_types:append(TokenType::new_simple_in("T_ASSIGN", "=")|ptr)
-	lex_token_types:append(TokenType::new_simple_in("T_PAREN_OPEN", "(")|ptr)
-	lex_token_types:append(TokenType::new_simple_in("T_PAREN_CLOSE", ")")|ptr)
-	lex_token_types:append(TokenType::new_simple_in("T_CAST", "|")|ptr)
+	lex_token_types:append(TokenType::new_fn("T_INT_LITERAL", lex::match_int_literal|TokenMatcher)|ptr)
+	lex_token_types:append(TokenType::new_fn("T_FLOAT_LITERAL", lex::match_float_literal|TokenMatcher)|ptr)
+	lex_token_types:append(TokenType::new_fn("T_STRING_LITERAL", lex::match_string_literal|TokenMatcher)|ptr)
+
+	lex_token_types:append(TokenType::new_in("T_ASSIGN", "=")|ptr)
+	lex_token_types:append(TokenType::new_fn("T_AUGASSIGN", lex::match_augassign|TokenMatcher)|ptr)
+	lex_token_types:append(TokenType::new_in("T_PAREN_OPEN", "(")|ptr)
+	lex_token_types:append(TokenType::new_in("T_PAREN_CLOSE", ")")|ptr)
+	lex_token_types:append(TokenType::new_in("T_CAST", "|")|ptr)
+
+	lex_token_types:append(TokenType::new_fn("T_BINOP", lex::match_binop|TokenMatcher)|ptr)
+	lex_token_types:append(TokenType::new_in("T_UNOP", "-!")|ptr)
 	
-	lex_token_types:append(TokenType::new_simple_in("T_ENDOFSTATEMENT", "\r\n;")|ptr)
+	lex_token_types:append(TokenType::new_in("T_ENDOFSTATEMENT", "\r\n;")|ptr)
 return
+
+function(cstr name) lex::tokty_by_name -> TokenType does
+	int i=0
+	while i<lex_token_types.len do
+		if (lex_token_types:get(i)|TokenType).name==name do
+			return lex_token_types:get(i)|TokenType
+		done
+		i+=1
+	done
+return null|TokenType
 
 function() lex::free -> void does
 	while lex_token_types.len>0 do
@@ -157,22 +257,18 @@ function(cstr text) lex::tokenize -> void does
 	int dbg_print_token_pos
 	int match_len
 	bool matched
+	List tokens = List::new()
+	tokens:append(lex::tokty_by_name("T_ENDOFSTATEMENT"):make_token(";")|ptr)
 	while text_pos<text:len() do
 		current_matcher_idx=0
 		matched=false
 		while (current_matcher_idx<lex_token_types.len) & (-matched) do
 			current_matcher=lex_token_types:get(current_matcher_idx)|TokenType
-			match_len=current_matcher:match(text:offset(text_pos))
+			match_len=current_matcher:match(tokens, text:offset(text_pos))
 			#printf("Trying matcher %s\n", current_matcher.name)
 			if match_len>0 do
 				matched=true
-				printf("%s: `", current_matcher.name)
-				dbg_print_token_pos=0
-				while dbg_print_token_pos<match_len do
-					printf("%c", text[text_pos+dbg_print_token_pos])
-					dbg_print_token_pos+=1
-				done
-				printf("`\n")
+				tokens:append(current_matcher:make_token(text:offset(text_pos))|ptr)
 				text_pos+=match_len
 			done
 			current_matcher_idx+=1
@@ -183,5 +279,16 @@ function(cstr text) lex::tokenize -> void does
 			printf("E: can't match any furter after %i:%s\n", text_pos, text:offset(text_pos))
 			exit(1)
 		done
+	done
+	printf("Parsed into %i tokens:\n", tokens.len)
+	int p=0
+	Token t
+	while p<tokens.len do
+		t=tokens:get(p)|Token
+		if t.text=="\n" do
+			t.text="\\n"
+		done
+		printf("%s:'%s'\n", t.type_.name, t.text)
+		p+=1
 	done
 return

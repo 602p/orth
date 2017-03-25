@@ -44,6 +44,9 @@ return strcmp(a,b)==0
 function(ptr a, ptr b) ptr:__eq__ -> bool does
 return (a|long)==(b|long)
 
+function(ptr a, ptr b) ptr:__ne__ -> bool does
+return (a|long)!=(b|long)
+
 function(cstr s) cstr:free -> void does
 	free(s)
 return

@@ -1,3 +1,4 @@
+import linkedlist
 
 function() lex::get_alphabet -> cstr does
 return "qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM_"
@@ -5,13 +6,182 @@ return "qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM_"
 function() lex::get_ext_identifier -> cstr does
 return "qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM_1234567890"
 
-function(cstr identifier) lex::match_identifier -> int does
-	if -((identifier[0]):in(lex::get_alphabet())) do
+function(cstr text) lex::match_identifier -> int does
+	if -((text[0]):in(lex::get_alphabet())) do
 		return 0
 	done
 
 	int i=1
-	while identifier[i]:in(lex::get_ext_identifier()) & (i<identifier:len()) do
+	while text[i]:in(lex::get_ext_identifier()) & (i<text:len()) do
 		i+=1
 	done
 return i
+
+function(cstr text) lex::match_binop -> int does
+	if text:startswith("==") +\
+	   text:startswith("!=") +\
+	   text:startswith(">=") +\
+	   text:startswith("<=") +\
+	   text:startswith(">>") +\
+	   text:startswith("<<") do
+	   	return 2
+	done
+return text[0]:in("&*/-+%<>")|int
+
+function(cstr text) lex::match_int_literal -> int does
+	int i=0
+	while text[i]:in("1234567890") do
+		i+=1
+	done
+	if text[i]:in(".") do
+		return 0
+	done
+return i
+
+function(cstr text) lex::match_float_literal -> int does
+	int i=0
+	while text[i]:in("1234567890.") do
+		i+=1
+	done
+return i
+
+function(cstr text) lex::match_var_decl -> int does
+	int i = lex::match_identifier(text)
+
+	if i==0 do
+		return 0
+	done
+
+	while text[i]:in(" \t") do
+		i+=1
+	done
+
+	int name=lex::match_identifier(text:offset(i))
+
+	if name==0 do
+		return 0
+	done
+
+	i+=name
+return i
+
+function(cstr text) lex::match_string_literal -> int does
+	#I've got a bug in my first-gen compiler actaully, where "\"" isn't a valid string...
+	#hahahaha... that's actually not a problem in this compiler (SHOC) but i have to do
+	#this hack to get SHOC to compile in orthc
+	if -(text[0]==34|byte) do
+		return 0
+	done
+
+	int i=1
+	bool escape=false
+	bool continue=true
+	while continue do
+		if ((text[i]==34|byte) & -escape) do
+			continue=false
+		done
+
+		if text[i]:in("\\") do
+			escape=true
+		else do
+			escape=false
+		done
+
+		i+=1
+	done
+return i
+
+type TokenMatcher is a function->int
+type TokenType is
+	cstr name
+	bool deadsimple
+	cstr deadsimple_text
+	TokenMatcher func
+
+	function(cstr name, TokenMatcher func) TokenType::new -> TokenType does
+		TokenType new = malloc(@sizeof(TokenType)@)|TokenType
+		new.name=name
+		new.deadsimple=false
+		new.func=func
+	return new
+
+	function(cstr name, cstr text) TokenType::new_simple_in -> TokenType does
+		TokenType new = TokenType::new(name, null|TokenMatcher)
+		new.deadsimple=true
+		new.deadsimple_text=text
+	return new
+
+	function(TokenType self, cstr text) TokenType:match -> int does
+		if self.deadsimple do
+			return text[0]:in(self.deadsimple_text)|int
+		done
+	return self.func(text)
+
+	function(TokenType self) TokenType:free -> void does
+		free(self|ptr)
+	return
+endtype
+
+List lex_token_types
+
+function() lex::init -> void does
+	lex_token_types=List::new()
+	lex_token_types:append(TokenType::new("T_VAR_DECL", lex::match_var_decl|TokenMatcher)|ptr)
+	lex_token_types:append(TokenType::new("T_NAME", lex::match_identifier|TokenMatcher)|ptr)
+
+	lex_token_types:append(TokenType::new("T_INT_LITERAL", lex::match_int_literal|TokenMatcher)|ptr)
+	lex_token_types:append(TokenType::new("T_FLOAT_LITERAL", lex::match_float_literal|TokenMatcher)|ptr)
+	lex_token_types:append(TokenType::new("T_STRING_LITERAL", lex::match_string_literal|TokenMatcher)|ptr)
+
+	lex_token_types:append(TokenType::new("T_BINOP", lex::match_binop|TokenMatcher)|ptr)
+
+	lex_token_types:append(TokenType::new_simple_in("T_ASSIGN", "=")|ptr)
+	lex_token_types:append(TokenType::new_simple_in("T_PAREN_OPEN", "(")|ptr)
+	lex_token_types:append(TokenType::new_simple_in("T_PAREN_CLOSE", ")")|ptr)
+	lex_token_types:append(TokenType::new_simple_in("T_CAST", "|")|ptr)
+	
+	lex_token_types:append(TokenType::new_simple_in("T_ENDOFSTATEMENT", "\r\n;")|ptr)
+return
+
+function() lex::free -> void does
+	while lex_token_types.len>0 do
+		(lex_token_types:get(0)|TokenType):free()
+		lex_token_types:del(0)
+	done
+return
+
+function(cstr text) lex::tokenize -> void does
+	int text_pos=0
+	int current_matcher_idx
+	TokenType current_matcher
+	int dbg_print_token_pos
+	int match_len
+	bool matched
+	while text_pos<text:len() do
+		current_matcher_idx=0
+		matched=false
+		while (current_matcher_idx<lex_token_types.len) & (-matched) do
+			current_matcher=lex_token_types:get(current_matcher_idx)|TokenType
+			match_len=current_matcher:match(text:offset(text_pos))
+			#printf("Trying matcher %s\n", current_matcher.name)
+			if match_len>0 do
+				matched=true
+				printf("%s: `", current_matcher.name)
+				dbg_print_token_pos=0
+				while dbg_print_token_pos<match_len do
+					printf("%c", text[text_pos+dbg_print_token_pos])
+					dbg_print_token_pos+=1
+				done
+				printf("`\n")
+				text_pos+=match_len
+			done
+			current_matcher_idx+=1
+		done
+		if text[text_pos]:in(" \t") do
+			text_pos+=1
+		elif -matched do
+			printf("E: can't match any furter after %i:%s\n", text_pos, text:offset(text_pos))
+			exit(1)
+		done
+	done
+return

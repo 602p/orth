@@ -8,6 +8,16 @@ function(int nargs, ArgList args) main -> int does
 		printf("E: Bad args\n")
 		return 1
 	done
-	
-	printf("Matching `%s` -> %i\n", args:get(1), lex::match_identifier(args:get(1)))
+
+	File fd = File::open(args:get(1), "r")
+	cstr contents=fd:readall()
+	fd:close()
+	fd:free()
+
+	printf("Parsing Text: `%s`\n", contents)
+
+	lex::init()
+	lex::tokenize(contents)
+	lex::free()
+	contents:free()
 return 0

@@ -13,6 +13,18 @@ function(EleList eles) parse::lookahead_is_accessor -> bool does
 	done
 return false
 
+function(EleList eles) parse::lookahead_is_possibly_function -> bool does
+	if eles:has_lookahead() do
+		if eles:get_lookahead().is_token do
+			if eles:get_lookahead():t():is_a("T_NAME"):or(\
+			   eles:get_lookahead():t():is_a("T_PAREN_CLOSE")):or(\
+			   eles:get_lookahead():t():is_a("T_BRACKET_CLOSE")) do
+			   return true #Cases where it may be a function invocation
+			done
+		done
+	done
+return false
+
 type BinOpExpr is packed
 	NodeType type_
 	cstr op
@@ -54,14 +66,8 @@ type BinOpExpr is packed
 			return 0
 		done
 
-		if eles:has_lookahead() do
-			if eles:get_lookahead().is_token do
-				if eles:get_lookahead():t():is_a("T_NAME"):or(\
-				   eles:get_lookahead():t():is_a("T_PAREN_CLOSE")):or(\
-				   eles:get_lookahead():t():is_a("T_BRACKET_CLOSE")) do
-				   return 0 #Cases where it may be a function invocation
-				done
-			done
+		if parse::lookahead_is_possibly_function(eles) do
+			return 0 #Don't turn a(1)+2 into a,(1)+2
 		done
 	return 3
 

@@ -1,31 +1,31 @@
 import std
 
-type Node is
+type LinkedListNode is
     ptr value
-    Node next
+    LinkedListNode next
 
-    function(ptr value) Node::new -> Node does
-        Node new = malloc(@sizeof(Node)@)|Node
+    function(ptr value) LinkedListNode::new -> LinkedListNode does
+        LinkedListNode new = malloc(@sizeof(LinkedListNode)@)|LinkedListNode
         new.value=value
     return new
 
-    function(Node n) Node:free -> void does
+    function(LinkedListNode n) LinkedListNode:free -> void does
         free(n)
     return
 endtype
 
 type List is
     int len
-    Node head
+    LinkedListNode head
 
     function() List::new -> List does
         List new = malloc(@sizeof(List)@)|List
         new.len=0
     return new
 
-    function(List l, int want) List:get_node -> Node does
+    function(List l, int want) List:get_node -> LinkedListNode does
         int idx = 0
-        Node current = l.head
+        LinkedListNode current = l.head
         while idx!=want do
             idx+=1
             current=current.next
@@ -36,9 +36,9 @@ type List is
     return l:get_node(want).value
 
     function(List l, ptr item) List:append -> void does
-        Node new = Node::new(item)
+        LinkedListNode new = LinkedListNode::new(item)
         if l.len>0 do
-            Node last = l:get_node(l.len-1)
+            LinkedListNode last = l:get_node(l.len-1)
             last.next=new
         else do
             l.head=new
@@ -55,7 +55,7 @@ type List is
             return
         done
 
-        Node new = Node::new(item)
+        LinkedListNode new = LinkedListNode::new(item)
 
         if i==0 do
             if l.len!=0 do
@@ -68,7 +68,7 @@ type List is
 
         l.len+=1
 
-        Node prev = l:get_node(i-1)
+        LinkedListNode prev = l:get_node(i-1)
         new.next=prev.next
         prev.next=new
     return
@@ -88,7 +88,7 @@ type List is
             return
         done
 
-        Node prev = l:get_node(i-1)
+        LinkedListNode prev = l:get_node(i-1)
         prev.next:free()
         if i!=l.len-1 do
             prev.next=prev.next.next

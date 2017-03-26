@@ -404,7 +404,7 @@ class StructOType(OType):
 	def index_to(self, field):
 		#Return the fragment of a getelementptr instruction to access the field named field
 		try:
-			return "i32 "+str(list(self.fields.keys()).index(field))
+			return "i32 "+str(list(self.fields.keys()).index(field))+"; for field %s in type %s"%(field, self.get_name())
 		except ValueError:
 			raise KeyError("Programmer Error: Type %s has no field %s"%(self.name, field))
 

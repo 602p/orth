@@ -439,6 +439,9 @@ class FileTransformer(Transformer):
 	def prepare(self, out):
 		print("Preparing "+out.context_map['file'])
 		for func in self.node.funcs:
+			if isinstance(func, TypeDecl):
+				transform.get_transformer(func, self).define(out)
+		for func in self.node.funcs:
 			if isinstance(func, FunctionDecl):
 				out.set_signature(func.name, datamodel.FunctionOType(
 					func.name,
@@ -499,8 +502,10 @@ class WhileExprTransformer(Transformer):
 class TypeTransformer(Transformer):
 	transforms=TypeDecl
 
-	def prepare(self, out):
+	def define(self, out):
 		out.types[self.node.name]=datamodel.StructOType(self.node.name, self.node.fields, out, packed=self.node.packed)
+
+	def prepare(self, out):
 		out.types[self.node.name].setup(out)
 		for method in self.node.methods:
 			out.set_signature(method.name, datamodel.FunctionOType(
@@ -516,7 +521,7 @@ class TypeTransformer(Transformer):
 class TypeAliasTransformer(Transformer):
 	transforms=AliasTypeDecl
 
-	def prepare(self, out):
+	def define(self, out):
 		if self.node.aliases_fpointer:
 			out.types[self.node.name]=datamodel.BlackBoxFunctionOType(
 				self.node.name,

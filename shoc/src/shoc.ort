@@ -21,7 +21,7 @@ function(int nargs, ArgList args) main -> int does
 	printf("Parsing Text: `%s`\n", contents)
 
 	List tokens = lex::tokenize(contents)
-	parse::parse(tokens)
+	parse::parse(tokens, contents)
 
 	Token::free_token_list(tokens)
 	parse::free()

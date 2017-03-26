@@ -1,8 +1,10 @@
 @declare_c_func("printf", "int", "(...)")@
 @declare_c_func("puts", "int", "(i8*)")@
+@declare_c_func("system", "int", "(i8*)")@
 @declare_c_func("sprintf", "int", "(...)")@
 @declare_c_func("scanf", "int", "(...)")@
 @declare_c_func("malloc", "ptr", "(i32)")@
+@declare_c_func("usleep", "void", "(i32)")@
 @declare_c_func("realloc", "ptr", "(i8*, i32)")@
 @declare_c_func("strcat", "cstr", "(i8*, i8*)")@
 @declare_c_func("memcpy", "void", "(i8*, i8*, i32)")@
@@ -46,6 +48,9 @@ return (a|ptr):offset(b)|cstr
 
 function(cstr a, cstr b) cstr:__eq__ -> bool does
 return strcmp(a,b)==0
+
+function(cstr a, cstr b) cstr:__ne__ -> bool does
+return strcmp(a,b)!=0
 
 function(ptr a, ptr b) ptr:__eq__ -> bool does
 return (a|long)==(b|long)

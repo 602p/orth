@@ -6,4 +6,4 @@ cd src
 
 orthc shoc.ort noclean dump_tokens
 
-mv shoc ..
+mv shoc ../shoc.o

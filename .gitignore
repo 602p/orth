@@ -102,4 +102,4 @@ serial.log
 louos.bin
 out.s
 *.exe
-shoc
+shoc.o

@@ -1,0 +1,332 @@
+import linkedlist
+import lex
+
+function(int depth) parse::indent -> void does
+	int i=0
+	while i<depth do
+		printf("\t")
+		i+=1
+	done
+return
+
+type Node is packed
+	NodeType type_
+	function(Node self) Node:free -> void does
+		self.type_.deleter(self)
+		free(self|ptr)
+	return
+
+	function(Node self, int depth) Node:print -> void does
+		self.type_.printer(self, depth)
+	return
+
+	function(Node self) Node:print_root -> void does
+		self:print(0)
+	return
+
+	function(Node self, cstr ty) Node:is_a -> bool does
+	return self.type_:is_a(ty)
+endtype
+
+type NodeDeleter is a function->void #(Node node)
+type NodePrinter is a function->void #(Node node, int depth)
+type NodeCreator is a function->Node #(EleList elems) -> created node
+type NodeMatcher is a function->int  #(EleList elems) -> number consumed
+
+
+type Element is
+	bool is_token
+	ptr thing
+
+	function(Token t) Element::from_token -> Element does
+		Element new = malloc(@sizeof(Element)@)|Element
+		new.is_token=true
+		new.thing=t|ptr
+	return new
+
+	function(Node n) Element::from_node -> Element does
+		Element new = malloc(@sizeof(Element)@)|Element
+		new.is_token=false
+		new.thing=n|ptr
+	return new
+
+	function(Element self) Element:t -> Token does
+		if -self.is_token do
+			printf("E: PANIC: Element:t() on non-token\n")
+			exit(1)
+		done
+	return self.thing|Token
+
+	function(Element self) Element:n -> Node does
+		if self.is_token do
+			printf("E: PANIC: Element:n() on non-node\n")
+			exit(1)
+		done
+	return self.thing|Node
+
+	function(Element self) Element:print -> void does
+		if self.is_token do
+			printf("%s(%s)\n", self:t().type_.name, self:t().text)
+		else do
+			self:n():print(1)
+		done
+	return
+
+	function(Element self) Element:free -> void does
+		if self.is_token do
+			(self.thing|Token):free()
+		else do
+			(self.thing|Node):free()
+		done
+		free(self|ptr)
+	return
+endtype
+
+type EleList is
+	int position
+	List list
+
+	function(List l) EleList::from -> EleList does
+		EleList new = malloc(@sizeof(EleList)@)|EleList
+		new.list=List::new()
+		int i=0
+		while i<l.len do
+			new.list:append(Element::from_token(l:get(i)|Token)|ptr)
+			i+=1
+		done
+		new.position=l.len-1
+	return new
+
+	function(EleList self, int pos) EleList:get -> Element does
+	return self.list:get(self.position+pos)|Element
+
+	function(EleList self) EleList:get_lookahead -> Element does
+	return self:get(-1)
+
+	function(EleList self, int by) EleList:advance -> EleList does
+		self.position-=by
+	return self
+
+	function(EleList self) EleList:in_slice -> int does
+	return self.list.len-self.position
+
+	function(EleList self, int count, Element e) EleList:set_tail -> EleList does
+		int i=0
+		while i<count do #It was at this point that I realized I don't have a :set, LOL
+			if (self.list:get(self.position)|Element).is_token do
+				(self.list:get(self.position)|Element):free()
+			done
+			self.list:del(self.position)
+			i+=1
+		done
+		self.list:insert(self.position, e|ptr)
+	return self
+
+	function(EleList self) EleList:print -> void does
+		int i=0
+		while i<self.list.len do
+			printf("%03i", i)
+			if i==self.position do
+				printf("*")
+			done
+			printf("\t")
+			(self.list:get(i)|Element):print()
+			i+=1
+		done
+	return
+endtype
+
+type NodeType is
+	cstr name
+	List things_i_am
+
+	NodePrinter printer
+	NodeDeleter deleter
+	NodeCreator creator
+
+	int matcher_flags #0 = Default, 1 = Match only tokens, 2 = Match only nodes
+	int matcher_count #min number of elemnts left requred
+	NodeMatcher matcher
+
+	function(NodeType self, NodePrinter p) NodeType:set_printer -> NodeType does
+		self.printer=p
+	return self
+
+	function(NodeType self, NodeDeleter d) NodeType:set_deleter -> NodeType does
+		self.deleter=d
+	return self
+
+	function(NodeType self, NodeCreator d) NodeType:set_creator -> NodeType does
+		self.creator=d
+	return self
+
+	function(NodeType self, NodeMatcher m) NodeType:set_matcher -> NodeType does
+		self.matcher=m
+	return self
+
+	function(NodeType self, EleList eles) NodeType:create_node -> Node does
+		Node new = self.creator(eles)
+		new.type_=self
+	return new
+
+	function(cstr name) NodeType::new -> NodeType does
+		NodeType new = malloc(@sizeof(NodeType)@)|NodeType
+		new.name=name
+
+		new.things_i_am=null|List
+		new.matcher_count=1
+		new.matcher_flags=0
+	return new
+
+	function(NodeType self, EleList elements) NodeType:match -> int does
+		if elements:in_slice()<self.matcher_count do
+			return 0
+		done
+
+		if self.matcher_flags!=0 do
+			int i=0
+			while i<self.matcher_count do
+				if ((self.matcher_flags==1) & -elements:get(i).is_token):or(\
+					(self.matcher_flags==2) &  elements:get(i).is_token) do
+					return 0
+				done
+				i+=1
+			done
+		done
+	return self.matcher(elements)
+
+	function(NodeType self, int count) NodeType:matches -> NodeType does
+		self.matcher_count=count
+	return self
+
+	function(NodeType self) NodeType:matches_only_tokens -> NodeType does
+		self.matcher_flags=1
+	return self
+
+	function(NodeType self) NodeType:matches_only_nodes -> NodeType does
+		self.matcher_flags=2
+	return self
+
+	function(NodeType self, cstr thing) NodeType:isinstance -> bool does
+		if thing==self.name do
+			return true
+		done
+
+		if self.things_i_am|ptr==null do
+			return false
+		done
+
+		int i=0
+		while i<self.things_i_am.len do
+			if (self.things_i_am:get(i)|cstr)==thing do
+				return true
+			done
+			i+=1
+		done
+	return false
+
+	function(NodeType self, cstr thing) NodeType:is_a -> bool does
+	return self:isinstance(thing)
+
+	function(NodeType self, cstr thing) NodeType:addtype -> NodeType does
+		if self.things_i_am|ptr==null do
+			self.things_i_am=List::new()
+		done
+		self.things_i_am:append(thing|ptr)
+
+		if thing=="ValueExpression" do
+			self:addtype("Expression")
+		done
+
+		if thing=="IdentifierExpression" do
+			self:addtype("ValueExpression")
+		done
+	return self
+
+	function(NodeType self) NodeType:free -> void does
+		free(self|ptr)
+	return
+endtype
+
+List parse_node_types
+
+function(cstr name) parse::type_by_name -> NodeType does
+	int i=0
+	while i<parse_node_types.len do
+		if (parse_node_types:get(i)|NodeType).name==name do
+			return parse_node_types:get(i)|NodeType
+		done
+		i+=1
+	done
+return null|NodeType
+
+function(List l, NodeType n) List:append_NodeType -> void does
+	l:append(n|ptr)
+return
+
+function(List l, Node n) List:append_Node -> void does
+	l:append(n|ptr)
+return
+
+function(List l, int n) List:get_Node -> Node does
+return l:get(n)|Node
+
+function(EleList e, cstr s) parse::update_viz -> void does
+	bool fancy = true
+	float speed= 0.2
+
+	if fancy do
+		usleep((speed*1000000.)|int)
+		system("clear")
+	done
+	printf("\n\nParsing '%s'\n\n", s)
+	e:print()
+return
+
+function(List tokens, cstr text) parse::parse -> Node does
+	EleList eles=EleList::from(tokens)
+
+	bool     progress
+	int      current_type_idx
+	NodeType current_type
+	int      match_count
+	bool     DEBUG=false
+
+	while eles.position>0 do
+		progress=true
+		while progress do
+			progress=false
+			current_type_idx=0
+			while (current_type_idx<parse_node_types.len) & -progress do
+				current_type=parse_node_types:get(current_type_idx)|NodeType
+				match_count=current_type:match(eles)
+				if DEBUG do
+					printf("Pos=%i, ty=%s, match=%i\n",\
+						eles.position, current_type.name, match_count)
+				done
+				if match_count>0 do
+					eles:set_tail(match_count,\
+						Element::from_node(current_type:create_node(eles)))
+					progress=true
+					parse::update_viz(eles, text)
+					printf("Replaced %i elements at %i with a %s node\n",\
+					 match_count, eles.position, current_type.name)
+				done
+				current_type_idx+=1
+			done
+		done
+		eles:advance(1)
+		parse::update_viz(eles, text)
+		printf("No further possible parses, advanced by 1\n")
+	done
+	printf("Done!\n")
+return null|Node
+
+function() parse::free -> void does
+	while parse_node_types.len>0 do
+		(parse_node_types:get(0)|NodeType):free()
+		parse_node_types:del(0)
+	done
+	parse_node_types:clear()
+	parse_node_types:free()
+return

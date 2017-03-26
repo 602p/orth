@@ -1,0 +1,481 @@
+import lex
+import parse
+
+function(EleList eles) parse::lookahead_is_accessor -> bool does
+	if eles:get_lookahead().is_token do
+		if (eles:get_lookahead():t().type_.name=="T_DOT"):or(\
+			eles:get_lookahead():t().type_.name=="T_COLON"):or(\
+			eles:get_lookahead():t().type_.name=="T_DOUBLECOLON") do
+			return true
+		done
+	done
+return false
+
+type BinOpExpr is packed
+	NodeType type_
+	cstr op
+	Node lhs
+	Node rhs
+
+	function(BinOpExpr node) BinOpExpr::free -> void does
+		node.lhs:free()
+		node.rhs:free()
+	return
+
+	function(BinOpExpr node, int depth) BinOpExpr::print -> void does
+		printf("BinOpExpr (Operator='%s')\n", node.op)
+		parse::indent(depth)
+		printf("|- LHS: ")
+		node.lhs:print(depth+1)
+
+		parse::indent(depth)
+		printf("\- RHS: ")
+		node.rhs:print(depth+1)
+	return
+
+	function(EleList eles) BinOpExpr::create -> BinOpExpr does
+		BinOpExpr new = malloc(@sizeof(BinOpExpr)@)|BinOpExpr
+		new.lhs=eles:get(0):n()
+		new.op=eles:get(1):t().text
+		new.rhs=eles:get(2):n()
+	return new
+
+	function(EleList eles) BinOpExpr::match -> int does
+		if eles:get(0).is_token:or(\
+		  -eles:get(1).is_token):or(\
+		   eles:get(2).is_token) do
+			return 0
+		done
+
+		if (eles:get(1):t().type_.name!="T_BINOP"):or(\
+		   -eles:get(0):n():is_a("ValueExpression")):or(\
+		   -eles:get(0):n():is_a("ValueExpression")) do
+			return 0
+		done
+
+		if parse::lookahead_is_accessor(eles) do
+			return 0
+		done
+	return 3
+
+	function() BinOpExpr::impl -> NodeType does
+	return NodeType::new("BinOpExpr")\
+					:set_printer(BinOpExpr::print |NodePrinter)\
+					:set_deleter(BinOpExpr::free  |NodeDeleter)\
+					:set_creator(BinOpExpr::create|NodeCreator)\
+					:set_matcher(BinOpExpr::match |NodeMatcher)\
+					:matches(3):addtype("ValueExpression")
+endtype
+
+type AssignmentExpr is packed
+	NodeType type_
+	cstr op
+	Node lhs
+	Node rhs
+
+	function(AssignmentExpr node) AssignmentExpr::free -> void does
+		node.lhs:free()
+		node.rhs:free()
+	return
+
+	function(AssignmentExpr node, int depth) AssignmentExpr::print -> void does
+		printf("AssignmentExpr (Operator='%s')\n", node.op)
+		parse::indent(depth)
+		printf("|- LHS: ")
+		node.lhs:print(depth+1)
+
+		parse::indent(depth)
+		printf("\- RHS: ")
+		node.rhs:print(depth+1)
+	return
+
+	function(EleList eles) AssignmentExpr::create -> AssignmentExpr does
+		AssignmentExpr new = malloc(@sizeof(AssignmentExpr)@)|AssignmentExpr
+		new.lhs=eles:get(0):n()
+		new.op=eles:get(1):t().text
+		new.rhs=eles:get(2):n()
+	return new
+
+	function(EleList eles) AssignmentExpr::match -> int does
+		if eles:get(0).is_token:or(\
+		  -eles:get(1).is_token):or(\
+		   eles:get(2).is_token) do
+			return 0
+		done
+
+		if (-(\
+				(eles:get(1):t().type_.name=="T_ASSIGN"):or(\
+		 		eles:get(1):t().type_.name=="T_AUGASSIGN"))):or(\
+		   -eles:get(0):n():is_a("IdentifierExpression")):or(\
+		   -eles:get(2):n():is_a("ValueExpression")) do
+			return 0
+		done
+
+		if parse::lookahead_is_accessor(eles) do
+			return 0
+		done
+	return 3
+
+	function() AssignmentExpr::impl -> NodeType does
+	return NodeType::new("AssignmentExpr")\
+					:set_printer(AssignmentExpr::print |NodePrinter)\
+					:set_deleter(AssignmentExpr::free  |NodeDeleter)\
+					:set_creator(AssignmentExpr::create|NodeCreator)\
+					:set_matcher(AssignmentExpr::match |NodeMatcher)\
+					:matches(3):addtype("Expression")
+endtype
+
+type AccessorExpr is packed
+	NodeType type_
+	cstr mode
+	Node object
+	Node field
+
+	function(AccessorExpr node) AccessorExpr::free -> void does
+		node.object:free()
+		node.field:free()
+	return
+
+	function(AccessorExpr node, int depth) AccessorExpr::print -> void does
+		printf("AccessorExpr (Mode='%s')\n", node.mode)
+		parse::indent(depth)
+		printf("|- Object: ")
+		node.object:print(depth+1)
+
+		parse::indent(depth)
+		printf("\- Field: ")
+		node.field:print(depth+1)
+	return
+
+	function(EleList eles) AccessorExpr::create -> AccessorExpr does
+		AccessorExpr new = malloc(@sizeof(AccessorExpr)@)|AccessorExpr
+		new.object=eles:get(0):n()
+		new.mode=eles:get(1):t().text
+		new.field=eles:get(2):n()
+	return new
+
+	function(EleList eles) AccessorExpr::match -> int does
+		if eles:get(0).is_token:or(\
+		  -eles:get(1).is_token):or(\
+		   eles:get(2).is_token) do
+			return 0
+		done
+
+		if (-(\
+				(eles:get(1):t().type_.name=="T_DOT"):or(\
+		 		eles:get(1):t().type_.name=="T_COLON"):or(\
+		 		eles:get(1):t().type_.name=="T_DOUBLECOLON"))):or(\
+		   -eles:get(0):n():is_a("IdentifierExpression")):or(\
+		   -eles:get(2):n():is_a("NameExpr")) do
+			return 0
+		done
+
+		if parse::lookahead_is_accessor(eles) do
+			return 0
+		done
+	return 3
+
+	function() AccessorExpr::impl -> NodeType does
+	return NodeType::new("AccessorExpr")\
+					:set_printer(AccessorExpr::print |NodePrinter)\
+					:set_deleter(AccessorExpr::free  |NodeDeleter)\
+					:set_creator(AccessorExpr::create|NodeCreator)\
+					:set_matcher(AccessorExpr::match |NodeMatcher)\
+					:matches(3):addtype("IdentifierExpression")
+endtype
+
+type NameExpr is packed
+	NodeType type_
+	cstr name
+
+	function(NameExpr node) NameExpr::free -> void does
+		free(node.name|ptr)
+	return
+
+	function(NameExpr node, int depth) NameExpr::print -> void does
+		printf("NameExpr: '%s'\n", node.name)
+	return
+
+	function(EleList eles) NameExpr::create -> NameExpr does
+		NameExpr new = malloc(@sizeof(NameExpr)@)|NameExpr
+		new.name=eles:get(0):t().text
+	return new
+
+	function(EleList eles) NameExpr::match -> int does
+	return (eles:get(0):t().type_.name=="T_NAME")|int
+
+	function() NameExpr::impl -> NodeType does
+	return NodeType::new("NameExpr")\
+					:set_printer(NameExpr::print |NodePrinter)\
+					:set_deleter(NameExpr::free  |NodeDeleter)\
+					:set_creator(NameExpr::create|NodeCreator)\
+					:set_matcher(NameExpr::match |NodeMatcher)\
+					:matches(1):matches_only_tokens():addtype("IdentifierExpression")
+endtype
+
+type DeclExpr is packed
+	NodeType type_
+	cstr name
+
+	function(DeclExpr node) DeclExpr::free -> void does
+		free(node.name|ptr)
+	return
+
+	function(DeclExpr node, int depth) DeclExpr::print -> void does
+		printf("DeclExpr: '%s'\n", node.name)
+	return
+
+	function(EleList eles) DeclExpr::create -> DeclExpr does
+		DeclExpr new = malloc(@sizeof(DeclExpr)@)|DeclExpr
+		new.name=eles:get(0):t().text
+	return new
+
+	function(EleList eles) DeclExpr::match -> int does
+	return (eles:get(0):t().type_.name=="T_VAR_DECL")|int
+
+	function() DeclExpr::impl -> NodeType does
+	return NodeType::new("DeclExpr")\
+					:set_printer(DeclExpr::print |NodePrinter)\
+					:set_deleter(DeclExpr::free  |NodeDeleter)\
+					:set_creator(DeclExpr::create|NodeCreator)\
+					:set_matcher(DeclExpr::match |NodeMatcher)\
+					:matches(1):matches_only_tokens():addtype("IdentifierExpression")
+endtype
+
+type GroupingExpr is packed
+	NodeType type_
+	Node contents
+
+	function(GroupingExpr node) GroupingExpr::free -> void does
+		node.contents:free()
+	return
+
+	function(GroupingExpr node, int depth) GroupingExpr::print -> void does
+		printf("GroupingExpr: ")
+		node.contents:print(depth+1)
+	return
+
+	function(EleList eles) GroupingExpr::create -> GroupingExpr does
+		GroupingExpr new = malloc(@sizeof(GroupingExpr)@)|GroupingExpr
+		new.contents=eles:get(1):n()
+	return new
+
+	function(EleList eles) GroupingExpr::match -> int does
+		if (-eles:get(0).is_token):or(\
+		     eles:get(1).is_token):or(\
+		    -eles:get(2).is_token) do
+			return 0
+		done
+
+		if (eles:get(0):t().type_.name!="T_PAREN_OPEN"):or(\
+			eles:get(2):t().type_.name!="T_PAREN_CLOSE"):or(\
+		   -eles:get(1):n():is_a("ValueExpression")) do
+			return 0
+		done
+	return 3
+
+	function() GroupingExpr::impl -> NodeType does
+	return NodeType::new("GroupingExpr")\
+					:set_printer(GroupingExpr::print |NodePrinter)\
+					:set_deleter(GroupingExpr::free  |NodeDeleter)\
+					:set_creator(GroupingExpr::create|NodeCreator)\
+					:set_matcher(GroupingExpr::match |NodeMatcher)\
+					:matches(3):addtype("ValueExpression")
+endtype
+
+type TupleEndFragment is packed
+	NodeType type_
+	Node element
+
+	function(TupleEndFragment node) TupleEndFragment::free -> void does
+		node.element:free()
+	return
+
+	function(TupleEndFragment node, int depth) TupleEndFragment::print -> void does
+		printf("TupleEndFragment, element=")
+		node.element:print(depth+1)
+	return
+
+	function(EleList eles) TupleEndFragment::create -> TupleEndFragment does
+		TupleEndFragment new = malloc(@sizeof(TupleEndFragment)@)|TupleEndFragment
+		new.element=eles:get(1):n()
+	return new
+
+	function(EleList eles) TupleEndFragment::match -> int does
+		if (-eles:get(0).is_token):or(\
+		     eles:get(1).is_token):or(\
+		    -eles:get(2).is_token) do
+			return 0
+		done
+
+		if (eles:get(0):t().type_.name!="T_COMMA"):or(\
+			eles:get(2):t().type_.name!="T_PAREN_CLOSE"):or(\
+		   -eles:get(1):n():is_a("ValueExpression")) do
+			return 0
+		done
+	return 3
+
+	function() TupleEndFragment::impl -> NodeType does
+	return NodeType::new("TupleEndFragment")\
+					:set_printer(TupleEndFragment::print |NodePrinter)\
+					:set_deleter(TupleEndFragment::free  |NodeDeleter)\
+					:set_creator(TupleEndFragment::create|NodeCreator)\
+					:set_matcher(TupleEndFragment::match |NodeMatcher)\
+					:matches(3):addtype("TupleFragment")
+endtype
+
+type TupleMidFragment is packed
+	NodeType type_
+	List elements
+
+	function(TupleMidFragment node) TupleMidFragment::free -> void does
+		int i=0
+		while i<node.elements.len do
+			(node.elements:get(i)|Node):free()
+			i+=1
+		done
+		node.elements:clear()
+		node.elements:free()
+	return
+
+	function(TupleMidFragment node, int depth) TupleMidFragment::print -> void does
+		printf("TupleMidFragment: (Length=%i)\n", node.elements.len)
+		int i=0
+		while i<node.elements.len do
+			parse::indent(depth)
+			printf("|%i- ", i)
+			node.elements:get_Node(i):print(depth+1)
+			i+=1
+		done
+	return
+
+	function(EleList eles) TupleMidFragment::create -> TupleMidFragment does
+		TupleMidFragment new = malloc(@sizeof(TupleMidFragment)@)|TupleMidFragment
+		if eles:get(2):n():is_a("TupleEndFragment") do
+			new.elements=List::new()
+			new.elements:append_Node(eles:get(1):n())
+			new.elements:append_Node((eles:get(2):n()|TupleEndFragment).element)
+		else do
+			new.elements=List::copy((eles:get(2):n()|TupleMidFragment).elements)
+			new.elements:insert(0, eles:get(1):n()|ptr)
+		done
+	return new
+
+	function(EleList eles) TupleMidFragment::match -> int does
+		if (-eles:get(0).is_token):or(\
+		     eles:get(1).is_token):or(\
+		     eles:get(2).is_token) do
+			return 0
+		done
+
+		if (eles:get(0):t().type_.name!="T_COMMA"):or(\
+		   -eles:get(1):n():is_a("ValueExpression")):or(\
+		   -eles:get(2):n():is_a("TupleFragment")) do
+			return 0
+		done
+	return 3
+
+	function() TupleMidFragment::impl -> NodeType does
+	return NodeType::new("TupleMidFragment")\
+					:set_printer(TupleMidFragment::print |NodePrinter)\
+					:set_deleter(TupleMidFragment::free  |NodeDeleter)\
+					:set_creator(TupleMidFragment::create|NodeCreator)\
+					:set_matcher(TupleMidFragment::match |NodeMatcher)\
+					:matches(3):addtype("TupleFragment")
+endtype
+
+type Tuple is packed
+	NodeType type_
+	List elements
+
+	function(Tuple node) Tuple::free -> void does
+		int i=0
+		while i<node.elements.len do
+			(node.elements:get(i)|Node):free()
+			i+=1
+		done
+		node.elements:clear()
+		node.elements:free()
+	return
+
+	function(Tuple node, int depth) Tuple::print -> void does
+		printf("Tuple: (Length=%i)\n", node.elements.len)
+		int i=0
+		while i<node.elements.len do
+			parse::indent(depth)
+			printf("|%i- ", i)
+			node.elements:get_Node(i):print(depth+1)
+			i+=1
+		done
+	return
+
+	function(EleList eles) Tuple::create -> Tuple does
+		Tuple new = malloc(@sizeof(Tuple)@)|Tuple
+		if eles:get(2):n():is_a("TupleEndFragment") do
+			new.elements=List::new()
+			new.elements:append_Node(eles:get(1):n())
+			new.elements:append_Node((eles:get(2):n()|TupleEndFragment).element)
+		else do
+			new.elements=List::copy((eles:get(2):n()|TupleMidFragment).elements)
+			new.elements:insert(0, eles:get(1):n()|ptr)
+		done
+	return new
+
+	function(EleList eles) Tuple::match -> int does
+		if (-eles:get(0).is_token):or(\
+		     eles:get(1).is_token):or(\
+		     eles:get(2).is_token) do
+			return 0
+		done
+
+		if (eles:get(0):t().type_.name!="T_PAREN_OPEN"):or(\
+		   -eles:get(2):n():is_a("TupleFragment")):or(\
+		   -eles:get(1):n():is_a("ValueExpression")) do
+			return 0
+		done
+	return 3
+
+	function() Tuple::impl -> NodeType does
+	return NodeType::new("Tuple")\
+					:set_printer(Tuple::print |NodePrinter)\
+					:set_deleter(Tuple::free  |NodeDeleter)\
+					:set_creator(Tuple::create|NodeCreator)\
+					:set_matcher(Tuple::match |NodeMatcher)\
+					:matches(3)
+endtype
+
+function() parse::init -> void does
+	List l=List::new()
+
+	l:append_NodeType(BinOpExpr::impl())
+	l:append_NodeType(NameExpr::impl())
+	l:append_NodeType(DeclExpr::impl())
+	l:append_NodeType(GroupingExpr::impl())
+	l:append_NodeType(AssignmentExpr::impl())
+	l:append_NodeType(AccessorExpr::impl())
+	l:append_NodeType(TupleEndFragment::impl())
+	l:append_NodeType(TupleMidFragment::impl())
+	l:append_NodeType(Tuple::impl())
+
+	parse_node_types=l
+return
+
+function() parse::show_types -> void does
+	int p=0
+	int i
+	NodeType t
+	while p<parse_node_types.len do
+		t=parse_node_types:get(p)|NodeType
+		printf("\n%s: %s ", t.name, t.name)
+		if t.things_i_am|ptr!=null do
+			i=0
+			while i<t.things_i_am.len do
+				printf("%s ", t.things_i_am:get(i)|cstr)
+				i+=1
+			done
+		done
+		printf("\t->is_a('TupleFragment')=%i", t:is_a("TupleFragment")|int)
+		p+=1
+	done
+	printf("\n")
+return

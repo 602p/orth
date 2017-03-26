@@ -44,7 +44,7 @@ type BinOpExpr is packed
 
 		if (eles:get(1):t().type_.name!="T_BINOP"):or(\
 		   -eles:get(0):n():is_a("ValueExpression")):or(\
-		   -eles:get(0):n():is_a("ValueExpression")) do
+		   -eles:get(2):n():is_a("ValueExpression")) do
 			return 0
 		done
 
@@ -281,7 +281,7 @@ type GroupingExpr is packed
 					:set_printer(GroupingExpr::print |NodePrinter)\
 					:set_creator(GroupingExpr::create|NodeCreator)\
 					:set_matcher(GroupingExpr::match |NodeMatcher)\
-					:matches(3):addtype("ValueExpression"):addtype("Tuple")
+					:matches(3):addtype("Tuple"):addtype("ValueExpression")
 endtype
 
 type TupleEndFragment is packed
@@ -771,19 +771,23 @@ endtype
 function() parse::init -> void does
 	List l=List::new()
 
-	l:append_NodeType(BinOpExpr::impl())
 	l:append_NodeType(NameExpr::impl())
-	l:append_NodeType(LiteralExpr::impl())
 	l:append_NodeType(DeclExpr::impl())
-	l:append_NodeType(GroupingExpr::impl())
-	l:append_NodeType(AssignmentExpr::impl())
 	l:append_NodeType(AccessorExpr::impl())
+
+	l:append_NodeType(LiteralExpr::impl())
+	
+	l:append_NodeType(GroupingExpr::impl())
+	l:append_NodeType(BinOpExpr::impl())
+
+	l:append_NodeType(CallExpr::impl())
+
+	l:append_NodeType(AssignmentExpr::impl())
 
 	l:append_NodeType(TupleEndFragment::impl())
 	l:append_NodeType(TupleMidFragment::impl())
 	l:append_NodeType(Tuple::impl())
 	l:append_NodeType(ZeroTuple::impl())
-	l:append_NodeType(CallExpr::impl())
 
 	l:append_NodeType(ZeroArgList::impl())
 	l:append_NodeType(OneArgList::impl())
@@ -801,15 +805,15 @@ function() parse::show_types -> void does
 	NodeType t
 	while p<parse_node_types.len do
 		t=parse_node_types:get(p)|NodeType
-		printf("\n%s: %s ", t.name, t.name)
+		printf("\n%s%s:", t.name, " "*(20-t.name:len()))
 		if t.things_i_am|ptr!=null do
-			i=0
-			while i<t.things_i_am.len do
-				printf("%s ", t.things_i_am:get(i)|cstr)
-				i+=1
+			i=t.things_i_am.len-1
+			while i>-1 do
+				printf(" %s%s", t.things_i_am:get(i)|cstr, " "*(25-(t.things_i_am:get(i)|cstr):len()))
+				i-=1
 			done
 		done
-		printf("\t->is_a('TupleFragment')=%i", t:is_a("TupleFragment")|int)
+		printf(" %s", t.name)
 		p+=1
 	done
 	printf("\n")

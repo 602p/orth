@@ -10,6 +10,12 @@ function(int nargs, ArgList args) main -> int does
 		return 1
 	done
 
+	if args:get(1)=="_show_parser_types_" do
+		parse::init()
+		parse::show_types()
+		return 0
+	done
+
 	File fd = File::open(args:get(1), "r")
 	cstr contents=fd:readall()
 	fd:close()

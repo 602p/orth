@@ -2,6 +2,7 @@ import std
 import fileio
 import args
 import lex
+import parse
 
 function(int nargs, ArgList args) main -> int does
 	if nargs!=2 do
@@ -14,10 +15,16 @@ function(int nargs, ArgList args) main -> int does
 	fd:close()
 	fd:free()
 
+	lex::init()
+	parse::init()
+
 	printf("Parsing Text: `%s`\n", contents)
 
-	lex::init()
-	lex::tokenize(contents)
+	List tokens = lex::tokenize(contents)
+	parse::parse(tokens)
+
+	Token::free_token_list(tokens)
+	parse::free()
 	lex::free()
 	contents:free()
 return 0

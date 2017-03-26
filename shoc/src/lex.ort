@@ -101,7 +101,7 @@ function(cstr text) lex::match_string_literal -> int does
 			continue=false
 		done
 
-		if text[i]:in("\\") do
+		if text[i]:in("\\") & -escape do
 			escape=true
 		else do
 			escape=false
@@ -146,6 +146,18 @@ function(cstr text) lex::match_import -> int does
 	while -text[i]:in(" \r\n\t") do
 		i+=1
 	done
+return i
+
+function(cstr text) lex::match_intrinsic -> int does
+	if -text[0]:in("@") do
+		return 0
+	done
+
+	int i=1
+	while -text[i]:in("@") do
+		i+=1
+	done
+	i+=1
 return i
 
 type TokenMatcher is a function->int
@@ -232,6 +244,10 @@ type TokenType is
 	return self:after(prev_req)
 
 	function(TokenType self) TokenType:free -> void does
+		if self.preceeded_opts|ptr!=null do
+			self.preceeded_opts:clear()
+			self.preceeded_opts:free()
+		done
 		free(self|ptr)
 	return
 
@@ -241,6 +257,9 @@ type TokenType is
 	function(TokenType self) TokenType:notoken -> TokenType does
 		self.produce_token=false
 	return self
+
+	function(TokenType self, cstr text) TokenType:make_token -> Token does
+	return Token::_new(text:substr(0, self:match_internal(text)), self)
 endtype
 
 type Token is
@@ -254,10 +273,21 @@ type Token is
 		new.text=text
 		new.type_=type_
 	return new
-endtype
 
-function(TokenType self, cstr text) TokenType:make_token -> Token does
-return Token::_new(text:substr(0, self:match_internal(text)), self)
+	function(Token self) Token:free -> void does
+		#free(self.text|ptr)
+		free(self|ptr)
+	return
+
+	function(List l) Token::free_token_list -> void does
+		while l.len>0 do
+			(l:get(0)|Token):free()
+			l:del(0)
+		done
+		l:clear()
+		l:free()
+	return
+endtype
 
 List lex_token_types
 
@@ -268,6 +298,7 @@ function() lex::init -> void does
 	t:append(TokenType::new_fn("T_BLOCK_COMMENT", lex::match_block_comment|TokenMatcher):notoken()|ptr)
 
 	t:append(TokenType::new_fn("T_IMPORT", lex::match_import|TokenMatcher)|ptr)
+	t:append(TokenType::new_fn("T_INTRINSIC", lex::match_intrinsic|TokenMatcher)|ptr)
 
 	t:append(TokenType::new_kw("T_IF", "if")|ptr)
 	t:append(TokenType::new_kw("T_DONE", "done")|ptr)
@@ -343,9 +374,11 @@ function() lex::free -> void does
 		(lex_token_types:get(0)|TokenType):free()
 		lex_token_types:del(0)
 	done
+	lex_token_types:clear()
+	lex_token_types:free()
 return
 
-function(cstr text) lex::tokenize -> void does
+function(cstr text) lex::tokenize -> List does
 	int text_pos=0
 	int current_matcher_idx
 	TokenType current_matcher
@@ -382,15 +415,4 @@ function(cstr text) lex::tokenize -> void does
 			ok=false
 		done
 	done
-	printf("Parsed into %i tokens:\n", tokens.len)
-	int p=0
-	Token t
-	while p<tokens.len do
-		t=tokens:get(p)|Token
-		if t.text=="\n" do
-			t.text="\\n"
-		done
-		printf("%s:'%s'\n", t.type_.name, t.text)
-		p+=1
-	done
-return
+return tokens

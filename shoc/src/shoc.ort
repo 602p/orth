@@ -10,7 +10,7 @@ function(int nargs, ArgList args) main -> int does
 		return 1
 	done
 
-	if args:get(1)=="_show_parser_types_" do
+	if args:get(1)=="--show-parser-types" do
 		parse::init()
 		parse::show_types()
 		return 0

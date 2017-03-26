@@ -1,1 +1,5 @@
-(1)+(2)
+function(cstr a, cstr b) cstr:__add__ -> cstr does
+	cstr result = malloc(strlen(a)+strlen(b)+1)
+	strcpy(result, a)
+	strcat(result, b)
+return result

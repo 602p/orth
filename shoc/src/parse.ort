@@ -107,6 +107,9 @@ type EleList is
 	function(EleList self) EleList:get_lookahead -> Element does
 	return self:get(-1)
 
+	function(EleList self) EleList:has_lookahead -> bool does
+	return self.position!=0
+
 	function(EleList self, int by) EleList:advance -> EleList does
 		self.position-=by
 	return self

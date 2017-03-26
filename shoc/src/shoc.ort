@@ -2,7 +2,7 @@ import std
 import fileio
 import args
 import lex
-import parse
+import grammar
 
 function(int nargs, ArgList args) main -> int does
 	if nargs!=2 do

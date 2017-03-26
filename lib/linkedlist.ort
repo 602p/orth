@@ -23,6 +23,15 @@ type List is
         new.len=0
     return new
 
+    function(List o) List::copy -> List does
+        List new = List::new()
+        int i=0
+        while i<o.len do
+            new:append(o:get(i))
+            i+=1
+        done
+    return new
+
     function(List l, int want) List:get_node -> LinkedListNode does
         int idx = 0
         LinkedListNode current = l.head

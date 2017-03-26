@@ -1,1 +1,1 @@
-((a*b)-((one+two+three)/foo))-(baz-quux)
+int a = ((a+b)*c)+((a-b)*(d*b))

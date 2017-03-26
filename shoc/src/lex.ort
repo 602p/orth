@@ -63,6 +63,10 @@ function(cstr text) lex::match_float_literal -> int does
 	while text[i]:in("1234567890.") do
 		i+=1
 	done
+
+	if i==1 do #Don't match '.'
+		return 0
+	done
 return i
 
 function(cstr text) lex::match_var_decl -> int does

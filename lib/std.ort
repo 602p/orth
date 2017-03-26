@@ -104,11 +104,16 @@ function(int i) int:str -> cstr does
 	sprintf(str, "%i", i)
 return str
 
+type _STDReadIntBox is packed
+	int i
+endtype
+
 function(cstr prompt) read_int -> int does
-	int result
-	ptr result_ptr=result||ptr
+	_STDReadIntBox box = malloc(@sizeof(int)@)|_STDReadIntBox
 	printf(prompt)
-	scanf("%d", result_ptr)
+	scanf("%d", box)
+	int result=box.i
+	free(box)
 return result
 
 function(cstr prompt) read_line -> cstr does

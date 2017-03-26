@@ -1,4 +1,3 @@
-int   a =   (("some" + "text")|ptr|int)+3
-if x do
-	a+=1
-done
+
+a+=\
+ b

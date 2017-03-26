@@ -1,1 +1,2 @@
-t:append(TokenType::new_kw("T_WHILE", "while"):after("T_ENDOFSTATEMENT"))
+function() main -> int does
+return 1

@@ -511,6 +511,7 @@ type ZeroTuple is packed
 					:set_matcher(ZeroTuple::match |NodeMatcher)\
 					:matches(2):matches_only_tokens():addtype("Tuple")
 endtype
+
 type CallExpr is packed
 	NodeType type_
 	Node meth
@@ -582,6 +583,66 @@ type CallExpr is packed
 					:matches(2):matches_only_nodes():addtype("ValueExpression")
 endtype
 
+type ZeroArgList is packed
+	NodeType type_
+
+	function(ZeroArgList node) ZeroArgList::free -> void does;return
+
+	function(ZeroArgList node, int depth) ZeroArgList::print -> void does
+		printf("ZeroArgList: (Size=0)\n")
+	return
+
+	function(EleList eles) ZeroArgList::create -> ZeroArgList does
+		ZeroArgList new = malloc(@sizeof(ZeroArgList)@)|ZeroArgList
+	return new
+
+	function(EleList eles) ZeroArgList::match -> int does
+		if (-eles:get(0):t():is_a("T_ARGLIST_START")):or(\
+		    -eles:get(1):t():is_a("T_ARGLIST_END")) do
+			return 0
+		done
+	return 2
+
+	function() ZeroArgList::impl -> NodeType does
+	return NodeType::new("ZeroArgList")\
+					:set_printer(ZeroArgList::print |NodePrinter)\
+					:set_deleter(ZeroArgList::free  |NodeDeleter)\
+					:set_creator(ZeroArgList::create|NodeCreator)\
+					:set_matcher(ZeroArgList::match |NodeMatcher)\
+					:matches(2):matches_only_tokens():addtype("ArgList")
+endtype
+
+type OneArgList is packed
+	NodeType type_
+	cstr text
+
+	function(OneArgList node) OneArgList::free -> void does;return
+
+	function(OneArgList node, int depth) OneArgList::print -> void does
+		printf("OneArgList: (Size=0)\n")
+	return
+
+	function(EleList eles) OneArgList::create -> OneArgList does
+		OneArgList new = malloc(@sizeof(OneArgList)@)|OneArgList
+	return new
+
+	function(EleList eles) OneArgList::match -> int does
+		if (-eles:get(0):t():is_a("T_ARGLIST_START")):or(\
+		    -eles:get(1):t():is_a("T_ARGLIST_END")) do
+			return 0
+		done
+	return 2
+
+	function() OneArgList::impl -> NodeType does
+	return NodeType::new("OneArgList")\
+					:set_printer(OneArgList::print |NodePrinter)\
+					:set_deleter(OneArgList::free  |NodeDeleter)\
+					:set_creator(OneArgList::create|NodeCreator)\
+					:set_matcher(OneArgList::match |NodeMatcher)\
+					:matches(3):matches_only_tokens():addtype("ArgList")
+endtype
+
+
 function() parse::init -> void does
 	List l=List::new()
 
@@ -592,11 +653,14 @@ function() parse::init -> void does
 	l:append_NodeType(GroupingExpr::impl())
 	l:append_NodeType(AssignmentExpr::impl())
 	l:append_NodeType(AccessorExpr::impl())
+
 	l:append_NodeType(TupleEndFragment::impl())
 	l:append_NodeType(TupleMidFragment::impl())
 	l:append_NodeType(Tuple::impl())
 	l:append_NodeType(ZeroTuple::impl())
 	l:append_NodeType(CallExpr::impl())
+
+	l:append_NodeType(ZeroArgList::impl())
 
 	parse_node_types=l
 return

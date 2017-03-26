@@ -1,6 +1,9 @@
 import linkedlist
 import lex
 
+function(Token self, cstr type_) Token:is_a -> bool does
+return self.type_.name==type_
+
 function(int depth) parse::indent -> void does
 	int i=0
 	while i<depth do

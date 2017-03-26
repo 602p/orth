@@ -102,6 +102,7 @@ def parse(tokens):
 			#At least you get a more helpful error message...
 			#Error detection/informing is really not optimal
 			print(item)
+			print("\n\n\n".join(str(n) for n in view.tokens[view.tokens.index(item)-2:view.tokens.index(item)+2]))
 			raise SyntaxError("Programmer Error: Got a token in the resultant tokens")
 
 	return FileExpr(view.tokens)

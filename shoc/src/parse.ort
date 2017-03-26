@@ -15,8 +15,9 @@ return
 type Node is packed
 	NodeType type_
 	function(Node self) Node:free -> void does
-		self.type_.deleter(self)
-		free(self|ptr)
+		#self.type_.deleter(self)
+		#free(self|ptr)
+		0#TODO: Re-implement this
 	return
 
 	function(Node self, int depth) Node:print -> void does

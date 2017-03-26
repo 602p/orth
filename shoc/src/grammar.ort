@@ -17,11 +17,6 @@ type BinOpExpr is packed
 	Node lhs
 	Node rhs
 
-	function(BinOpExpr node) BinOpExpr::free -> void does
-		node.lhs:free()
-		node.rhs:free()
-	return
-
 	function(BinOpExpr node, int depth) BinOpExpr::print -> void does
 		printf("BinOpExpr (Operator='%s')\n", node.op)
 		parse::indent(depth)
@@ -61,7 +56,6 @@ type BinOpExpr is packed
 	function() BinOpExpr::impl -> NodeType does
 	return NodeType::new("BinOpExpr")\
 					:set_printer(BinOpExpr::print |NodePrinter)\
-					:set_deleter(BinOpExpr::free  |NodeDeleter)\
 					:set_creator(BinOpExpr::create|NodeCreator)\
 					:set_matcher(BinOpExpr::match |NodeMatcher)\
 					:matches(3):addtype("ValueExpression")
@@ -72,11 +66,6 @@ type AssignmentExpr is packed
 	cstr op
 	Node lhs
 	Node rhs
-
-	function(AssignmentExpr node) AssignmentExpr::free -> void does
-		node.lhs:free()
-		node.rhs:free()
-	return
 
 	function(AssignmentExpr node, int depth) AssignmentExpr::print -> void does
 		printf("AssignmentExpr (Operator='%s')\n", node.op)
@@ -119,7 +108,6 @@ type AssignmentExpr is packed
 	function() AssignmentExpr::impl -> NodeType does
 	return NodeType::new("AssignmentExpr")\
 					:set_printer(AssignmentExpr::print |NodePrinter)\
-					:set_deleter(AssignmentExpr::free  |NodeDeleter)\
 					:set_creator(AssignmentExpr::create|NodeCreator)\
 					:set_matcher(AssignmentExpr::match |NodeMatcher)\
 					:matches(3):addtype("Expression")
@@ -130,11 +118,6 @@ type AccessorExpr is packed
 	cstr mode
 	Node object
 	Node field
-
-	function(AccessorExpr node) AccessorExpr::free -> void does
-		node.object:free()
-		node.field:free()
-	return
 
 	function(AccessorExpr node, int depth) AccessorExpr::print -> void does
 		printf("AccessorExpr (Mode='%s')\n", node.mode)
@@ -178,7 +161,6 @@ type AccessorExpr is packed
 	function() AccessorExpr::impl -> NodeType does
 	return NodeType::new("AccessorExpr")\
 					:set_printer(AccessorExpr::print |NodePrinter)\
-					:set_deleter(AccessorExpr::free  |NodeDeleter)\
 					:set_creator(AccessorExpr::create|NodeCreator)\
 					:set_matcher(AccessorExpr::match |NodeMatcher)\
 					:matches(3):addtype("IdentifierExpression")
@@ -187,10 +169,6 @@ endtype
 type NameExpr is packed
 	NodeType type_
 	cstr name
-
-	function(NameExpr node) NameExpr::free -> void does
-		free(node.name|ptr)
-	return
 
 	function(NameExpr node, int depth) NameExpr::print -> void does
 		printf("NameExpr: '%s'\n", node.name)
@@ -207,7 +185,6 @@ type NameExpr is packed
 	function() NameExpr::impl -> NodeType does
 	return NodeType::new("NameExpr")\
 					:set_printer(NameExpr::print |NodePrinter)\
-					:set_deleter(NameExpr::free  |NodeDeleter)\
 					:set_creator(NameExpr::create|NodeCreator)\
 					:set_matcher(NameExpr::match |NodeMatcher)\
 					:matches(1):matches_only_tokens():addtype("IdentifierExpression")
@@ -217,10 +194,6 @@ type LiteralExpr is packed
 	NodeType type_
 	cstr value
 	cstr value_type
-
-	function(LiteralExpr node) LiteralExpr::free -> void does
-		free(node.value|ptr)
-	return
 
 	function(LiteralExpr node, int depth) LiteralExpr::print -> void does
 		printf("LiteralExpr: type=%s, value=%s\n", node.value_type, node.value)
@@ -246,7 +219,6 @@ type LiteralExpr is packed
 	function() LiteralExpr::impl -> NodeType does
 	return NodeType::new("LiteralExpr")\
 					:set_printer(LiteralExpr::print |NodePrinter)\
-					:set_deleter(LiteralExpr::free  |NodeDeleter)\
 					:set_creator(LiteralExpr::create|NodeCreator)\
 					:set_matcher(LiteralExpr::match |NodeMatcher)\
 					:matches(1):matches_only_tokens():addtype("ValueExpression")
@@ -255,10 +227,6 @@ endtype
 type DeclExpr is packed
 	NodeType type_
 	cstr name
-
-	function(DeclExpr node) DeclExpr::free -> void does
-		free(node.name|ptr)
-	return
 
 	function(DeclExpr node, int depth) DeclExpr::print -> void does
 		printf("DeclExpr: '%s'\n", node.name)
@@ -275,7 +243,6 @@ type DeclExpr is packed
 	function() DeclExpr::impl -> NodeType does
 	return NodeType::new("DeclExpr")\
 					:set_printer(DeclExpr::print |NodePrinter)\
-					:set_deleter(DeclExpr::free  |NodeDeleter)\
 					:set_creator(DeclExpr::create|NodeCreator)\
 					:set_matcher(DeclExpr::match |NodeMatcher)\
 					:matches(1):matches_only_tokens():addtype("IdentifierExpression")
@@ -284,10 +251,6 @@ endtype
 type GroupingExpr is packed
 	NodeType type_
 	Node contents
-
-	function(GroupingExpr node) GroupingExpr::free -> void does
-		node.contents:free()
-	return
 
 	function(GroupingExpr node, int depth) GroupingExpr::print -> void does
 		printf("GroupingExpr: ")
@@ -316,7 +279,6 @@ type GroupingExpr is packed
 	function() GroupingExpr::impl -> NodeType does
 	return NodeType::new("GroupingExpr")\
 					:set_printer(GroupingExpr::print |NodePrinter)\
-					:set_deleter(GroupingExpr::free  |NodeDeleter)\
 					:set_creator(GroupingExpr::create|NodeCreator)\
 					:set_matcher(GroupingExpr::match |NodeMatcher)\
 					:matches(3):addtype("ValueExpression"):addtype("Tuple")
@@ -325,10 +287,6 @@ endtype
 type TupleEndFragment is packed
 	NodeType type_
 	Node element
-
-	function(TupleEndFragment node) TupleEndFragment::free -> void does
-		node.element:free()
-	return
 
 	function(TupleEndFragment node, int depth) TupleEndFragment::print -> void does
 		printf("TupleEndFragment, element=")
@@ -357,7 +315,6 @@ type TupleEndFragment is packed
 	function() TupleEndFragment::impl -> NodeType does
 	return NodeType::new("TupleEndFragment")\
 					:set_printer(TupleEndFragment::print |NodePrinter)\
-					:set_deleter(TupleEndFragment::free  |NodeDeleter)\
 					:set_creator(TupleEndFragment::create|NodeCreator)\
 					:set_matcher(TupleEndFragment::match |NodeMatcher)\
 					:matches(3):addtype("TupleFragment")
@@ -366,16 +323,6 @@ endtype
 type TupleMidFragment is packed
 	NodeType type_
 	List elements
-
-	function(TupleMidFragment node) TupleMidFragment::free -> void does
-		int i=0
-		while i<node.elements.len do
-			(node.elements:get(i)|Node):free()
-			i+=1
-		done
-		node.elements:clear()
-		node.elements:free()
-	return
 
 	function(TupleMidFragment node, int depth) TupleMidFragment::print -> void does
 		printf("TupleMidFragment: (Length=%i)\n", node.elements.len)
@@ -417,7 +364,6 @@ type TupleMidFragment is packed
 	function() TupleMidFragment::impl -> NodeType does
 	return NodeType::new("TupleMidFragment")\
 					:set_printer(TupleMidFragment::print |NodePrinter)\
-					:set_deleter(TupleMidFragment::free  |NodeDeleter)\
 					:set_creator(TupleMidFragment::create|NodeCreator)\
 					:set_matcher(TupleMidFragment::match |NodeMatcher)\
 					:matches(3):addtype("TupleFragment")
@@ -426,16 +372,6 @@ endtype
 type Tuple is packed
 	NodeType type_
 	List elements
-
-	function(Tuple node) Tuple::free -> void does
-		int i=0
-		while i<node.elements.len do
-			(node.elements:get(i)|Node):free()
-			i+=1
-		done
-		node.elements:clear()
-		node.elements:free()
-	return
 
 	function(Tuple node, int depth) Tuple::print -> void does
 		printf("Tuple: (Length=%i)\n", node.elements.len)
@@ -477,7 +413,6 @@ type Tuple is packed
 	function() Tuple::impl -> NodeType does
 	return NodeType::new("Tuple")\
 					:set_printer(Tuple::print |NodePrinter)\
-					:set_deleter(Tuple::free  |NodeDeleter)\
 					:set_creator(Tuple::create|NodeCreator)\
 					:set_matcher(Tuple::match |NodeMatcher)\
 					:matches(3)
@@ -485,8 +420,6 @@ endtype
 
 type ZeroTuple is packed
 	NodeType type_
-
-	function(ZeroTuple node) ZeroTuple::free -> void does;return
 
 	function(ZeroTuple node, int depth) ZeroTuple::print -> void does
 		printf("ZeroTuple: (Length=0)\n")
@@ -506,7 +439,6 @@ type ZeroTuple is packed
 	function() ZeroTuple::impl -> NodeType does
 	return NodeType::new("ZeroTuple")\
 					:set_printer(ZeroTuple::print |NodePrinter)\
-					:set_deleter(ZeroTuple::free  |NodeDeleter)\
 					:set_creator(ZeroTuple::create|NodeCreator)\
 					:set_matcher(ZeroTuple::match |NodeMatcher)\
 					:matches(2):matches_only_tokens():addtype("Tuple")
@@ -516,17 +448,6 @@ type CallExpr is packed
 	NodeType type_
 	Node meth
 	List args
-
-	function(CallExpr node) CallExpr::free -> void does
-		node.meth:free()
-		int i=0
-		while i<node.args.len do
-			(node.args:get(i)|Element):n():free()
-			i+=1
-		done
-		node.args:clear()
-		node.args:free()
-	return
 
 	function(CallExpr node, int depth) CallExpr::print -> void does
 		printf("CallExpr:\n")
@@ -577,7 +498,6 @@ type CallExpr is packed
 	function() CallExpr::impl -> NodeType does
 	return NodeType::new("CallExpr")\
 					:set_printer(CallExpr::print |NodePrinter)\
-					:set_deleter(CallExpr::free  |NodeDeleter)\
 					:set_creator(CallExpr::create|NodeCreator)\
 					:set_matcher(CallExpr::match |NodeMatcher)\
 					:matches(2):matches_only_nodes():addtype("ValueExpression")
@@ -585,8 +505,6 @@ endtype
 
 type ZeroArgList is packed
 	NodeType type_
-
-	function(ZeroArgList node) ZeroArgList::free -> void does;return
 
 	function(ZeroArgList node, int depth) ZeroArgList::print -> void does
 		printf("ZeroArgList: (Size=0)\n")
@@ -606,7 +524,6 @@ type ZeroArgList is packed
 	function() ZeroArgList::impl -> NodeType does
 	return NodeType::new("ZeroArgList")\
 					:set_printer(ZeroArgList::print |NodePrinter)\
-					:set_deleter(ZeroArgList::free  |NodeDeleter)\
 					:set_creator(ZeroArgList::create|NodeCreator)\
 					:set_matcher(ZeroArgList::match |NodeMatcher)\
 					:matches(2):matches_only_tokens():addtype("ArgList")
@@ -615,8 +532,6 @@ endtype
 type OneArgList is packed
 	NodeType type_
 	cstr text
-
-	function(OneArgList node) OneArgList::free -> void does;return
 
 	function(OneArgList node, int depth) OneArgList::print -> void does
 		printf("OneArgList: (Size=0)\n")
@@ -636,7 +551,6 @@ type OneArgList is packed
 	function() OneArgList::impl -> NodeType does
 	return NodeType::new("OneArgList")\
 					:set_printer(OneArgList::print |NodePrinter)\
-					:set_deleter(OneArgList::free  |NodeDeleter)\
 					:set_creator(OneArgList::create|NodeCreator)\
 					:set_matcher(OneArgList::match |NodeMatcher)\
 					:matches(3):matches_only_tokens():addtype("ArgList")

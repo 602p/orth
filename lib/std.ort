@@ -32,6 +32,12 @@ function(cstr a, int b) cstr:__mul__ -> cstr does
 	done
 return result
 
+function(bool a, bool b) bool:or -> bool does
+	if a do
+		return a
+	done
+return b
+
 function(ptr a, int b) ptr:offset -> ptr does
 return ((a|long)+(b|long))|ptr
 

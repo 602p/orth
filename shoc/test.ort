@@ -1,1 +1,1 @@
-int a = ((a+b)*c)+((a-b)*(d*b))
+t:append(TokenType::new_kw("T_WHILE", "while"):after("T_ENDOFSTATEMENT"))

@@ -165,7 +165,7 @@ type AccessorExpr is packed
 				(eles:get(1):t().type_.name=="T_DOT"):or(\
 		 		eles:get(1):t().type_.name=="T_COLON"):or(\
 		 		eles:get(1):t().type_.name=="T_DOUBLECOLON"))):or(\
-		   -eles:get(0):n():is_a("IdentifierExpression")):or(\
+		   -eles:get(0):n():is_a("ValueExpression")):or(\
 		   -eles:get(2):n():is_a("NameExpr")) do
 			return 0
 		done
@@ -211,6 +211,45 @@ type NameExpr is packed
 					:set_creator(NameExpr::create|NodeCreator)\
 					:set_matcher(NameExpr::match |NodeMatcher)\
 					:matches(1):matches_only_tokens():addtype("IdentifierExpression")
+endtype
+
+type LiteralExpr is packed
+	NodeType type_
+	cstr value
+	cstr value_type
+
+	function(LiteralExpr node) LiteralExpr::free -> void does
+		free(node.value|ptr)
+	return
+
+	function(LiteralExpr node, int depth) LiteralExpr::print -> void does
+		printf("LiteralExpr: type=%s, value=%s\n", node.value_type, node.value)
+	return
+
+	function(EleList eles) LiteralExpr::create -> LiteralExpr does
+		LiteralExpr new = malloc(@sizeof(LiteralExpr)@)|LiteralExpr
+		new.value=eles:get(0):t().text
+		if eles:get(0):t().type_.name=="T_INT_LITERAL" do
+			new.value_type="int"
+		elif eles:get(0):t().type_.name=="T_FLOAT_LITERAL" do
+			new.value_type="float"
+		else do
+			new.value_type="cstr"
+		done
+	return new
+
+	function(EleList eles) LiteralExpr::match -> int does
+	return ((eles:get(0):t().type_.name=="T_INT_LITERAL")+\
+		    (eles:get(0):t().type_.name=="T_FLOAT_LITERAL")+\
+		    (eles:get(0):t().type_.name=="T_STRING_LITERAL"))|int
+
+	function() LiteralExpr::impl -> NodeType does
+	return NodeType::new("LiteralExpr")\
+					:set_printer(LiteralExpr::print |NodePrinter)\
+					:set_deleter(LiteralExpr::free  |NodeDeleter)\
+					:set_creator(LiteralExpr::create|NodeCreator)\
+					:set_matcher(LiteralExpr::match |NodeMatcher)\
+					:matches(1):matches_only_tokens():addtype("ValueExpression")
 endtype
 
 type DeclExpr is packed
@@ -280,7 +319,7 @@ type GroupingExpr is packed
 					:set_deleter(GroupingExpr::free  |NodeDeleter)\
 					:set_creator(GroupingExpr::create|NodeCreator)\
 					:set_matcher(GroupingExpr::match |NodeMatcher)\
-					:matches(3):addtype("ValueExpression")
+					:matches(3):addtype("ValueExpression"):addtype("Tuple")
 endtype
 
 type TupleEndFragment is packed
@@ -444,11 +483,111 @@ type Tuple is packed
 					:matches(3)
 endtype
 
+type ZeroTuple is packed
+	NodeType type_
+
+	function(ZeroTuple node) ZeroTuple::free -> void does;return
+
+	function(ZeroTuple node, int depth) ZeroTuple::print -> void does
+		printf("ZeroTuple: (Length=0)\n")
+	return
+
+	function(EleList eles) ZeroTuple::create -> ZeroTuple does
+		ZeroTuple new = malloc(@sizeof(ZeroTuple)@)|ZeroTuple
+	return new
+
+	function(EleList eles) ZeroTuple::match -> int does
+		if (eles:get(0):t().type_.name!="T_PAREN_OPEN"):or(\
+		    eles:get(1):t().type_.name!="T_PAREN_CLOSE") do
+			return 0
+		done
+	return 2
+
+	function() ZeroTuple::impl -> NodeType does
+	return NodeType::new("ZeroTuple")\
+					:set_printer(ZeroTuple::print |NodePrinter)\
+					:set_deleter(ZeroTuple::free  |NodeDeleter)\
+					:set_creator(ZeroTuple::create|NodeCreator)\
+					:set_matcher(ZeroTuple::match |NodeMatcher)\
+					:matches(2):matches_only_tokens():addtype("Tuple")
+endtype
+type CallExpr is packed
+	NodeType type_
+	Node meth
+	List args
+
+	function(CallExpr node) CallExpr::free -> void does
+		node.meth:free()
+		int i=0
+		while i<node.args.len do
+			(node.args:get(i)|Element):n():free()
+			i+=1
+		done
+		node.args:clear()
+		node.args:free()
+	return
+
+	function(CallExpr node, int depth) CallExpr::print -> void does
+		printf("CallExpr:\n")
+		parse::indent(depth)
+		printf("|- Method: ")
+		node.meth:print(depth+1)
+
+		parse::indent(depth)
+		printf("\- Arguments: (Len=%i)\n", node.args.len)
+		int i=0
+		while i<node.args.len do
+			parse::indent(depth+1)
+			if i==node.args.len-1 do
+				printf("\%i- ", i)
+			else do
+				printf("|%i- ", i)
+			done
+			node.args:get_Node(i):print(depth+2)
+			i+=1
+		done
+	return
+
+	function(EleList eles) CallExpr::create -> CallExpr does
+		CallExpr new = malloc(@sizeof(CallExpr)@)|CallExpr
+		new.meth=eles:get(0):n()
+		Node args = eles:get(1):n()
+		if args:is_a("ZeroTuple") do
+			new.args=List::new()
+		elif args:is_a("GroupingExpr") do
+			new.args=List::new()
+			new.args:append_Node((args|GroupingExpr).contents)
+		else do
+			new.args=List::copy((args|Tuple).elements)
+		done
+	return new
+
+	function(EleList eles) CallExpr::match -> int does
+		if (-eles:get(0):n():is_a("IdentifierExpression")):or(\
+		    -eles:get(1):n():is_a("Tuple")) do
+			return 0
+		done
+
+		if parse::lookahead_is_accessor(eles) do
+			return 0
+		done
+	return 2
+
+	function() CallExpr::impl -> NodeType does
+	return NodeType::new("CallExpr")\
+					:set_printer(CallExpr::print |NodePrinter)\
+					:set_deleter(CallExpr::free  |NodeDeleter)\
+					:set_creator(CallExpr::create|NodeCreator)\
+					:set_matcher(CallExpr::match |NodeMatcher)\
+					:matches(2):matches_only_nodes():addtype("ValueExpression")
+endtype
+
 function() parse::init -> void does
 	List l=List::new()
 
 	l:append_NodeType(BinOpExpr::impl())
 	l:append_NodeType(NameExpr::impl())
+	l:append_NodeType(LiteralExpr::impl())
 	l:append_NodeType(DeclExpr::impl())
 	l:append_NodeType(GroupingExpr::impl())
 	l:append_NodeType(AssignmentExpr::impl())
@@ -456,6 +595,8 @@ function() parse::init -> void does
 	l:append_NodeType(TupleEndFragment::impl())
 	l:append_NodeType(TupleMidFragment::impl())
 	l:append_NodeType(Tuple::impl())
+	l:append_NodeType(ZeroTuple::impl())
+	l:append_NodeType(CallExpr::impl())
 
 	parse_node_types=l
 return

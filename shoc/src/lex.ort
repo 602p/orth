@@ -49,8 +49,11 @@ function(cstr text) lex::match_augassign -> int does
 return 0
 
 function(cstr text) lex::match_int_literal -> int does
+	if -text[0]:in("1234567890") do
+		return 0
+	done
 	int i=0
-	while text[i]:in("1234567890") do
+	while text[i]:in("1234567890xbXB") do
 		i+=1
 	done
 	if text[i]:in(".") do
@@ -341,8 +344,13 @@ function() lex::init -> void does
 	t:append(TokenType::new_fn("T_FLOAT_LITERAL", lex::match_float_literal|TokenMatcher)|ptr)
 	t:append(TokenType::new_fn("T_STRING_LITERAL", lex::match_string_literal|TokenMatcher)|ptr)
 
-	t:append(TokenType::new_eq("T_ASSIGN", "=")|ptr)
 	t:append(TokenType::new_fn("T_AUGASSIGN", lex::match_augassign|TokenMatcher)|ptr)
+	t:append(TokenType::new_fn("T_BINOP", lex::match_binop|TokenMatcher)\
+		:after("T_NAME"):or("T_BRACKET_CLOSE"):or("T_PAREN_CLOSE"):or("T_INT_LITERAL")\
+		:or("T_STRING_LITERAL"):or("T_FLOAT_LITERAL")|ptr) #Only match after things that could be value (removes
+															#confustion with unary -)
+	t:append(TokenType::new_eq("T_ASSIGN", "=")|ptr)
+	
 
 	t:append(TokenType::new_eq("T_PAREN_OPEN", "(")|ptr)
 	t:append(TokenType::new_eq("T_PAREN_CLOSE", ")")|ptr)
@@ -355,7 +363,7 @@ function() lex::init -> void does
 	t:append(TokenType::new_eq("T_DOUBLECOLON", "::")|ptr)
 	t:append(TokenType::new_eq("T_COLON", ":")|ptr)
 	
-	t:append(TokenType::new_fn("T_BINOP", lex::match_binop|TokenMatcher)|ptr)
+	
 	t:append(TokenType::new_in("T_UNOP", "-!")|ptr)
 	
 	t:append(TokenType::new_in("T_ENDOFSTATEMENT", "\r\n;")|ptr)

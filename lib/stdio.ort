@@ -1,0 +1,12 @@
+@declare_c_func("fdopen", "ptr", "(i32, i8*)")@
+@declare_c_func("fflush", "void", "(i8*)")@
+
+ptr stdout
+ptr stderr
+ptr stdin
+
+function() stdio::init -> void does
+	stdout = fdopen(1, "w")
+	stderr = fdopen(2, "w")
+	stdin = fdopen(0, "r")
+return

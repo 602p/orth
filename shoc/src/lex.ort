@@ -391,6 +391,7 @@ function() lex::free -> void does
 return
 
 function(cstr text) lex::tokenize -> List does
+	ProgressBar bar = ProgressBar::new(text:len(), 40, "Tokenizing...")
 	int text_pos=0
 	int current_matcher_idx
 	TokenType current_matcher
@@ -426,5 +427,7 @@ function(cstr text) lex::tokenize -> List does
 			printf("E: can't match any furter after %i:`%s`\n", text_pos, text:offset(text_pos))
 			ok=false
 		done
+		bar:update(text_pos)
 	done
+	bar:free()
 return tokens

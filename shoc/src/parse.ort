@@ -1,5 +1,6 @@
 import linkedlist
 import lex
+import progressbar
 
 function(Token self, cstr type_) Token:is_a -> bool does
 return self.type_.name==type_
@@ -296,6 +297,7 @@ return
 
 function(List tokens, cstr text) parse::parse -> Node does
 	EleList eles=EleList::from(tokens)
+	ProgressBar bar = ProgressBar::new_reversed(tokens.len, 40, "Parsing......")
 
 	bool     progress
 	int      current_type_idx
@@ -329,11 +331,14 @@ function(List tokens, cstr text) parse::parse -> Node does
 			parse::update_viz(eles, text)
 			printf("No further possible parses, advanced by 1\n")
 		done
+		bar:update(eles.position)
 	done
 	printf("Done!\n")
 	if -DEBUG do
+		#read_line("Press Enter")
 		eles:print()
 	done
+	bar:free()
 return null|Node
 
 function() parse::free -> void does

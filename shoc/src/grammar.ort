@@ -80,6 +80,44 @@ type BinOpExpr is packed
 					:matches(3):addtype("ValueExpression")
 endtype
 
+type UnOpExpr is packed
+	NodeType type_
+	cstr op
+	Node value
+
+	function(UnOpExpr node, int depth) UnOpExpr::print -> void does
+		printf("UnOpExpr (Operator='%s')\n", node.op)
+		parse::indent(depth)
+		printf("\- Value: ")
+		node.value:print(depth+1)
+	return
+
+	function(EleList eles) UnOpExpr::create -> UnOpExpr does
+		UnOpExpr new = malloc(@sizeof(UnOpExpr)@)|UnOpExpr
+		new.value=eles:get(1):n()
+		new.op=eles:get(0):t().text
+	return new
+
+	function(EleList eles) UnOpExpr::match -> int does
+		if eles:get(1).is_token:or(\
+		  -eles:get(0).is_token) do
+			return 0
+		done
+
+		if (-eles:get(0):t():is_a("T_UNOP")):or(\
+		    -eles:get(1):n():is_a("ValueExpression")) do
+			return 0
+		done
+	return 2
+
+	function() UnOpExpr::impl -> NodeType does
+	return NodeType::new("UnOpExpr")\
+					:set_printer(UnOpExpr::print |NodePrinter)\
+					:set_creator(UnOpExpr::create|NodeCreator)\
+					:set_matcher(UnOpExpr::match |NodeMatcher)\
+					:matches(2):addtype("ValueExpression")
+endtype
+
 type AssignmentExpr is packed
 	NodeType type_
 	cstr op
@@ -365,7 +403,7 @@ type TupleMidFragment is packed
 			new.elements:append_Node(eles:get(1):n())
 			new.elements:append_Node((eles:get(2):n()|TupleEndFragment).element)
 		else do
-			new.elements=List::copy((eles:get(2):n()|TupleMidFragment).elements)
+			new.elements=(eles:get(2):n()|TupleMidFragment).elements
 			new.elements:insert(0, eles:get(1):n()|ptr)
 		done
 	return new
@@ -418,7 +456,7 @@ type Tuple is packed
 			new.elements:append_Node(eles:get(1):n())
 			new.elements:append_Node((eles:get(2):n()|TupleEndFragment).element)
 		else do
-			new.elements=List::copy((eles:get(2):n()|TupleMidFragment).elements)
+			new.elements=(eles:get(2):n()|TupleMidFragment).elements
 			new.elements:insert(0, eles:get(1):n()|ptr)
 		done
 	return new
@@ -548,12 +586,12 @@ type CallExpr is packed
 			new.args=List::new()
 			new.args:append_Node((args|GroupingExpr).contents)
 		else do
-			new.args=List::copy((args|Tuple).elements)
+			new.args=(args|Tuple).elements
 		done
 	return new
 
 	function(EleList eles) CallExpr::match -> int does
-		if (-eles:get(0):n():is_a("IdentifierExpression")):or(\
+		if (-eles:get(0):n():is_a("ValueExpression")):or(\
 		    -eles:get(1):n():is_a("Tuple")) do
 			return 0
 		done
@@ -1110,6 +1148,59 @@ type CastExpr is packed
 					:matches(3):addtype("ValueExpression")
 endtype
 
+type IndexExpr is packed
+	NodeType type_
+	Node value
+	Node array
+
+	function(IndexExpr node, int depth) IndexExpr::print -> void does
+		printf("IndexExpr\n")
+		parse::indent(depth)
+		printf("|- Array: ")
+		node.array:print(depth+1)
+		parse::indent(depth)
+		printf("\\- Value: ")
+		node.value:print(depth+1)
+	return
+
+	function(EleList eles) IndexExpr::create -> IndexExpr does
+		IndexExpr new = malloc(@sizeof(IndexExpr)@)|IndexExpr
+		new.array=eles:get(0):n()
+		new.value=eles:get(2):n()
+	return new
+
+	function(EleList eles) IndexExpr::match -> int does
+		if eles:get(0).is_token:or(\
+		  -eles:get(1).is_token):or(\
+		   eles:get(2).is_token):or(\
+		  -eles:get(3).is_token) do
+			return 0
+		done
+
+		if (eles:get(1):t().type_.name!="T_BRACKET_OPEN"):or(\
+		    eles:get(3):t().type_.name!="T_BRACKET_CLOSE"):or(\
+		    -eles:get(0):n():is_a("ValueExpression")):or(\
+		    -eles:get(2):n():is_a("ValueExpression")) do
+			return 0
+		done
+
+		if parse::lookahead_is_accessor(eles) do
+			return 0
+		done
+
+		if parse::lookahead_is_possibly_function(eles) do
+			return 0
+		done
+	return 4
+
+	function() IndexExpr::impl -> NodeType does
+	return NodeType::new("IndexExpr")\
+					:set_printer(IndexExpr::print |NodePrinter)\
+					:set_creator(IndexExpr::create|NodeCreator)\
+					:set_matcher(IndexExpr::match |NodeMatcher)\
+					:matches(4):addtype("IdentifierExpression")
+endtype
+
 function() parse::init -> void does
 	List l=List::new()
 
@@ -1121,7 +1212,9 @@ function() parse::init -> void does
 	
 	l:append_NodeType(GroupingExpr::impl())
 	l:append_NodeType(BinOpExpr::impl())
+	l:append_NodeType(UnOpExpr::impl())
 	l:append_NodeType(CastExpr::impl())
+	l:append_NodeType(IndexExpr::impl())
 
 	l:append_NodeType(CallExpr::impl())
 

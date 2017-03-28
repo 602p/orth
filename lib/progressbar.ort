@@ -1,0 +1,79 @@
+import std
+import stdio
+
+type ProgressBar is
+	int last_update
+	int steps
+	int out_of
+	int step
+	cstr text
+	bool reverse
+	bool finished
+
+	function(int out_of, int steps, cstr text) ProgressBar::new -> ProgressBar does
+		ProgressBar new = malloc(@sizeof(ProgressBar)@)|ProgressBar
+		new.out_of=out_of
+		new.steps=steps
+		new.last_update=-1
+		new.step=(out_of/steps)|int
+		new.reverse=false
+		new.text=text
+		new.finished=false
+		if new.step==0 do
+			new.step=1
+		done
+	return new
+
+	function(int out_of, int steps, cstr text) ProgressBar::new_reversed -> ProgressBar does
+		ProgressBar new = ProgressBar::new(out_of, steps, text)
+		new.reverse=true
+	return new
+
+	function(ProgressBar self, int pos) ProgressBar:update -> void does
+		if self.finished do
+			return
+		done
+		if self.reverse do
+			pos=self.out_of-pos
+		done
+
+		int cur_state=(pos/self.step)
+
+		if (cur_state>self.last_update):or(pos==self.out_of) do
+			int pct=((pos|float/self.out_of|float)*100.)|int
+			self.last_update=cur_state
+			fprintf(stdout, "\r%s %010i/%010i [", self.text, pos, self.out_of)
+			int i=1
+			while i<self.steps do
+				if ((pos>=(self.step*(i+1))) & -(i==self.steps-1)):or(pct==100) do
+					fprintf(stdout, "=")
+				elif (pos>=(self.step*i)) do
+					fprintf(stdout, ">")
+				else do
+					fprintf(stdout, " ")
+				done
+				i+=1
+			done
+			if pct==100 do
+				fprintf(stdout, "=")
+			else do
+				fprintf(stdout, " ")
+			done
+			fprintf(stdout, "] %03i%%        ", pct)
+			fflush(stdout)
+			if pct==100 do
+				printf("Done!\n")
+				self.finished=true
+			done
+			
+		done
+	return
+
+	function(ProgressBar self) ProgressBar:done -> void does
+		self:update(self.out_of)
+	return
+
+	function(ProgressBar self) ProgressBar:free -> void does
+		free(self|ptr)
+	return
+endtype

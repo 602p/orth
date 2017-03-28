@@ -3,8 +3,10 @@ import fileio
 import args
 import lex
 import grammar
+import stdio
 
 function(int nargs, ArgList args) main -> int does
+	stdio::init()
 	if nargs!=2 do
 		printf("E: Bad args\n")
 		return 1

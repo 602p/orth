@@ -1,0 +1,12 @@
+import std
+import stdio
+import fileio
+
+function() main -> int does
+	stdio::init()
+	fprintf(stdout, "Hello, stdout!")
+	fflush(stdout)
+	read_line(">")
+	fprintf(stdout, "\rHello, rewrite\n")
+	fflush(stdout)
+return 0

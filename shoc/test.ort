@@ -1,1 +1,79 @@
-a-b
+
+	function(EleList eles) BlockBody::create -> BlockBody does
+		BlockBody new = malloc(sizeof(BlockBody))|BlockBody
+		int matchnum=BlockBody::match(eles)
+		if matchnum==2 do
+			if -eles:get(1).is_token do
+				if -(eles:get(1):n():is_a("BlockBody"):or(eles:get(1):n():is_a("IfExpr"))) do
+					shoc::bail_out("BlockBody matched against thing of len 2 of which [1] was a node but not a BlockBody")
+				done
+				if eles:get(1):n():is_a("IfExpr") do
+					if -(eles:get(1):n()|IfExpr).head.is_elif do
+						new.has_runoff_clause=false
+						new.runoff_clause=null|Node
+						new.statements=List::new()
+						new.statements:append_Node(eles:get(1):n())
+						return new
+					done
+				done
+				new.statements=List::new()
+				new.has_runoff_clause=true
+				new.runoff_clause=eles:get(1):n()
+			else do
+				new.statements=List::new()
+				new.has_runoff_clause=false
+				new.runoff_clause=null|Node
+			done
+		elif matchnum==3 do
+			BlockBody old = eles:get(2):n()|BlockBody
+			new.has_runoff_clause=old.has_runoff_clause
+			new.runoff_clause=old.runoff_clause
+			new.statements=old.statements
+			new.statements:insert(0, eles:get(1):n()|ptr)
+		else do #4
+			new.has_runoff_clause=true
+			new.runoff_clause=eles:get(3):n()
+			new.statements=List::new()
+		done
+	return new
+
+	function(EleList eles) BlockBody::match -> int does
+		if eles:get(0).is_token do
+			return 0
+		done
+
+		if -eles:get(0):n():is_a("SepExpr") do
+			return 0
+		done
+
+		if eles:get(1).is_token do
+			if eles:get(1):t():is_a("T_DONE") do
+				return 2
+			elif eles:get(1).is_token & eles:get(2).is_token do
+				if eles:get(1):t():is_a("T_ELSE") & eles:get(2):t():is_a("T_DO") do
+					return 4
+				done
+			done
+		elif eles:get(1):n():is_a("BlockBody") do
+			return 2
+		elif (-eles:get(1).is_token) do
+			if eles:get(1):n():is_a("IfExpr") do
+				if (eles:get(1):n()|IfExpr).head.is_elif do
+					return 2
+				done
+			done
+			if  (-eles:get(2).is_token) do
+				if eles:get(1):n():is_a("Expression") &\
+				   (eles:get(2):n():is_a("BlockBody")) do
+				   return 3
+				done
+			done
+		done
+	return 0
+
+	function() BlockBody::impl -> NodeType does
+	return NodeType::new("BlockBody")\
+					:set_printer(BlockBody::print |NodePrinter)\
+					:set_creator(BlockBody::create|NodeCreator)\
+					:set_matcher(BlockBody::match |NodeMatcher)\
+					:matches(2)

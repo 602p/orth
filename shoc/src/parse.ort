@@ -285,7 +285,7 @@ return l:get(n)|Node
 
 function(EleList e, cstr s) parse::update_viz -> void does
 	bool fancy = true
-	float speed= 0.05
+	float speed= 0.2
 
 	if fancy do
 		usleep((speed*1000000.)|int)
@@ -305,7 +305,7 @@ function(List tokens, cstr text) parse::parse -> Node does
 	int      match_count
 	bool     DEBUG=false
 
-	while eles.position>0 do
+	while eles.position>=0 do
 		progress=true
 		while progress do
 			progress=false
@@ -331,7 +331,7 @@ function(List tokens, cstr text) parse::parse -> Node does
 			parse::update_viz(eles, text)
 			printf("No further possible parses, advanced by 1\n")
 		done
-		bar:update(eles.position)
+		bar:update(eles.position+1)
 	done
 	printf("Done!\n")
 	if -DEBUG do

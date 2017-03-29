@@ -5,6 +5,11 @@ import lex
 import grammar
 import stdio
 
+function(cstr err) shoc::bail_out -> void does
+	printf("E: SHOC Bailout: %s\n", err)
+	exit(1)
+return
+
 function(int nargs, ArgList args) main -> int does
 	stdio::init()
 	if nargs!=2 do

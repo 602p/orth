@@ -391,6 +391,7 @@ function() lex::free -> void does
 return
 
 function(cstr text) lex::tokenize -> List does
+	#text=text+"\n;;;"
 	ProgressBar bar = ProgressBar::new(text:len(), 40, "Tokenizing...")
 	int text_pos=0
 	int current_matcher_idx
@@ -429,5 +430,6 @@ function(cstr text) lex::tokenize -> List does
 		done
 		bar:update(text_pos)
 	done
+	#text:free()
 	bar:free()
 return tokens

@@ -1,6 +1,24 @@
+function(BlockBody node, int depth) BlockBody::print -> void does
+		printf("BlockBody: (N_Statements=%i)\n", node.statements.len)
+		int i=0
+		while i<node.statements.len do
+			parse::indent(depth+1)
+			printf("|%i- ", i)
+			node.statements:get_Node(i):print(depth+2)
+			i+=1
+		done
+
+		parse::indent(depth)
+		if node.has_runoff_clause do
+			printf("\\-- Runoff Clause: ")
+			node.runoff_clause:print(depth+1)
+		else do
+			printf("\\-- No Runoff Clause\n")
+		done
+	return
 
 	function(EleList eles) BlockBody::create -> BlockBody does
-		BlockBody new = malloc(sizeof(BlockBody))|BlockBody
+		BlockBody new = malloc(@sizeof(BlockBody)@)|BlockBody
 		int matchnum=BlockBody::match(eles)
 		if matchnum==2 do
 			if -eles:get(1).is_token do
@@ -77,3 +95,4 @@
 					:set_creator(BlockBody::create|NodeCreator)\
 					:set_matcher(BlockBody::match |NodeMatcher)\
 					:matches(2)
+					

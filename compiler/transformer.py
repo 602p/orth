@@ -537,6 +537,7 @@ class ImportTransformer(Transformer):
 		import tokenize, parse
 		filename=transform.resolve_import(self.node, out)
 		if filename not in out.ast_cache:
+			print("Parsing %s..."%filename)
 			out.ast_cache[filename]=parse.parse(
 				tokenize.tokenize(
 					open(filename, 'r').read()

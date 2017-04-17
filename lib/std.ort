@@ -67,7 +67,8 @@ return atoi(s)
 
 function(byte b, cstr s) byte:in -> bool does
 	int i=0
-	while i<s:len() do
+	int len=s:len()
+	while i<len do
 		if s[i]==b do
 			return 1|bool
 		done

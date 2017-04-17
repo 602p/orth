@@ -585,6 +585,7 @@ type CallExpr is packed
 		elif args:is_a("GroupingExpr") do
 			new.args=List::new()
 			new.args:append_Node((args|GroupingExpr).contents)
+
 		else do
 			new.args=(args|Tuple).elements
 		done

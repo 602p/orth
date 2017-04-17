@@ -1,0 +1,51 @@
+import std
+import err
+import profile
+import linkedlist
+
+function() foo -> void does
+	long i=clock()
+	while (clock()-i)<100|long do
+		0
+	done
+
+return
+
+function() bar -> void does
+	foo()
+	foo()
+	long i=clock()
+	while (clock()-i)<50|long do
+		0
+	done
+
+return
+
+function(int b) a -> void does
+	long i=clock()
+	while (clock()-i)<50|long do
+		0
+	done
+	if b!=0 do
+		a(b-1)
+	done
+return
+
+function() main -> int does
+	orth::internal::profile::install_profiler()
+	bar()
+	foo()
+	a(30)
+	cstr a="A"
+	int b=1000
+	int sz = strlen(a)*b
+	sz+=1
+	cstr result = malloc(sz)
+	int idx=b
+	while b>0 do
+		b-=1
+		strcat(result, a)
+	done
+	"A"*10000
+	orth::internal::profile::display_profiling_data()
+return 0

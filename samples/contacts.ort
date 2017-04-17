@@ -1,5 +1,6 @@
 import std
 import linkedlist
+import profile
 
 type Record is
     cstr first
@@ -205,6 +206,8 @@ function(List l, cstr str, int year) do_cmd -> int does
 return 0
 
 function() main -> int does
+    orth::internal::profile::install_profiler()
+    
     cstr year_str = read_line("What year is it? ")
     int year = year_str:int()
     year_str:free()
@@ -230,4 +233,6 @@ function() main -> int does
     delete_records(l)
     l:clear()
     l:free()
+
+    orth::internal::profile::display_profiling_data()
 return 0

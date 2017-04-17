@@ -377,6 +377,7 @@ class FunctionTransformer(Transformer):
 			self.node.name,
 			",".join(get_type(arg.type, out).get_llvm_representation()+" %"+arg.name for arg in self.node.args)
 		))
+
 		with out.context(method=self.node.name):
 			with out.scope():
 				for arg in self.node.args:
@@ -386,6 +387,10 @@ class FunctionTransformer(Transformer):
 						v=arg.name,
 						n=out.get_var_name(arg.name)
 					))
+
+				if out.options["funchooks"] and not self.node.name.startswith("orth$$internal$$hooks$$"):
+					out.emitl("call void @orth$$internal$$hooks$$function_enter_hook(i8* {})".format(
+						datamodel.builtin_types['cstr'].get_literal_expr(self.node.name, out)))
 				transform.emit(out, self.node.body, self)
 		out.emitl("}")
 
@@ -393,6 +398,10 @@ class ReturnTransformer(Transformer):
 	transforms=ReturnExpr
 
 	def transform(self, out):
+		if out.options["funchooks"] and not out.context_map['method'].startswith("orth$$internal$$hooks$$"):
+			out.emitl("call void @orth$$internal$$hooks$$function_exit_hook(i8* {})".format(
+				datamodel.builtin_types['cstr'].get_literal_expr(out.context_map['method'], out)))
+
 		if self.node.value:
 			name=transform.emit(out, self.node.value, self)
 			out.emitl("ret {} {}".format(get_type(self.node.value, out).get_llvm_representation(), name))

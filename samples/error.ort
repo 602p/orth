@@ -1,0 +1,18 @@
+import std
+import err
+
+function() bar -> void does
+return
+
+function() baz -> void does
+	orth::fail("Test")
+return
+
+function() foo -> void does
+	bar()
+	baz()
+return
+
+function() main -> int does
+	foo()
+return 0

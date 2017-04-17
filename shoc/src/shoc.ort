@@ -4,15 +4,26 @@ import args
 import lex
 import grammar
 import stdio
+import err
+import profile
 
 function(cstr err) shoc::bail_out -> void does
-	printf("E: SHOC Bailout: %s\n", err)
-	exit(1)
+	printf("\n\nshoc::bail_out called, orth::fail traceback follows...\n")
+	orth::fail(err)
 return
 
 function(int nargs, ArgList args) main -> int does
+	bool PROFILE=false
+	if nargs>2 do 
+		PROFILE=args:get(2)=="--profile"
+	done
+
+	if PROFILE do
+		orth::internal::profile::install_profiler()
+	done
+
 	stdio::init()
-	if nargs!=2 do
+	if nargs<2 do
 		printf("E: Bad args\n")
 		return 1
 	done
@@ -40,4 +51,8 @@ function(int nargs, ArgList args) main -> int does
 	parse::free()
 	lex::free()
 	contents:free()
+
+	if PROFILE do
+		orth::internal::profile::display_profiling_data()
+	done
 return 0

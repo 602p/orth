@@ -3,6 +3,7 @@
 @declare_c_func("fclose", "void", "(i8*)")@
 @declare_c_func("fflush", "void", "(i8*)")@
 @declare_c_func("fgets", "ptr", "(i8*, i32, i8*)")@
+import err
 
 type File is
 	cstr path
@@ -18,8 +19,7 @@ type File is
 		f._file=fopen(path, mode)
 
 		if f._file|ptr|int==0 do
-			printf("***FATAL fileio/File::open error, fopen->0***\n")
-			exit(1)
+			orth::fail("***FATAL fileio/File::open error, fopen->0***\n")
 		done
 
 		f.mode=mode

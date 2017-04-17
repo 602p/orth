@@ -1,0 +1,78 @@
+import std
+
+type _StackNode is
+	_StackNode _next
+	_StackNode _prev
+	cstr name 
+endtype
+
+_StackNode __stack
+_StackNode __stack_tail
+
+type AddtlEnterExitCallback is a function->void #func(cstr name)
+
+AddtlEnterExitCallback __fex_addtl_callback_enter
+AddtlEnterExitCallback __fex_addtl_callback_exit
+bool __in_err
+
+function(cstr name) orth::internal::hooks::function_enter_hook -> void does
+	if __in_err do
+		return
+	done
+	__in_err=true
+	if __fex_addtl_callback_enter|ptr|int!=null|int do
+		__fex_addtl_callback_enter(name)
+	done
+	_StackNode new = malloc(@sizeof(_StackNode)@)|_StackNode
+	new._next=null|_StackNode
+	new._prev=null|_StackNode
+	new.name=name
+
+	if __stack|ptr|int==null|int do
+		__stack=new
+		__stack_tail=new
+	else do
+		__stack_tail._next=new
+		new._prev=__stack_tail
+		__stack_tail=new
+	done
+	__in_err=false
+return
+
+function(cstr name) orth::internal::hooks::function_exit_hook -> void does
+	if __in_err do
+		return
+	done
+	__in_err=true
+	if __stack._next|ptr|int==null|int do
+		return
+	done
+
+	if __fex_addtl_callback_exit|ptr|int!=null|int do
+		__fex_addtl_callback_exit(name)
+	done
+
+	_StackNode new_last=__stack_tail._prev
+	free(__stack_tail)
+	__stack_tail=new_last
+	new_last._next=null|_StackNode
+	__in_err=false
+return
+
+function(cstr err) orth::fail -> void does
+	printf("\x1B[41m==================== orth::fail bailout report ====================\x1B[0m\n")
+	printf("Bailout message: '%s'\n", err)
+	if __stack|ptr == null do
+		printf("Cannot print traceback, __stack is null. Did you compile with the 'funchooks' flag?\n")
+		exit(2)
+	done
+	printf("Traceback (orth calls only, most recent call last):\n")
+	_StackNode curr=__stack
+	int curr_idx=0
+	while curr|ptr!=null do
+		printf("  %04i: %s\n", curr_idx, curr.name)
+		curr_idx+=1
+		curr=curr._next
+	done
+	exit(1)
+return

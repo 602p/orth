@@ -426,6 +426,7 @@ function(cstr text) lex::tokenize -> List does
 			done
 		elif -matched do
 			printf("E: can't match any furter after %i:`%s`\n", text_pos, text:offset(text_pos))
+			shoc::bail_out("Can't match input string")
 			ok=false
 		done
 		bar:update(text_pos)

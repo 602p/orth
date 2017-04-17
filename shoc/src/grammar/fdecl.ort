@@ -1,0 +1,191 @@
+type FunctionDeclHead is packed
+	NodeType type_
+	List args
+	cstr name
+	cstr ret_type
+
+	function(FunctionDeclHead node, int depth) FunctionDeclHead::print -> void does
+		printf("FunctionDeclHead: Name='%s' Type='%s' Nargs=%i\n", node.name, node.ret_type, node.args.len)
+		int i=0
+		while i<node.args.len do
+			parse::indent(depth+1)
+			if i==node.args.len-1 do
+				printf("\\%i- %s\n", i, node.args:get(i))
+			else do
+				printf("|%i- %s\n", i, node.args:get(i))
+			done
+			i+=1
+		done
+	return
+
+	function(EleList eles) FunctionDeclHead::create -> FunctionDeclHead does
+		FunctionDeclHead new = malloc(@sizeof(FunctionDeclHead)@)|FunctionDeclHead
+		new.name=eles:get(2):t().text
+		new.ret_type=eles:get(4):t().text
+
+		Node args = eles:get(1):n()
+		if args:is_a("ZeroArgList") do
+			new.args=List::new()
+		elif args:is_a("OneArgList") do
+			new.args=List::new()
+			new.args:append((eles:get(1):n()|OneArgList).text)
+		else do #it's a MultiArgList
+			new.args=(eles:get(1):n()|MultiArgList).args
+		done
+	return new
+
+	function(EleList eles) FunctionDeclHead::match -> int does
+		#T_FUNCTIONDECL ArgList T_FUNCTIONDECL_NAME T_FUNCTIONDECL_RETURN T_FUNCTIONDECL_RETURN_TY
+		#...T_FUNCTIONDECL_DOES
+		if (-eles:get(0).is_token):or(\
+			 eles:get(1).is_token):or(\
+			-eles:get(2).is_token):or(\
+			-eles:get(3).is_token):or(\
+			-eles:get(4).is_token):or(\
+			-eles:get(5).is_token) do
+			return 0
+		done
+
+		if (-eles:get(0):t():is_a("T_FUNCTIONDECL")):or(\
+		    -eles:get(1):n():is_a("ArgList")):or(\
+		    -eles:get(2):t():is_a("T_FUNCTIONDECL_NAME")):or(\
+		    -eles:get(3):t():is_a("T_FUNCTIONDECL_RETURN")):or(\
+		    -eles:get(4):t():is_a("T_FUNCTIONDECL_RETURN_TY")):or(\
+		    -eles:get(5):t():is_a("T_FUNCTIONDECL_DOES")) do
+			return 0
+		done
+	return 6
+
+	function() FunctionDeclHead::impl -> NodeType does
+	return NodeType::new("FunctionDeclHead")\
+					:set_printer(FunctionDeclHead::print |NodePrinter)\
+					:set_creator(FunctionDeclHead::create|NodeCreator)\
+					:set_matcher(FunctionDeclHead::match |NodeMatcher)\
+					:matches(6)
+endtype
+
+type FunctionBody is packed
+	NodeType type_
+	List statements
+
+	function(FunctionBody node, int depth) FunctionBody::print -> void does
+		printf("FunctionBody: (N_Statements=%i)\n", node.statements.len)
+		int i=0
+		while i<node.statements.len do
+			parse::indent(depth+1)
+			if i==node.statements.len-1 do
+				printf("\\%i- ", i)
+				node.statements:get_Node(i):print(depth+2)
+			else do
+				printf("|%i- ", i)
+				node.statements:get_Node(i):print(depth+2)
+			done
+			i+=1
+		done
+	return
+
+	function(EleList eles) FunctionBody::create -> FunctionBody does
+		FunctionBody new = malloc(@sizeof(FunctionBody)@)|FunctionBody
+		if eles:in_slice()>2 do
+			if eles:get(1):n():is_a("Expression") do
+				if -eles:get(2).is_token do
+					if eles:get(2):n():is_a("FunctionBody") do
+						new.statements=(eles:get(2):n()|FunctionBody).statements
+						new.statements:insert(0, eles:get(1):n()|ptr)
+					done
+				done
+			done
+		done
+		if eles:get(1):n():is_a("ReturnExpr") do
+			new.statements=List::new()
+			new.statements:append_Node(eles:get(1):n())
+		done
+	return new
+
+	function(EleList eles) FunctionBody::match -> int does
+		if (eles:get(0).is_token) do
+			return 0
+		done
+
+		if -eles:get(0):n():is_a("SepExpr") do
+			return 0
+		done
+
+		if eles:get(1).is_token do
+			return 0
+		done
+
+		if eles:in_slice()>2 do
+			if eles:get(1):n():is_a("Expression") do
+				if -eles:get(2).is_token do
+					if eles:get(2):n():is_a("FunctionBody") do
+						if eles:get(1):n():is_a("IfExpr") do
+							if (eles:get(1):n()|IfExpr).head.is_elif do
+								return 0
+							done
+						done
+						return 3
+					done
+				done
+			done
+		done
+		if eles:get(1):n():is_a("ReturnExpr") do
+			int i=0
+			Element e
+			while i<eles:in_slice() do #Don't match more than one return into a body per function. #TODO: Improve
+				e=eles:get(i)
+				if -e.is_token do
+					if e:n():is_a("FunctionBody") do
+						return 0
+					done
+				done
+				i+=1
+			done
+			return 2
+		done
+	return 0
+
+	function() FunctionBody::impl -> NodeType does
+	return NodeType::new("FunctionBody")\
+					:set_printer(FunctionBody::print |NodePrinter)\
+					:set_creator(FunctionBody::create|NodeCreator)\
+					:set_matcher(FunctionBody::match |NodeMatcher)\
+					:matches(2)
+endtype
+
+type FunctionDecl is packed
+	NodeType type_
+	FunctionDeclHead head
+	FunctionBody body
+
+	function(FunctionDecl node, int depth) FunctionDecl::print -> void does
+		printf("FunctionDecl:\n")
+		parse::indent(depth+1)
+		printf("|- Head: ")
+		(node.head|Node):print(depth+2)
+		parse::indent(depth+1)
+		printf("\\- Body: ")
+		(node.body|Node):print(depth+2)
+	return
+
+	function(EleList eles) FunctionDecl::create -> FunctionDecl does
+		FunctionDecl new = malloc(@sizeof(FunctionDecl)@)|FunctionDecl
+		new.head=eles:get(0):n()|FunctionDeclHead
+		new.body=eles:get(1):n()|FunctionBody
+	return new
+
+	function(EleList eles) FunctionDecl::match -> int does
+
+		if (-eles:get(0):n():is_a("FunctionDeclHead")):or(\
+		    -eles:get(1):n():is_a("FunctionBody")) do
+			return 0
+		done
+	return 2
+
+	function() FunctionDecl::impl -> NodeType does
+	return NodeType::new("FunctionDecl")\
+					:set_printer(FunctionDecl::print |NodePrinter)\
+					:set_creator(FunctionDecl::create|NodeCreator)\
+					:set_matcher(FunctionDecl::match |NodeMatcher)\
+					:matches(2):matches_only_nodes()
+endtype

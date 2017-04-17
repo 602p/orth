@@ -1,0 +1,23 @@
+type ImportStmt is packed
+	NodeType type_
+	cstr name
+
+	function(ImportStmt node, int depth) ImportStmt::print -> void does
+		printf("ImportStmt: '%s'\n", node.name)
+	return
+
+	function(EleList eles) ImportStmt::create -> ImportStmt does
+		ImportStmt new = malloc(@sizeof(ImportStmt)@)|ImportStmt
+		new.name=eles:get(0):t().text
+	return new
+
+	function(EleList eles) ImportStmt::match -> int does
+	return (eles:get(0):t().type_.name=="T_IMPORT")|int
+
+	function() ImportStmt::impl -> NodeType does
+	return NodeType::new("ImportStmt")\
+					:set_printer(ImportStmt::print |NodePrinter)\
+					:set_creator(ImportStmt::create|NodeCreator)\
+					:set_matcher(ImportStmt::match |NodeMatcher)\
+					:matches(1):matches_only_tokens():addtype("ValueExpression")
+endtype

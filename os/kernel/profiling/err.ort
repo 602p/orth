@@ -13,8 +13,13 @@ type AddtlEnterExitCallback is a function->void #func(cstr name)
 AddtlEnterExitCallback __fex_addtl_callback_enter
 AddtlEnterExitCallback __fex_addtl_callback_exit
 bool __in_err
+bool __err_ready
 
 function(cstr name) orth::internal::hooks::function_enter_hook -> void does
+	if -__err_ready do
+		return
+	done
+
 	if __in_err do
 		return
 	done
@@ -39,11 +44,16 @@ function(cstr name) orth::internal::hooks::function_enter_hook -> void does
 return
 
 function(cstr name) orth::internal::hooks::function_exit_hook -> void does
+	if -__err_ready do
+		return
+	done
+
 	if __in_err do
 		return
 	done
 	__in_err=true
 	if __stack._next|ptr|int==null|int do
+		__in_err=false
 		return
 	done
 
@@ -52,26 +62,34 @@ function(cstr name) orth::internal::hooks::function_exit_hook -> void does
 	done
 
 	_StackNode new_last=__stack_tail._prev
-	free(__stack_tail)
+	free(__stack_tail|ptr)
 	__stack_tail=new_last
 	new_last._next=null|_StackNode
 	__in_err=false
 return
 
+function() orth::internal::hooks::enable_err -> void does
+	__err_ready=true
+return
+
 function(cstr err) orth::fail -> void does
-	printf("\x1B[41m==================== orth::fail bailout report ====================\x1B[0m\n")
-	printf("Bailout message: '%s'\n", err)
+	kterm:print("\x01==================== orth::fail bailout report ====================\x01\n")
+	kterm:print("Bailout message: '")
+	kterm:print(err)
+	kterm:print("'\n")
 	if __stack|ptr == null do
-		printf("Cannot print traceback, __stack is null. Did you compile with the 'funchooks' flag?\n")
-		exit(2)
+		kterm:print("Cannot print traceback, __stack is null. Did you compile with the 'funchooks' flag?\n")
 	done
-	printf("Traceback (orth calls only, most recent call last):\n")
-	_StackNode curr=__stack
+	kterm:print("Traceback (orth calls only, most recent call last):\n")
+	_StackNode curr=__stack._next
 	int curr_idx=0
 	while curr|ptr!=null do
-		printf("  %04i: %s\n", curr_idx, curr.name)
+		kterm:print("  ")
+		kterm:dumphexi(curr_idx)
+		kterm:print(" - ")
+		kterm:print(curr.name)
+		kterm:print("\n")
 		curr_idx+=1
 		curr=curr._next
 	done
-	exit(1)
 return

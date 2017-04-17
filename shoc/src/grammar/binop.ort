@@ -1,0 +1,53 @@
+type BinOpExpr is packed
+	NodeType type_
+	cstr op
+	Node lhs
+	Node rhs
+
+	function(BinOpExpr node, int depth) BinOpExpr::print -> void does
+		printf("BinOpExpr (Operator='%s')\n", node.op)
+		parse::indent(depth)
+		printf("|- LHS: ")
+		node.lhs:print(depth+1)
+
+		parse::indent(depth)
+		printf("\- RHS: ")
+		node.rhs:print(depth+1)
+	return
+
+	function(EleList eles) BinOpExpr::create -> BinOpExpr does
+		BinOpExpr new = malloc(@sizeof(BinOpExpr)@)|BinOpExpr
+		new.lhs=eles:get(0):n()
+		new.op=eles:get(1):t().text
+		new.rhs=eles:get(2):n()
+	return new
+
+	function(EleList eles) BinOpExpr::match -> int does
+		if eles:get(0).is_token:or(\
+		  -eles:get(1).is_token):or(\
+		   eles:get(2).is_token) do
+			return 0
+		done
+
+		if (eles:get(1):t().type_.name!="T_BINOP"):or(\
+		   -eles:get(0):n():is_a("ValueExpression")):or(\
+		   -eles:get(2):n():is_a("ValueExpression")) do
+			return 0
+		done
+
+		if parse::lookahead_is_accessor(eles) do
+			return 0
+		done
+
+		if parse::lookahead_is_possibly_function(eles) do
+			return 0 #Don't turn a(1)+2 into a,(1)+2
+		done
+	return 3
+
+	function() BinOpExpr::impl -> NodeType does
+	return NodeType::new("BinOpExpr")\
+					:set_printer(BinOpExpr::print |NodePrinter)\
+					:set_creator(BinOpExpr::create|NodeCreator)\
+					:set_matcher(BinOpExpr::match |NodeMatcher)\
+					:matches(3):addtype("ValueExpression")
+endtype

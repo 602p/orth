@@ -19,6 +19,9 @@ function(cstr a, cstr b) cstr:__eq__ -> bool does
 	done
 return 1|bool
 
+function(cstr a, cstr b) cstr:__ne__ -> bool does
+return -(a==b)
+
 function(cstr a, ubyte char) cstr:index -> int does
 	int idx=0
 	while idx<a:len() do
@@ -28,6 +31,19 @@ function(cstr a, ubyte char) cstr:index -> int does
 		idx+=1
 	done
 return -1
+
+function(cstr s, cstr o, int l) cstr:equals_l -> bool does
+	int i=0
+	while i<l do
+		if s[i]!=o[i] do
+			return false
+		done
+		i+=1
+	done
+return true
+
+function(cstr s, cstr o) cstr:startswith -> bool does
+return s:equals_l(o, o:len())
 
 function(cstr s) cstr:ord -> int does
 return (s|ptr)[0]|int
@@ -106,3 +122,9 @@ function(short s, short o) short:xor -> short does
 		i+=1|short
 	done
 return out
+
+function(ptr a, ptr b) ptr:__eq__ -> bool does
+return (a|long)==(b|long)
+
+function(ptr a, ptr b) ptr:__ne__ -> bool does
+return -(a==b)

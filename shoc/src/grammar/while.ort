@@ -1,0 +1,44 @@
+type WhileExpr is packed
+	NodeType type_
+	Node condition
+	BlockBody body
+
+	function(WhileExpr node, int depth) WhileExpr::print -> void does
+		printf("WhileExpr:\n")
+		parse::indent(depth+1)
+		printf("|- Condition: ")
+		(node.condition):print(depth+2)
+		parse::indent(depth+1)
+		printf("|- Body: ")
+		(node.body|Node):print(depth+2)
+	return
+
+	function(EleList eles) WhileExpr::create -> WhileExpr does
+		WhileExpr new = malloc(@sizeof(WhileExpr)@)|WhileExpr
+		new.condition=eles:get(1):n()
+		new.body=eles:get(3):n()|BlockBody
+	return new
+
+	function(EleList eles) WhileExpr::match -> int does
+		if (-eles:get(0).is_token):or(\
+		    -eles:get(2).is_token):or(\
+		     eles:get(1).is_token):or(\
+		     eles:get(3).is_token) do
+			return 0
+		done
+
+		if (-eles:get(0):t():is_a("T_WHILE")):or(\
+			-eles:get(2):t():is_a("T_DO")):or(\
+			-eles:get(1):n():is_a("ValueExpression")):or(\
+			-eles:get(3):n():is_a("BlockBody")) do
+			return 0
+		done
+	return 4
+
+	function() WhileExpr::impl -> NodeType does
+	return NodeType::new("WhileExpr")\
+					:set_printer(WhileExpr::print |NodePrinter)\
+					:set_creator(WhileExpr::create|NodeCreator)\
+					:set_matcher(WhileExpr::match |NodeMatcher)\
+					:matches(4):addtype("Expression")
+endtype

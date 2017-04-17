@@ -1,0 +1,179 @@
+type TypeDeclHead is packed
+	NodeType type_
+	cstr name
+	bool is_type_alias
+	bool is_func_alias
+	bool packed
+	cstr alias_type #type for normal alias, RT for func alias
+
+	function(TypeDeclHead node, int depth) TypeDeclHead::print -> void does
+		printf("TypeDeclHead: `%s` (Is_Func_Alias=%i, Is_Type_Alias:%i, Is_Packed=%i)",\
+		 node.name, node.is_func_alias|int, node.is_type_alias|int, node.packed|int)
+		if node.is_type_alias do
+			printf(" Aliases Type: `%s`", node.alias_type)
+		elif node.is_func_alias do
+			printf(" Aliases Function->`%s`", node.alias_type)
+		done
+		printf("\n")
+	return
+
+	function(EleList eles) TypeDeclHead::create -> TypeDeclHead does
+		TypeDeclHead new = malloc(@sizeof(TypeDeclHead)@)|TypeDeclHead
+		int matchnum=TypeDeclHead::match(eles) # 3=regular, 4=regular+packed, 5=alias, 6=func alias
+		new.name=eles:get(1):t().text
+		new.packed=false
+		new.is_type_alias=false
+		new.is_func_alias=false
+		if matchnum==4 do
+			new.packed=true
+		elif matchnum==5 do
+			new.is_type_alias=true
+			new.alias_type=eles:get(4):t().text
+		elif matchnum==6 do
+			new.is_func_alias=true
+			new.alias_type=eles:get(5):t().text
+		done
+	return new
+
+	function(EleList eles) TypeDeclHead::match -> int does
+		if -(eles:get(0):t():is_a("T_TYPEDECL") &\
+			 eles:get(1):t():is_a("T_TYPEDECL_NAME") &\
+			 eles:get(2):t():is_a("T_TYPEDECL_IS")) do
+			return 0
+		done
+
+		if eles:in_slice()>=4 do
+			if eles:get(3).is_token do
+				if eles:get(3):t():is_a("T_TYPEDECL_PACKED") do
+					return 4
+				done
+
+				if eles:get(3):t():is_a("T_TYPEDECL_ALIAS") do
+					if eles:in_slice()>=5 do
+						if eles:get(4).is_token do
+							if eles:get(4):t():is_a("T_TYPEDECL_ALIAS_NAME") do
+								return 5
+							done
+
+							if eles:in_slice()>=6 do
+								if eles:get(5).is_token do
+									if eles:get(4):t():is_a("T_TYPEDECL_ALIAS_FUNC")&\
+									   eles:get(5):t():is_a("T_TYPEDECL_ALIAS_FUNC_RT") do
+										return 6
+									done
+								done
+							done
+						done
+					done
+				done
+			done
+		done
+	return 3
+
+	function() TypeDeclHead::impl -> NodeType does
+	return NodeType::new("TypeDeclHead")\
+					:set_printer(TypeDeclHead::print |NodePrinter)\
+					:set_creator(TypeDeclHead::create|NodeCreator)\
+					:set_matcher(TypeDeclHead::match |NodeMatcher)\
+					:matches(3):matches_only_tokens()
+endtype
+
+type TypeDeclBody is packed
+	NodeType type_
+	List statements
+
+	function(TypeDeclBody node, int depth) TypeDeclBody::print -> void does
+		printf("TypeDeclBody: (N_Statements=%i)\n", node.statements.len)
+		int i=0
+		while i<node.statements.len do
+			parse::indent(depth+1)
+			if i==node.statements.len-1 do
+				printf("\\%i- ", i)
+				node.statements:get_Node(i):print(depth+2)
+			else do
+				printf("|%i- ", i)
+				node.statements:get_Node(i):print(depth+2)
+			done
+			i+=1
+		done
+	return
+
+	function(EleList eles) TypeDeclBody::create -> TypeDeclBody does
+		TypeDeclBody new = malloc(@sizeof(TypeDeclBody)@)|TypeDeclBody
+		if eles:get(1).is_token do
+			new.statements=List::new()
+		else do
+			new.statements=(eles:get(2):n()|TypeDeclBody).statements
+			new.statements:insert(0, eles:get(1):n()|ptr)
+		done
+	return new
+
+	function(EleList eles) TypeDeclBody::match -> int does
+		if (eles:get(0).is_token) do
+			return 0
+		done
+
+		if -eles:get(0):n():is_a("SepExpr") do
+			return 0
+		done
+
+		if eles:get(0):n():is_a("TypeDeclHead") do
+			return 0
+		done
+
+		if -eles:get(1).is_token do
+			if eles:in_slice()>2 do
+				if eles:get(2):n():is_a("TypeDeclBody") do
+					return 3
+				done
+			done
+		else do
+			if eles:get(1):t():is_a("T_TYPEDECL_ENDTYPE") do
+				return 2
+			done
+		done
+	return 0
+
+	function() TypeDeclBody::impl -> NodeType does
+	return NodeType::new("TypeDeclBody")\
+					:set_printer(TypeDeclBody::print |NodePrinter)\
+					:set_creator(TypeDeclBody::create|NodeCreator)\
+					:set_matcher(TypeDeclBody::match |NodeMatcher)\
+					:matches(2)
+endtype
+
+type TypeDecl is packed
+	NodeType type_
+	TypeDeclHead head
+	TypeDeclBody body
+
+	function(TypeDecl node, int depth) TypeDecl::print -> void does
+		printf("TypeDecl:\n")
+		parse::indent(depth+1)
+		printf("|- Head: ")
+		(node.head|Node):print(depth+2)
+		parse::indent(depth+1)
+		printf("\\- Body: ")
+		(node.body|Node):print(depth+2)
+	return
+
+	function(EleList eles) TypeDecl::create -> TypeDecl does
+		TypeDecl new = malloc(@sizeof(TypeDecl)@)|TypeDecl
+		new.head=eles:get(0):n()|TypeDeclHead
+		new.body=eles:get(1):n()|TypeDeclBody
+	return new
+
+	function(EleList eles) TypeDecl::match -> int does
+		if (-eles:get(0):n():is_a("TypeDeclHead")):or(\
+		    -eles:get(1):n():is_a("TypeDeclBody")) do
+			return 0
+		done
+	return 2
+
+	function() TypeDecl::impl -> NodeType does
+	return NodeType::new("TypeDecl")\
+					:set_printer(TypeDecl::print |NodePrinter)\
+					:set_creator(TypeDecl::create|NodeCreator)\
+					:set_matcher(TypeDecl::match |NodeMatcher)\
+					:matches(2):matches_only_nodes()
+endtype

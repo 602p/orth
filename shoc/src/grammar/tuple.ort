@@ -1,0 +1,201 @@
+type TupleEndFragment is packed
+	NodeType type_
+	Node element
+
+	function(TupleEndFragment node, int depth) TupleEndFragment::print -> void does
+		printf("TupleEndFragment, element=")
+		node.element:print(depth+1)
+	return
+
+	function(EleList eles) TupleEndFragment::create -> TupleEndFragment does
+		TupleEndFragment new = malloc(@sizeof(TupleEndFragment)@)|TupleEndFragment
+		new.element=eles:get(1):n()
+	return new
+
+	function(EleList eles) TupleEndFragment::match -> int does
+		if (-eles:get(0).is_token):or(\
+		     eles:get(1).is_token):or(\
+		    -eles:get(2).is_token) do
+			return 0
+		done
+
+		if (eles:get(0):t().type_.name!="T_COMMA"):or(\
+			eles:get(2):t().type_.name!="T_PAREN_CLOSE"):or(\
+		   -eles:get(1):n():is_a("ValueExpression")) do
+			return 0
+		done
+	return 3
+
+	function() TupleEndFragment::impl -> NodeType does
+	return NodeType::new("TupleEndFragment")\
+					:set_printer(TupleEndFragment::print |NodePrinter)\
+					:set_creator(TupleEndFragment::create|NodeCreator)\
+					:set_matcher(TupleEndFragment::match |NodeMatcher)\
+					:matches(3):addtype("TupleFragment")
+endtype
+
+type TupleMidFragment is packed
+	NodeType type_
+	List elements
+
+	function(TupleMidFragment node, int depth) TupleMidFragment::print -> void does
+		printf("TupleMidFragment: (Length=%i)\n", node.elements.len)
+		int i=0
+		while i<node.elements.len do
+			parse::indent(depth)
+			printf("|%i- ", i)
+			node.elements:get_Node(i):print(depth+1)
+			i+=1
+		done
+	return
+
+	function(EleList eles) TupleMidFragment::create -> TupleMidFragment does
+		TupleMidFragment new = malloc(@sizeof(TupleMidFragment)@)|TupleMidFragment
+		if eles:get(2):n():is_a("TupleEndFragment") do
+			new.elements=List::new()
+			new.elements:append_Node(eles:get(1):n())
+			new.elements:append_Node((eles:get(2):n()|TupleEndFragment).element)
+		else do
+			new.elements=(eles:get(2):n()|TupleMidFragment).elements
+			new.elements:insert(0, eles:get(1):n()|ptr)
+		done
+	return new
+
+	function(EleList eles) TupleMidFragment::match -> int does
+		if (-eles:get(0).is_token):or(\
+		     eles:get(1).is_token):or(\
+		     eles:get(2).is_token) do
+			return 0
+		done
+
+		if (eles:get(0):t().type_.name!="T_COMMA"):or(\
+		   -eles:get(1):n():is_a("ValueExpression")):or(\
+		   -eles:get(2):n():is_a("TupleFragment")) do
+			return 0
+		done
+	return 3
+
+	function() TupleMidFragment::impl -> NodeType does
+	return NodeType::new("TupleMidFragment")\
+					:set_printer(TupleMidFragment::print |NodePrinter)\
+					:set_creator(TupleMidFragment::create|NodeCreator)\
+					:set_matcher(TupleMidFragment::match |NodeMatcher)\
+					:matches(3):addtype("TupleFragment")
+endtype
+
+type Tuple is packed
+	NodeType type_
+	List elements
+
+	function(Tuple node, int depth) Tuple::print -> void does
+		printf("Tuple: (Length=%i)\n", node.elements.len)
+		int i=0
+		while i<node.elements.len do
+			parse::indent(depth)
+			if i==node.elements.len-1 do
+				printf("\\%i- ", i)
+			else do
+				printf("|%i- ", i)
+			done
+			node.elements:get_Node(i):print(depth+1)
+			i+=1
+		done
+	return
+
+	function(EleList eles) Tuple::create -> Tuple does
+		Tuple new = malloc(@sizeof(Tuple)@)|Tuple
+		if eles:get(2):n():is_a("TupleEndFragment") do
+			new.elements=List::new()
+			new.elements:append_Node(eles:get(1):n())
+			new.elements:append_Node((eles:get(2):n()|TupleEndFragment).element)
+		else do
+			new.elements=(eles:get(2):n()|TupleMidFragment).elements
+			new.elements:insert(0, eles:get(1):n()|ptr)
+		done
+	return new
+
+	function(EleList eles) Tuple::match -> int does
+		if (-eles:get(0).is_token):or(\
+		     eles:get(1).is_token):or(\
+		     eles:get(2).is_token) do
+			return 0
+		done
+
+		if (eles:get(0):t().type_.name!="T_PAREN_OPEN"):or(\
+		   -eles:get(2):n():is_a("TupleFragment")):or(\
+		   -eles:get(1):n():is_a("ValueExpression")) do
+			return 0
+		done
+	return 3
+
+	function() Tuple::impl -> NodeType does
+	return NodeType::new("Tuple")\
+					:set_printer(Tuple::print |NodePrinter)\
+					:set_creator(Tuple::create|NodeCreator)\
+					:set_matcher(Tuple::match |NodeMatcher)\
+					:matches(3)
+endtype
+
+type ZeroTuple is packed
+	NodeType type_
+
+	function(ZeroTuple node, int depth) ZeroTuple::print -> void does
+		printf("ZeroTuple: (Length=0)\n")
+	return
+
+	function(EleList eles) ZeroTuple::create -> ZeroTuple does
+		ZeroTuple new = malloc(@sizeof(ZeroTuple)@)|ZeroTuple
+	return new
+
+	function(EleList eles) ZeroTuple::match -> int does
+		if (eles:get(0):t().type_.name!="T_PAREN_OPEN"):or(\
+		    eles:get(1):t().type_.name!="T_PAREN_CLOSE") do
+			return 0
+		done
+	return 2
+
+	function() ZeroTuple::impl -> NodeType does
+	return NodeType::new("ZeroTuple")\
+					:set_printer(ZeroTuple::print |NodePrinter)\
+					:set_creator(ZeroTuple::create|NodeCreator)\
+					:set_matcher(ZeroTuple::match |NodeMatcher)\
+					:matches(2):matches_only_tokens():addtype("Tuple")
+endtype
+
+type OneTuple is packed
+	NodeType type_
+	Node element
+
+	function(OneTuple node, int depth) OneTuple::print -> void does
+		printf("OneTuple: (Length=1)\n")
+		parse::indent(depth)
+		printf("\\- ")
+		node.element:print(depth+1)
+	return
+
+	function(EleList eles) OneTuple::create -> OneTuple does
+		OneTuple new = malloc(@sizeof(OneTuple)@)|OneTuple
+		new.element=eles:get(1):n()
+	return new
+
+	function(EleList eles) OneTuple::match -> int does
+		if (-eles:get(0).is_token):or(\
+		     eles:get(1).is_token):or(\
+		    -eles:get(2).is_token) do
+			return 0
+		done
+
+		if (-eles:get(0):t():is_a("T_PAREN_OPEN")):or(\
+		    -eles:get(1):n():is_a("ValueExpression")):or(\
+		    -eles:get(2):t():is_a("T_PAREN_CLOSE")) do
+			return 0
+		done
+	return 3
+
+	function() OneTuple::impl -> NodeType does
+	return NodeType::new("OneTuple")\
+					:set_printer(OneTuple::print |NodePrinter)\
+					:set_creator(OneTuple::create|NodeCreator)\
+					:set_matcher(OneTuple::match |NodeMatcher)\
+					:matches(3):addtype("Tuple")
+endtype

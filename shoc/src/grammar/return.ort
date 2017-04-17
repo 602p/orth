@@ -1,0 +1,53 @@
+type ReturnExpr is packed
+	NodeType type_
+	bool is_void
+	Node value
+
+	function(ReturnExpr node, int depth) ReturnExpr::print -> void does
+		printf("ReturnExpr: ")
+		if node.is_void do
+			printf("<void>\n")
+		else do
+			node.value:print(depth+1)
+		done
+	return
+
+	function(EleList eles) ReturnExpr::create -> ReturnExpr does
+		ReturnExpr new = malloc(@sizeof(ReturnExpr)@)|ReturnExpr
+		new.is_void=true
+		if eles:in_slice()>1 do
+			if -eles:get(1).is_token do
+				new.is_void=-eles:get(1):n():is_a("ValueExpression")
+			done
+		done
+
+		if -new.is_void do
+			new.value=eles:get(1):n()
+		done
+	return new
+
+	function(EleList eles) ReturnExpr::match -> int does
+		if (-eles:get(0).is_token) do
+			return 0
+		done
+
+		if (eles:get(0):t().type_.name!="T_RETURN") do
+			return 0
+		done
+
+		if eles:in_slice()>1 do
+			if -eles:get(1).is_token do
+				if eles:get(1):n():is_a("ValueExpression") do
+					return 2
+				done
+			done
+		done
+	return 1
+
+	function() ReturnExpr::impl -> NodeType does
+	return NodeType::new("ReturnExpr")\
+					:set_printer(ReturnExpr::print |NodePrinter)\
+					:set_creator(ReturnExpr::create|NodeCreator)\
+					:set_matcher(ReturnExpr::match |NodeMatcher)\
+					:matches(1):addtype("Expression")
+endtype

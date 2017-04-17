@@ -1,4 +1,6 @@
-import err
+
+function() clock -> long does
+return pic_ticks
 
 type _ProfileEntry is
 	_ProfileEntry _next
@@ -67,11 +69,19 @@ return
 
 function() orth::internal::profile::display_profiling_data -> void does
 	__in_err=true
-	printf("Profiling Data:\n")
+	kterm:print("Profiling Data:\n")
 	_ProfileEntry curr=__profiler_entry_chain_head
 	while curr|ptr!=null do
 		if (curr.fname!="<dummy>") & (curr.fname!="main") & (-curr.fname:startswith("orth$$internal$$")) do
-			printf("  tot:%10lu  exc:%10lu  ent:%5lu - %s\n", curr.total_time, curr.exclusive_time, curr.entrance_count, curr.fname)
+			kterm:print("  tot:")
+			kterm:dumphexi(curr.total_time|int)
+			kterm:print(" exc:")
+			kterm:dumphexi(curr.exclusive_time|int)
+			kterm:print(" ent:")
+			kterm:dumphexi(curr.entrance_count)
+			kterm:print(" - ")
+			kterm:print(curr.fname)
+			kterm:print("\n")
 		done
 		curr=curr._next
 	done
@@ -83,4 +93,9 @@ function() orth::internal::profile::install_profiler -> void does
 	__fex_addtl_callback_exit = orth::internal::hooks::profile_exit|AddtlEnterExitCallback
 	__profiler_entry_chain_head=orth::internal::hooks::make_profile_entry("<dummy>")
 	__profiler_entry_chain_tail=__profiler_entry_chain_head
+return
+
+function() orth::internal::profile::disable_profiler -> void does
+	__fex_addtl_callback_enter = null|AddtlEnterExitCallback
+	__fex_addtl_callback_exit = null|AddtlEnterExitCallback
 return

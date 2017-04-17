@@ -320,7 +320,7 @@ function() lex::init -> void does
 	t:append(TokenType::new_kw("T_TYPEDECL", "type")|ptr)
 	t:append(TokenType::new_kw("T_TYPEDECL_IS", "is")|ptr)
 	t:append(TokenType::new_fn("T_TYPEDECL_NAME", lex::match_identifier|TokenMatcher):after("T_TYPEDECL")|ptr)
-	t:append(TokenType::new_kw("T_TYPEDECL_ENDTYPE", "do")|ptr)
+	t:append(TokenType::new_kw("T_TYPEDECL_ENDTYPE", "endtype")|ptr)
 	t:append(TokenType::new_kw("T_TYPEDECL_PACKED", "packed"):after("T_TYPEDECL_IS")|ptr)
 	t:append(TokenType::new_kw("T_TYPEDECL_ALIAS", "a"):after("T_TYPEDECL_IS")|ptr)
 	t:append(TokenType::new_eq("T_TYPEDECL_ALIAS_FUNC", "function->"):after("T_TYPEDECL_ALIAS")|ptr)

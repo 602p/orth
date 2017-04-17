@@ -14,6 +14,9 @@ import mbdata
 import serialdbg
 import vgatest
 import gfxterm
+import util
+import "profiling/err.ort"
+import "profiling/profile.ort"
 
 import paging
 #import thunk
@@ -153,6 +156,8 @@ function(ptr multiboot_struct_addr) kernel_main -> void does
 	done
 
 	init_keymap()
+
+	orth::internal::hooks::enable_err()
 
 	kterm:print("\n\nREADY")
 

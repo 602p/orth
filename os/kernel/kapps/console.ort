@@ -292,6 +292,24 @@ function(cstr args) kc_chararama -> void does
 	done
 return
 
+function(cstr args) kc_fail -> void does
+	orth::fail(args)
+return
+
+function(cstr args) kc_prof -> void does
+	if args:len()==0 do
+		kterm:print("Pass `on` to turn on, `off` to turn off, and `show` to show stats\n")
+	done
+
+	if args=="on" do
+		orth::internal::profile::install_profiler()
+	elif args=="off" do
+		orth::internal::profile::disable_profiler()
+	elif args=="show" do
+		orth::internal::profile::display_profiling_data()
+	done
+return
+
 function(cstr name, cstr desc, KConsoleCommandRunner cmd) add_cmd -> void does
 	KConsoleCommand cur = kcommand_head
 	while cur._next|ptr|int!=0 do
@@ -329,6 +347,8 @@ function() kconsole_run -> void does
 	add_cmd("drawbmp", "Draw a BMP that was loaded as a kernel module", kc_draw_bmp|KConsoleCommandRunner)
 	add_cmd("rng", "Emit some (bad) random numbers", s_rngtest|KConsoleCommandRunner)
 	add_cmd("snake", "Play Snake!", snake_run|KConsoleCommandRunner)
+	add_cmd("fail", "Call orth::fail with args as message", kc_fail|KConsoleCommandRunner)
+	add_cmd("prof", "Control profiling", kc_prof|KConsoleCommandRunner)
 
 	console_buf=KeyboardBuf::new(1024, kterm, console_submit|SubmitCallback)
 	command_to_run=0|ptr|KConsoleCommand

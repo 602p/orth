@@ -1,0 +1,54 @@
+type CastExpr is packed
+	NodeType type_
+	Node value
+	cstr target
+
+	function(CastExpr node, int depth) CastExpr::print -> void does
+		printf("CastExpr (Target='%s')\n", node.target)
+
+		parse::indent(depth)
+		printf("\- Value: ")
+		node.value:print(depth+1)
+	return
+
+	function(EleList eles) CastExpr::create -> CastExpr does
+		CastExpr new = malloc(@sizeof(CastExpr)@)|CastExpr
+		new.value=eles:get(0):n()
+		new.target=(eles:get(2):n()|NameExpr).name
+	return new
+
+	function(EleList eles) CastExpr::match -> int does
+		if eles:get(0).is_token:or(\
+		  -eles:get(1).is_token):or(\
+		   eles:get(2).is_token) do
+			return 0
+		done
+
+		if (eles:get(1):t().type_.name!="T_CAST"):or(\
+		   -eles:get(0):n():is_a("ValueExpression")):or(\
+		   -eles:get(2):n():is_a("NameExpr")) do
+			return 0
+		done
+
+		if parse::lookahead_is_accessor(eles) do
+			return 0
+		done
+
+		if parse::lookahead_is_possibly_function(eles) do
+			return 0 #Don't turn a(1)+2 into a,(1)+2
+		done
+
+		if eles:get_lookahead().is_token do
+			if eles:get_lookahead():t():is_a("T_CAST") do
+				return 0
+			done
+		done
+	return 3
+
+	function() CastExpr::impl -> NodeType does
+	return NodeType::new("CastExpr")\
+					:set_printer(CastExpr::print |NodePrinter)\
+					:set_creator(CastExpr::create|NodeCreator)\
+					:set_matcher(CastExpr::match |NodeMatcher)\
+					:matches(3):addtype("ValueExpression")
+endtype

@@ -1,0 +1,73 @@
+type IfExprHead is packed
+	NodeType type_
+	Node condition
+	bool is_elif
+
+	function(IfExprHead node, int depth) IfExprHead::print -> void does
+		printf("IfExprHead: Is_Elif:%i, Condition=", node.is_elif|int)
+		node.condition:print(depth+1)
+	return
+
+	function(EleList eles) IfExprHead::create -> IfExprHead does
+		IfExprHead new = malloc(@sizeof(IfExprHead)@)|IfExprHead
+		new.condition=eles:get(1):n()
+		new.is_elif=eles:get(0):t():is_a("T_ELIF")
+	return new
+
+	function(EleList eles) IfExprHead::match -> int does
+		if (-eles:get(0).is_token):or(\
+		     eles:get(1).is_token):or(\
+		    -eles:get(2).is_token) do
+			return 0
+		done
+
+		if (-(eles:get(0):t().type_.name=="T_IF"):or(eles:get(0):t().type_.name=="T_ELIF")):or(\
+			eles:get(2):t().type_.name!="T_DO"):or(\
+		   -eles:get(1):n():is_a("ValueExpression")) do
+			return 0
+		done
+	return 3
+
+	function() IfExprHead::impl -> NodeType does
+	return NodeType::new("IfExprHead")\
+					:set_printer(IfExprHead::print |NodePrinter)\
+					:set_creator(IfExprHead::create|NodeCreator)\
+					:set_matcher(IfExprHead::match |NodeMatcher)\
+					:matches(3)
+endtype
+
+type IfExpr is packed
+	NodeType type_
+	IfExprHead head
+	BlockBody body
+
+	function(IfExpr node, int depth) IfExpr::print -> void does
+		printf("IfExpr:\n")
+		parse::indent(depth+1)
+		printf("|- Head: ")
+		(node.head|Node):print(depth+2)
+		parse::indent(depth+1)
+		printf("|- Body: ")
+		(node.body|Node):print(depth+2)
+	return
+
+	function(EleList eles) IfExpr::create -> IfExpr does
+		IfExpr new = malloc(@sizeof(IfExpr)@)|IfExpr
+		new.head=eles:get(0):n()|IfExprHead
+		new.body=eles:get(1):n()|BlockBody
+	return new
+
+	function(EleList eles) IfExpr::match -> int does
+		if (-eles:get(0):n():is_a("IfExprHead")):or(\
+		    -eles:get(1):n():is_a("BlockBody")) do
+			return 0
+		done
+	return 2
+
+	function() IfExpr::impl -> NodeType does
+	return NodeType::new("IfExpr")\
+					:set_printer(IfExpr::print |NodePrinter)\
+					:set_creator(IfExpr::create|NodeCreator)\
+					:set_matcher(IfExpr::match |NodeMatcher)\
+					:matches(2):matches_only_nodes():addtype("Expression")
+endtype

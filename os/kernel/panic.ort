@@ -45,6 +45,8 @@ function(int errorcode, int addr, cstr type, cstr message) kpanic -> void does
 	kterm:dumphexi(__kgetcr3())
 	kterm:print("\nCR4:")
 	kterm:dumpbin(__kgetcr4())
+	kterm:print("\n")
+	orth::fail(type)
 	kterm:print("\n\nSystem halted")
 	__khalt()
 return

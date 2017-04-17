@@ -1,0 +1,37 @@
+type UnOpExpr is packed
+	NodeType type_
+	cstr op
+	Node value
+
+	function(UnOpExpr node, int depth) UnOpExpr::print -> void does
+		printf("UnOpExpr (Operator='%s')\n", node.op)
+		parse::indent(depth)
+		printf("\- Value: ")
+		node.value:print(depth+1)
+	return
+
+	function(EleList eles) UnOpExpr::create -> UnOpExpr does
+		UnOpExpr new = malloc(@sizeof(UnOpExpr)@)|UnOpExpr
+		new.value=eles:get(1):n()
+		new.op=eles:get(0):t().text
+	return new
+
+	function(EleList eles) UnOpExpr::match -> int does
+		if eles:get(1).is_token:or(\
+		  -eles:get(0).is_token) do
+			return 0
+		done
+
+		if (-eles:get(0):t():is_a("T_UNOP")):or(\
+		    -eles:get(1):n():is_a("ValueExpression")) do
+			return 0
+		done
+	return 2
+
+	function() UnOpExpr::impl -> NodeType does
+	return NodeType::new("UnOpExpr")\
+					:set_printer(UnOpExpr::print |NodePrinter)\
+					:set_creator(UnOpExpr::create|NodeCreator)\
+					:set_matcher(UnOpExpr::match |NodeMatcher)\
+					:matches(2):addtype("ValueExpression")
+endtype

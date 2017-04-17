@@ -1,0 +1,193 @@
+type ZeroArgList is packed
+	NodeType type_
+
+	function(ZeroArgList node, int depth) ZeroArgList::print -> void does
+		printf("ZeroArgList: (Size=0)\n")
+	return
+
+	function(EleList eles) ZeroArgList::create -> ZeroArgList does
+		ZeroArgList new = malloc(@sizeof(ZeroArgList)@)|ZeroArgList
+	return new
+
+	function(EleList eles) ZeroArgList::match -> int does
+		if (-eles:get(0):t():is_a("T_ARGLIST_START")):or(\
+		    -eles:get(1):t():is_a("T_ARGLIST_END")) do
+			return 0
+		done
+	return 2
+
+	function() ZeroArgList::impl -> NodeType does
+	return NodeType::new("ZeroArgList")\
+					:set_printer(ZeroArgList::print |NodePrinter)\
+					:set_creator(ZeroArgList::create|NodeCreator)\
+					:set_matcher(ZeroArgList::match |NodeMatcher)\
+					:matches(2):matches_only_tokens():addtype("ArgList")
+endtype
+
+type OneArgList is packed
+	NodeType type_
+	cstr text
+
+	function(OneArgList node, int depth) OneArgList::print -> void does
+		printf("OneArgList: (Size=1)\n")
+		parse::indent(depth+1)
+		printf("\\0- %s\n", node.text)
+	return
+
+	function(EleList eles) OneArgList::create -> OneArgList does
+		OneArgList new = malloc(@sizeof(OneArgList)@)|OneArgList
+		new.text=eles:get(1):t().text
+	return new
+
+	function(EleList eles) OneArgList::match -> int does
+		if (-eles:get(0):t():is_a("T_ARGLIST_START")):or(\
+		    -eles:get(1):t():is_a("T_ARGLIST_ELE")):or(\
+		    -eles:get(2):t():is_a("T_ARGLIST_END")) do
+			return 0
+		done
+	return 3
+
+	function() OneArgList::impl -> NodeType does
+	return NodeType::new("OneArgList")\
+					:set_printer(OneArgList::print |NodePrinter)\
+					:set_creator(OneArgList::create|NodeCreator)\
+					:set_matcher(OneArgList::match |NodeMatcher)\
+					:matches(3):matches_only_tokens():addtype("ArgList")
+endtype
+
+type MultiArgListStart is packed
+	NodeType type_
+	cstr text
+
+	function(MultiArgListStart node, int depth) MultiArgListStart::print -> void does
+		printf("MultiArgListStart: (Size=1)\n")
+		parse::indent(depth+1)
+		printf("\\0- %s\n", node.text)
+	return
+
+	function(EleList eles) MultiArgListStart::create -> MultiArgListStart does
+		MultiArgListStart new = malloc(@sizeof(MultiArgListStart)@)|MultiArgListStart
+		new.text=eles:get(1):t().text
+	return new
+
+	function(EleList eles) MultiArgListStart::match -> int does
+		if (-eles:get(0):t():is_a("T_ARGLIST_SEP")):or(\
+		    -eles:get(1):t():is_a("T_ARGLIST_ELE")):or(\
+		    -eles:get(2):t():is_a("T_ARGLIST_END")) do
+			return 0
+		done
+	return 3
+
+	function() MultiArgListStart::impl -> NodeType does
+	return NodeType::new("MultiArgListStart")\
+					:set_printer(MultiArgListStart::print |NodePrinter)\
+					:set_creator(MultiArgListStart::create|NodeCreator)\
+					:set_matcher(MultiArgListStart::match |NodeMatcher)\
+					:matches(3):matches_only_tokens():addtype("MultiArgListFragment")
+endtype
+
+type MultiArgListExt is packed
+	NodeType type_
+	List args
+
+	function(MultiArgListExt node, int depth) MultiArgListExt::print -> void does
+		printf("MultiArgListExt: (Size=%i)\n", node.args.len)
+		int i=0
+		while i<node.args.len do
+			parse::indent(depth+1)
+			if i==node.args.len-1 do
+				printf("\\%i- %s\n", i, node.args:get(i))
+			else do
+				printf("|%i- %s\n", i, node.args:get(i))
+			done
+			i+=1
+		done
+	return
+
+	function(EleList eles) MultiArgListExt::create -> MultiArgListExt does
+		MultiArgListExt new = malloc(@sizeof(MultiArgListExt)@)|MultiArgListExt
+		Node ele = eles:get(2):n()
+		if ele:is_a("MultiArgListStart") do
+			new.args=List::new()
+			new.args:append(eles:get(1):t().text)
+			new.args:append((eles:get(2):n()|MultiArgListStart).text)
+		else do #it's a MultiArgListExt
+			new.args=(ele|MultiArgListExt).args
+			new.args:insert(0, eles:get(1):t().text)
+		done
+	return new
+
+	function(EleList eles) MultiArgListExt::match -> int does
+		if (-eles:get(0).is_token):or(\
+			-eles:get(1).is_token):or(\
+			 eles:get(2).is_token) do
+			return 0
+		done
+
+		if (-eles:get(0):t():is_a("T_ARGLIST_SEP")):or(\
+		    -eles:get(1):t():is_a("T_ARGLIST_ELE")):or(\
+		    -eles:get(2):n():is_a("MultiArgListFragment")) do
+			return 0
+		done
+	return 3
+
+	function() MultiArgListExt::impl -> NodeType does
+	return NodeType::new("MultiArgListExt")\
+					:set_printer(MultiArgListExt::print |NodePrinter)\
+					:set_creator(MultiArgListExt::create|NodeCreator)\
+					:set_matcher(MultiArgListExt::match |NodeMatcher)\
+					:matches(3):addtype("MultiArgListFragment")
+endtype
+
+type MultiArgList is packed
+	NodeType type_
+	List args
+
+	function(MultiArgList node, int depth) MultiArgList::print -> void does
+		printf("MultiArgList: (Size=%i)\n", node.args.len)
+		int i=0
+		while i<node.args.len do
+			parse::indent(depth+1)
+			if i==node.args.len-1 do
+				printf("\\%i- %s\n", i, node.args:get(i))
+			else do
+				printf("|%i- %s\n", i, node.args:get(i))
+			done
+			i+=1
+		done
+	return
+
+	function(EleList eles) MultiArgList::create -> MultiArgList does
+		MultiArgList new = malloc(@sizeof(MultiArgList)@)|MultiArgList
+		Node ele = eles:get(2):n()
+		if ele:is_a("MultiArgListStart") do
+			new.args=List::new()
+			new.args:append(eles:get(1):t().text)
+			new.args:append((eles:get(2):n()|MultiArgListStart).text)
+		else do #it's a MultiArgList
+			new.args=(ele|MultiArgList).args
+			new.args:insert(0, eles:get(1):t().text)
+		done
+	return new
+
+	function(EleList eles) MultiArgList::match -> int does
+		if (-eles:get(0).is_token):or(\
+			-eles:get(1).is_token):or(\
+			 eles:get(2).is_token) do
+			return 0
+		done
+
+		if (-eles:get(0):t():is_a("T_ARGLIST_START")):or(\
+		    -eles:get(1):t():is_a("T_ARGLIST_ELE")):or(\
+		    -eles:get(2):n():is_a("MultiArgListFragment")) do
+			return 0
+		done
+	return 3
+
+	function() MultiArgList::impl -> NodeType does
+	return NodeType::new("MultiArgList")\
+					:set_printer(MultiArgList::print |NodePrinter)\
+					:set_creator(MultiArgList::create|NodeCreator)\
+					:set_matcher(MultiArgList::match |NodeMatcher)\
+					:matches(3):addtype("ArgList")
+endtype

@@ -1,0 +1,62 @@
+type CallExpr is packed
+	NodeType type_
+	Node meth
+	List args
+
+	function(CallExpr node, int depth) CallExpr::print -> void does
+		printf("CallExpr:\n")
+		parse::indent(depth)
+		printf("|- Method: ")
+		node.meth:print(depth+1)
+
+		parse::indent(depth)
+		printf("\- Arguments: (Len=%i)\n", node.args.len)
+		int i=0
+		while i<node.args.len do
+			parse::indent(depth+1)
+			if i==node.args.len-1 do
+				printf("\\%i- ", i)
+			else do
+				printf("|%i- ", i)
+			done
+			node.args:get_Node(i):print(depth+2)
+			i+=1
+		done
+	return
+
+	function(EleList eles) CallExpr::create -> CallExpr does
+		CallExpr new = malloc(@sizeof(CallExpr)@)|CallExpr
+		new.meth=eles:get(0):n()
+		Node args = eles:get(1):n()
+		if args:is_a("ZeroTuple") do
+			new.args=List::new()
+		elif args:is_a("OneTuple") do
+			new.args=List::new()
+			new.args:append_Node((args|OneTuple).element)
+		elif args:is_a("GroupingExpr") do
+			new.args=List::new()
+			new.args:append_Node((args|GroupingExpr).contents)
+
+		else do
+			new.args=(args|Tuple).elements
+		done
+	return new
+
+	function(EleList eles) CallExpr::match -> int does
+		if (-eles:get(0):n():is_a("ValueExpression")):or(\
+		    -eles:get(1):n():is_a("Tuple")) do
+			return 0
+		done
+
+		if parse::lookahead_is_accessor(eles) do
+			return 0
+		done
+	return 2
+
+	function() CallExpr::impl -> NodeType does
+	return NodeType::new("CallExpr")\
+					:set_printer(CallExpr::print |NodePrinter)\
+					:set_creator(CallExpr::create|NodeCreator)\
+					:set_matcher(CallExpr::match |NodeMatcher)\
+					:matches(2):matches_only_nodes():addtype("ValueExpression")
+endtype

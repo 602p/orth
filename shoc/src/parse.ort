@@ -57,19 +57,19 @@ type Element is
 
 	function(Element self) Element:t -> Token does
 		if -self.is_token do
-			printf("E: shoc/parse//Token:t() on non-token\n")
+			printf("\nE: shoc/parse//Token:t() on non-token\n")
 			printf("\tCalled on: ")
 			self:print()
-			exit(1)
+			shoc::bail_out("Invalid Element Narrowing")
 		done
 	return self.thing|Token
 
 	function(Element self) Element:n -> Node does
 		if self.is_token do
-			printf("E: shoc/parse//Token:n() on non-node\n")
+			printf("\nE: shoc/parse//Token:n() on non-node\n")
 			printf("\tCalled on: ")
 			self:print()
-			exit(1)
+			shoc::bail_out("Invalid Element Narrowing")
 		done
 	return self.thing|Node
 

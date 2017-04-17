@@ -1,90 +1,37 @@
-List parse_node_types
+type TypeDecl is packed
+	NodeType type_
+	TypeDeclHead head
+	TypeDeclBody body
 
-function(cstr name) parse::type_by_name -> NodeType does
-	int i=0
-	while i<parse_node_types.len do
-		if (parse_node_types:get(i)|NodeType).name==name do
-			return parse_node_types:get(i)|NodeType
+	function(TypeDecl node, int depth) TypeDecl::print -> void does
+		printf("TypeDecl:\n")
+		parse::indent(depth+1)
+		printf("|- Head: ")
+		(node.head|Node):print(depth+2)
+		parse::indent(depth+1)
+		printf("\\- Body: ")
+		(node.body|Node):print(depth+2)
+	return
+
+	function(EleList eles) TypeDecl::create -> TypeDecl does
+		TypeDecl new = malloc(@sizeof(TypeDecl)@)|TypeDecl
+		new.head=eles:get(0):n()|TypeDeclHead
+		new.body=eles:get(1):n()|TypeDeclBody
+	return new
+
+	function(EleList eles) TypeDecl::match -> int does
+		if (-eles:get(0):n():is_a("TypeDeclHead")):or(\
+		    -eles:get(1):n():is_a("TypeDeclBody")) do
+			return 0
 		done
-		i+=1
-	done
-return null|NodeType
+	return 2
 
-function(List l, NodeType n) List:append_NodeType -> void does
-	l:append(n|ptr)
-return
+	function() TypeDecl::impl -> NodeType does
+	return NodeType::new("TypeDecl")\
+					:set_printer(TypeDecl::print |NodePrinter)\
+					:set_creator(TypeDecl::create|NodeCreator)\
+					:set_matcher(TypeDecl::match |NodeMatcher)\
+					:matches(2):matches_only_nodes()
+endtype
 
-function(List l, Node n) List:append_Node -> void does
-	l:append(n|ptr)
-return
-
-function(List l, int n) List:get_Node -> Node does
-return l:get(n)|Node
-
-function(EleList e, cstr s) parse::update_viz -> void does
-	bool fancy = true
-	float speed= 0.15
-
-	if fancy do
-		usleep((speed*1000000.)|int)
-		system("clear")
-	done
-	printf("\n\nParsing '%s'\n\n", s)
-	e:print()
-return
-
-function(List tokens, cstr text) parse::parse -> Node does
-	EleList eles=EleList::from(tokens)
-	ProgressBar bar = ProgressBar::new_reversed(tokens.len, 40, "Parsing......")
-
-	bool     progress
-	int      current_type_idx
-	NodeType current_type
-	int      match_count
-	bool     DEBUG=false
-
-	while eles.position>=0 do
-		progress=true
-		while progress do
-			progress=false
-			current_type_idx=0
-			while (current_type_idx<parse_node_types.len) & -progress do
-				current_type=parse_node_types:get(current_type_idx)|NodeType
-				#printf("%s\n", current_type.name)
-				match_count=current_type:match(eles)
-				if match_count>0 do
-					eles:set_tail(match_count,\
-						Element::from_node(current_type:create_node(eles)))
-					progress=true
-					if DEBUG do
-						parse::update_viz(eles, text)
-						printf("Replaced %i elements at %i with a %s node\n",\
-					 		match_count, eles.position, current_type.name)
-					done
-				done
-				current_type_idx+=1
-			done
-		done
-		eles:advance(1)
-		if DEBUG do
-			parse::update_viz(eles, text)
-			printf("No further possible parses, advanced by 1\n")
-		done
-		bar:update(eles.position+1)
-	done
-	printf("Done!\n")
-	if -DEBUG do
-		#read_line("Press Enter")
-		eles:print()
-	done
-	bar:free()
-return null|Node
-
-function() parse::free -> void does
-	while parse_node_types.len>0 do
-		(parse_node_types:get(0)|NodeType):free()
-		parse_node_types:del(0)
-	done
-	parse_node_types:clear()
-	parse_node_types:free()
-return
+1+

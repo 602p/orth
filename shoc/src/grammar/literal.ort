@@ -1,0 +1,33 @@
+type LiteralExpr is packed
+	NodeType type_
+	cstr value
+	cstr value_type
+
+	function(LiteralExpr node, int depth) LiteralExpr::print -> void does
+		printf("LiteralExpr: type=%s, value=%s\n", node.value_type, node.value)
+	return
+
+	function(EleList eles) LiteralExpr::create -> LiteralExpr does
+		LiteralExpr new = malloc(@sizeof(LiteralExpr)@)|LiteralExpr
+		new.value=eles:get(0):t().text
+		if eles:get(0):t().type_.name=="T_INT_LITERAL" do
+			new.value_type="int"
+		elif eles:get(0):t().type_.name=="T_FLOAT_LITERAL" do
+			new.value_type="float"
+		else do
+			new.value_type="cstr"
+		done
+	return new
+
+	function(EleList eles) LiteralExpr::match -> int does
+	return ((eles:get(0):t().type_.name=="T_INT_LITERAL")+\
+		    (eles:get(0):t().type_.name=="T_FLOAT_LITERAL")+\
+		    (eles:get(0):t().type_.name=="T_STRING_LITERAL"))|int
+
+	function() LiteralExpr::impl -> NodeType does
+	return NodeType::new("LiteralExpr")\
+					:set_printer(LiteralExpr::print |NodePrinter)\
+					:set_creator(LiteralExpr::create|NodeCreator)\
+					:set_matcher(LiteralExpr::match |NodeMatcher)\
+					:matches(1):matches_only_tokens():addtype("ValueExpression")
+endtype

@@ -146,6 +146,24 @@ type EleList is
 			i+=1
 		done
 	return
+
+	function(EleList self, int depth) EleList:print_depth -> void does
+		int i=0
+		while i<self.list.len do
+			parse::indent(depth)
+			printf("%03i", i)
+			if i==self.position do
+				printf("*")
+			done
+			printf("\t")
+			if (self.list:get(i)|Element).is_token do
+				(self.list:get(i)|Element):print()
+			else do
+				(self.list:get(i)|Element):n():print(depth+1)
+			done
+			i+=1
+		done
+	return
 endtype
 
 type NodeType is
@@ -284,8 +302,8 @@ function(List l, int n) List:get_Node -> Node does
 return l:get(n)|Node
 
 function(EleList e, cstr s) parse::update_viz -> void does
-	bool fancy = true
-	float speed= 0.15
+	bool fancy = false
+	float speed= 0.0
 
 	if fancy do
 		usleep((speed*1000000.)|int)
@@ -295,7 +313,7 @@ function(EleList e, cstr s) parse::update_viz -> void does
 	e:print()
 return
 
-function(List tokens, cstr text) parse::parse -> Node does
+function(List tokens, cstr text) parse::parse -> EleList does
 	EleList eles=EleList::from(tokens)
 	ProgressBar bar = ProgressBar::new_reversed(tokens.len, 40, "Parsing......")
 
@@ -340,7 +358,7 @@ function(List tokens, cstr text) parse::parse -> Node does
 		eles:print()
 	done
 	bar:free()
-return null|Node
+return eles
 
 function() parse::free -> void does
 	while parse_node_types.len>0 do

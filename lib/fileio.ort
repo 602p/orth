@@ -28,6 +28,14 @@ type File is
 		f.closed=0|bool
 	return f
 
+	function(cstr path) File::exists -> bool does
+		ptr file=fopen(path, "r")
+		if file==null do
+			return false
+		done
+		fclose(file)
+	return true
+
 	function(File f) File:ready -> bool does
 		if f.reached_eof==0|bool do
 			return 1|bool

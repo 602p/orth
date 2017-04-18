@@ -1,0 +1,10 @@
+import std
+import linkedlist
+
+function() main -> int does
+	List l = List::new()
+	l:append("Foo")
+	l:append("Bar")
+	l:append("Baz")
+	printf("%s\n", l:get(0))
+return 0

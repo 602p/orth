@@ -78,6 +78,24 @@ function() orth::internal::profile::display_profiling_data -> void does
 	__in_err=false
 return
 
+import fileio
+
+function(cstr filename) orth::internal::profile::dump_profiling_data_csv -> void does
+	__in_err=true
+	File out=File::open(filename, "w")
+	_ProfileEntry curr=__profiler_entry_chain_head
+	fprintf(out._file, "Total Time,Exclusive Time,Entry Count,Symbol Name\n")
+	while curr|ptr!=null do
+		if (curr.fname!="<dummy>") & (curr.fname!="main") & (-curr.fname:startswith("orth$$internal$$")) do
+			fprintf(out._file, "%10lu,%10lu,%5lu,%s\n", curr.total_time, curr.exclusive_time, curr.entrance_count, curr.fname)
+		done
+		curr=curr._next
+	done
+	out:close()
+	printf("Data written to '%s'\n", filename)
+	__in_err=false
+return
+
 function() orth::internal::profile::install_profiler -> void does
 	__fex_addtl_callback_enter = orth::internal::hooks::profile_enter|AddtlEnterExitCallback
 	__fex_addtl_callback_exit = orth::internal::hooks::profile_exit|AddtlEnterExitCallback

@@ -14,13 +14,23 @@ type LinkedListNode is
     return
 endtype
 
+type ListCacheBox is packed
+    LinkedListNode node
+endtype
+
 type List is
     int len
     LinkedListNode head
+    ptr cache
+    bool cache_ready
+    bool cache_alloced
 
     function() List::new -> List does
         List new = malloc(@sizeof(List)@)|List
         new.len=0
+        new.cache_ready=false
+        new.cache_alloced=false
+        new.head=null|LinkedListNode
     return new
 
     function(List o) List::copy -> List does
@@ -32,14 +42,31 @@ type List is
         done
     return new
 
-    function(List l, int want) List:get_node -> LinkedListNode does
+    function(List l) List:gen_cache -> void does
+        if l.cache_alloced do
+            free(l.cache)
+        done
+        int SOB=@sizeof(ListCacheBox)@
+        l.cache_alloced=true
+        l.cache_ready=true
+        l.cache=malloc(SOB*(l.len+1))
         int idx = 0
         LinkedListNode current = l.head
-        while idx!=want do
+        ListCacheBox box
+        while idx<l.len do
+            box=(l.cache|long+(SOB*idx)|long)|ptr|ListCacheBox
+            box.node=current
             idx+=1
             current=current.next
         done
-    return current
+    return
+
+    function(List l, int want) List:get_node -> LinkedListNode does
+        # printf("Call to get_node, %i\n", want)
+        if -l.cache_ready do
+            l:gen_cache()
+        done
+    return ((l.cache|long+((@sizeof(ListCacheBox)@)*want)|long)|ptr|ListCacheBox).node
 
     function(List l, int want) List:get -> ptr does
     return l:get_node(want).value
@@ -53,11 +80,13 @@ type List is
             l.head=new
         done
         l.len+=1
+        l.cache_ready=false
     return
 
     function(List l, int i, ptr item) List:insert -> void does
         if i==l.len do
             l:append(item)
+            l.cache_ready=false
             return
         elif i>l.len do
             printf("Can't insert past end of list!\n")
@@ -72,6 +101,7 @@ type List is
             done
             l.head=new
             l.len+=1
+            l.cache_ready=false
             return
         done
 
@@ -80,6 +110,7 @@ type List is
         LinkedListNode prev = l:get_node(i-1)
         new.next=prev.next
         prev.next=new
+        l.cache_ready=false
     return
 
     function(List l, int i) List:del -> void does
@@ -94,6 +125,7 @@ type List is
                 l.head=l.head.next
             done
             l.len-=1
+            l.cache_ready=false
             return
         done
 
@@ -103,6 +135,7 @@ type List is
             prev.next=prev.next.next
         done
         l.len-=1
+        l.cache_ready=false
     return
 
     function(List l) List:clear -> void does
@@ -112,6 +145,7 @@ type List is
             idx-=1
         done
         l.len=0
+        l.cache_ready=false
     return
 
     function(List l) List:free -> void does

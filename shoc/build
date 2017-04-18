@@ -4,6 +4,6 @@ export PATH=$PATH:../../compiler
 
 cd src
 
-orthc shoc.ort noclean dump_tokens funchooks
+orthc shoc.ort funchooks noclean
 
-mv shoc ../shoc.o
+mv shoc ../shoc

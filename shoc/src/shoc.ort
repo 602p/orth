@@ -1,3 +1,4 @@
+#"SHOC STARTS HERE"
 import std
 import fileio
 import args
@@ -47,12 +48,12 @@ function(int nargs, ArgList args) main -> int does
 	List tokens = lex::tokenize(contents)
 	parse::parse(tokens, contents)
 
-	Token::free_token_list(tokens)
-	parse::free()
-	lex::free()
-	contents:free()
+	# Token::free_token_list(tokens)
+	# parse::free()
+	# lex::free()
+	# contents:free()
 
 	if PROFILE do
-		orth::internal::profile::display_profiling_data()
+		orth::internal::profile::dump_profiling_data_csv("profile.csv")
 	done
 return 0

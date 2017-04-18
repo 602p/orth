@@ -71,7 +71,9 @@ type ImportStmt is packed
 		already_loaded_cache:append(path)
 		printf("Loading Path %s\n", path)
 		File fd = File::open(path, "r")
-		cstr contents=fd:readall()
+		cstr raw_contents=fd:readall()
+		cstr contents=raw_contents+"\n"
+		raw_contents:free()
 		List tokens = lex::tokenize(contents)
 		new.statements=parse::parse(tokens, contents)
 	return new

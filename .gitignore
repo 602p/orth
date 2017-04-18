@@ -103,3 +103,5 @@ louos.bin
 out.s
 *.exe
 shoc.o
+shoc/shoc
+profile.csv

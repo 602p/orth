@@ -75,3 +75,12 @@ function(cstr err) orth::fail -> void does
 	done
 	exit(1)
 return
+
+function(int code) __orth_sig_h -> void does
+	orth::fail("Segmentation Fault Caught")
+return
+
+import sighandle
+function() orth::install_sigsev_handler -> void does
+	system::set_interrupt_handler(11, __orth_sig_h|SignalHandler)
+return

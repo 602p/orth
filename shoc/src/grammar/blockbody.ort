@@ -73,8 +73,8 @@ type BlockBody is packed
 		if eles:get(1).is_token do
 			if eles:get(1):t():is_a("T_DONE") do
 				return 2
-			elif eles:get(1).is_token & eles:get(2).is_token do
-				if eles:in_slice()>2 do
+			elif eles:in_slice()>2 do
+				if eles:get(1).is_token & eles:get(2).is_token do
 					if eles:get(1):t():is_a("T_ELSE") & eles:get(2):t():is_a("T_DO") do
 						return 4
 					done

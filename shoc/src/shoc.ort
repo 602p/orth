@@ -14,6 +14,7 @@ function(cstr err) shoc::bail_out -> void does
 return
 
 function(int nargs, ArgList args) main -> int does
+	orth::install_sigsev_handler()
 	bool PROFILE=false
 	if nargs>2 do 
 		PROFILE=args:get(2)=="--profile"
@@ -36,7 +37,9 @@ function(int nargs, ArgList args) main -> int does
 	done
 
 	File fd = File::open(args:get(1), "r")
-	cstr contents=fd:readall()
+	cstr raw_contents=fd:readall()
+	cstr contents=raw_contents+"\n"
+	raw_contents:free()
 	fd:close()
 	fd:free()
 
@@ -48,6 +51,7 @@ function(int nargs, ArgList args) main -> int does
 	List tokens = lex::tokenize(contents)
 	parse::parse(tokens, contents)
 
+	# XXXX Broken
 	# Token::free_token_list(tokens)
 	# parse::free()
 	# lex::free()

@@ -1,0 +1,20 @@
+
+type GIRStackAlloc is packed
+	GIRInstructionType _gir_ty
+	OType type_
+	cstr  target
+
+	function(GIRStackAlloc inst) GIRStackAlloc::print -> void does
+		printf("stack_alloc '%s' -> <%s>\n", inst.type_.name, inst.target)
+	return
+
+	function(OType type_, cstr target) GIRStackAlloc::new -> GIRInstruction does
+		GIRStackAlloc new = mem::a(@sizeof(GIRStackAlloc)@)|GIRStackAlloc
+		new._gir_ty=GIRInstructionType::called("stack_alloac")
+		new.type_=type_
+		new.target=target
+	return new|GIRInstruction
+
+	function() GIRStackAlloc::impl -> GIRInstructionType does
+	return GIRInstructionType::new("stack_alloc"):set_printer(GIRStackAlloc::print|GIRInstructionPrinter)
+endtype

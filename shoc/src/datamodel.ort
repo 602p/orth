@@ -1,0 +1,12 @@
+
+type OType is
+	cstr name
+
+	function(OType t) OType:get_size -> int does
+	return 4
+
+	function(cstr name) OType::new -> OType does
+		OType new = mem::a(@sizeof(OType)@)|OType
+		new.name=name
+	return new
+endtype

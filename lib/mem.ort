@@ -1,0 +1,33 @@
+import std
+
+type MemArena is
+	ptr allocation
+	int position
+	int allocation_size
+	MemArena _next
+endtype
+
+type MemAllocator is a function->ptr #(int)
+type MemDeallocator is a function->void #(ptr)
+
+MemAllocator __mem_allocator
+MemDeallocator __mem_deallocator
+
+function(int amount) mem::alloc -> ptr does
+return __mem_allocator(amount)
+
+function(ptr ob) mem::free -> void does
+	__mem_deallocator(ob)
+return 
+
+function() orth::internal::hooks::mem_init_default_allocator -> void does
+	printf("orth::internal::hooks::mem_init_default_allocator\n")
+	__mem_allocator=__raw_malloc|MemAllocator
+	__mem_deallocator=__raw_free|MemDeallocator
+return
+
+@construct_signature("__raw_malloc", "malloc", ["int"], "ptr")@
+@construct_signature("__raw_free", "free", ["ptr"], "void", auto_conv=True)@
+@construct_signature("malloc", "mem::alloc", ["int"], "ptr")@
+@construct_signature("free", "mem::free", ["ptr"], "void", auto_conv=True)@
+@register_startup("orth::internal::hooks::mem_init_default_allocator")@

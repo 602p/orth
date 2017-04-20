@@ -7,6 +7,7 @@ import grammar
 import stdio
 import err
 import profile
+import mem
 
 function(cstr err) shoc::bail_out -> void does
 	printf("\n\nshoc::bail_out called, orth::fail traceback follows...\n")

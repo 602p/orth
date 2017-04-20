@@ -24,13 +24,13 @@ def process_intrinsic(out, text):
 		))
 		return "%"+res
 
-	def declare_c_func(name, type, paramstring):
+	def declare_c_func(name, type, paramstring, auto_conv=False):
 		#Provide a prototype for an external function (that is, will be linked at compile-time)
 		#Equivilent of ASM extern or C function prototype
 		if name not in out.signatures:
 			rt=datamodel.builtin_types[type]
 			out.emitl("declare {} @{}{}".format(rt.get_llvm_representation(), name, paramstring))
-			out.set_signature(name, datamodel.ManualFunctionOType(name, paramstring, rt))
+			out.set_signature(name, datamodel.ManualFunctionOType(name, paramstring, rt, auto_conv=auto_conv))
 
 	declare_func=declare_c_func #Not all externs are C
 
@@ -66,6 +66,16 @@ def process_intrinsic(out, text):
 
 	def register_func(name, rt, argstring):
 		out.set_signature(name, datamodel.ManualFunctionOType(name, argstring, datamodel.builtin_types[rt]))
+
+	def construct_signature(ident, symbol, args, rt, auto_conv=False):
+		name="@"+symbol.replace(":","$")
+		out.signatures[ident]=transform.Variable(
+			name,
+			datamodel.FunctionOType(name, [out.types[i] for i in args], out.types[rt], auto_conv=auto_conv)
+		)
+
+	def register_startup(funcname):
+		out.startup_functions.append(funcname.replace(":","$"))
 
 	#Horrible hack to allow @sizeof(SomeClass)@ without quotes
 	locals().update(out.types) #TODO: Change

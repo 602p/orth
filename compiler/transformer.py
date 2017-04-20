@@ -299,11 +299,12 @@ class NameExprTransformer(Transformer):
 					out.get_var_name(self.node.name))) #From NameExpr
 			elif self.node.name in out.signatures:
 				self.type=out.signatures[self.node.name].type
-				out.emitl("%{} = bitcast {} {} to {}".format( #Noop, because I can't see another way to 
+				out.emitl("%{} = bitcast {} {} to {};NET {}".format( #Noop, because I can't see another way to 
 					name,										#get LLVM to just give me the goddamn address
 					self.type.get_llvm_representation(),
 					out.signatures[self.node.name].name,
-					self.type.get_llvm_representation()
+					self.type.get_llvm_representation(),
+					str(out.signatures[self.node.name])
 				))
 		return name
 
@@ -388,6 +389,10 @@ class FunctionTransformer(Transformer):
 						n=out.get_var_name(arg.name)
 					))
 
+				if self.node.name=="main":
+					for func in out.startup_functions:
+						out.emitl("call void {}()".format(out.signatures[func].name))
+
 				if out.options["funchooks"] and not self.node.name.startswith("orth$$internal$$hooks$$"):
 					out.emitl("call void @orth$$internal$$hooks$$function_enter_hook(i8* {})".format(
 						datamodel.builtin_types['cstr'].get_literal_expr(self.node.name, out)))
@@ -415,13 +420,29 @@ class CallExprTransformer(Transformer):
 	def transform(self, out):
 		implicit_first_parameter=isinstance(self.node.method, AccessorExpr) and self.node.method.accesses=="method"
 		method_to_invoke=transform.emit(out, self.node.method, self)
+
+		auto_conv=False
+		if isinstance(self.node.method, NameExpr):
+			if self.node.method.name in out.signatures:
+				auto_conv=out.signatures[self.node.method.name].type.auto_conv
+
 		method_type=get_type(self.node.method, out)
 		result=out.get_temp_name()
 		args=[]
 		if implicit_first_parameter:
 			args.append(get_type(self.node.method.object, out).get_llvm_representation()+" "+transform.emit(out, self.node.method.object))
-		for arg in self.node.args:
-			args.append(get_type(arg, out).get_llvm_representation()+" "+transform.emit(out, arg, self))
+		for idx, arg in enumerate(self.node.args):
+			arg_val=transform.emit(out, arg, self)
+			arg_ty=get_type(arg, out)
+			if auto_conv:
+				new_name=out.get_temp_name()
+				arg_ty=out.signatures[self.node.method.name].type.args[idx]
+				out.emitl("%{} = {} ;AUTO_CONV".format(
+					new_name,
+					get_type(arg, out).implement_cast(arg_val, get_type(arg, out), arg_ty))
+				)
+				arg_val="%"+new_name
+			args.append(arg_ty.get_llvm_representation()+" "+arg_val)
 
 		if method_type.returntype.get_llvm_representation()!="void": #From CallExpr
 			out.emitl("%{} = call {} {}({})".format(

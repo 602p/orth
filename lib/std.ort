@@ -14,7 +14,7 @@
 @declare_c_func("atoi", "int", "(i8*)")@
 @declare_c_func("strcmp", "int", "(i8*, i8*)")@
 @declare_c_func("strncmp", "int", "(i8*, i8*, i32)")@
-@declare_c_func("free", "int", "(...)")@
+@declare_c_func("free", "void", "(i8*)")@
 @declare_c_func("exit", "int", "(i32)")@
 @declare_c_func("clock", "long", "()")@
 

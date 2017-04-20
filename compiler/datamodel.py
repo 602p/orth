@@ -319,7 +319,7 @@ class PointerPrimitiveOType(PrimitiveOType):
 
 class FunctionOType(PointerPrimitiveOType):
 	#Used for the signatures cache. Tells callers how to invoke stuff.
-	def __init__(self, name, args, returntype):
+	def __init__(self, name, args, returntype, auto_conv=False):
 		OType.__init__(self, name)
 		self.llvmtype=returntype.get_llvm_representation()
 		self.argsig=" ("+(",".join(typ.get_llvm_representation() for typ in args))+")"
@@ -327,6 +327,7 @@ class FunctionOType(PointerPrimitiveOType):
 		self.datalayout=None
 		self.returntype=returntype
 		self.args=args
+		self.auto_conv=auto_conv
 
 	def get_llvm_representation(self):
 		return self.llvmtype+" "+self.argsig+"*"
@@ -341,10 +342,11 @@ class BlackBoxFunctionOType(FunctionOType):
 class ManualFunctionOType(FunctionOType):
 	#Used for @declare_func@ intrinsics (for calling out to external functions)
 	#Basically just lets users specify the parts of the LLVM decl
-	def __init__(self, name, argsig, returntype):
+	def __init__(self, name, argsig, returntype, auto_conv=False):
 		FunctionOType.__init__(self, name, [], returntype)
 		self.argsig=argsig
 		self.llvmtype=returntype.get_llvm_representation()
+		self.auto_conv=auto_conv
 
 class PrimitiveCStrOType(PointerPrimitiveOType):
 	#A cstr (C-String) is functionally equivilint to a pointer, but has a literal form (A quoted string)

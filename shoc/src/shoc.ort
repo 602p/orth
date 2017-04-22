@@ -8,6 +8,9 @@ import stdio
 import err
 import profile
 import mem
+import os
+
+import searchpath
 
 function(cstr err) shoc::bail_out -> void does
 	printf("\n\nshoc::bail_out called, orth::fail traceback follows...\n")
@@ -15,9 +18,7 @@ function(cstr err) shoc::bail_out -> void does
 return
 
 function(int nargs, ArgList args) main -> int does
-	if nargs>2 do 
-		mem::init_arena_allocator(1024*1024)
-	done
+	mem::init_arena_allocator(1024*1024)
 
 	orth::install_sigsev_handler()
 	bool PROFILE=false
@@ -43,12 +44,12 @@ function(int nargs, ArgList args) main -> int does
 		return 0
 	done
 
+	List search_path=List::new()
+	search_path:append(os::get_cwd()+"/../lib")
+
 	File fd = File::open(args:get(1), "r")
-	cstr raw_contents=fd:readall()
-	cstr contents=raw_contents+"\n"
-	raw_contents:free()
+	cstr contents=fd:readall()+"\n"
 	fd:close()
-	fd:free()
 
 	lex::init()
 	parse::init()
@@ -57,12 +58,6 @@ function(int nargs, ArgList args) main -> int does
 
 	List tokens = lex::tokenize(contents)
 	parse::parse(tokens, contents)
-
-	# XXXX Broken
-	# Token::free_token_list(tokens)
-	# parse::free()
-	# lex::free()
-	# contents:free()
 
 	if PROFILE do
 		orth::internal::profile::dump_profiling_data_csv("profile.csv")

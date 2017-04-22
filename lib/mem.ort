@@ -123,6 +123,10 @@ function(ptr ob) mem::free_unmanaged -> void does
 	__raw_free(ob)
 return 
 
+function(ptr ob) mem::raw_free -> void does
+	__raw_free(ob)
+return
+
 function() mem::__empty -> void does
 return
 

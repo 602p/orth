@@ -1,0 +1,18 @@
+
+@declare_c_func("get_current_dir_name", "cstr", "()")@
+@declare_c_func("getenv", "cstr", "(i8*)")@
+
+function() os::get_cwd -> cstr does
+	cstr raw_cwd=get_current_dir_name()
+	cstr ret = raw_cwd:copy() #Do this dance cause glibc internally mallocs for the string, not using orth allocator
+	mem::raw_free(raw_cwd)
+return ret
+
+function(cstr key) os::env::get -> cstr does
+	if -os::env::has(key) do
+		orth::fail("os::env::get called on nonexistant key :"+key)
+	done
+return getenv(key)
+
+function(cstr key) os::env::has -> bool does
+return getenv(key)|ptr!=null

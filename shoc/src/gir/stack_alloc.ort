@@ -5,12 +5,12 @@ type GIRStackAlloc is packed
 	cstr  target
 
 	function(GIRStackAlloc inst) GIRStackAlloc::print -> void does
-		printf("stack_alloc '%s' -> <%s>\n", inst.type_.name, inst.target)
+		printf("stack_alloc {%s} -> <%s>\n", inst.type_.name, inst.target)
 	return
 
 	function(OType type_, cstr target) GIRStackAlloc::new -> GIRInstruction does
 		GIRStackAlloc new = mem::a(@sizeof(GIRStackAlloc)@)|GIRStackAlloc
-		new._gir_ty=GIRInstructionType::called("stack_alloac")
+		new._gir_ty=GIRInstructionType::called("stack_alloc")
 		new.type_=type_
 		new.target=target
 	return new|GIRInstruction

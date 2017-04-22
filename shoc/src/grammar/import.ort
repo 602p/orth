@@ -48,12 +48,13 @@ type ImportStmt is packed
 		else do
 			path=new.name:substr(new.name:find(" ")+1,new.name:len()-(new.name:find(" ")+1))
 		done
+
+		List search_path=List::new()
+		search_path:append(os::env::get("ORTH_LIB"))
+		search_path:append(".")
+
 		if -is_abs_path do
-			if File::exists("/home/louis/Documents/orth/shoc/src/"+path+".ort") do
-				path="/home/louis/Documents/orth/shoc/src/"+path+".ort"
-			else do
-				path="/home/louis/Documents/orth/lib/"+path+".ort"
-			done
+			path=shoc::resolve_name_import(search_path, path)
 		done
 		new.path=path
 		if already_loaded_cache|ptr==null do

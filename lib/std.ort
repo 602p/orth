@@ -64,6 +64,11 @@ function(cstr s) cstr:free -> void does
 	free(s)
 return
 
+function(cstr s) cstr:copy -> cstr does
+	cstr n = malloc(s:len()+1)
+	strcat(n, s)
+return n
+
 function(cstr s) cstr:int -> int does
 return atoi(s)
 

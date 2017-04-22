@@ -1,2 +1,27 @@
 import fileio
 
+function(List path, cstr import_name) shoc::resolve_name_import -> cstr does
+	int i=0
+	cstr path_attempt
+	while i<path.len do
+		path_attempt=(path:get(i)|cstr)+"/"+import_name+".ort"
+		printf("TRY: %s\n", path_attempt)
+		if File::exists(path_attempt) do
+			return path_attempt
+		done
+
+		path_attempt=(path:get(i)|cstr)+"/"+import_name+"/__init__.ort"
+		if File::exists(path_attempt) do
+			return path_attempt
+		done
+		i+=1
+	done
+	shoc::bail_out("Can't resolve bare-name import of: "+import_name)
+return ""
+
+function(cstr path) shoc::resolve_absolute_import -> cstr does
+	cstr ret = os::get_cwd()+"/"+path
+	if -File::exists(ret) do
+		shoc::bail_out("Can't resolve quoted-path import of: "+path)
+	done
+return ret

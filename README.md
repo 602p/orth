@@ -39,7 +39,7 @@ return 0
 
 Orth is still a low-level language, meaning you still need to watch your memory managment and whatnot, but abstractions provided with the OOP ideas work with that simplicity, not against it.
 
-##Compiling Orth
+### Compiling Orth
 1. Write a program, feel free to crib the hello world example
 2. Install python 3 if not already done (should provide a `/usr/bin/python3`)
 3. Install LLVM 3.5 (should provide a `llc`)

@@ -7,6 +7,7 @@ type LinkedListNode is
     function(ptr value) LinkedListNode::new -> LinkedListNode does
         LinkedListNode new = malloc(@sizeof(LinkedListNode)@)|LinkedListNode
         new.value=value
+        new.next=null|LinkedListNode
     return new
 
     function(LinkedListNode n) LinkedListNode:free -> void does
@@ -46,7 +47,7 @@ type List is
         if l.cache_alloced do
             free(l.cache)
         done
-        int SOB=@sizeof(ListCacheBox)@
+        int SOB=(@sizeof(ListCacheBox)@)
         l.cache_alloced=true
         l.cache_ready=true
         l.cache=malloc(SOB*(l.len+1))
@@ -57,14 +58,18 @@ type List is
             box=(l.cache|long+(SOB*idx)|long)|ptr|ListCacheBox
             box.node=current
             idx+=1
-            current=current.next
+            if current.next|ptr!=null do
+                current=current.next
+            done
         done
     return
 
     function(List l, int want) List:get_node -> LinkedListNode does
-        # printf("Call to get_node, %i\n", want)
         if -l.cache_ready do
             l:gen_cache()
+        done
+        if want>=l.len do
+            shoc::bail_out("Requested List pos > than exists, "+want:str()+">"+l.len:str())
         done
     return ((l.cache|long+((@sizeof(ListCacheBox)@)*want)|long)|ptr|ListCacheBox).node
 
@@ -120,10 +125,12 @@ type List is
         done
 
         if i==0 do
-            l.head:free()
+            # printf("DELETING Head=%x\n", l.head.value)
+            LinkedListNode old_head = l.head
             if l.len>1 do
                 l.head=l.head.next
             done
+            old_head:free()
             l.len-=1
             l.cache_ready=false
             return

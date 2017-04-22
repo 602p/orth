@@ -1,33 +1,152 @@
 import std
+import err
 
 type MemArena is
 	ptr allocation
 	int position
-	int allocation_size
+	ptr last_alloc
+	int last_alloc_amount
+	int arena_size
+	int layer_id
 	MemArena _next
+
+	function(int size, int layer) MemArena::new -> MemArena does
+		MemArena new = mem::alloc_unmanaged(@sizeof(MemArena)@)|MemArena
+		new.arena_size=size
+		new.allocation=mem::alloc_unmanaged(new.arena_size)
+		new.position=0
+		new.layer_id=layer
+		new._next=null|MemArena
+	return new
+
+	function(MemArena self, int amount) MemArena:allocate -> ptr does
+		amount+=8-(amount%8)
+		self.position+=amount
+		self.last_alloc_amount=amount
+		self.last_alloc=self.allocation:offset(self.position-amount)
+	return self.last_alloc
+
+	function(MemArena self, int amount) MemArena:has_room -> bool does
+	return (self.arena_size-self.position)>=amount+1+(8-(amount%8))
+
+	function(MemArena self, ptr ob) MemArena:try_free -> void does
+		if ob==self.last_alloc do
+			self.position-=self.last_alloc_amount
+			self.last_alloc=0|ptr
+		done
+	return
+
+	function(MemArena self) MemArena:free -> void does
+		mem::free_unmanaged(self.allocation)
+		mem::free_unmanaged(self)
+	return
 endtype
+
+MemArena __mem_head_arena
+MemArena __mem_tail_arena
+int __mem_arena_min_sz
+int __mem_arena_curr_layer
+
+function(int amount) mem::arena::alloc -> ptr does
+	if -__mem_tail_arena:has_room(amount) do
+		__mem_tail_arena._next=MemArena::new(amount+__mem_arena_min_sz, __mem_arena_curr_layer)
+		__mem_tail_arena=__mem_tail_arena._next
+	done
+return __mem_tail_arena:allocate(amount)
+
+function(ptr ob) mem::arena::free -> void does
+	__mem_tail_arena:try_free(ob)
+return
+
+function() mem::arena::push_arena -> void does
+	__mem_arena_curr_layer+=1
+	__mem_tail_arena._next=MemArena::new(__mem_arena_min_sz, __mem_arena_curr_layer)
+	__mem_tail_arena=__mem_tail_arena._next
+return
+
+function() mem::arena::pop_arena -> void does
+	MemArena curr=__mem_head_arena
+	MemArena next
+	while curr|ptr!=null do
+		next=curr._next
+		if curr.layer_id==__mem_arena_curr_layer do
+			curr:free()
+		done
+		curr=next
+	done
+	__mem_arena_curr_layer-=1
+return
+
+function() mem::arena::clean_up -> void does
+	MemArena curr=__mem_head_arena
+	MemArena next
+	while curr|ptr!=null do
+		next=curr._next
+		curr:free()
+		curr=next
+	done
+return
+
+function(int min_arena_sz) mem::init_arena_allocator -> void does
+	__mem_arena_min_sz=min_arena_sz
+	__mem_arena_curr_layer=0
+	__mem_head_arena=MemArena::new(__mem_arena_min_sz, __mem_arena_curr_layer)
+	__mem_tail_arena=__mem_head_arena
+	__mem_allocator=mem::arena::alloc|MemAllocator
+	__mem_deallocator=mem::arena::free|MemDeallocator
+	__mem_cleaner=mem::arena::clean_up|MemCleaner
+return
 
 type MemAllocator is a function->ptr #(int)
 type MemDeallocator is a function->void #(ptr)
+type MemCleaner is a function->void #()
 
 MemAllocator __mem_allocator
 MemDeallocator __mem_deallocator
+MemCleaner __mem_cleaner
+
+int __mem_total_unmanaged_allocs
 
 function(int amount) mem::alloc -> ptr does
 return __mem_allocator(amount)
+
+function(int amount) mem::alloc_unmanaged -> ptr does
+	__mem_total_unmanaged_allocs+=1
+return __raw_malloc(amount)
 
 function(ptr ob) mem::free -> void does
 	__mem_deallocator(ob)
 return 
 
-function() orth::internal::hooks::mem_init_default_allocator -> void does
-	printf("orth::internal::hooks::mem_init_default_allocator\n")
-	__mem_allocator=__raw_malloc|MemAllocator
-	__mem_deallocator=__raw_free|MemDeallocator
+function(ptr ob) mem::free_unmanaged -> void does
+	__mem_total_unmanaged_allocs-=1
+	__raw_free(ob)
+return 
+
+function() mem::__empty -> void does
+return
+
+@set_autoconv("mem::free_unmanaged")@
+
+function() mem::init_default_allocator -> void does
+	__mem_allocator=mem::alloc_unmanaged|MemAllocator
+	__mem_deallocator=mem::free_unmanaged|MemDeallocator
+	__mem_cleaner=mem::__empty|MemCleaner
+return
+
+function() mem::clean_up -> void does
+	__mem_cleaner()
+	int excusable=0
+	if __stack|ptr != null do
+		excusable=3
+	done
+	if __mem_total_unmanaged_allocs>excusable do
+		printf("W: Did not free all memory, %i allocations unfreed\n", __mem_total_unmanaged_allocs-excusable)
+	done
 return
 
 @construct_signature("__raw_malloc", "malloc", ["int"], "ptr")@
 @construct_signature("__raw_free", "free", ["ptr"], "void", auto_conv=True)@
 @construct_signature("malloc", "mem::alloc", ["int"], "ptr")@
 @construct_signature("free", "mem::free", ["ptr"], "void", auto_conv=True)@
-@register_startup("orth::internal::hooks::mem_init_default_allocator")@
+@register_startup("mem::init_default_allocator")@

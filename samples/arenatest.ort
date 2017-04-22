@@ -1,0 +1,8 @@
+import mem
+import err
+
+function() main -> int does
+	orth::install_sigsev_handler()
+	mem::init_arena_allocator(1024*1024)
+	mem::clean_up()
+return 0

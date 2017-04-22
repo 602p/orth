@@ -50,6 +50,7 @@ type File is
 		int buf_sz = BLOCK_SIZE
 		cstr new_buf
 		int last_size=-1
+		cstr ra_buf
 
 		while buf:len()!=last_size do
 			last_size=buf:len()
@@ -61,7 +62,11 @@ type File is
 				return buf
 			else do
 				buf_sz+=BLOCK_SIZE
-				buf=realloc(buf, buf_sz)
+				ra_buf=malloc(buf_sz)
+				memcpy(ra_buf, buf, buf_sz-BLOCK_SIZE)
+				free(buf)
+				buf=ra_buf
+				#buf=realloc(buf, buf_sz)
 
 				if buf|ptr|int==0 do
 					printf("***FATAL fileio/File::readline error, realloc->0 for req_sz=%i***\n", buf_sz)

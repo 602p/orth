@@ -74,8 +74,14 @@ def process_intrinsic(out, text):
 			datamodel.FunctionOType(name, [out.types[i] for i in args], out.types[rt], auto_conv=auto_conv)
 		)
 
-	def register_startup(funcname):
-		out.startup_functions.append(funcname.replace(":","$"))
+	def register_startup(funcname, spot=None):
+		if spot is None:
+			out.startup_functions.append(funcname.replace(":","$"))
+		else:
+			out.startup_functions.insert(spot, funcname.replace(":","$"))
+
+	def set_autoconv(funcname):
+		out.signatures[funcname.replace(":", "$")].type.auto_conv=True
 
 	#Horrible hack to allow @sizeof(SomeClass)@ without quotes
 	locals().update(out.types) #TODO: Change

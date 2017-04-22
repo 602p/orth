@@ -1,3 +1,4 @@
+import mem
 
 type _StackNode is
 	_StackNode _next
@@ -15,6 +16,9 @@ AddtlEnterExitCallback __fex_addtl_callback_exit
 bool __in_err
 
 function(cstr name) orth::internal::hooks::function_enter_hook -> void does
+	if __stack|ptr|int == 0 do
+		return
+	done
 	if __in_err do
 		return
 	done
@@ -22,23 +26,22 @@ function(cstr name) orth::internal::hooks::function_enter_hook -> void does
 	if __fex_addtl_callback_enter|ptr|int!=null|int do
 		__fex_addtl_callback_enter(name)
 	done
-	_StackNode new = malloc(@sizeof(_StackNode)@)|_StackNode
+	_StackNode new = mem::alloc_unmanaged(@sizeof(_StackNode)@)|_StackNode
 	new._next=null|_StackNode
 	new._prev=null|_StackNode
 	new.name=name
 
-	if __stack|ptr|int==null|int do
-		__stack=new
-		__stack_tail=new
-	else do
-		__stack_tail._next=new
-		new._prev=__stack_tail
-		__stack_tail=new
-	done
+	__stack_tail._next=new
+	new._prev=__stack_tail
+	__stack_tail=new
+
 	__in_err=false
 return
 
 function(cstr name) orth::internal::hooks::function_exit_hook -> void does
+	if __stack|ptr|int == 0 do
+		return
+	done
 	if __in_err do
 		return
 	done
@@ -52,11 +55,23 @@ function(cstr name) orth::internal::hooks::function_exit_hook -> void does
 	done
 
 	_StackNode new_last=__stack_tail._prev
-	free(__stack_tail)
+	mem::free_unmanaged(__stack_tail)
 	__stack_tail=new_last
 	new_last._next=null|_StackNode
 	__in_err=false
 return
+
+function() orth::internal::hooks::setup_pstack -> void does
+	_StackNode new = mem::alloc_unmanaged(@sizeof(_StackNode)@)|_StackNode
+	new._next=null|_StackNode
+	new._prev=null|_StackNode
+	new.name="<dummy root>"
+
+	__stack=new
+	__stack_tail=new
+return
+
+@register_startup("orth::internal::hooks::setup_pstack", 0)@
 
 function(cstr err) orth::fail -> void does
 	printf("\x1B[41m==================== orth::fail bailout report ====================\x1B[0m\n")
@@ -73,14 +88,22 @@ function(cstr err) orth::fail -> void does
 		curr_idx+=1
 		curr=curr._next
 	done
+	mem::clean_up()
 	exit(1)
 return
 
 function(int code) __orth_sig_h -> void does
-	orth::fail("Segmentation Fault Caught")
+	if code==11 do
+		orth::fail("Segmentation Fault Caught")
+	elif code==6 do
+		orth::fail("Abort (malloc) Fault Caught")
+	else do
+		orth::fail("??? Fault Caught - "+code:str())
+	done
 return
 
 import sighandle
 function() orth::install_sigsev_handler -> void does
 	system::set_interrupt_handler(11, __orth_sig_h|SignalHandler)
+	system::set_interrupt_handler(6, __orth_sig_h|SignalHandler)
 return

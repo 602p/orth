@@ -43,10 +43,15 @@ type CallExpr is packed
 	return new
 
 	function(EleList eles) CallExpr::match -> int does
-		if (-eles:get(0):n():is_a("ValueExpression")):or(\
-		    -eles:get(1):n():is_a("Tuple")) do
+		# printf("0 - %u\n", eles)
+		if -eles:get(0):n():is_a("ValueExpression") do
 			return 0
 		done
+		# printf("1\n")
+		if -eles:get(1):n():is_a("Tuple") do
+			return 0
+		done
+		# printf("A\n")
 
 		if parse::lookahead_is_accessor(eles) do
 			return 0

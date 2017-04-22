@@ -15,6 +15,10 @@ function(cstr err) shoc::bail_out -> void does
 return
 
 function(int nargs, ArgList args) main -> int does
+	if nargs>2 do 
+		mem::init_arena_allocator(1024*1024)
+	done
+
 	orth::install_sigsev_handler()
 	bool PROFILE=false
 	if nargs>2 do 
@@ -28,12 +32,14 @@ function(int nargs, ArgList args) main -> int does
 	stdio::init()
 	if nargs<2 do
 		printf("E: Bad args\n")
+		mem::clean_up()
 		return 1
 	done
 
 	if args:get(1)=="--show-parser-types" do
 		parse::init()
 		parse::show_types()
+		mem::clean_up()
 		return 0
 	done
 
@@ -61,4 +67,6 @@ function(int nargs, ArgList args) main -> int does
 	if PROFILE do
 		orth::internal::profile::dump_profiling_data_csv("profile.csv")
 	done
+
+	mem::clean_up()
 return 0

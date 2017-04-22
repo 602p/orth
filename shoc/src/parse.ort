@@ -107,6 +107,13 @@ type EleList is
 	return new
 
 	function(EleList self, int pos) EleList:get -> Element does
+		# printf(" - %i, len=%i\n", self.position+pos, self.list.len)
+		if (self.position+pos)>=self.list.len do
+			shoc::bail_out("Requested EleList pos > than exists, "+(self.position+pos):str()+">"+self.list.len:str())
+		done
+		if (self.position+pos)<0 do
+			shoc::bail_out("Requested EleList pos <0")
+		done
 	return self.list:get(self.position+pos)|Element
 
 	function(EleList self) EleList:get_lookahead -> Element does
@@ -125,9 +132,6 @@ type EleList is
 	function(EleList self, int count, Element e) EleList:set_tail -> EleList does
 		int i=0
 		while i<count do #It was at this point that I realized I don't have a :set, LOL
-			if (self.list:get(self.position)|Element).is_token do
-				(self.list:get(self.position)|Element):free()
-			done
 			self.list:del(self.position)
 			i+=1
 		done

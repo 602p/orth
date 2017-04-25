@@ -88,11 +88,14 @@ class TokenType(ChainBuilderProvider):
 	#token. Also allows capturing of the value matched, wether or not to actually emit it
 	#into the tokenstream (false for e.g. comments) and wether it's a "keyword" and shouldn't
 	#match stuff in the middle of other fragments
-	def __init__(self, regex, preceeding_in=None, capture=False, emit=True, keyword=False):
-		if keyword:
-			regex=regex+r"(?=\s)" #look-ahead for whitespace, that is it's not part of another
-									#word (e.g. int functionname isn't a T_FUNCTIONDECL)
-		self.regex=re.compile(regex)
+	def __init__(self, regex, preceeding_in=None, capture=True, emit=True, keyword=False):
+		if regex is not None:
+			if keyword:
+				regex=regex+r"(?=\s)" #look-ahead for whitespace, that is it's not part of another
+										#word (e.g. int functionname isn't a T_FUNCTIONDECL)
+			self.regex=re.compile(regex)
+		else:
+			self.regex=None
 		self.preceeding_in=preceeding_in
 		self.capture=capture
 		self.emit=emit
@@ -100,10 +103,15 @@ class TokenType(ChainBuilderProvider):
 	def __repr__(self): return self.name
 
 	def matches(self, text, prev):
+		if self.regex is None:
+			return False
 		return self.regex.match(text) is not None and (self.preceeding_in is None or prev.type.name in self.preceeding_in)
 
-	def make_token(self, text, line=None, file=None):
-		return Token(self, self.regex.match(text).group() if self.capture else None, line=line, file=file) if self.emit else None
+	def make_token(self, text, line=None, file=None, force_create=False):
+		try:
+			return Token(self, self.regex.match(text).group() if (self.capture or force_create) else None, line=line, file=file) if (self.emit or force_create) else None
+		except AttributeError:
+			return Token(self, text, line=line, file=file) if self.emit else None
 
 class Token:
 	#Holder

@@ -157,6 +157,7 @@ class Tokens(metaclass=TokenHolder):
 	T_STRING_LITERAL = TokenType(r"r?\"[(#-~)|( \!)]*\"", capture=True)
 
 	T_ENDOFSTATEMENT = TokenType(";")#In case you want to write C
+	T_WHITESPACE = TokenType(None)#For the mode where you want to preserve formatting
 
 globals().update(Tokens)
 #^-- Metaprogramming is fun!

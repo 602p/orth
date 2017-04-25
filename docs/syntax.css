@@ -1,0 +1,44 @@
+body{
+	background-color: #101010;
+	color: white;
+}
+
+.orth-T_INTEGER_LITERAL, .orth-T_FLOAT_LITERAL{
+	color: #6c71c4;
+}
+
+.orth-T_STRING_LITERAL{
+	color: #b58900;
+}
+
+.orth-T_FUNCTIONDECL, .orth-T_FUNCTIONDECL_RETURNS, .orth-T_FUNCTIONDECL_DOES, .orth-T_TYPEDECL, .orth-T_TYPEDECL_IS, .orth-T_TYPEDECL_END,
+.orth-T_TYPEDECL_PACKED, .orth-T_TYPEDECL_ALIAS, .orth-T_RETURN{
+	
+	color: #268bd2;
+}
+
+.orth-T_IF_START, .orth-T_BLOCK_DONE, .orth-T_BLOCK_DO, .orth-T_IF_BLOCK_END_ON_ELIF,
+.orth-T_IF_ELIF, .orth-T_IF_BLOCK_END_ON_ELSE, .orth-T_IF_ELSE, .orth-T_WHILE_START, .orth-T_IMPORT, .orth-T_AUGASSIGN,
+.orth-T_BINARY_OPERATOR, .orth-T_UNARY_OPERATOR, .orth-T_ASSIGNMENT, .orth-T_LIST_START, .orth-T_LIST_STOP{
+	color: #d33682;
+}
+
+.orth-T_TYPEDECL_NAME, .orth-T_FUNCTIONDECL_NAME{
+	color: #cb4b16;
+}
+
+.orth-T_PTRCAST, .orth-T_CAST, .orth-T_COLON, .orth-T_DOT, .orth-T_DOUBLECOLON{
+	color: #859900;
+}
+
+.orth-T_LINE_COMMENT, .orth-T_BLOCK_COMMENT, .orth-T_INTRINSIC{
+	color: #839496;
+}
+
+.orth-T_ARGLIST_ELEMENT, .orth-T_FUNCTIONDECL_RETURN_TYPE{
+	color: #2aa198;
+}
+
+.orth-T_PAREN_OPEN, .orth-T_PAREN_CLOSE{
+	color: #93a1a1;
+}

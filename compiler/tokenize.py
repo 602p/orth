@@ -1,6 +1,6 @@
 from grammar import Tokens
 
-def tokenize(text, file="_in", verbose=False):
+def tokenize(text, file="_in", verbose=False, emit_whitespace=False):
 	"""Dead simple regex stream parser. Try parsing all of the patterns in the grammar
 	(in ordereddict Tokens) in order, until one matches. Tokens match if their regex match
 	and they are preeceded by a token that they have in their preeceding_in list (or that
@@ -16,21 +16,28 @@ def tokenize(text, file="_in", verbose=False):
 	while position<len(text):
 		if verbose: print(text[position:])
 		if text[position:].startswith("\\"):
+			if emit_whitespace: tokens.append(Tokens.T_WHITESPACE.make_token("\\\n", line=line))
 			position+=2
 			continue
 
 		if text[position] in "\r\n":
 			if verbose: print("(adding T_ENDOFSTATEMENT)")
-			tokens.append(Tokens.T_ENDOFSTATEMENT.make_token(";", line=line))
+			tokens.append(Tokens.T_ENDOFSTATEMENT.make_token("\n", line=line))
 			position+=1
 			line+=1
 			continue
 
+		prev=None
+		for t in reversed(tokens):
+			if t.type.name!="T_WHITESPACE":
+				prev=t
+				break
+
 		for token in Tokens.values():
 			if verbose: print(token.name)
-			if token.matches(text[position:], tokens[-1] if tokens else None):
+			if token.matches(text[position:], prev):
 				
-				tok=token.make_token(text[position:], file=file, line=line)
+				tok=token.make_token(text[position:], file=file, line=line, force_create=emit_whitespace)
 				if tok:
 					if verbose: print("Adding %s"%tok)
 					tokens.append(tok)
@@ -38,9 +45,9 @@ def tokenize(text, file="_in", verbose=False):
 				break
 		else:
 			if text[position] in " \t":
+				if emit_whitespace: tokens.append(Tokens.T_WHITESPACE.make_token(text[position], line=line))
 				position+=1
 				continue
-			print(tokens)
 			raise SyntaxError("No match at %i: %s" % (position, text[position:]))
 
 	return tokens[1:]

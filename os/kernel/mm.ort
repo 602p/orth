@@ -25,6 +25,7 @@ function(int to) malign -> void does
 return
 
 function(ptr idx) free -> void does
+	#Haha, jokes on you- you thought I was responsible with memory allocation, nope!
 	if last_alloc|int==idx|int do
 		mm_pos=last_alloc
 		last_alloc=0xDEADBEEF|ptr

@@ -37,7 +37,7 @@ function() main -> int does
 return 0
 ```
 
-Check out some larger, low-level usage examples from the kernel in this repo (with syntax highlighting!): [x86 IRQs](http://louis.goessling.com/orth/os/irqio.ort.html) and [x86 Paging/MM](http://louis.goessling.com/orth/os/mm.ort.html) (import statements are links)
+Check out some larger, low-level usage examples from the kernel in this repo (with syntax highlighting!) [here](http://louis.goessling.com/orth/os/kernel.ort.html) (import statements are links)
 
 Orth is still a low-level language, meaning you still need to watch your memory managment and whatnot, but abstractions provided with the OOP ideas work with that simplicity, not against it.
 

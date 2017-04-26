@@ -1,6 +1,6 @@
 body{
 	background-color: #101010;
-	color: white;
+	color: #fdf6e3;
 }
 
 .orth-T_INTEGER_LITERAL, .orth-T_FLOAT_LITERAL{
@@ -23,7 +23,7 @@ body{
 	color: #d33682;
 }
 
-.orth-T_TYPEDECL_NAME, .orth-T_FUNCTIONDECL_NAME{
+.orth-T_TYPEDECL_NAME, .orth-T_FUNCTIONDECL_NAME, .orth-T_TYPEDECL_FUNCTIONPOINTER{
 	color: #cb4b16;
 }
 
@@ -35,10 +35,18 @@ body{
 	color: #839496;
 }
 
-.orth-T_ARGLIST_ELEMENT, .orth-T_FUNCTIONDECL_RETURN_TYPE{
+.orth-T_LINE_COMMENT, .orth-T_BLOCK_COMMENT{
+	font-style: italic;
+}
+
+.orth-T_ARGLIST_ELEMENT-type, .orth-T_FUNCTIONDECL_RETURN_TYPE, .orth-T_VAR_DECL-type, .orth-T_NAME-cast-type{
 	color: #2aa198;
 }
 
 .orth-T_PAREN_OPEN, .orth-T_PAREN_CLOSE{
 	color: #93a1a1;
+}
+
+.orth-T_NAME-accessor{
+	color: #bbdddd;
 }

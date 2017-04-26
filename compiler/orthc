@@ -25,6 +25,10 @@ if "dump_tokens" in sys.argv:
 print("Parsing...                       ")
 node=parse.parse(tokens)
 
+if "dump_bd" in sys.argv:
+	print("Parsing... [Drawing BD]                 ")
+	drawblockdiag.emit_node_file(open('out.bd', 'w'), node, portrait_mode=True)
+
 
 print("Preparing Transformer...                       ")
 import transform, transformer, datamodel
@@ -68,9 +72,7 @@ with open("out.ll", 'w') as fd:
 
 	e.emit_global_statments()
 
-if "dump_bd" in sys.argv:
-	print("Parsing... [Drawing BD]                 ")
-	drawblockdiag.emit_node_file(open('out.bd', 'w'), node, portrait_mode=True)
+
 
 if not "nobuild" in sys.argv:
 	print("Compiling...                       ")

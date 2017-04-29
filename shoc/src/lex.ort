@@ -61,6 +61,14 @@ function(cstr text) lex::match_int_literal -> int does
 	done
 return i
 
+function(cstr text) lex::match_bool_literal -> int does
+	if text:startswith("true") do
+		return 4
+	elif text:startswith("false") do
+		return 5
+	done
+return 0
+
 function(cstr text) lex::match_float_literal -> int does
 	int i=0
 	while text[i]:in("1234567890.") do
@@ -337,12 +345,14 @@ function() lex::init -> void does
 	t:append(TokenType::new_fn("T_FUNCTIONDECL_RETURN_TY", lex::match_identifier|TokenMatcher):after("T_FUNCTIONDECL_RETURN")|ptr)
 	t:append(TokenType::new_kw("T_FUNCTIONDECL_DOES", "does"):after("T_FUNCTIONDECL_RETURN_TY")|ptr)
 
-	t:append(TokenType::new_fn("T_VAR_DECL", lex::match_var_decl|TokenMatcher):after("T_ENDOFSTATEMENT")|ptr)
-	t:append(TokenType::new_fn("T_NAME", lex::match_identifier|TokenMatcher)|ptr)
-
 	t:append(TokenType::new_fn("T_INT_LITERAL", lex::match_int_literal|TokenMatcher)|ptr)
+	t:append(TokenType::new_fn("T_BOOL_LITERAL", lex::match_bool_literal|TokenMatcher)|ptr)
+	t:append(TokenType::new_eq("T_NULL_LITERAL", "null")|ptr)
 	t:append(TokenType::new_fn("T_FLOAT_LITERAL", lex::match_float_literal|TokenMatcher)|ptr)
 	t:append(TokenType::new_fn("T_STRING_LITERAL", lex::match_string_literal|TokenMatcher)|ptr)
+
+	t:append(TokenType::new_fn("T_VAR_DECL", lex::match_var_decl|TokenMatcher):after("T_ENDOFSTATEMENT")|ptr)
+	t:append(TokenType::new_fn("T_NAME", lex::match_identifier|TokenMatcher)|ptr)
 
 	t:append(TokenType::new_fn("T_AUGASSIGN", lex::match_augassign|TokenMatcher)|ptr)
 	t:append(TokenType::new_fn("T_BINOP", lex::match_binop|TokenMatcher)\

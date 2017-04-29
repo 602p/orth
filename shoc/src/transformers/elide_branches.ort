@@ -2,7 +2,7 @@
 function(IfExpr n, TransformerPass p) elide_branches::visit_if -> Node does
 	if n.condition:is_a("LiteralExpr") do
 		LiteralExpr lit = n.condition|LiteralExpr
-		if lit.value_type=="int" do
+		if (lit.value_type=="int"):or(lit.value_type=="bool") do
 			if lit.value:int()!=0 do
 				return BlockBody::create_direct(n.body.statements)|Node
 			else do
@@ -10,6 +10,8 @@ function(IfExpr n, TransformerPass p) elide_branches::visit_if -> Node does
 					if n.body.runoff_clause:is_a("BlockBody") do
 						return BlockBody::create_direct((n.body.runoff_clause|BlockBody).statements)|Node
 					done
+				else do
+					return null|Node
 				done
 			done
 		done

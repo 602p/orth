@@ -8,9 +8,9 @@ type BlockBody is packed
 		printf("BlockBody: (N_Statements=%i)\n", node.statements.len)
 		int i=0
 		while i<node.statements.len do
-			parse::indent(depth+1)
+			parse::indent(depth)
 			printf("|%i- ", i)
-			node.statements:get_Node(i):print(depth+2)
+			node.statements:get_Node(i):print(depth+1)
 			i+=1
 		done
 

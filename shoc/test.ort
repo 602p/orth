@@ -1,1 +1,1 @@
-"Hell"+"o"+" W"+"orld!"
+print("Dog"*10)

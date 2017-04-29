@@ -14,6 +14,12 @@ type LiteralExpr is packed
 			new.value_type="int"
 		elif eles:get(0):t().type_.name=="T_FLOAT_LITERAL" do
 			new.value_type="float"
+		elif eles:get(0):t().type_.name=="T_NULL_LITERAL" do
+			new.value_type="ptr"
+			new.value="0"
+		elif eles:get(0):t().type_.name=="T_BOOL_LITERAL" do
+			new.value_type="bool"
+			new.value=(eles:get(0):t().text=="true"):str()
 		else do
 			new.value_type="cstr"
 			new.value=new.value:substr(1, new.value:len()-2)
@@ -39,6 +45,8 @@ type LiteralExpr is packed
 	function(EleList eles) LiteralExpr::match -> int does
 	return ((eles:get(0):t().type_.name=="T_INT_LITERAL")+\
 		    (eles:get(0):t().type_.name=="T_FLOAT_LITERAL")+\
+		    (eles:get(0):t().type_.name=="T_BOOL_LITERAL")+\
+		    (eles:get(0):t().type_.name=="T_NULL_LITERAL")+\
 		    (eles:get(0):t().type_.name=="T_STRING_LITERAL"))|int
 
 	function() LiteralExpr::impl -> NodeType does

@@ -4,19 +4,22 @@ import parse
 type NodeTransformer is a function->Node #taking (Node, TransformerPass), returning new node for tree
 
 type TransformerPass is
-	cstr        name
-	NodeTransformer visit_any
-	StrMap      visitor_map
+	cstr   name
+	StrMap visitor_map
+	ptr    extra_info
 
 	function(cstr name) TransformerPass::new -> TransformerPass does
 		TransformerPass new = malloc(@sizeof(TransformerPass)@)|TransformerPass
 		new.name=name
-		new.visit_any=null|NodeTransformer
 		new.visitor_map=StrMap::new()
 	return new
 
 	function(TransformerPass self, cstr node_type, NodeTransformer visitor) TransformerPass:add_specialization -> TransformerPass does
 		self.visitor_map:set(node_type, visitor|ptr)
+	return self
+
+	function(TransformerPass self, ptr info) TransformerPass:set_info -> TransformerPass does
+		self.extra_info=info
 	return self
 
 	function(TransformerPass self, Node n) TransformerPass:visit_children -> void does

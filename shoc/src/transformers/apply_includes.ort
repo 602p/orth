@@ -1,0 +1,37 @@
+import searchpath
+
+function(ImportStmt n, TransformerPass p) apply_includes::visit_import -> Node does
+	cstr path
+	if n.name:contains("\x22") do
+		int start=n.name:find("\x22")
+		int end=n.name:offset(start+1):find("\x22")
+		path=shoc::resolve_absolute_import(n.name:substr(start+1, end))
+	else do
+		List search_path = List::new()
+		search_path:append(".")
+		path=shoc::resolve_name_import(search_path, n.name:substr(n.name:find(" ")+1,n.name:len()-(n.name:find(" ")+1)))
+	done
+
+	int i=0
+	while i<(p.extra_info|List).len do
+		if ((p.extra_info|List):get(i)|cstr)==path do
+			return null|Node
+		done
+		i+=1
+	done
+	
+	(p.extra_info|List):append(path)
+	
+	File fd = File::open(path, "r")
+	cstr contents=fd:readall()+"\n"
+
+	List tokens = lex::tokenize(contents)
+	FileNode file = FileNode::create(parse::parse(tokens, contents))
+
+	Node res = shoc::run_transformers(file|Node)
+return res|Node
+
+function() apply_includes::init -> TransformerPass does
+return TransformerPass::new("apply_includes")\
+	   :set_info(List::new()|ptr)\
+       :add_specialization("ImportStmt", apply_includes::visit_import|NodeTransformer)

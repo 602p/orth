@@ -1,4 +1,4 @@
-<#type ImportStmt is packed
+type ImportStmt is packed
 	NodeType type_
 	cstr name
 
@@ -20,72 +20,72 @@
 					:set_creator(ImportStmt::create|NodeCreator)\
 					:set_matcher(ImportStmt::match |NodeMatcher)\
 					:matches(1):matches_only_tokens():addtype("ValueExpression")
-endtype#>
-
-List already_loaded_cache
-
-type ImportStmt is packed
-	NodeType type_
-	cstr name
-	cstr path
-	EleList statements
-
-	function(ImportStmt node, int depth) ImportStmt::print -> void does
-		printf("ImportStmt: '%s' from %s\n", node.name, node.path)
-		node.statements:print_depth(depth)
-	return
-
-	function(EleList eles) ImportStmt::create -> ImportStmt does
-		ImportStmt new = malloc(@sizeof(ImportStmt)@)|ImportStmt
-		new.name=eles:get(0):t().text
-		cstr path
-		bool is_abs_path=false
-		if new.name:contains("\x22") do
-			is_abs_path=true
-			int start=new.name:find("\x22")
-			int end=new.name:offset(start+1):find("\x22")
-			path=new.name:substr(start+1, end)
-		else do
-			path=new.name:substr(new.name:find(" ")+1,new.name:len()-(new.name:find(" ")+1))
-		done
-
-		List search_path=List::new()
-		search_path:append(os::env::get("ORTH_LIB"))
-		search_path:append(".")
-
-		if -is_abs_path do
-			path=shoc::resolve_name_import(search_path, path)
-		done
-		new.path=path
-		if already_loaded_cache|ptr==null do
-			already_loaded_cache=List::new()
-		done
-		int i=0
-		while i<already_loaded_cache.len do
-			if (already_loaded_cache:get(i)|cstr)==path do
-				new.statements=EleList::from(List::new())
-				printf("Skipping %s, already loaded\n", path)
-				return new
-			done
-			i+=1
-		done
-		already_loaded_cache:append(path)
-		printf("Loading Path %s\n", path)
-		File fd = File::open(path, "r")
-		cstr raw_contents=fd:readall()
-		cstr contents=raw_contents+"\n"
-		raw_contents:free()
-		List tokens = lex::tokenize(contents)
-		new.statements=parse::parse(tokens, contents)
-	return new
-
-	function(EleList eles) ImportStmt::match -> int does
-	return (eles:get(0):t().type_.name=="T_IMPORT")|int
-
-	function() ImportStmt::impl -> NodeType does
-	return NodeType::new("ImportStmt")\
-					:set_printer(ImportStmt::print |NodePrinter)\
-					:set_creator(ImportStmt::create|NodeCreator)\
-					:set_matcher(ImportStmt::match |NodeMatcher)\
-					:matches(1):matches_only_tokens():addtype("ValueExpression")
 endtype
+
+# List already_loaded_cache
+
+# type ImportStmt is packed
+# 	NodeType type_
+# 	cstr name
+# 	cstr path
+# 	EleList statements
+
+# 	function(ImportStmt node, int depth) ImportStmt::print -> void does
+# 		printf("ImportStmt: '%s' from %s\n", node.name, node.path)
+# 		node.statements:print_depth(depth)
+# 	return
+
+# 	function(EleList eles) ImportStmt::create -> ImportStmt does
+# 		ImportStmt new = malloc(@sizeof(ImportStmt)@)|ImportStmt
+# 		new.name=eles:get(0):t().text
+# 		cstr path
+# 		bool is_abs_path=false
+# 		if new.name:contains("\x22") do
+# 			is_abs_path=true
+# 			int start=new.name:find("\x22")
+# 			int end=new.name:offset(start+1):find("\x22")
+# 			path=new.name:substr(start+1, end)
+# 		else do
+# 			path=new.name:substr(new.name:find(" ")+1,new.name:len()-(new.name:find(" ")+1))
+# 		done
+
+# 		List search_path=List::new()
+# 		search_path:append(os::env::get("ORTH_LIB"))
+# 		search_path:append(".")
+
+# 		if -is_abs_path do
+# 			path=shoc::resolve_name_import(search_path, path)
+# 		done
+# 		new.path=path
+# 		if already_loaded_cache|ptr==null do
+# 			already_loaded_cache=List::new()
+# 		done
+# 		int i=0
+# 		while i<already_loaded_cache.len do
+# 			if (already_loaded_cache:get(i)|cstr)==path do
+# 				new.statements=EleList::from(List::new())
+# 				printf("Skipping %s, already loaded\n", path)
+# 				return new
+# 			done
+# 			i+=1
+# 		done
+# 		already_loaded_cache:append(path)
+# 		printf("Loading Path %s\n", path)
+# 		File fd = File::open(path, "r")
+# 		cstr raw_contents=fd:readall()
+# 		cstr contents=raw_contents+"\n"
+# 		raw_contents:free()
+# 		List tokens = lex::tokenize(contents)
+# 		new.statements=parse::parse(tokens, contents)
+# 	return new
+
+# 	function(EleList eles) ImportStmt::match -> int does
+# 	return (eles:get(0):t().type_.name=="T_IMPORT")|int
+
+# 	function() ImportStmt::impl -> NodeType does
+# 	return NodeType::new("ImportStmt")\
+# 					:set_printer(ImportStmt::print |NodePrinter)\
+# 					:set_creator(ImportStmt::create|NodeCreator)\
+# 					:set_matcher(ImportStmt::match |NodeMatcher)\
+# 					:matches(1):matches_only_tokens():addtype("ValueExpression")
+# endtype

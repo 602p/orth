@@ -2,6 +2,8 @@ import "transformers/rewrite_namespaces.ort"
 import "transformers/fold_constants.ort"
 import "transformers/elide_groupings.ort"
 import "transformers/elide_branches.ort"
+import "transformers/apply_includes.ort"
+import "transformers/strip_seps.ort"
 
 function(List l, TransformerPass p) List:append_Transformer -> void does
 	l:append(p|ptr)
@@ -12,4 +14,6 @@ function(List l) shoc::transformers::init -> void does
 	l:append_Transformer(elide_groupings::init())
 	l:append_Transformer(fold_constants::init())
 	l:append_Transformer(elide_branches::init())
+	l:append_Transformer(apply_includes::init())
+	l:append_Transformer(strip_seps::init())
 return

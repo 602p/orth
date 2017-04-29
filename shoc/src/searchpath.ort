@@ -5,7 +5,6 @@ function(List path, cstr import_name) shoc::resolve_name_import -> cstr does
 	cstr path_attempt
 	while i<path.len do
 		path_attempt=(path:get(i)|cstr)+"/"+import_name+".ort"
-		printf("TRY: %s\n", path_attempt)
 		if File::exists(path_attempt) do
 			return path_attempt
 		done

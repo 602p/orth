@@ -1,0 +1,7 @@
+
+function(SepExpr n, TransformerPass p) strip_seps::visit_sep -> Node does
+return null|Node
+
+function() strip_seps::init -> TransformerPass does
+return TransformerPass::new("strip_seps")\
+       :add_specialization("SepExpr", strip_seps::visit_sep|NodeTransformer)

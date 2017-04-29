@@ -1,0 +1,2 @@
+import other
+int b = 3*3

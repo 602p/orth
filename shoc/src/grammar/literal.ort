@@ -16,6 +16,7 @@ type LiteralExpr is packed
 			new.value_type="float"
 		else do
 			new.value_type="cstr"
+			new.value=new.value:substr(1, new.value:len()-2)
 		done
 	return new
 

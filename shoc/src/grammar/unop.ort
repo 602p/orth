@@ -28,10 +28,15 @@ type UnOpExpr is packed
 		done
 	return 2
 
+	function(UnOpExpr n, TransformerPass p) UnOpExpr::visit -> void does
+		n.value=p:visit(n.value)
+	return
+
 	function() UnOpExpr::impl -> NodeType does
 	return NodeType::new("UnOpExpr")\
 					:set_printer(UnOpExpr::print |NodePrinter)\
 					:set_creator(UnOpExpr::create|NodeCreator)\
 					:set_matcher(UnOpExpr::match |NodeMatcher)\
+					:set_visitor(UnOpExpr::visit |NodeVisitor)\
 					:matches(2):addtype("ValueExpression")
 endtype

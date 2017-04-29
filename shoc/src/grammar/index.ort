@@ -43,10 +43,16 @@ type IndexExpr is packed
 		done
 	return 4
 
+	function(IndexExpr n, TransformerPass p) IndexExpr::visit -> void does
+		n.value=p:visit(n.value)
+		n.array=p:visit(n.array)
+	return
+
 	function() IndexExpr::impl -> NodeType does
 	return NodeType::new("IndexExpr")\
 					:set_printer(IndexExpr::print |NodePrinter)\
 					:set_creator(IndexExpr::create|NodeCreator)\
 					:set_matcher(IndexExpr::match |NodeMatcher)\
+					:set_visitor(IndexExpr::visit |NodeVisitor)\
 					:matches(4):addtype("IdentifierExpression")
 endtype

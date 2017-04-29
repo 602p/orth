@@ -44,10 +44,17 @@ type ReturnExpr is packed
 		done
 	return 1
 
+	function(ReturnExpr n, TransformerPass p) ReturnExpr::visit -> void does
+		if -n.is_void do
+			n.value=p:visit(n.value)
+		done
+	return
+
 	function() ReturnExpr::impl -> NodeType does
 	return NodeType::new("ReturnExpr")\
 					:set_printer(ReturnExpr::print |NodePrinter)\
 					:set_creator(ReturnExpr::create|NodeCreator)\
 					:set_matcher(ReturnExpr::match |NodeMatcher)\
+					:set_visitor(ReturnExpr::visit |NodeVisitor)\
 					:matches(1):addtype("Expression")
 endtype

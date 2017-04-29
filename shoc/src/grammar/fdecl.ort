@@ -156,36 +156,59 @@ endtype
 type FunctionDecl is packed
 	NodeType type_
 	FunctionDeclHead head
-	FunctionBody body
+	List body
 
 	function(FunctionDecl node, int depth) FunctionDecl::print -> void does
 		printf("FunctionDecl:\n")
 		parse::indent(depth+1)
 		printf("|- Head: ")
-		(node.head|Node):print(depth+2)
-		parse::indent(depth+1)
-		printf("\\- Body: ")
-		(node.body|Node):print(depth+2)
+		(node.head|Node):print(depth+1)
+		int i=0
+		while i<node.body.len do
+			parse::indent(depth+1)
+			if i==node.body.len-1 do
+				printf("\\%i- ", i)
+				node.body:get_Node(i):print(depth+2)
+			else do
+				printf("|%i- ", i)
+				node.body:get_Node(i):print(depth+2)
+			done
+			i+=1
+		done
 	return
 
 	function(EleList eles) FunctionDecl::create -> FunctionDecl does
 		FunctionDecl new = malloc(@sizeof(FunctionDecl)@)|FunctionDecl
 		new.head=eles:get(0):n()|FunctionDeclHead
-		new.body=eles:get(1):n()|FunctionBody
+		new.body=(eles:get(1):n()|FunctionBody).statements
 	return new
 
 	function(EleList eles) FunctionDecl::match -> int does
-
 		if (-eles:get(0):n():is_a("FunctionDeclHead")):or(\
 		    -eles:get(1):n():is_a("FunctionBody")) do
 			return 0
 		done
 	return 2
 
+	function(FunctionDecl n, TransformerPass p) FunctionDecl::visit -> void does
+		int i=0
+		Node res
+		while i<n.body.len do
+			res=p:visit(n.body:get_Node(i))
+			if res|ptr==null do
+				n.body:del(i)
+			else do
+				n.body:set(i, res|ptr)
+			done
+			i+=1
+		done
+	return
+
 	function() FunctionDecl::impl -> NodeType does
 	return NodeType::new("FunctionDecl")\
 					:set_printer(FunctionDecl::print |NodePrinter)\
 					:set_creator(FunctionDecl::create|NodeCreator)\
 					:set_matcher(FunctionDecl::match |NodeMatcher)\
+					:set_visitor(FunctionDecl::visit |NodeVisitor)\
 					:matches(2):matches_only_nodes()
 endtype

@@ -13,6 +13,7 @@
 @declare_c_func("strncpy", "void", "(i8*, i8*, i32)")@
 @declare_c_func("strlen", "int", "(i8*)")@
 @declare_c_func("atoi", "int", "(i8*)")@
+@declare_c_func("strtod", "float", "(i8*, i8*)")@
 @declare_c_func("strcmp", "int", "(i8*, i8*)")@
 @declare_c_func("strncmp", "int", "(i8*, i8*, i32)")@
 @declare_c_func("free", "void", "(i8*)")@
@@ -72,6 +73,9 @@ return n
 function(cstr s) cstr:int -> int does
 return atoi(s)
 
+function(cstr s) cstr:float -> float does
+return strtod(s, null)
+
 function(byte b, cstr s) byte:in -> bool does
 	int i=0
 	int len=s:len()
@@ -119,8 +123,13 @@ function(cstr s, cstr t) cstr:contains -> bool does
 return s:find(t)!=-1
 
 function(int i) int:str -> cstr does
-	cstr str = malloc(20) #TODO: FIX
+	cstr str = malloc(50) #TODO: FIX
 	sprintf(str, "%i", i)
+return str
+
+function(float i) float:str -> cstr does
+	cstr str = malloc(50) #TODO: FIX
+	sprintf(str, "%f", i)
 return str
 
 function(bool b) bool:str -> cstr does

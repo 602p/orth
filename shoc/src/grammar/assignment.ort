@@ -42,10 +42,16 @@ type AssignmentExpr is packed
 		done
 	return 3
 
+	function(AssignmentExpr n, TransformerPass p) AssignmentExpr::visit -> void does
+		n.rhs=p:visit(n.rhs)
+		n.lhs=p:visit(n.lhs)
+	return
+
 	function() AssignmentExpr::impl -> NodeType does
 	return NodeType::new("AssignmentExpr")\
 					:set_printer(AssignmentExpr::print |NodePrinter)\
 					:set_creator(AssignmentExpr::create|NodeCreator)\
 					:set_matcher(AssignmentExpr::match |NodeMatcher)\
+					:set_visitor(AssignmentExpr::visit |NodeVisitor)\
 					:matches(3):addtype("Expression")
 endtype

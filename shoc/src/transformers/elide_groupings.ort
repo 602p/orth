@@ -1,0 +1,7 @@
+
+function(GroupingExpr n, TransformerPass p) elide_groupings::visit_grouping -> Node does
+return n.contents
+
+function() elide_groupings::init -> TransformerPass does
+return TransformerPass::new("elide_groupings")\
+       :add_specialization("GroupingExpr", elide_groupings::visit_grouping|NodeTransformer)

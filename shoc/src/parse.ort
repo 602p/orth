@@ -1,7 +1,7 @@
 import linkedlist
 import lex
 import progressbar
-import visit
+import transform
 
 function(Token self, cstr type_) Token:is_a -> bool does
 return self.type_.name==type_

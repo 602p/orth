@@ -1,0 +1,12 @@
+
+function(AccessorExpr n, TransformerPass p) rewrite_namespaces::visit_accessor -> AccessorExpr does
+	if n.mode=="::" do
+		if n.object:is_a("NameExpr") do
+			return NameExpr::create_direct((n.object|NameExpr).name+"$$"+n.field)|AccessorExpr
+		done
+	done
+return n
+
+function() rewrite_namespaces::init -> TransformerPass does
+return TransformerPass::new("rewrite_namespaces")\
+       :add_specialization("AccessorExpr", rewrite_namespaces::visit_accessor|NodeTransformer)

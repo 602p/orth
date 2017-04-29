@@ -19,6 +19,13 @@ type LiteralExpr is packed
 		done
 	return new
 
+	function(cstr value_type, cstr value) LiteralExpr::create_direct -> Node does
+		LiteralExpr new = malloc(@sizeof(LiteralExpr)@)|LiteralExpr
+		new.value=value
+		new.value_type=value_type
+		new.type_=parse::type_by_name("LiteralExpr")
+	return new|Node
+
 	function(EleList eles) LiteralExpr::match -> int does
 	return ((eles:get(0):t().type_.name=="T_INT_LITERAL")+\
 		    (eles:get(0):t().type_.name=="T_FLOAT_LITERAL")+\

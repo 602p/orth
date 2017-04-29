@@ -30,10 +30,15 @@ type GroupingExpr is packed
 		done
 	return 3
 
+	function(GroupingExpr n, TransformerPass p) GroupingExpr::visit -> void does
+		n.contents=p:visit(n.contents)
+	return
+
 	function() GroupingExpr::impl -> NodeType does
 	return NodeType::new("GroupingExpr")\
 					:set_printer(GroupingExpr::print |NodePrinter)\
 					:set_creator(GroupingExpr::create|NodeCreator)\
 					:set_matcher(GroupingExpr::match |NodeMatcher)\
+					:set_visitor(GroupingExpr::visit |NodeVisitor)\
 					:matches(3):addtype("Tuple"):addtype("ValueExpression")
 endtype

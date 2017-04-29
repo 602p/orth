@@ -47,6 +47,7 @@ import "grammar/tuple.ort"
 import "grammar/typedecl.ort"
 import "grammar/unop.ort"
 import "grammar/while.ort"
+import "grammar/file.ort"
 
 function() parse::init -> void does
 	List l=List::new()
@@ -98,6 +99,8 @@ function() parse::init -> void does
 	l:append_NodeType(SepExpr::impl())
 
 	l:append_NodeType(OneTuple::impl()) #Fallback matching case for one-arg function calls
+
+	l:append_NodeType(FileNode::impl())
 
 	parse_node_types=l
 return

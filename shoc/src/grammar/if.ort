@@ -38,14 +38,15 @@ endtype
 
 type IfExpr is packed
 	NodeType type_
-	IfExprHead head
+	Node condition
+	bool is_elif
 	BlockBody body
 
 	function(IfExpr node, int depth) IfExpr::print -> void does
 		printf("IfExpr:\n")
 		parse::indent(depth+1)
-		printf("|- Head: ")
-		(node.head|Node):print(depth+2)
+		printf("|- Condition: ")
+		(node.condition|Node):print(depth+2)
 		parse::indent(depth+1)
 		printf("|- Body: ")
 		(node.body|Node):print(depth+2)
@@ -53,7 +54,8 @@ type IfExpr is packed
 
 	function(EleList eles) IfExpr::create -> IfExpr does
 		IfExpr new = malloc(@sizeof(IfExpr)@)|IfExpr
-		new.head=eles:get(0):n()|IfExprHead
+		new.condition=(eles:get(0):n()|IfExprHead).condition
+		new.is_elif=(eles:get(0):n()|IfExprHead).is_elif
 		new.body=eles:get(1):n()|BlockBody
 	return new
 
@@ -64,10 +66,16 @@ type IfExpr is packed
 		done
 	return 2
 
+	function(IfExpr n, TransformerPass p) IfExpr::visit -> void does
+		n.condition=p:visit(n.condition)
+		n.body=p:visit(n.body|Node)|BlockBody
+	return
+
 	function() IfExpr::impl -> NodeType does
 	return NodeType::new("IfExpr")\
 					:set_printer(IfExpr::print |NodePrinter)\
 					:set_creator(IfExpr::create|NodeCreator)\
 					:set_matcher(IfExpr::match |NodeMatcher)\
+					:set_visitor(IfExpr::visit |NodeVisitor)\
 					:matches(2):matches_only_nodes():addtype("Expression")
 endtype

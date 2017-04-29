@@ -45,8 +45,8 @@ type BinOpExpr is packed
 	return 3
 
 	function(BinOpExpr n, TransformerPass p) BinOpExpr::visit -> void does
-		p:visit(n.lhs)
-		p:visit(n.rhs)
+		n.lhs=p:visit(n.lhs)
+		n.rhs=p:visit(n.rhs)
 	return
 
 	function() BinOpExpr::impl -> NodeType does

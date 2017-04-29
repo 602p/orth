@@ -10,7 +10,7 @@ import profile
 import mem
 import os
 
-import visit
+import transform
 
 import searchpath
 
@@ -55,20 +55,18 @@ function(int nargs, ArgList args) main -> int does
 
 	lex::init()
 	parse::init()
-	visit::init()
+	transform::init()
 
 	printf("Parsing Text: `%s`\n", contents)
 
 	List tokens = lex::tokenize(contents)
-	EleList elems = parse::parse(tokens, contents)
+	FileNode file = FileNode::create(parse::parse(tokens, contents))
 
 	printf("\n\n\n")
 
-	elems:get(1):print()
+	Node n = shoc::run_transformers(file|Node)
 
-	printf("\n\n\n")
-
-	Node n = shoc::run_visitors(elems:get(1):n())
+	printf("\n")
 
 	n:print_root()
 

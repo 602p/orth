@@ -120,7 +120,7 @@ type FunctionBody is packed
 				if -eles:get(2).is_token do
 					if eles:get(2):n():is_a("FunctionBody") do
 						if eles:get(1):n():is_a("IfExpr") do
-							if (eles:get(1):n()|IfExpr).head.is_elif do
+							if (eles:get(1):n()|IfExpr).is_elif do
 								return 0
 							done
 						done

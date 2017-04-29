@@ -2,7 +2,7 @@ type AccessorExpr is packed
 	NodeType type_
 	cstr mode
 	Node object
-	Node field
+	cstr field
 
 	function(AccessorExpr node, int depth) AccessorExpr::print -> void does
 		printf("AccessorExpr (Mode='%s')\n", node.mode)
@@ -11,15 +11,14 @@ type AccessorExpr is packed
 		node.object:print(depth+1)
 
 		parse::indent(depth)
-		printf("\- Field: ")
-		node.field:print(depth+1)
+		printf("\- Field: %s\n", node.field)
 	return
 
 	function(EleList eles) AccessorExpr::create -> AccessorExpr does
 		AccessorExpr new = malloc(@sizeof(AccessorExpr)@)|AccessorExpr
 		new.object=eles:get(0):n()
 		new.mode=eles:get(1):t().text
-		new.field=eles:get(2):n()
+		new.field=(eles:get(2):n()|NameExpr).name
 	return new
 
 	function(EleList eles) AccessorExpr::match -> int does
@@ -43,10 +42,15 @@ type AccessorExpr is packed
 		done
 	return 3
 
+	function(AccessorExpr n, TransformerPass p) AccessorExpr::visit -> void does
+		n.object=p:visit(n.object)
+	return
+
 	function() AccessorExpr::impl -> NodeType does
 	return NodeType::new("AccessorExpr")\
 					:set_printer(AccessorExpr::print |NodePrinter)\
 					:set_creator(AccessorExpr::create|NodeCreator)\
 					:set_matcher(AccessorExpr::match |NodeMatcher)\
+					:set_visitor(AccessorExpr::visit |NodeVisitor)\
 					:matches(3):addtype("IdentifierExpression")
 endtype

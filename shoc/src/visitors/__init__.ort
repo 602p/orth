@@ -1,9 +1,0 @@
-import "$/test_visitor.ort"
-
-function(List l, TransformerPass p) List:append_transformer -> void does
-	l:append(p|ptr)
-return
-
-function(List l) shoc::visitors::init -> void does
-	l:append_transformer(test_visitor::init())
-return

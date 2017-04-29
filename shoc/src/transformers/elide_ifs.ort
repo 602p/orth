@@ -1,0 +1,21 @@
+
+function(IfExpr n, TransformerPass p) elide_ifs::visit_grouping -> Node does
+	if n.condition:is_a("LiteralExpr") do
+		LiteralExpr lit = n.condition|LiteralExpr
+		if lit.value_type=="int" do
+			if lit.value:int()!=0 do
+				return BlockBody::create_direct(n.body.statements)|Node
+			else do
+				if n.body.has_runoff_clause do
+					if n.body.runoff_clause:is_a("BlockBody") do
+						return BlockBody::create_direct((n.body.runoff_clause|BlockBody).statements)|Node
+					done
+				done
+			done
+		done
+	done
+return n|Node
+
+function() elide_ifs::init -> TransformerPass does
+return TransformerPass::new("elide_ifs")\
+       :add_specialization("IfExpr", elide_ifs::visit_grouping|NodeTransformer)

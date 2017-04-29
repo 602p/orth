@@ -88,6 +88,10 @@ type List is
         l.cache_ready=false
     return
 
+    function(List l, int i, ptr item) List:set -> void does
+        l:get_node(i).value=item
+    return
+
     function(List l, int i, ptr item) List:insert -> void does
         if i==l.len do
             l:append(item)

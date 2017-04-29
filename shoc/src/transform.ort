@@ -24,27 +24,28 @@ type TransformerPass is
 	return
 
 	function(TransformerPass self, Node n) TransformerPass:visit -> Node does
+		self:visit_children(n)
 		if self.visitor_map:contains(n.type_.name) do
 			ptr entry = self.visitor_map:get(n.type_.name)
 			NodeTransformer v = entry|NodeTransformer
 			return v(n, self)
 		done
-		self:visit_children(n)
 	return n
 endtype
 
-import visitors
-List shoc_visitors
+import transformers
+List shoc_transformers
 
-function() visit::init -> void does
-	shoc_visitors=List::new()
-	shoc::visitors::init(shoc_visitors)
+function() transform::init -> void does
+	shoc_transformers=List::new()
+	shoc::transformers::init(shoc_transformers)
 return
 
-function(Node n) shoc::run_visitors -> Node does
+function(Node n) shoc::run_transformers -> Node does
 	int i=0
-	while i<shoc_visitors.len do
-		n=(shoc_visitors:get(i)|TransformerPass):visit(n)
+	while i<shoc_transformers.len do
+		printf("Running transformer pass '%s'\n", (shoc_transformers:get(i)|TransformerPass).name)
+		n=(shoc_transformers:get(i)|TransformerPass):visit(n)
 		i+=1
 	done
 return n

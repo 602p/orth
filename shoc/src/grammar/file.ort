@@ -1,0 +1,55 @@
+type FileNode is packed
+	NodeType type_
+	List statements
+
+	function(FileNode node, int depth) FileNode::print -> void does
+		printf("FileNode: (N_Statements=%i)\n", node.statements.len)
+		int i=0
+		while i<node.statements.len do
+			parse::indent(depth+1)
+			printf("|%i- ", i)
+			node.statements:get_Node(i):print(depth+2)
+			i+=1
+		done
+	return
+
+	function(EleList eles) FileNode::create -> FileNode does
+		FileNode new = malloc(@sizeof(FileNode)@)|FileNode
+		new.type_=parse::type_by_name("FileNode")
+		new.statements=List::new()
+		int i=0
+		while i<eles:in_slice() do
+			if eles:get(i).is_token do
+				eles:get(i):print()
+				shoc::bail_out("Got a token in the input to FileNode::create!")
+			done
+			new.statements:append_Node(eles:get(i):n())
+			i+=1
+		done
+	return new
+
+	function(EleList eles) FileNode::match -> int does
+	return 0
+
+	function(FileNode n, TransformerPass p) FileNode::visit -> void does
+		int i=0
+		Node res
+		while i<n.statements.len do
+			res=p:visit(n.statements:get_Node(i))
+			if res|ptr==null do
+				n.statements:del(i)
+			else do
+				n.statements:set(i, res|ptr)
+			done
+			i+=1
+		done
+	return
+
+	function() FileNode::impl -> NodeType does
+	return NodeType::new("FileNode")\
+					:set_printer(FileNode::print |NodePrinter)\
+					:set_creator(FileNode::create|NodeCreator)\
+					:set_matcher(FileNode::match |NodeMatcher)\
+					:set_visitor(FileNode::visit |NodeVisitor)\
+					:matches(2)
+endtype

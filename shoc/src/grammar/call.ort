@@ -58,10 +58,25 @@ type CallExpr is packed
 		done
 	return 2
 
+	function(CallExpr n, TransformerPass p) CallExpr::visit -> void does
+		n.meth=p:visit(n.meth)
+		
+		int i=0
+		Node res
+		while i<n.args.len do
+			res=p:visit(n.args:get_Node(i))
+			if res|ptr!=null do
+				n.args:set(i, res|ptr)
+			done
+			i+=1
+		done
+	return
+
 	function() CallExpr::impl -> NodeType does
 	return NodeType::new("CallExpr")\
 					:set_printer(CallExpr::print |NodePrinter)\
 					:set_creator(CallExpr::create|NodeCreator)\
 					:set_matcher(CallExpr::match |NodeMatcher)\
+					:set_visitor(CallExpr::visit |NodeVisitor)\
 					:matches(2):matches_only_nodes():addtype("ValueExpression")
 endtype

@@ -18,10 +18,15 @@ type BlockBody is packed
 		if node.has_runoff_clause do
 			printf("\\-- Runoff Clause: ")
 			node.runoff_clause:print(depth)
-		else do
-			printf("\\-- No Runoff Clause\n")
 		done
 	return
+
+	function(List nodes) BlockBody::create_direct -> Node does
+		BlockBody new = malloc(@sizeof(BlockBody)@)|BlockBody
+		new.type_=parse::type_by_name("BlockBody")
+		new.statements=nodes
+		new.has_runoff_clause=false
+	return new|Node
 
 	function(EleList eles) BlockBody::create -> BlockBody does
 		BlockBody new = malloc(@sizeof(BlockBody)@)|BlockBody
@@ -32,7 +37,7 @@ type BlockBody is packed
 					shoc::bail_out("BlockBody matched against thing of len 2 of which [1] was a node but not a BlockBody")
 				done
 				if eles:get(1):n():is_a("IfExpr") do
-					if -(eles:get(1):n()|IfExpr).head.is_elif do
+					if -(eles:get(1):n()|IfExpr).is_elif do
 						new.has_runoff_clause=false
 						new.runoff_clause=null|Node
 						new.statements=List::new()
@@ -84,7 +89,7 @@ type BlockBody is packed
 			return 2
 		elif (-eles:get(1).is_token) do
 			if eles:get(1):n():is_a("IfExpr") do
-				if (eles:get(1):n()|IfExpr).head.is_elif do
+				if (eles:get(1):n()|IfExpr).is_elif do
 					return 2
 				done
 			done
@@ -99,10 +104,33 @@ type BlockBody is packed
 		done
 	return 0
 
+	function(BlockBody n, TransformerPass p) BlockBody::visit -> void does
+		int i=0
+		Node res
+		while i<n.statements.len do
+			res=p:visit(n.statements:get_Node(i))
+			if res|ptr==null do
+				n.statements:del(i)
+			else do
+				n.statements:set(i, res|ptr)
+			done
+			i+=1
+		done
+		if n.has_runoff_clause do
+			Node runoff=p:visit(n.runoff_clause)
+			if runoff|ptr==null do
+				n.has_runoff_clause=false
+			else do
+				n.runoff_clause=runoff
+			done
+		done
+	return
+
 	function() BlockBody::impl -> NodeType does
 	return NodeType::new("BlockBody")\
 					:set_printer(BlockBody::print |NodePrinter)\
 					:set_creator(BlockBody::create|NodeCreator)\
 					:set_matcher(BlockBody::match |NodeMatcher)\
+					:set_visitor(BlockBody::visit |NodeVisitor)\
 					:matches(2)
 endtype

@@ -119,9 +119,12 @@ function(cstr s, cstr t) cstr:contains -> bool does
 return s:find(t)!=-1
 
 function(int i) int:str -> cstr does
-	cstr str = malloc(20)
+	cstr str = malloc(20) #TODO: FIX
 	sprintf(str, "%i", i)
 return str
+
+function(bool b) bool:str -> cstr does
+return (b|int):str()
 
 type _STDReadIntBox is packed
 	int i

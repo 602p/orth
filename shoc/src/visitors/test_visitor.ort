@@ -1,0 +1,8 @@
+
+function(Node n, TransformerPass p) test_visitor::visit_literal -> Node does
+	printf("Visiting literal, value=%s\n", (n|LiteralExpr).value)
+	(n|LiteralExpr).value+=" hi!"
+return n
+
+function() test_visitor::init -> TransformerPass does
+return TransformerPass::new("test_visitor"):add_specialization("LiteralExpr", test_visitor::visit_literal|NodeTransformer)

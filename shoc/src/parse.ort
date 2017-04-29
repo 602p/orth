@@ -1,6 +1,7 @@
 import linkedlist
 import lex
 import progressbar
+import visit
 
 function(Token self, cstr type_) Token:is_a -> bool does
 return self.type_.name==type_
@@ -31,13 +32,11 @@ type Node is packed
 
 	function(Node self, cstr ty) Node:is_a -> bool does
 	return self.type_:is_a(ty)
+
+	function(Node self, TransformerPass p) Node:run_transformer_on_children -> void does
+		self.type_.child_visitor(self, p)
+	return
 endtype
-
-type NodeDeleter is a function->void #(Node node)
-type NodePrinter is a function->void #(Node node, int depth)
-type NodeCreator is a function->Node #(EleList elems) -> created node
-type NodeMatcher is a function->int  #(EleList elems) -> number consumed
-
 
 type Element is
 	bool is_token
@@ -170,6 +169,15 @@ type EleList is
 	return
 endtype
 
+type NodeDeleter is a function->void #(Node node)
+type NodePrinter is a function->void #(Node node, int depth)
+type NodeVisitor is a function->void #(Node node, TransformerPass p)
+type NodeCreator is a function->Node #(EleList elems) -> created node
+type NodeMatcher is a function->int  #(EleList elems) -> number consumed
+
+function(Node n, TransformerPass p) _default_node_child_visitor -> void does
+return
+
 type NodeType is
 	cstr name
 	List things_i_am
@@ -177,6 +185,7 @@ type NodeType is
 	NodePrinter printer
 	NodeDeleter deleter
 	NodeCreator creator
+	NodeVisitor child_visitor
 
 	int matcher_flags #0 = Default, 1 = Match only tokens, 2 = Match only nodes
 	int matcher_count #min number of elemnts left requred
@@ -184,6 +193,10 @@ type NodeType is
 
 	function(NodeType self, NodePrinter p) NodeType:set_printer -> NodeType does
 		self.printer=p
+	return self
+
+	function(NodeType self, NodeVisitor v) NodeType:set_visitor -> NodeType does
+		self.child_visitor=v
 	return self
 
 	function(NodeType self, NodeDeleter d) NodeType:set_deleter -> NodeType does
@@ -206,6 +219,7 @@ type NodeType is
 	function(cstr name) NodeType::new -> NodeType does
 		NodeType new = malloc(@sizeof(NodeType)@)|NodeType
 		new.name=name
+		new.child_visitor=_default_node_child_visitor|NodeVisitor
 
 		new.things_i_am=null|List
 		new.matcher_count=1
@@ -362,6 +376,7 @@ function(List tokens, cstr text) parse::parse -> EleList does
 		eles:print()
 	done
 	bar:free()
+	eles.position=0
 return eles
 
 function() parse::free -> void does

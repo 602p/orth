@@ -11,8 +11,7 @@ type MapEntry is
 	return new
 endtype
 
-type StrMap is
-	#...actually just a List!
+type StrMap is #...actually just a List!
 	function() StrMap::new -> StrMap does
 	return List::new()|StrMap
 
@@ -42,7 +41,7 @@ type StrMap is
 
 	function(StrMap self, cstr key) StrMap:get -> ptr does
 		if -self:contains(key) do
-			orth::fail("KeyError: "+key)
+			orth::fail("KeyError in StrMap: "+key)
 		done
 	return self:get_entry(key).value
 endtype

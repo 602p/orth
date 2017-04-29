@@ -466,11 +466,17 @@ class CallExprTransformer(Transformer):
 class FileTransformer(Transformer):
 	transforms=FileExpr
 
-	def prepare(self, out):
-		print("Preparing "+out.context_map['file'])
+	def define(self, out):
 		for func in self.node.funcs:
 			if isinstance(func, TypeDecl):
+				print("Saw type: "+func.name)
+			if isinstance(func, ImportExpr) or (isinstance(func, TypeDecl) and not isinstance(func, AliasTypeDecl))\
+			   or isinstance(func, IntrinsicExpr):
 				transform.get_transformer(func, self).define(out)
+
+	def prepare(self, out):
+		print("Preparing "+out.context_map['file'])
+		# self.define(out)
 		for func in self.node.funcs:
 			if isinstance(func, FunctionDecl):
 				out.set_signature(func.name, datamodel.FunctionOType(
@@ -487,6 +493,8 @@ class FileTransformer(Transformer):
 				out.set_global_var_name(func.name, "@"+name, get_type(func, out))
 			elif isinstance(func, ImportExpr) or isinstance(func, TypeDecl):
 				transform.get_transformer(func, self).prepare(out)
+			# elif isinstance(func, AliasTypeDecl):
+				# transform.get_transformer(func, self).define(out)
 			else:
 				transform.emit(out, func, self)
 
@@ -500,8 +508,11 @@ class IntrinsicTransformer(Transformer):
 	transforms=IntrinsicExpr
 
 	def transform(self, out):
+		return intrinsics.process_intrinsic_late(out, self.node.text)
+
+	def define(self, out):
 		# print(self.node)
-		return intrinsics.process_intrinsic(out, self.node.text)
+		return intrinsics.process_intrinsic_early(out, self.node.text)
 
 	@staticmethod
 	def get_type(node, out):
@@ -533,6 +544,7 @@ class TypeTransformer(Transformer):
 	transforms=TypeDecl
 
 	def define(self, out):
+		print("-> Defining type "+self.node.name)
 		out.types[self.node.name]=datamodel.StructOType(self.node.name, self.node.fields, out, packed=self.node.packed)
 
 	def prepare(self, out):
@@ -551,7 +563,7 @@ class TypeTransformer(Transformer):
 class TypeAliasTransformer(Transformer):
 	transforms=AliasTypeDecl
 
-	def define(self, out):
+	def prepare(self, out):
 		if self.node.aliases_fpointer:
 			out.types[self.node.name]=datamodel.BlackBoxFunctionOType(
 				self.node.name,
@@ -567,7 +579,7 @@ class ImportTransformer(Transformer):
 		import tokenize, parse
 		filename=transform.resolve_import(self.node, out)
 		if filename not in out.ast_cache:
-			print("Parsing %s..."%filename)
+			# print("Parsing %s..."%filename)
 			out.ast_cache[filename]=parse.parse(
 				tokenize.tokenize(
 					open(filename, 'r').read()
@@ -578,14 +590,28 @@ class ImportTransformer(Transformer):
 			self
 		)
 
+	def define(self, out):
+		path=transform.resolve_import(self.node, out)
+		
+		filename=transform.sanitize_fn(path)
+
+		if filename in out.defined_files:
+			# print("SKIP")
+			# out.emitl(";;;OMITTING INCLUDE `"+filename+"`, PREVIOUSLY INCLUDED")
+			return
+		print("Defining "+filename+" (inv. parse)")
+		out.defined_files.append(filename)
+		with out.context(file=filename, path=path):
+			self.get_file_transformer(out).define(out)
+
 	def prepare(self, out):
 		path=transform.resolve_import(self.node, out)
 		filename=transform.sanitize_fn(path)
 		if filename in out.prepared_files:
 			out.emitl(";;;OMITTING INCLUDE `"+filename+"`, PREVIOUSLY INCLUDED")
 			return
+		# print("Preparing "+filename)
 		out.prepared_files.append(filename)
-		
 		with out.context(file=filename, path=path):
 			self.get_file_transformer(out).prepare(out)
 

@@ -1,0 +1,50 @@
+import strmap
+import parse
+
+type NodeTransformer is a function->Node #taking (Node, TransformerPass), returning new node for tree
+
+type TransformerPass is
+	cstr        name
+	NodeTransformer visit_any
+	StrMap      visitor_map
+
+	function(cstr name) TransformerPass::new -> TransformerPass does
+		TransformerPass new = malloc(@sizeof(TransformerPass)@)|TransformerPass
+		new.name=name
+		new.visit_any=null|NodeTransformer
+		new.visitor_map=StrMap::new()
+	return new
+
+	function(TransformerPass self, cstr node_type, NodeTransformer visitor) TransformerPass:add_specialization -> TransformerPass does
+		self.visitor_map:set(node_type, visitor|ptr)
+	return self
+
+	function(TransformerPass self, Node n) TransformerPass:visit_children -> void does
+		n:run_transformer_on_children(self)
+	return
+
+	function(TransformerPass self, Node n) TransformerPass:visit -> Node does
+		if self.visitor_map:contains(n.type_.name) do
+			ptr entry = self.visitor_map:get(n.type_.name)
+			NodeTransformer v = entry|NodeTransformer
+			return v(n, self)
+		done
+		self:visit_children(n)
+	return n
+endtype
+
+import visitors
+List shoc_visitors
+
+function() visit::init -> void does
+	shoc_visitors=List::new()
+	shoc::visitors::init(shoc_visitors)
+return
+
+function(Node n) shoc::run_visitors -> Node does
+	int i=0
+	while i<shoc_visitors.len do
+		n=(shoc_visitors:get(i)|TransformerPass):visit(n)
+		i+=1
+	done
+return n

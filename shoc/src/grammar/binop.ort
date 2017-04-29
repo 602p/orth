@@ -44,10 +44,16 @@ type BinOpExpr is packed
 		done
 	return 3
 
+	function(BinOpExpr n, TransformerPass p) BinOpExpr::visit -> void does
+		p:visit(n.lhs)
+		p:visit(n.rhs)
+	return
+
 	function() BinOpExpr::impl -> NodeType does
 	return NodeType::new("BinOpExpr")\
 					:set_printer(BinOpExpr::print |NodePrinter)\
 					:set_creator(BinOpExpr::create|NodeCreator)\
 					:set_matcher(BinOpExpr::match |NodeMatcher)\
+					:set_visitor(BinOpExpr::visit |NodeVisitor)\
 					:matches(3):addtype("ValueExpression")
 endtype

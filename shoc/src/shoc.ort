@@ -10,6 +10,8 @@ import profile
 import mem
 import os
 
+import visit
+
 import searchpath
 
 function(cstr err) shoc::bail_out -> void does
@@ -53,11 +55,22 @@ function(int nargs, ArgList args) main -> int does
 
 	lex::init()
 	parse::init()
+	visit::init()
 
 	printf("Parsing Text: `%s`\n", contents)
 
 	List tokens = lex::tokenize(contents)
-	parse::parse(tokens, contents)
+	EleList elems = parse::parse(tokens, contents)
+
+	printf("\n\n\n")
+
+	elems:get(1):print()
+
+	printf("\n\n\n")
+
+	Node n = shoc::run_visitors(elems:get(1):n())
+
+	n:print_root()
 
 	if PROFILE do
 		orth::internal::profile::dump_profiling_data_csv("profile.csv")

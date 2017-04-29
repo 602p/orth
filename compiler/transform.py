@@ -93,6 +93,7 @@ class Emitter:
 		self.prepared_files=[] #Files whose prototypes/globals have been emitted, and signatures loaded
 					#(all files will have that preparation transformation applied before _any_ are actually
 					# "included")
+		self.defined_files=[]
 		self.ast_cache={} #Cache of filename (non-mangled)->ASTNode for files
 		self.path_cache={} #Cache of include_name->File path for imports
 		self.types=copy.copy(datamodel.builtin_types) #Dictionary of orth_type_name:OTypes of the types availible (globally)
@@ -243,6 +244,7 @@ def emit(out, node, parent=None):
 	return get_transformer(node, parent).transform(out)
 
 def emit_project(out, node, parent=None):
+	get_transformer(node, parent).define(out)
 	get_transformer(node, parent).prepare(out)
 	return get_transformer(node, parent).transform(out)
 

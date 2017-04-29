@@ -1,0 +1,103 @@
+Reading...                       
+Tokenizing...                       
+Parsing...                       
+Preparing Transformer...                       
+Transforming...                       
+Preparing in
+Parsing ./mm.ort...
+Preparing mm
+Parsing ./term.ort...
+Preparing term
+Parsing ./serialdbg.ort...
+Preparing serialdbg
+Parsing ./irqio.ort...
+Preparing irqio
+Parsing ./panic.ort...
+Preparing panic
+Parsing ./keymap_us.ort...
+Preparing keymap_us
+Parsing ./util.ort...
+Preparing util
+Parsing kapps/console.ort...
+Preparing kappsconsole
+Parsing kapps/conutil.ort...
+Preparing kappsconutil
+Parsing mbdata.ort...
+Preparing mbdata
+Parsing kapps/raycaster/raycaster.ort...
+Preparing kappsraycasterraycaster
+Parsing kapps/raycaster/rcmath.ort...
+Preparing kappsraycasterrcmath
+Parsing kapps/raycaster/rcrots.ort...
+Preparing kappsraycasterrcrots
+Parsing kapps/raycaster/rcmap.ort...
+Preparing kappsraycasterrcmap
+Parsing ./framebuffer.ort...
+Preparing framebuffer
+Parsing font/font.ort...
+Preparing fontfont
+Parsing kapps/drawbmp.ort...
+Preparing kappsdrawbmp
+Parsing kapps/snake/rng.ort...
+Preparing kappssnakerng
+Parsing kapps/snake/snake.ort...
+Preparing kappssnakesnake
+Parsing ./vgatest.ort...
+Preparing vgatest
+Parsing ./gfxterm.ort...
+Preparing gfxterm
+Parsing profiling/err.ort...
+Preparing profilingerr
+Parsing profiling/profile.ort...
+Preparing profilingprofile
+Parsing ./paging.ort...
+Preparing paging
+Transforming in
+Transforming mm
+Transforming term
+Transforming serialdbg
+Transforming irqio
+Transforming panic
+Transforming keymap_us
+Transforming util
+Transforming kappsconsole
+Transforming kappsconutil
+Transforming mbdata
+Transforming kappsraycasterraycaster
+Transforming kappsraycasterrcmath
+Transforming kappsraycasterrcrots
+Transforming kappsraycasterrcmap
+Transforming framebuffer
+Transforming fontfont
+Transforming kappsdrawbmp
+Transforming kappssnakerng
+Transforming kappssnakesnake
+Transforming vgatest
+Transforming gfxterm
+Transforming profilingerr
+Transforming profilingprofile
+Transforming paging
+
+*****************************************
+*****************************************
+******************ERROR******************
+*****************************************
+*****************************************
+
+'zzz' <class 'KeyError'>
+SCOPES: (most recent first)
+	{'mt_x': Var(TY{int} %var_fin_mkernel_main_l103_n10270___mt_x), 'multiboot_struct_addr': Var(TY{ptr} %var_fin_mkernel_main_lu_n9985___multiboot_struct_addr), 'testpos': Var(TY{int} %var_fin_mkernel_main_l106_n10278___testpos), 'fg_idx': Var(TY{int} %var_fin_mkernel_main_l150_n10424___fg_idx), 'bg_idx': Var(TY{int} %var_fin_mkernel_main_l143_n10406___bg_idx), 'mappos': Var(TY{int} %var_fin_mkernel_main_l36_n10008___mappos)}
+	{}
+	{'kterm': Var(TY{Terminal} @gvar_fin_mu_lu_n8__kterm), 'command_args': Var(TY{cstr} @gvar_fkappsconsole_mu_lu_n17__command_args), 'page_manager': Var(TY{PageManager} @gvar_fpaging_mu_lu_n29__page_manager), 'console_buf': Var(TY{KeyboardBuf} @gvar_fkappsconsole_mu_lu_n15__console_buf), 'mm_pos': Var(TY{ptr} @gvar_fmm_mu_lu_n2__mm_pos), '__profiler_entry_chain_tail': Var(TY{_ProfileEntry} @gvar_fprofilingprofile_mu_lu_n28____profiler_entry_chain_tail), 'last_alloc': Var(TY{ptr} @gvar_fmm_mu_lu_n3__last_alloc), '__fex_addtl_callback_enter': Var(TY{AddtlEnterExitCallback} @gvar_fprofilingerr_mu_lu_n23____fex_addtl_callback_enter), '__stack': Var(TY{_StackNode} @gvar_fprofilingerr_mu_lu_n21____stack), 'pic_ticks': Var(TY{long} @gvar_firqio_mu_lu_n6__pic_ticks), '__fex_addtl_callback_exit': Var(TY{AddtlEnterExitCallback} @gvar_fprofilingerr_mu_lu_n24____fex_addtl_callback_exit), 'kcommand_head': Var(TY{KConsoleCommand} @gvar_fkappsconsole_mu_lu_n18__kcommand_head), '__in_err': Var(TY{bool} @gvar_fprofilingerr_mu_lu_n25____in_err), 'rc_running': Var(TY{bool} @gvar_fkappsraycasterraycaster_mu_lu_n12__rc_running), '__profiler_entry_chain_head': Var(TY{_ProfileEntry} @gvar_fprofilingprofile_mu_lu_n27____profiler_entry_chain_head), 'mbinfo': Var(TY{MultibootInfo} @gvar_fin_mu_lu_n30__mbinfo), '__err_ready': Var(TY{bool} @gvar_fprofilingerr_mu_lu_n26____err_ready), 'command_to_run': Var(TY{KConsoleCommand} @gvar_fkappsconsole_mu_lu_n16__command_to_run), 'serial_base': Var(TY{int} @gvar_fserialdbg_mu_lu_n7__serial_base), 'keymap': Var(TY{Keymap} @gvar_fkeymap_us_mu_lu_n11__keymap), 'console_emulator': Var(TY{VGATextModeEmulator} @gvar_fgfxterm_mu_lu_n19__console_emulator), 'mm_head': Var(TY{ptr} @gvar_fmm_mu_lu_n1__mm_head), 'console_fb': Var(TY{Framebuffer} @gvar_fgfxterm_mu_lu_n20__console_fb), 'base_vma': Var(TY{int} @gvar_fin_mu_lu_n9__base_vma), 'system_kbdstate': Var(TY{KeyboardState} @gvar_firqio_mu_lu_n5__system_kbdstate), 'multiboot_data_physaddr': Var(TY{ptr} @gvar_fin_mu_lu_n10__multiboot_data_physaddr), 'idt': Var(TY{IDT} @gvar_firqio_mu_lu_n4__idt), 'snake_running': Var(TY{bool} @gvar_fkappssnakesnake_mu_lu_n14__snake_running), 's_lfsr_state': Var(TY{short} @gvar_fkappssnakerng_mu_lu_n13__s_lfsr_state), '__stack_tail': Var(TY{_StackNode} @gvar_fprofilingerr_mu_lu_n22____stack_tail)}
+CONTEX: (most recent first)
+	{'line': 166, 'indent': 3}
+	{'indent': 2, 'method': 'kernel_main'}
+	{'file': 'in', 'indent': 1}
+	{'path': './', 'line': 'u', 'indent': 0, 'ns': 'u', 'file': 'u', 'astblock': 'u', 'class': 'u', 'method': 'u'}
+SIGNAT:  dict_keys(['Terminal$blank', 'IRQHandlerTable$get', 'MBModuleTag$get_args', '__kgetcr0', 'KConsoleCommand$$new', '__kget_pagedir_addr', '_update_framebuffer', 'llvm.sqrt.f64', 'free', 'Snake$$new', 'orth$$internal$$profile$$disable_profiler', 'Framebuffer$setpx', '_null_updater', 'KeyboardBuf$delete1', 'Terminal$print', 'GDTEntry$$new', 'test_svga', 'short$xor', 'snake_run', 'get_map', 'cstr$__eq__', 'MultibootInfo$$load', 'rcrot_get__', 'Framebuffer$$from_mbinfo', '__kgetcr3', 'VGATextModeEmulator$update', 'RawMultibootInfo$get_type', 'IDT$$create', 'init_pm', 'PageEntry$set_nonpresent', 'malign', 'VGATextModeEmulator$$new', 'get_map_h', 'int$bitset', 'MBRSDP1Tag$printOEM', 'irq_doublefault_handler', 'malloc', 'int$pow', 'GDT$add', 'RawVBEControllerInfo$print', 'Framebuffer$copyfrom', '__kgetcr4', 'irq_zerodivision_handler', 'KeyboardEvent$$new', 's_lfsr_seed', '__kgeteflags', 'kc_dump_parseed_multiboot', 'irq_protectionfault_handler', 'GDT$$new', 's_randint', 'console_disp_line', 'Terminal$printa', 'kernel_main', 'kirq_callback', 'get_command', 'short$b', 'kc_shutdown', 'MultibootModuleInfo$$new', 'KeyboardBuf$$new', 'r2d', 'kc_prof', 'PageManager$$new', 'console_submit', 'translate_keycode', '__kgetfs', 'kc_help', 'Terminal$printlong', 'memcpy', 'MultibootInfo$get_mod_by_args', 'Food$eaten', 'Food$gen_pos', '__kget_internal_irq_table', 'Terminal$printi', 'Snake$grow', 'irq_pagefault_handler', 'InternalIDTHandlerLookupTable$get', 'irq_timer_handler', 'ikpanici', 'orth$$internal$$hooks$$profile_exit', 'Terminal$setattrs', 'PageManager$get_pde_slot_addr', 'kc_colorama', 'kc_mem', 'orth$$internal$$hooks$$make_profile_entry', 'cstr$equals_l', 'Terminal$$new', '__kreload_paging', 'KMM$$init', 'MBModuleTag$get_addr', 'GDTEntry$print', 'write_port', 'Food$clear', 'kc_clear', 'Segment$draw', 'irq_keyboard_handler', '_snake_handler', 'kc_color', 'Terminal$movecursor', '_snake_term_null_handler', 'bool$and', '_rc_handler', '__kreloadselectors', 'read_port', 'rc_mtest', 'Terminal$printl', 'IRQHandlerTable$$new', 'Segment$has_next', '__khalt', 'kc_picsleep', 'kc_dump_multiboot', 'KeyboardBuf$handleevent', 'Food$create_new', 'init_emulator', '__kwritepb', 'Segment$$new', '__kgetss', '__kgetes', 'Snake$contains', 'cstr$__ne__', 'memcpy32', 'ptr$__ne__', 'kc_dumpargs', 'init_keymap', 'PageEntry$set', 'BMPImage$get_pixel', 'kpanic', 'setup_pit', 'KeyboardState$getkey', 'cstr$index', 'char', 'kswritecstr', '__kgetcs', 'RawVBEModeInfo$print', 'sqrt', 'IDT$install_internal_entry', 'Keymap$is_shifted', 'add_cmd', 'KeyboardState$set_handler', 'ikpanic', 'VGATextModeEmulator$clear', 'Framebuffer$drawchar', 'ptr$__eq__', 'Terminal$dumphexi', 'KeyboardBuf$append', 'PageManager$$get_slot_for_addr', '__kgetds', '__kreadpb', 'orth$$internal$$hooks$$get_profile_entry', 'kc_drawcolors', 'kc_fail', 'kc_fault', '__kgetcr2', 'Framebuffer$fill', 'start_irqs', 'Segment$clear', 'RawMultibootInfo$get_tag', 'Keymap$translate_keycode', 'kc_echo', 'PageManager$get_pde_slot_idx', 'clock', 'orth$$internal$$hooks$$function_enter_hook', 's_lfsr_next', 'Keymap$$init', 'memset', 'KeyboardBuf$stringview', 'VGABox$__ne__', '_rc_term_null_handler', 'cstr$startswith', 'ptr$offset', 'RawMultibootInfo$has_type', 'kc_chararama', 'orth$$internal$$hooks$$function_exit_hook', 'Snake$update', 's_lfsr_seed_time', 'Food$draw', 'MBMMAPMemTag$print', 'rcsin', 'orth$$internal$$profile$$install_profiler', 'get_font', 'kswritebyte', 'IRQHandlerTable$set', 'kc_draw_bmp', 'kc_hexnum', 'init_serial', 'cstr$len', 'Food$$new', 'consolehandler', 'Terminal$setchar', 'Terminal$dumphex', 'orth$$internal$$hooks$$profile_enter', 'get_colors', 'Terminal$dumpbin', 'bool$or', 'Framebuffer$$new', 'KeyboardBuf$clear', 'kc_getpicticks', 'orth$$internal$$profile$$display_profiling_data', 'install_gdt', 'orth$$internal$$hooks$$enable_err', '__kwritepw', 'Terminal$bsod', 'rcrot_get_for', 'rccos', 'kc_snowcrash_code', '__kgetgs', 'kc_drawstuff', 'Terminal$scroll', 'setup_irq', 'rc_run', 'KeyboardState$$new', 'KeyboardState$setkey', 'setup_kbd', 'hex_char_to_num', 'Snake$draw', 'KConsoleCommand$run', '__klgdt', 'short$pow', 'VGABox$__eq__', 'Framebuffer$$new_hw', '__klidt', 'orth$$fail', 'kc_addhex', 'BMPImage$get_data', 'get_map_w', 'GDT$insert', 'Framebuffer$fillrect', 'IDTEntry$set', 'cstr$ord', 'cstr$idxi', 'Terminal$putchar', 'BMPImage$get_pitch', 'RawMultibootInfo$print', 'kconsole_run', 's_rngtest'])
+INCLUD:  ['mm', 'term', 'serialdbg', 'irqio', 'panic', 'keymap_us', 'util', 'kappsconsole', 'kappsconutil', 'mbdata', 'kappsraycasterraycaster', 'kappsraycasterrcmath', 'kappsraycasterrcrots', 'kappsraycasterrcmap', 'framebuffer', 'fontfont', 'kappsdrawbmp', 'kappssnakerng', 'kappssnakesnake', 'vgatest', 'gfxterm', 'profilingerr', 'profilingprofile', 'paging']
+TYPES : 
+TY{MBMMAPMemTag} -> %ty_MBMMAPMemTag_s*;  TY{long} -> i64;  TY{KeyboardBuf} -> %ty_KeyboardBuf_s*;  TY{ulong} -> i64;  TY{short} -> i16;  TY{IRQRegs} -> %ty_IRQRegs_s*;  TY{PageManager} -> %ty_PageManager_s*;  TY{KeyboardState} -> %ty_KeyboardState_s*;  TY{VGATextModeEmulator} -> %ty_VGATextModeEmulator_s*;  TY{Terminal} -> %ty_Terminal_s*;  TY{uint} -> i32;  TY{MultibootInfo} -> %ty_MultibootInfo_s*;  TY{KeyboardEvent} -> %ty_KeyboardEvent_s*;  TY{Food} -> %ty_Food_s*;  TY{_ProfileEntry} -> %ty__ProfileEntry_s*;  TY{Keymap} -> %ty_Keymap_s*;  TY{KeyboardConsumerCallback} -> void (...)*;  TY{InternalIDTHandlerLookupTable} -> %ty_InternalIDTHandlerLookupTable_s*;  TY{IRQHandlerBox} -> %ty_IRQHandlerBox_s*;  TY{xxlong} -> i256;  TY{GDTEntry} -> %ty_GDTEntry_s*;  TY{MBMMAPMemTagEntry} -> %ty_MBMMAPMemTagEntry_s*;  TY{MBFBMemTag} -> %ty_MBFBMemTag_s*;  TY{IRQHandlerTable} -> %ty_IRQHandlerTable_s*;  TY{RCRotState} -> %ty_RCRotState_s*;  TY{MBBasicMemTag} -> %ty_MBBasicMemTag_s*;  TY{MBRSDP1Tag} -> %ty_MBRSDP1Tag_s*;  TY{VGABox} -> %ty_VGABox_s*;  TY{MultibootModuleInfo} -> %ty_MultibootModuleInfo_s*;  TY{ubyte} -> i8;  TY{uxxlong} -> i256;  TY{BMP24ColorCell} -> %ty_BMP24ColorCell_s*;  TY{bool} -> i1;  TY{int} -> i32;  TY{Segment} -> %ty_Segment_s*;  TY{InternalIDTHandlerLookupTableEntry} -> %ty_InternalIDTHandlerLookupTableEntry_s*;  TY{GDT} -> %ty_GDT_s*;  TY{TerminalUpdateHook} -> void (...)*;  TY{xlong} -> i128;  TY{ptr} -> i8*;  TY{MBModuleTag} -> %ty_MBModuleTag_s*;  TY{ushort} -> i16;  TY{__i32Box} -> %ty___i32Box_s*;  TY{Framebuffer} -> %ty_Framebuffer_s*;  TY{float} -> double;  TY{MBDeviceTag} -> %ty_MBDeviceTag_s*;  TY{RawMultibootInfo} -> %ty_RawMultibootInfo_s*;  TY{KConsoleCommand} -> %ty_KConsoleCommand_s*;  TY{SubmitCallback} -> void (...)*;  TY{KConsoleCommandRunner} -> void (...)*;  TY{RawVBEControllerInfo} -> %ty_RawVBEControllerInfo_s*;  TY{void} -> void;  TY{RawVBEModeInfo} -> %ty_RawVBEModeInfo_s*;  TY{uxlong} -> i128;  TY{AddtlEnterExitCallback} -> void (...)*;  TY{byte} -> i8;  TY{PageEntry} -> %ty_PageEntry_s*;  TY{Snake} -> %ty_Snake_s*;  TY{BMPImage} -> %ty_BMPImage_s*;  TY{RCFloatBox} -> %ty_RCFloatBox_s*;  TY{IRQHandler} -> void (...)*;  TY{IDTEntry} -> %ty_IDTEntry_s*;  TY{cstr} -> i8*;  TY{IDT} -> %ty_IDT_s*;  TY{_StackNode} -> %ty__StackNode_s*;  TY{MBTagStub} -> %ty_MBTagStub_s*;  
+LASTLI:  166
+LASTFI:  in
+LASTME:  kernel_main

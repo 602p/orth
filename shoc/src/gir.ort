@@ -5,6 +5,11 @@ type GIRInstruction is packed
 	function(GIRInstruction inst) GIRInstruction:print -> void does
 		inst._gir_ty._printer(inst)
 	return
+
+	function(cstr type_name, int size) GIRInstruction::new -> GIRInstruction does
+		GIRInstruction new = malloc(size)|GIRInstruction
+		new._gir_ty=GIRInstructionType::called(type_name)
+	return new
 endtype
 
 type GIRInstructionPrinter is a function->void #(GIRInstruction)
@@ -13,7 +18,7 @@ type GIRInstructionType is
 	GIRInstructionPrinter _printer
 
 	function(cstr name) GIRInstructionType::new -> GIRInstructionType does
-		GIRInstructionType new = mem::a(@sizeof(GIRInstructionType)@)|GIRInstructionType
+		GIRInstructionType new = malloc(@sizeof(GIRInstructionType)@)|GIRInstructionType
 		new.name=name
 	return new
 

@@ -1,7 +1,0 @@
-function(int a, int b, cstr c) foo -> int does                                                                                                                                      
-        int f=compare(c, "foobar", some::thing():foo((b-1)*2))                                                                                                                               
-        f*=72                                                                                                                                                                                
-return a*f                                                                                                                                                                                   
-                                                                                                                                                                                             
-function(int a, int b) NS::add -> int does                                                                                                                                                   
-return a+b

@@ -6,7 +6,7 @@ type OType is
 	return 4
 
 	function(cstr name) OType::new -> OType does
-		OType new = mem::a(@sizeof(OType)@)|OType
+		OType new = malloc(@sizeof(OType)@)|OType
 		new.name=name
 	return new
 endtype

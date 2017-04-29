@@ -1,4 +1,4 @@
-import "kapps/util.ort"
+import "kapps/conutil.ort"
 import "mbdata.ort"
 import "kapps/raycaster/raycaster.ort"
 import "kapps/drawbmp.ort"

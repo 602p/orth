@@ -27,6 +27,15 @@ type LiteralExpr is packed
 		new.type_=parse::type_by_name("LiteralExpr")
 	return new|Node
 
+	function(int value) LiteralExpr::create_direct_int -> Node does
+	return LiteralExpr::create_direct("int", value:str())
+
+	function(bool value) LiteralExpr::create_direct_bool -> Node does
+	return LiteralExpr::create_direct("bool", value:str())
+
+	function(float value) LiteralExpr::create_direct_float -> Node does
+	return LiteralExpr::create_direct("float", value:str())
+
 	function(EleList eles) LiteralExpr::match -> int does
 	return ((eles:get(0):t().type_.name=="T_INT_LITERAL")+\
 		    (eles:get(0):t().type_.name=="T_FLOAT_LITERAL")+\

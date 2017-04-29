@@ -1,15 +1,15 @@
-import "$/rewrite_namespaces.ort"
-import "$/fold_constants.ort"
-import "$/elide_groupings.ort"
-import "$/elide_branches.ort"
+import "transformers/rewrite_namespaces.ort"
+import "transformers/fold_constants.ort"
+import "transformers/elide_groupings.ort"
+import "transformers/elide_branches.ort"
 
-function(List l, TransformerPass p) List:append_transformer -> void does
+function(List l, TransformerPass p) List:append_Transformer -> void does
 	l:append(p|ptr)
 return
 
 function(List l) shoc::transformers::init -> void does
-	l:append_transformer(rewrite_namespaces::init())
-	l:append_transformer(elide_groupings::init())
-	l:append_transformer(fold_constants::init())
-	l:append_transformer(elide_branches::init())
+	l:append_Transformer(rewrite_namespaces::init())
+	l:append_Transformer(elide_groupings::init())
+	l:append_Transformer(fold_constants::init())
+	l:append_Transformer(elide_branches::init())
 return

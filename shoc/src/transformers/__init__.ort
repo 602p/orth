@@ -1,4 +1,4 @@
-import "transformers/rewrite_namespaces.ort"
+import "transformers/rw_namespaces.ort"
 import "transformers/fold_constants.ort"
 import "transformers/elide_groupings.ort"
 import "transformers/elide_branches.ort"

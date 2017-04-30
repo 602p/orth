@@ -132,5 +132,5 @@ type BlockBody is packed
 					:set_creator(BlockBody::create|NodeCreator)\
 					:set_matcher(BlockBody::match |NodeMatcher)\
 					:set_visitor(BlockBody::visit |NodeVisitor)\
-					:matches(2)
+					:matches(2):addtype("Expression")
 endtype

@@ -14,14 +14,6 @@ function(int nargs, ArgList args) main -> int does
 	mem::init_arena_allocator(1024*1024)
 
 	orth::install_sigsev_handler()
-	bool PROFILE=false
-	if nargs>2 do 
-		PROFILE=args:get(2)=="--profile"
-	done
-
-	if PROFILE do
-		orth::internal::profile::install_profiler()
-	done
 
 	stdio::init()
 	if nargs<2 do
@@ -49,21 +41,31 @@ function(int nargs, ArgList args) main -> int does
 		i+=1
 	done
 
+	if options:contains("profile"):or(options:contains("profile_dump_csv")) do
+		orth::internal::profile::install_profiler()
+	done
+
 	File fd = File::open(args:get(1), "r")
 	cstr contents=fd:readall()
 	fd:close()
 
-	Node node = shoc::get_empty_project()\
-	                 :with_base_tokens()\
-	                 :with_base_grammar()\
-	                 :with_base_passes()\
-	                 :with_search_path(search_path)\
-	                 :with_options(options)\
-	                 :process_text(contents)
+	Project proj = shoc::get_empty_project()\
+	                    :with_base_tokens()\
+	                    :with_base_grammar()\
+	                    :with_base_passes()\
+	                    :with_search_path(search_path)\
+	                    :with_options(options)\
+
+	Node node = proj:process_text(contents)
 
 	node:print_root()
 
-	if PROFILE do
+	if options:contains("dump_node_types") do
+		printf("\n\n\n")
+		proj:show_types()
+	done
+
+	if options:contains("profile_dump_csv") do
 		orth::internal::profile::dump_profiling_data_csv("profile.csv")
 	done
 

@@ -1,3 +1,3 @@
 cd src
-../shoc shoc.ort -s../../lib
+../shoc main.ort -s../../lib
 cd ..

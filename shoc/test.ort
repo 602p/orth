@@ -1,5 +1,11 @@
 import other
 
+type bar is
+	int f
+endtype
+
+type Foo is a function->bar
+
 function() foo -> void does
 	a+=b*(2*2)
 	cstr foo = "DOG "*10

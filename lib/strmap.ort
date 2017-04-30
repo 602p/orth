@@ -44,4 +44,10 @@ type StrMap is #...actually just a List!
 			orth::fail("KeyError in StrMap: "+key)
 		done
 	return self:get_entry(key).value
+
+	function(StrMap self) StrMap:num_keys -> int does
+	return self:_al().len
+
+	function(StrMap self, int req) StrMap:get_by_num -> ptr does
+	return (self:_al():get(req)|MapEntry).value
 endtype

@@ -1,12 +1,198 @@
+int VOID #0
+int S_INT #1
+int U_INT #2
+int FLOAT #3
+int POINTER #4
+int F_PTR #5
+int STRUCT #6
 
-type OType is
+function(int variety) datamodel::variety_to_name -> cstr does
+	if variety==0 do
+		return "VOID"
+	elif variety==1 do
+		return "S_INT"
+	elif variety==2 do
+		return "U_INT"
+	elif variety==3 do
+		return "FLOAT"
+	elif variety==4 do
+		return "POINTER"
+	elif variety==5 do
+		return "F_PTR"
+	elif variety==6 do
+		return "STRUCT"
+	done
+	shoc::bail_out("datamodel::variety_to_name called on invalid variety: "+variety:str())
+return ""
+
+type OType is packed
+	int variety
 	cstr name
+	Project proj
+
+	function(OType t) OType:is_primitive -> bool does
+	return t.variety<5
+
+	function(OType t) OType:is_fptr -> bool does
+	return t.variety==5
+
+	function(OType t) OType:is_struct -> bool does
+	return t.variety==6
+
+	function(OType t) OType:as_primitive -> PrimitiveOType does
+	return t|PrimitiveOType
+
+	function(OType t) OType:as_struct -> StructOType does
+	return t|StructOType
+
+	function(OType t) OType:as_fptr -> FPtrOType does
+	return t|FPtrOType
 
 	function(OType t) OType:get_size -> int does
-	return 4
+		if t:is_primitive() do
+			return t:as_primitive():get_size()
+		elif t:is_fptr() do
+			return t:as_fptr():get_size()
+		done
+	return t:as_struct():get_size()
 
-	function(cstr name) OType::new -> OType does
-		OType new = malloc(@sizeof(OType)@)|OType
-		new.name=name
-	return new
+	function(OType t, Project p) OType:set_project -> OType does
+		t.proj=p
+	return t
+
+	function(OType t) OType:print -> void does
+		if t:is_primitive() do
+			t:as_primitive():print()
+		elif t:is_fptr() do
+			t:as_fptr():print()
+		elif t:is_struct() do
+			t:as_struct():print()
+		else do
+			printf("??? %i\n", t.variety)
+		done
+	return
 endtype
+
+type PrimitiveOType is packed
+	int variety
+	cstr name
+	Project proj
+	int size
+
+	function(cstr name, int v, int size) PrimitiveOType::new -> OType does
+		PrimitiveOType new = malloc(@sizeof(PrimitiveOType)@)|PrimitiveOType
+
+		new.name=name
+		new.variety=v
+		new.size=size
+	return new|OType
+
+	function(PrimitiveOType t) PrimitiveOType:get_size -> int does
+	return t.size
+
+	function(PrimitiveOType t) PrimitiveOType:print -> void does
+		printf("%i P %s\t%s\t%i bytes\n", t.variety, datamodel::variety_to_name(t.variety), t.name, t.size)
+	return
+endtype
+
+type FPtrOType is packed
+	int variety
+	cstr name
+	Project proj
+	OType return_value
+
+	function(cstr name, OType return_value) FPtrOType::new -> OType does
+		FPtrOType new = malloc(@sizeof(FPtrOType)@)|FPtrOType
+
+		new.name=name
+		new.variety=F_PTR
+		new.return_value=return_value
+	return new|OType
+
+	function(FPtrOType self) FPtrOType:get_size -> int does
+	return self.proj.pointer_size
+
+	function(FPtrOType t) FPtrOType:print -> void does
+		printf("%i F %s\t%s\t-> %s\n", t.variety, datamodel::variety_to_name(t.variety), t.name, t.return_value.name)
+	return
+endtype
+
+type StructOType is packed
+	int variety
+	cstr name
+	Project proj
+	bool packed
+	List fields
+
+	function(cstr name) StructOType::new -> OType does
+		StructOType new = malloc(@sizeof(StructOType)@)|StructOType
+
+		new.name=name
+		new.variety=STRUCT
+		new.fields=List::new()
+		new.packed=false
+	return new|OType
+
+	function(StructOType self, int i) StructOType:get_field_type_by_pos -> OType does
+	return self.proj:get_type((self.fields:get(i)|cstr):substr(0, (self.fields:get(i)|cstr):find(" ")))|OType
+
+	function(StructOType self) StructOType:get_size -> int does
+		int i=0
+		int sum=0
+		while i<self.fields.len do
+			if self:get_field_type_by_pos(i):is_struct() do
+				sum+=self.proj.pointer_size
+			else do
+				sum+=self:get_field_type_by_pos(i):get_size()
+			done
+			i+=1
+		done
+	return sum
+
+	function(StructOType t) StructOType:print -> void does
+		printf("%i S %s\t%s\t%i bytes {", t.variety, datamodel::variety_to_name(t.variety), t.name, t:get_size())
+		int i=0
+		while i<t.fields.len do
+			printf("%s", t.fields:get(i))
+			if i!=t.fields.len-1 do
+				printf(", ")
+			done
+			i+=1
+		done
+		printf("}\n")
+	return
+endtype
+
+function(Project p) shoc::datamodel::init_base -> void does
+	VOID=0
+	S_INT=1
+	U_INT=2
+	FLOAT=3
+	POINTER=4
+	F_PTR=5
+	STRUCT=6
+
+	p:add_Type(PrimitiveOType::new("int", S_INT, 4))
+	p:add_Type(PrimitiveOType::new("short", S_INT, 2))
+	p:add_Type(PrimitiveOType::new("byte", S_INT, 1))
+	p:add_Type(PrimitiveOType::new("long", S_INT, 8))
+	p:add_Type(PrimitiveOType::new("xlong", S_INT, 16))
+
+	p:add_Type(PrimitiveOType::new("uint", U_INT, 4))
+	p:add_Type(PrimitiveOType::new("ushort", U_INT, 2))
+	p:add_Type(PrimitiveOType::new("ubyte", U_INT, 1))
+	p:add_Type(PrimitiveOType::new("ulong", U_INT, 8))
+	p:add_Type(PrimitiveOType::new("uxlong", U_INT, 16))
+
+	p:add_Type(PrimitiveOType::new("float", FLOAT, 8))
+
+	p:add_Type(PrimitiveOType::new("bool", U_INT, 1))
+
+	p:add_Type(PrimitiveOType::new("ptr", POINTER, p.pointer_size))
+	p:add_Type(PrimitiveOType::new("cstr", POINTER, p.pointer_size))
+
+	p:add_Type(PrimitiveOType::new("void", VOID, 0))
+return
+
+function(Project p, cstr name) Project:get_type -> OType does
+return p.types:get(name)|OType

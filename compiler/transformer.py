@@ -403,14 +403,18 @@ class ReturnTransformer(Transformer):
 	transforms=ReturnExpr
 
 	def transform(self, out):
-		if out.options["funchooks"] and not out.context_map['method'].startswith("orth$$internal$$hooks$$"):
-			out.emitl("call void @orth$$internal$$hooks$$function_exit_hook(i8* {})".format(
-				datamodel.builtin_types['cstr'].get_literal_expr(out.context_map['method'], out)))
+		
 
 		if self.node.value:
 			name=transform.emit(out, self.node.value, self)
+			if out.options["funchooks"] and not out.context_map['method'].startswith("orth$$internal$$hooks$$"):
+				out.emitl("call void @orth$$internal$$hooks$$function_exit_hook(i8* {})".format(
+					datamodel.builtin_types['cstr'].get_literal_expr(out.context_map['method'], out)))
 			out.emitl("ret {} {}".format(get_type(self.node.value, out).get_llvm_representation(), name))
 		else:
+			if out.options["funchooks"] and not out.context_map['method'].startswith("orth$$internal$$hooks$$"):
+				out.emitl("call void @orth$$internal$$hooks$$function_exit_hook(i8* {})".format(
+					datamodel.builtin_types['cstr'].get_literal_expr(out.context_map['method'], out)))
 			out.emitl("ret void")
 
 class CallExprTransformer(Transformer):

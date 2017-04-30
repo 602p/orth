@@ -2,6 +2,7 @@ import lex
 import parse
 import grammar
 import transformers
+import datamodel
 
 function(cstr err) shoc::bail_out -> void does
 	printf("\n\nshoc::bail_out called, orth::fail traceback follows...\n")
@@ -14,16 +15,22 @@ type Project is
 	List transformer_passes
 	StrMap options
 
+	int pointer_size
+
+	StrMap types
 	List search_path
 	List included_files
 endtype
 
 function() shoc::get_empty_project -> Project does
 	Project p = malloc(@sizeof(Project)@)|Project
+
 	p.token_types = List::new()
 	p.node_types = List::new()
 	p.transformer_passes = List::new()
 	p.options = StrMap::new()
+
+	p.types=StrMap::new()
 	p.included_files = List::new()
 	p.search_path=List::new()
 return p
@@ -40,6 +47,10 @@ function(Project p) Project:with_base_passes -> Project does
 	shoc::transformers::init(p)
 return p
 
+function(Project p) Project:with_base_types -> Project does
+	shoc::datamodel::init_base(p)
+return p
+
 function(Project p, List l) Project:with_search_path -> Project does
 	p.search_path=l
 return p
@@ -48,11 +59,27 @@ function(Project p, StrMap l) Project:with_options -> Project does
 	p.options=l
 return p
 
+function(Project p, int bits) Project:with_arch_bits -> Project does
+	p.pointer_size=bits/8
+return p
+
 function(Project p, TransformerPass t) Project:add_Transformer -> void does
 	p.transformer_passes:append(t|ptr)
 	t:set_project(p)
 return
 
+function(Project p, OType t) Project:add_Type -> void does
+	p.types:set(t.name, t|ptr)
+	t:set_project(p)
+return
+
+function(Project p, Node n) Project:run_only_import -> Node does
+return (p.transformer_passes:get(0)|TransformerPass):visit(n)
+
 function(Project p, cstr text) Project:process_text -> Node does
+	text+="\n"
+return p:run_only_import(p:parse(p:tokenize(text), text))
+
+function(Project p, cstr text) Project:process_project -> Node does
 	text+="\n"
 return p:run_transformers(p:parse(p:tokenize(text), text))

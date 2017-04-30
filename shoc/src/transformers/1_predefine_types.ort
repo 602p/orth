@@ -1,0 +1,8 @@
+
+function(TypeDecl n, TransformerPass p) predefine_types::visit_type -> TypeDecl does
+	p.proj:add_Type(StructOType::new(n.head.name))
+return n
+
+function() predefine_types::init -> TransformerPass does
+return TransformerPass::new("predefine_types")\
+       :add_specialization("TypeDecl", predefine_types::visit_type|NodeTransformer)

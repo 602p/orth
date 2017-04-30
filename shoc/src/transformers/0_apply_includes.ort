@@ -25,6 +25,8 @@ function(ImportStmt n, TransformerPass p) apply_includes::visit_import -> Node d
 	cstr text = fd:readall()
 
 	fd:close()
+
+	printf("Processing include of path '%s'\n", path)
 return p.proj:process_text(text)
 
 function() apply_includes::init -> TransformerPass does

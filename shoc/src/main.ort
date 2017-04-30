@@ -53,12 +53,22 @@ function(int nargs, ArgList args) main -> int does
 	                    :with_base_tokens()\
 	                    :with_base_grammar()\
 	                    :with_base_passes()\
+	                    :with_arch_bits(64)\
+	                    :with_base_types()\
 	                    :with_search_path(search_path)\
 	                    :with_options(options)\
 
-	Node node = proj:process_text(contents)
+	Node node = proj:process_project(contents)
 
 	node:print_root()
+
+	printf("\n\n")
+
+	int i=0
+	while i<proj.types:num_keys() do
+		(proj.types:get_by_num(i)|OType):print()
+		i+=1
+	done
 
 	if options:contains("dump_node_types") do
 		printf("\n\n\n")

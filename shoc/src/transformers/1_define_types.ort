@@ -1,0 +1,27 @@
+
+function(TypeDecl n, TransformerPass p) define_types::visit_type -> TypeDecl does
+	int i=0
+	Node st
+	while i<n.body.statements.len do
+		st=n.body.statements:get_Node(i)
+		if st:is_a("DeclExpr") do
+			(p.proj:get_type(n.head.name)|StructOType).fields:append((st|DeclExpr).name)
+		done
+		i+=1
+	done
+return n
+
+function(TypeDeclHead n, TransformerPass p) define_types::visit_alias -> TypeDeclHead does
+	if (-n.is_type_alias) & (-n.is_func_alias) do
+		shoc::bail_out("Malformed typedecl "+n.name+"... head only")
+	done
+	if -p.proj.types:contains(n.alias_type) do
+		shoc::bail_out("No such type "+n.alias_type+" for RT of FPtr in define_types::visit_alias, atype="+n.name)
+	done
+	p.proj:add_Type(FPtrOType::new(n.name, p.proj:get_type(n.alias_type)))
+return n
+
+function() define_types::init -> TransformerPass does
+return TransformerPass::new("define_types")\
+       :add_specialization("TypeDecl", define_types::visit_type|NodeTransformer)\
+       :add_specialization("TypeDeclHead", define_types::visit_alias|NodeTransformer)

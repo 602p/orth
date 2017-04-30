@@ -29,7 +29,25 @@ function(int nargs, ArgList args) main -> int does
 	done
 
 	List search_path=List::new()
-	search_path:append(os::get_cwd()+"/../lib")
+	search_path:append(".")
+
+	StrMap options = StrMap::new()
+
+	int i=1
+	cstr arg
+	while i<nargs do
+		arg=args:get(i)
+
+		if arg:startswith("-s") do
+			search_path:append(arg:offset(2))
+		done
+
+		if arg:startswith("-f") do
+			options:set(arg:offset(2), "1")
+		done
+
+		i+=1
+	done
 
 	File fd = File::open(args:get(1), "r")
 	cstr contents=fd:readall()
@@ -39,6 +57,8 @@ function(int nargs, ArgList args) main -> int does
 	                 :with_base_tokens()\
 	                 :with_base_grammar()\
 	                 :with_base_passes()\
+	                 :with_search_path(search_path)\
+	                 :with_options(options)\
 	                 :process_text(contents)
 
 	node:print_root()

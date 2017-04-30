@@ -7,9 +7,7 @@ function(ImportStmt n, TransformerPass p) apply_includes::visit_import -> Node d
 		int end=n.name:offset(start+1):find("\x22")
 		path=shoc::resolve_absolute_import(n.name:substr(start+1, end))
 	else do
-		List search_path = List::new()
-		search_path:append(".")
-		path=shoc::resolve_name_import(search_path, n.name:substr(n.name:find(" ")+1,n.name:len()-(n.name:find(" ")+1)))
+		path=shoc::resolve_name_import(p.proj.search_path, n.name:substr(n.name:find(" ")+1,n.name:len()-(n.name:find(" ")+1)))
 	done
 
 	int i=0

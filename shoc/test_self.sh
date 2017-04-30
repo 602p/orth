@@ -1,4 +1,3 @@
 cd src
-export ORTH_LIB=$(pwd)/../../lib
-../shoc shoc.ort
+../shoc shoc.ort -s../../lib
 cd ..

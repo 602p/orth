@@ -2,4 +2,5 @@ import other
 
 function() foo -> void does
 	a+=b*(2*2)
+	cstr foo = "DOG "*10
 return

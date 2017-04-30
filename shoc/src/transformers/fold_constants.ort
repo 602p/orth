@@ -60,11 +60,11 @@ function(BinOpExpr n, TransformerPass p) fold_constants::visit_binop -> Node doe
 				return LiteralExpr::create_direct_bool(p.proj, lf<=rf)
 			done
 		elif (lhs.value_type=="cstr") & rhs.value_type=="cstr" do
-			if n.op=="+" do
+			if n.op=="+"  & -p.proj.options:contains("no_str_add_fold") do
 				return LiteralExpr::create_direct(p.proj, "cstr", lhs.value+rhs.value)
 			done
 		elif (lhs.value_type=="cstr") & rhs.value_type=="int" do
-			if n.op=="*" do
+			if (n.op=="*") & -p.proj.options:contains("no_str_mul_fold") do
 				return LiteralExpr::create_direct(p.proj, "cstr", lhs.value*rhs.value:int())
 			done
 		done

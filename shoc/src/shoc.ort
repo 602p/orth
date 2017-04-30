@@ -14,6 +14,7 @@ type Project is
 	List transformer_passes
 	StrMap options
 
+	List search_path
 	List included_files
 endtype
 
@@ -24,6 +25,7 @@ function() shoc::get_empty_project -> Project does
 	p.transformer_passes = List::new()
 	p.options = StrMap::new()
 	p.included_files = List::new()
+	p.search_path=List::new()
 return p
 
 function(Project p) Project:with_base_tokens -> Project does
@@ -36,6 +38,14 @@ return p
 
 function(Project p) Project:with_base_passes -> Project does
 	shoc::transformers::init(p)
+return p
+
+function(Project p, List l) Project:with_search_path -> Project does
+	p.search_path=l
+return p
+
+function(Project p, StrMap l) Project:with_options -> Project does
+	p.options=l
 return p
 
 function(Project p, TransformerPass t) Project:add_Transformer -> void does

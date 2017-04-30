@@ -1,8 +1,10 @@
+import boxes
+
 type _ArgList_CStrBox is packed
 	cstr str
 endtype
 
 type ArgList is packed
 	function(ArgList l, int pos) ArgList:get -> cstr does
-	return ((l|ptr|long + (pos*@sizeof(ptr)@)|long)|ptr|_ArgList_CStrBox).str
+	return unbox_l::cstr(l|ptr|long + (pos*@sizeof(ptr)@)|long)
 endtype

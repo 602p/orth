@@ -1,0 +1,60 @@
+
+type Box_cstr is packed
+	cstr val
+endtype
+
+type Box_int is packed
+	int val
+endtype
+
+type Box_short is packed
+	short val
+endtype
+
+type Box_bool is packed
+	bool val
+endtype
+
+type Box_long is packed
+	long val
+endtype
+
+type Box_ptr is packed
+	ptr val
+endtype
+
+function(ptr p) unbox::cstr -> cstr does
+return (p|Box_cstr).val
+
+function(ptr p) unbox::int -> int does
+return (p|Box_int).val
+
+function(ptr p) unbox::short -> short does
+return (p|Box_short).val
+
+function(ptr p) unbox::bool -> bool does
+return (p|Box_bool).val
+
+function(ptr p) unbox::long -> long does
+return (p|Box_long).val
+
+function(ptr p) unbox::ptr -> ptr does
+return (p|Box_ptr).val
+
+function(long p) unbox_l::cstr -> cstr does
+return (p|ptr|Box_cstr).val
+
+function(long p) unbox_l::int -> int does
+return (p|ptr|Box_int).val
+
+function(long p) unbox_l::short -> short does
+return (p|ptr|Box_short).val
+
+function(long p) unbox_l::bool -> bool does
+return (p|ptr|Box_bool).val
+
+function(long p) unbox_l::long -> long does
+return (p|ptr|Box_long).val
+
+function(long p) unbox_l::ptr -> ptr does
+return (p|ptr|Box_ptr).val

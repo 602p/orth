@@ -11,9 +11,9 @@ type NameExpr is packed
 		new.name=eles:get(0):t().text
 	return new
 
-	function(cstr name) NameExpr::create_direct -> NameExpr does
+	function(Project p, cstr name) NameExpr::create_direct -> NameExpr does
 		NameExpr new = malloc(@sizeof(NameExpr)@)|NameExpr
-		new.type_=parse::type_by_name("NameExpr")
+		new.type_=p:type_by_name("NameExpr")
 		new.name=name
 	return new
 

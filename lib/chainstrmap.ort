@@ -1,0 +1,49 @@
+
+type ChainStrMap is
+	List maps
+
+	function() ChainStrMap::new -> ChainStrMap does
+		ChainStrMap new = malloc(@sizeof(ChainStrMap)@)|ChainStrMap
+		new.maps=List::new()
+	return new
+
+	function(ChainStrMap self, int i) ChainStrMap:get_map -> StrMap does
+	return self.maps:get(i)|StrMap
+
+	function(ChainStrMap self, cstr key) ChainStrMap:contains -> bool does
+		int i=0
+		while i<self.maps.len do
+			if self:get_map(i):contains(key) do
+				return true
+			done
+			i+=1
+		done
+	return false
+
+	function(ChainStrMap self, cstr key) ChainStrMap:get -> ptr does
+		int i=0
+		while i<self.maps.len do
+			if self:get_map(i):contains(key) do
+				return self:get_map(i):get(key)
+			done
+			i+=1
+		done
+		orth::fail("KeyError for key "+key+" in ChainStrMap")
+	return null
+
+	function(ChainStrMap self, cstr key, ptr value) ChainStrMap:set -> void does
+		if self.maps.len==0 do
+			self.maps:append(StrMap::new()|ptr)
+		done
+
+		self.maps:get(0):set(key, value)
+	return
+
+	function(ChainStrMap self, StrMap map) ChainStrMap:push_map -> ChainStrMap does
+		self.maps:insert(0, map|ptr)
+	return self
+
+	function(ChainStrMap self) ChainStrMap:pop_map -> ChainStrMap does
+		self.maps:del(0)
+	return self
+endtype

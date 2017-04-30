@@ -13,25 +13,22 @@ function(ImportStmt n, TransformerPass p) apply_includes::visit_import -> Node d
 	done
 
 	int i=0
-	while i<(p.extra_info|List).len do
-		if ((p.extra_info|List):get(i)|cstr)==path do
+	while i<p.proj.included_files.len do
+		if (p.proj.included_files:get(i)|cstr)==path do
 			return null|Node
 		done
 		i+=1
 	done
 	
-	(p.extra_info|List):append(path)
-	
+	p.proj.included_files:append(path)
+
 	File fd = File::open(path, "r")
-	cstr contents=fd:readall()+"\n"
 
-	List tokens = lex::tokenize(contents)
-	FileNode file = FileNode::create(parse::parse(tokens, contents))
+	cstr text = fd:readall()
 
-	Node res = shoc::run_transformers(file|Node)
-return res|Node
+	fd:close()
+return p.proj:process_text(text)
 
 function() apply_includes::init -> TransformerPass does
 return TransformerPass::new("apply_includes")\
-	   :set_info(List::new()|ptr)\
        :add_specialization("ImportStmt", apply_includes::visit_import|NodeTransformer)

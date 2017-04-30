@@ -21,9 +21,9 @@ type BlockBody is packed
 		done
 	return
 
-	function(List nodes) BlockBody::create_direct -> Node does
+	function(Project p, List nodes) BlockBody::create_direct -> Node does
 		BlockBody new = malloc(@sizeof(BlockBody)@)|BlockBody
-		new.type_=parse::type_by_name("BlockBody")
+		new.type_=p:type_by_name("BlockBody")
 		new.statements=nodes
 		new.has_runoff_clause=false
 	return new|Node

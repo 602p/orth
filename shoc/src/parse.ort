@@ -296,13 +296,11 @@ type NodeType is
 	return
 endtype
 
-List parse_node_types
-
-function(cstr name) parse::type_by_name -> NodeType does
+function(Project p, cstr name) Project:type_by_name -> NodeType does
 	int i=0
-	while i<parse_node_types.len do
-		if (parse_node_types:get(i)|NodeType).name==name do
-			return parse_node_types:get(i)|NodeType
+	while i<p.node_types.len do
+		if (p.node_types:get(i)|NodeType).name==name do
+			return p.node_types:get(i)|NodeType
 		done
 		i+=1
 	done
@@ -331,7 +329,7 @@ function(EleList e, cstr s) parse::update_viz -> void does
 	e:print()
 return
 
-function(List tokens, cstr text) parse::parse -> EleList does
+function(Project p, List tokens, cstr text) Project:parse -> Node does
 	EleList eles=EleList::from(tokens)
 	ProgressBar bar = ProgressBar::new_reversed(tokens.len, 40, "Parsing......")
 
@@ -346,8 +344,8 @@ function(List tokens, cstr text) parse::parse -> EleList does
 		while progress do
 			progress=false
 			current_type_idx=0
-			while (current_type_idx<parse_node_types.len) & -progress do
-				current_type=parse_node_types:get(current_type_idx)|NodeType
+			while (current_type_idx<p.node_types.len) & -progress do
+				current_type=p.node_types:get(current_type_idx)|NodeType
 				#printf("%s\n", current_type.name)
 				match_count=current_type:match(eles)
 				if match_count>0 do
@@ -371,19 +369,6 @@ function(List tokens, cstr text) parse::parse -> EleList does
 		bar:update(eles.position+1)
 	done
 	printf("Done!\n")
-	if -DEBUG do
-		#read_line("Press Enter")
-		eles:print()
-	done
 	bar:free()
 	eles.position=0
-return eles
-
-function() parse::free -> void does
-	while parse_node_types.len>0 do
-		(parse_node_types:get(0)|NodeType):free()
-		parse_node_types:del(0)
-	done
-	parse_node_types:clear()
-	parse_node_types:free()
-return
+return FileNode::create(p, eles)|Node

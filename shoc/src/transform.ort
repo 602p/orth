@@ -4,15 +4,20 @@ import parse
 type NodeTransformer is a function->Node #taking (Node, TransformerPass), returning new node for tree
 
 type TransformerPass is
-	cstr   name
-	StrMap visitor_map
-	ptr    extra_info
+	cstr    name
+	StrMap  visitor_map
+	ptr     extra_info
+	Project proj
 
 	function(cstr name) TransformerPass::new -> TransformerPass does
 		TransformerPass new = malloc(@sizeof(TransformerPass)@)|TransformerPass
 		new.name=name
 		new.visitor_map=StrMap::new()
 	return new
+
+	function(TransformerPass p, Project proj) TransformerPass:set_project -> TransformerPass does
+		p.proj=proj
+	return p
 
 	function(TransformerPass self, cstr node_type, NodeTransformer visitor) TransformerPass:add_specialization -> TransformerPass does
 		self.visitor_map:set(node_type, visitor|ptr)
@@ -36,19 +41,11 @@ type TransformerPass is
 	return n
 endtype
 
-import transformers
-List shoc_transformers
-
-function() transform::init -> void does
-	shoc_transformers=List::new()
-	shoc::transformers::init(shoc_transformers)
-return
-
-function(Node n) shoc::run_transformers -> Node does
+function(Project p, Node n) Project:run_transformers -> Node does
 	int i=0
-	while i<shoc_transformers.len do
-		printf("Running transformer pass '%s'\n", (shoc_transformers:get(i)|TransformerPass).name)
-		n=(shoc_transformers:get(i)|TransformerPass):visit(n)
+	while i<p.transformer_passes.len do
+		printf("Running transformer pass '%s'\n", (p.transformer_passes:get(i)|TransformerPass).name)
+		n=(p.transformer_passes:get(i)|TransformerPass):visit(n)
 		i+=1
 	done
 return n

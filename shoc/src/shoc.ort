@@ -1,78 +1,48 @@
-#"SHOC STARTS HERE"
-import std
-import fileio
-import args
 import lex
+import parse
 import grammar
-import stdio
-import err
-import profile
-import mem
-import os
-
-import transform
-
-import searchpath
+import transformers
 
 function(cstr err) shoc::bail_out -> void does
 	printf("\n\nshoc::bail_out called, orth::fail traceback follows...\n")
 	orth::fail(err)
 return
 
-function(int nargs, ArgList args) main -> int does
-	mem::init_arena_allocator(1024*1024)
+type Project is
+	List token_types
+	List node_types
+	List transformer_passes
+	StrMap options
 
-	orth::install_sigsev_handler()
-	bool PROFILE=false
-	if nargs>2 do 
-		PROFILE=args:get(2)=="--profile"
-	done
+	List included_files
+endtype
 
-	if PROFILE do
-		orth::internal::profile::install_profiler()
-	done
+function() shoc::get_empty_project -> Project does
+	Project p = malloc(@sizeof(Project)@)|Project
+	p.token_types = List::new()
+	p.node_types = List::new()
+	p.transformer_passes = List::new()
+	p.options = StrMap::new()
+	p.included_files = List::new()
+return p
 
-	stdio::init()
-	if nargs<2 do
-		printf("E: Bad args\n")
-		mem::clean_up()
-		return 1
-	done
+function(Project p) Project:with_base_tokens -> Project does
+	lex::init_default(p.token_types)
+return p
 
-	if args:get(1)=="--show-parser-types" do
-		parse::init()
-		parse::show_types()
-		mem::clean_up()
-		return 0
-	done
+function(Project p) Project:with_base_grammar -> Project does
+	parse::init_default(p.node_types)
+return p
 
-	List search_path=List::new()
-	search_path:append(os::get_cwd()+"/../lib")
+function(Project p) Project:with_base_passes -> Project does
+	shoc::transformers::init(p)
+return p
 
-	File fd = File::open(args:get(1), "r")
-	cstr contents=fd:readall()+"\n"
-	fd:close()
+function(Project p, TransformerPass t) Project:add_Transformer -> void does
+	p.transformer_passes:append(t|ptr)
+	t:set_project(p)
+return
 
-	lex::init()
-	parse::init()
-	transform::init()
-
-	printf("Parsing Text: `%s`\n", contents)
-
-	List tokens = lex::tokenize(contents)
-	FileNode file = FileNode::create(parse::parse(tokens, contents))
-
-	printf("\n\n\n")
-
-	Node n = shoc::run_transformers(file|Node)
-
-	printf("\n")
-
-	n:print_root()
-
-	if PROFILE do
-		orth::internal::profile::dump_profiling_data_csv("profile.csv")
-	done
-
-	mem::clean_up()
-return 0
+function(Project p, cstr text) Project:process_text -> Node does
+	text+="\n"
+return p:run_transformers(p:parse(p:tokenize(text), text))

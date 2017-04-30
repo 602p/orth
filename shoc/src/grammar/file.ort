@@ -13,9 +13,9 @@ type FileNode is packed
 		done
 	return
 
-	function(EleList eles) FileNode::create -> FileNode does
+	function(Project p, EleList eles) FileNode::create -> FileNode does
 		FileNode new = malloc(@sizeof(FileNode)@)|FileNode
-		new.type_=parse::type_by_name("FileNode")
+		new.type_=p:type_by_name("FileNode")
 		new.statements=List::new()
 		int i=0
 		while i<eles:in_slice() do

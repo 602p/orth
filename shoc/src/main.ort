@@ -1,0 +1,51 @@
+#"SHOC STARTS HERE"
+import std
+import fileio
+import args
+import stdio
+import err
+import profile
+import mem
+import os
+
+import shoc
+
+function(int nargs, ArgList args) main -> int does
+	mem::init_arena_allocator(1024*1024)
+
+	orth::install_sigsev_handler()
+	bool PROFILE=false
+	if nargs>2 do 
+		PROFILE=args:get(2)=="--profile"
+	done
+
+	if PROFILE do
+		orth::internal::profile::install_profiler()
+	done
+
+	stdio::init()
+	if nargs<2 do
+		orth::fail("E: Bad args\n")
+	done
+
+	List search_path=List::new()
+	search_path:append(os::get_cwd()+"/../lib")
+
+	File fd = File::open(args:get(1), "r")
+	cstr contents=fd:readall()
+	fd:close()
+
+	Node node = shoc::get_empty_project()\
+	                 :with_base_tokens()\
+	                 :with_base_grammar()\
+	                 :with_base_passes()\
+	                 :process_text(contents)
+
+	node:print_root()
+
+	if PROFILE do
+		orth::internal::profile::dump_profiling_data_csv("profile.csv")
+	done
+
+	mem::clean_up()
+return 0

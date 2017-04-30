@@ -49,9 +49,7 @@ import "grammar/unop.ort"
 import "grammar/while.ort"
 import "grammar/file.ort"
 
-function() parse::init -> void does
-	List l=List::new()
-
+function(List l) parse::init_default -> void does
 	l:append_NodeType(NameExpr::impl())
 	l:append_NodeType(DeclExpr::impl())
 	l:append_NodeType(AccessorExpr::impl())
@@ -101,16 +99,14 @@ function() parse::init -> void does
 	l:append_NodeType(OneTuple::impl()) #Fallback matching case for one-arg function calls
 
 	l:append_NodeType(FileNode::impl())
-
-	parse_node_types=l
 return
 
-function() parse::show_types -> void does
+function(Project proj) Project:show_types -> void does
 	int p=0
 	int i
 	NodeType t
-	while p<parse_node_types.len do
-		t=parse_node_types:get(p)|NodeType
+	while p<proj.node_types.len do
+		t=proj.node_types:get(p)|NodeType
 		printf("\n%s%s:", t.name, " "*(20-t.name:len()))
 		if t.things_i_am|ptr!=null do
 			i=t.things_i_am.len-1

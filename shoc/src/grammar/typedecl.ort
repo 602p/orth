@@ -134,11 +134,26 @@ type TypeDeclBody is packed
 		done
 	return 0
 
+	function(TypeDeclBody n, TransformerPass p) TypeDeclBody::visit -> void does
+		int i=0
+		Node res
+		while i<n.statements.len do
+			res=p:visit(n.statements:get_Node(i))
+			if res|ptr==null do
+				n.statements:del(i)
+			else do
+				n.statements:set(i, res|ptr)
+			done
+			i+=1
+		done
+	return
+
 	function() TypeDeclBody::impl -> NodeType does
 	return NodeType::new("TypeDeclBody")\
 					:set_printer(TypeDeclBody::print |NodePrinter)\
 					:set_creator(TypeDeclBody::create|NodeCreator)\
 					:set_matcher(TypeDeclBody::match |NodeMatcher)\
+					:set_visitor(TypeDeclBody::visit |NodeVisitor)\
 					:matches(2)
 endtype
 
@@ -170,10 +185,16 @@ type TypeDecl is packed
 		done
 	return 2
 
+	function(TypeDecl n, TransformerPass p) TypeDecl::visit -> void does
+		n.body=p:visit(n.body|Node)|TypeDeclBody
+		n.head=p:visit(n.head|Node)|TypeDeclHead
+	return
+
 	function() TypeDecl::impl -> NodeType does
 	return NodeType::new("TypeDecl")\
 					:set_printer(TypeDecl::print |NodePrinter)\
 					:set_creator(TypeDecl::create|NodeCreator)\
 					:set_matcher(TypeDecl::match |NodeMatcher)\
+					:set_visitor(TypeDecl::visit |NodeVisitor)\
 					:matches(2):matches_only_nodes()
 endtype

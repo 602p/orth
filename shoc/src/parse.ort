@@ -368,7 +368,6 @@ function(Project p, List tokens, cstr text) Project:parse -> Node does
 		done
 		bar:update(eles.position+1)
 	done
-	printf("Done!\n")
 	bar:free()
 	eles.position=0
 return FileNode::create(p, eles)|Node

@@ -1,5 +1,5 @@
 
-function(FunctionDecl n, TransformerPass p) define_syms::visit_type -> FunctionDecl does
+function(FunctionDecl n, TransformerPass p) define_syms::visit_func -> FunctionDecl does
 	p.proj:add_Method(Method::new(p.proj, n.head.name, n.head.args, n.head.ret_type))
 return n
 
@@ -15,5 +15,5 @@ return n
 
 function() define_syms::init -> TransformerPass does
 return TransformerPass::new("define_syms")\
-       :add_specialization("FunctionDecl", define_syms::visit_type|NodeTransformer)\
+       :add_specialization("FunctionDecl", define_syms::visit_func|NodeTransformer)\
        :add_specialization("FileNode", define_syms::visit_file|NodeTransformer)

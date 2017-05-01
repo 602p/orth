@@ -35,7 +35,6 @@ function(int nargs, ArgList args) main -> int does
 		done
 
 		if arg:startswith("-f") do
-			printf("sf %s\n", arg:offset(2))
 			options:set(arg:offset(2), "1")
 		done
 
@@ -47,7 +46,7 @@ function(int nargs, ArgList args) main -> int does
 	done
 
 	File fd = File::open(args:get(1), "r")
-	cstr contents=fd:readall()
+	cstr contents=fd:readall()+"\n"
 	fd:close()
 
 	Project proj = shoc::get_empty_project()\
@@ -59,11 +58,19 @@ function(int nargs, ArgList args) main -> int does
 	                    :with_search_path(search_path)\
 	                    :with_options(options)\
 
-	Node node = proj:process_project(contents)
+	List tokens = proj:tokenize(contents)
+	Node node   = proj:parse(tokens, contents)
 
-	node:print_root()
+	if options:contains("dump_pre_ast") do
+		node:print_root()
+	done
 
-	printf("Foo, %i\n", options:contains("dump_types"))
+	node = proj:run_transformers(node)
+
+	if options:contains("dump_ast") do
+		node:print_root()
+	done
+
 	if options:contains("dump_types") do
 		printf("\n\n===TYPES===\n\n")
 		int i=0

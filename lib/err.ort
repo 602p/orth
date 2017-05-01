@@ -106,4 +106,5 @@ import sighandle
 function() orth::install_sigsev_handler -> void does
 	system::set_interrupt_handler(11, __orth_sig_h|SignalHandler)
 	system::set_interrupt_handler(6, __orth_sig_h|SignalHandler)
+	system::set_interrupt_handler(8, __orth_sig_h|SignalHandler)
 return

@@ -1,15 +1,4 @@
-import other
 
-int a
-
-type bar is
-	int foo
-	float baz
+type _STDReadIntBox is packed
+	int i
 endtype
-
-type Foo is a function->bar
-
-function() foo -> void does
-	a+=b*(2*2)
-	cstr foo = "DOG "*10
-return

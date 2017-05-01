@@ -53,7 +53,7 @@ function(cstr text) lex::match_int_literal -> int does
 		return 0
 	done
 	int i=0
-	while text[i]:in("1234567890xbXB") do
+	while text[i]:in("1234567890xbXBabcdefABCDEF") do
 		i+=1
 	done
 	if text[i]:in(".") do
@@ -168,8 +168,13 @@ function(cstr text) lex::match_intrinsic -> int does
 		return 0
 	done
 
+	bool in_quotes=false
+
 	int i=1
-	while -text[i]:in("@") do
+	while -(text[i]:in("@") & -in_quotes) do
+		if text[i]==34|byte do
+			in_quotes=-in_quotes
+		done
 		i+=1
 	done
 	i+=1

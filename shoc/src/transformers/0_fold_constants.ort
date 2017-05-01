@@ -1,5 +1,8 @@
 
 function(BinOpExpr n, TransformerPass p) fold_constants::visit_binop -> Node does
+	if p.proj.options:contains("no_fold") do
+		return n|Node
+	done
 	if n.lhs:is_a("LiteralExpr") & n.rhs:is_a("LiteralExpr") do
 		LiteralExpr lhs = n.lhs|LiteralExpr
 		LiteralExpr rhs = n.rhs|LiteralExpr

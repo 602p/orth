@@ -56,7 +56,7 @@ function(int nargs, ArgList args) main -> int does
 	                    :with_arch_bits(64)\
 	                    :with_base_types()\
 	                    :with_search_path(search_path)\
-	                    :with_options(options)\
+	                    :with_options(options)
 
 	List tokens = proj:tokenize(contents)
 	Node node   = proj:parse(tokens, contents)

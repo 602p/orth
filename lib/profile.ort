@@ -13,6 +13,7 @@ endtype
 
 _ProfileEntry __profiler_entry_chain_head
 _ProfileEntry __profiler_entry_chain_tail
+bool __profile_ready
 
 function(cstr name) orth::internal::hooks::make_profile_entry -> _ProfileEntry does
 	_ProfileEntry entry = malloc(@sizeof(_ProfileEntry)@)|_ProfileEntry
@@ -39,6 +40,9 @@ function(cstr name) orth::internal::hooks::get_profile_entry -> _ProfileEntry do
 return __profiler_entry_chain_tail
 
 function(cstr name) orth::internal::hooks::profile_enter -> void does
+	if -__profile_ready do
+		return
+	done
 	if __profiler_entry_chain_tail|ptr|int!=__profiler_entry_chain_head|ptr|int do
 		_ProfileEntry last = orth::internal::hooks::get_profile_entry(__stack_tail.name)
 		last.exclusive_time+=clock()-last.exc_entry_time
@@ -56,6 +60,9 @@ function(cstr name) orth::internal::hooks::profile_enter -> void does
 return
 
 function(cstr name) orth::internal::hooks::profile_exit -> void does
+	if -__profile_ready do
+		return
+	done
 	_ProfileEntry this = orth::internal::hooks::get_profile_entry(name)
 	this.exclusive_time+=clock()-this.exc_entry_time
 	this.stack_count-=1
@@ -101,4 +108,6 @@ function() orth::internal::profile::install_profiler -> void does
 	__fex_addtl_callback_exit = orth::internal::hooks::profile_exit|AddtlEnterExitCallback
 	__profiler_entry_chain_head=orth::internal::hooks::make_profile_entry("<dummy>")
 	__profiler_entry_chain_tail=__profiler_entry_chain_head
+
+	__profile_ready=true
 return

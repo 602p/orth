@@ -9,6 +9,12 @@ function(cstr err) shoc::bail_out -> void does
 	orth::fail(err)
 return
 
+function(bool cond, cstr err) shoc::assert -> void does
+	if cond do
+		shoc::bail_out(err)
+	done
+return
+
 type Project is
 	List token_types
 	List node_types
@@ -31,6 +37,7 @@ function() shoc::get_empty_project -> Project does
 	p.node_types = List::new()
 	p.transformer_passes = List::new()
 	p.options = StrMap::new()
+	p.pointer_size=0
 
 	p.types=StrMap::new()
 	p.methods=StrMap::new()
@@ -52,6 +59,7 @@ function(Project p) Project:with_base_passes -> Project does
 return p
 
 function(Project p) Project:with_base_types -> Project does
+	shoc::assert(p.pointer_size==0, "Must set arch before initilizing typing system")
 	shoc::datamodel::init_base(p)
 return p
 

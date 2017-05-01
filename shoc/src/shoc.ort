@@ -18,6 +18,8 @@ type Project is
 	int pointer_size
 
 	StrMap types
+	StrMap methods
+	StrMap globals
 	List search_path
 	List included_files
 endtype
@@ -31,6 +33,8 @@ function() shoc::get_empty_project -> Project does
 	p.options = StrMap::new()
 
 	p.types=StrMap::new()
+	p.methods=StrMap::new()
+	p.globals=StrMap::new()
 	p.included_files = List::new()
 	p.search_path=List::new()
 return p
@@ -71,6 +75,14 @@ return
 function(Project p, OType t) Project:add_Type -> void does
 	p.types:set(t.name, t|ptr)
 	t:set_project(p)
+return
+
+function(Project p, Method m) Project:add_Method -> void does
+	p.methods:set(m.name, m|ptr)
+return
+
+function(Project p, TypedVar v) Project:add_Global -> void does
+	p.globals:set(v.name, v|ptr)
 return
 
 function(Project p, Node n) Project:run_only_import -> Node does

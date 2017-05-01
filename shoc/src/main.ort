@@ -35,6 +35,7 @@ function(int nargs, ArgList args) main -> int does
 		done
 
 		if arg:startswith("-f") do
+			printf("sf %s\n", arg:offset(2))
 			options:set(arg:offset(2), "1")
 		done
 
@@ -62,16 +63,36 @@ function(int nargs, ArgList args) main -> int does
 
 	node:print_root()
 
-	printf("\n\n")
+	printf("Foo, %i\n", options:contains("dump_types"))
+	if options:contains("dump_types") do
+		printf("\n\n===TYPES===\n\n")
+		int i=0
+		while i<proj.types:num_keys() do
+			(proj.types:get_by_num(i)|OType):print()
+			i+=1
+		done
+	done
 
-	int i=0
-	while i<proj.types:num_keys() do
-		(proj.types:get_by_num(i)|OType):print()
-		i+=1
+	if options:contains("dump_methods") do
+		printf("\n\n===METHODS===\n\n")
+		int j=0
+		while j<proj.methods:num_keys() do
+			(proj.methods:get_by_num(j)|Method):print()
+			j+=1
+		done
+	done
+
+	if options:contains("dump_globals") do
+		printf("\n\n===GLOBALS===\n\n")
+		int k=0
+		while k<proj.globals:num_keys() do
+			printf("GLOBAL: %s - %s\n", (proj.globals:get_by_num(k)|TypedVar).name,  (proj.globals:get_by_num(k)|TypedVar).type_.name)
+			k+=1
+		done
 	done
 
 	if options:contains("dump_node_types") do
-		printf("\n\n\n")
+		printf("\n\n===PARSE NODE TYPES===\n\n")
 		proj:show_types()
 	done
 

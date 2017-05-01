@@ -9,6 +9,7 @@ import "transformers/0_strip_seps.ort"
 
 import "transformers/1_predefine_types.ort"
 import "transformers/1_define_types.ort"
+import "transformers/1_define_syms.ort"
 
 function(Project p) shoc::transformers::init -> void does
 	p:add_Transformer(apply_includes::init())
@@ -21,4 +22,5 @@ function(Project p) shoc::transformers::init -> void does
 
 	p:add_Transformer(predefine_types::init())
 	p:add_Transformer(define_types::init())
+	p:add_Transformer(define_syms::init())
 return

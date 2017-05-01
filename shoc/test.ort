@@ -1,7 +1,10 @@
 import other
 
+int a
+
 type bar is
-	int f
+	int foo
+	float baz
 endtype
 
 type Foo is a function->bar

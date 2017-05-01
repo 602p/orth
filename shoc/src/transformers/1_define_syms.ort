@@ -1,0 +1,19 @@
+
+function(FunctionDecl n, TransformerPass p) define_syms::visit_type -> FunctionDecl does
+	p.proj:add_Method(Method::new(p.proj, n.head.name, n.head.args, n.head.ret_type))
+return n
+
+function(FileNode n, TransformerPass p) define_syms::visit_file -> FileNode does
+	int i=0
+	while i<n.statements.len do
+		if n.statements:get_Node(i):is_a("DeclExpr") do
+			p.proj:add_Global(TypedVar::from_decl((n.statements:get_Node(i)|DeclExpr).name, p.proj))
+		done
+		i+=1
+	done
+return n
+
+function() define_syms::init -> TransformerPass does
+return TransformerPass::new("define_syms")\
+       :add_specialization("FunctionDecl", define_syms::visit_type|NodeTransformer)\
+       :add_specialization("FileNode", define_syms::visit_file|NodeTransformer)

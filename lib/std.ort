@@ -156,6 +156,17 @@ return result
 function(cstr c) ord -> int does
 return c[0]|int
 
+function(cstr c) bord -> byte does
+return c[0]|byte
+
 function(cstr s) prints -> void does
 	printf("%s", s)
+return
+
+function(cstr s, int sz) prints_tab -> void does
+	if s:len()>sz do
+		prints(s)
+		return
+	done
+	printf("%s%s", s, " "*(sz-s:len()))
 return

@@ -1,15 +1,16 @@
 import transform
 
-import "transformers/0_rw_namespaces.ort"
-import "transformers/0_fold_constants.ort"
-import "transformers/0_elide_groupings.ort"
-import "transformers/0_elide_branches.ort"
-import "transformers/0_apply_includes.ort"
-import "transformers/0_strip_seps.ort"
+import "transformers/lower/rw_namespaces.ort"
 
-import "transformers/1_predefine_types.ort"
-import "transformers/1_define_types.ort"
-import "transformers/1_define_syms.ort"
+import "transformers/def/apply_includes.ort"
+import "transformers/def/predefine_types.ort"
+import "transformers/def/define_types.ort"
+import "transformers/def/define_syms.ort"
+
+import "transformers/opt/fold_constants.ort"
+import "transformers/opt/elide_groupings.ort"
+import "transformers/opt/elide_branches.ort"
+import "transformers/opt/strip_seps.ort"
 
 function(Project p) shoc::transformers::init -> void does
 	p:add_Transformer(apply_includes::init())

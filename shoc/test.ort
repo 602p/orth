@@ -1,4 +1,11 @@
+int a
+xlong b
+bool c
 
-type _STDReadIntBox is packed
-	int i
+type Foo is
+	xlong m_a
+	xlong m_b
+	xlong m_c
 endtype
+
+Foo bar

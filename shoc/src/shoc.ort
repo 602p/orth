@@ -10,7 +10,7 @@ function(cstr err) shoc::bail_out -> void does
 return
 
 function(bool cond, cstr err) shoc::assert -> void does
-	if cond do
+	if -cond do
 		shoc::bail_out(err)
 	done
 return
@@ -22,6 +22,8 @@ type Project is
 	StrMap options
 
 	int pointer_size
+
+	FunctionDecl ctx_func
 
 	StrMap types
 	StrMap methods
@@ -39,12 +41,17 @@ function() shoc::get_empty_project -> Project does
 	p.options = StrMap::new()
 	p.pointer_size=0
 
+	p.ctx_func=null|FunctionDecl
+
 	p.types=StrMap::new()
 	p.methods=StrMap::new()
 	p.globals=StrMap::new()
 	p.included_files = List::new()
 	p.search_path=List::new()
 return p
+
+function(Project p) Project:ctx_func_ok -> bool does
+return p.ctx_func|ptr!=null
 
 function(Project p) Project:with_base_tokens -> Project does
 	lex::init_default(p.token_types)
@@ -59,7 +66,7 @@ function(Project p) Project:with_base_passes -> Project does
 return p
 
 function(Project p) Project:with_base_types -> Project does
-	shoc::assert(p.pointer_size==0, "Must set arch before initilizing typing system")
+	shoc::assert(p.pointer_size!=0, "Must set arch before initilizing typing system")
 	shoc::datamodel::init_base(p)
 return p
 

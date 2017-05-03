@@ -227,6 +227,10 @@ type NodeType is
 	return new
 
 	function(NodeType self, EleList elements) NodeType:match -> int does
+		if self.matcher|ptr==null do
+			return 0
+		done
+
 		if elements:in_slice()<self.matcher_count do
 			return 0
 		done
@@ -371,3 +375,57 @@ function(Project p, List tokens, cstr text) Project:parse -> Node does
 	bar:free()
 	eles.position=0
 return FileNode::create(p, eles)|Node
+
+import lex
+import parse
+
+function(EleList eles) parse::lookahead_is_accessor -> bool does
+	if eles:has_lookahead() do
+		if eles:get_lookahead().is_token do
+			if (eles:get_lookahead():t().type_.name=="T_DOT"):or(\
+				eles:get_lookahead():t().type_.name=="T_COLON"):or(\
+				eles:get_lookahead():t().type_.name=="T_DOUBLECOLON"):or(\
+				eles:get_lookahead():t().type_.name=="T_CAST") do #Pretty much an accessor, transforms type
+				return true
+			done
+		done
+	done
+return false
+
+function(EleList eles) parse::lookahead_is_possibly_function -> bool does
+	if eles:has_lookahead() do
+		if eles:get_lookahead().is_token do
+			if eles:get_lookahead():t():is_a("T_NAME"):or(\
+			   eles:get_lookahead():t():is_a("T_PAREN_CLOSE")):or(\
+			   eles:get_lookahead():t():is_a("T_BRACKET_CLOSE")) do
+			   return true #Cases where it may be a function invocation
+			done
+		done
+	done
+return false
+
+import grammar
+
+function(List l) parse::init_default -> void does
+	grammar::install(l)
+return
+
+function(Project proj) Project:show_types -> void does
+	int p=0
+	int i
+	NodeType t
+	while p<proj.node_types.len do
+		t=proj.node_types:get(p)|NodeType
+		printf("\n%s%s:", t.name, " "*(20-t.name:len()))
+		if t.things_i_am|ptr!=null do
+			i=t.things_i_am.len-1
+			while i>-1 do
+				printf(" %s%s", t.things_i_am:get(i)|cstr, " "*(25-(t.things_i_am:get(i)|cstr):len()))
+				i-=1
+			done
+		done
+		printf(" %s", t.name)
+		p+=1
+	done
+	printf("\n")
+return

@@ -191,6 +191,7 @@ type FunctionDecl is packed
 	return 2
 
 	function(FunctionDecl n, TransformerPass p) FunctionDecl::visit -> void does
+		p.proj.ctx_func=n
 		int i=0
 		Node res
 		while i<n.body.len do
@@ -202,6 +203,7 @@ type FunctionDecl is packed
 			done
 			i+=1
 		done
+		p.proj.ctx_func=null|FunctionDecl
 	return
 
 	function() FunctionDecl::impl -> NodeType does

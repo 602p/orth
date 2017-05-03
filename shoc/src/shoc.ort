@@ -23,7 +23,8 @@ type Project is
 
 	int pointer_size
 
-	FunctionDecl ctx_func
+	Method curr_method
+	cstr   curr_file
 
 	StrMap types
 	StrMap methods
@@ -41,7 +42,8 @@ function() shoc::get_empty_project -> Project does
 	p.options = StrMap::new()
 	p.pointer_size=0
 
-	p.ctx_func=null|FunctionDecl
+	p.curr_method=null|Method
+	p.curr_file="?"
 
 	p.types=StrMap::new()
 	p.methods=StrMap::new()
@@ -50,8 +52,8 @@ function() shoc::get_empty_project -> Project does
 	p.search_path=List::new()
 return p
 
-function(Project p) Project:ctx_func_ok -> bool does
-return p.ctx_func|ptr!=null
+function(Project p) Project:in_method -> bool does
+return p.curr_method|ptr!=null
 
 function(Project p) Project:with_base_tokens -> Project does
 	lex::init_default(p.token_types)
@@ -99,6 +101,9 @@ return
 function(Project p, TypedVar v) Project:add_Global -> void does
 	p.globals:set(v.name, v|ptr)
 return
+
+function(Project p, cstr s) Project:get_Method -> Method does
+return p.methods:get(s)|Method
 
 function(Project p, Node n) Project:run_only_import -> Node does
 return (p.transformer_passes:get(0)|TransformerPass):visit(n)

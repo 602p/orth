@@ -12,6 +12,8 @@ import "transformers/opt/elide_groupings.ort"
 import "transformers/opt/elide_branches.ort"
 import "transformers/opt/strip_seps.ort"
 
+import "transformers/pregir/define_locals.ort"
+
 function(Project p) shoc::transformers::init -> void does
 	p:add_Transformer(apply_includes::init())
 
@@ -24,4 +26,6 @@ function(Project p) shoc::transformers::init -> void does
 	p:add_Transformer(predefine_types::init())
 	p:add_Transformer(define_types::init())
 	p:add_Transformer(define_syms::init())
+
+	p:add_Transformer(define_locals::init())
 return

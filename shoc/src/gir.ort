@@ -1,0 +1,32 @@
+
+type GIRVar is
+	OType type_
+	cstr  memoname
+
+	function(OType t) GIRVar::new -> GIRVar does
+		GIRVar new = malloc(@sizeof(GIRVar)@)|GIRVar
+		new.type_=t
+		new.memoname=""
+	return new
+
+	function(GIRVar v, cstr s) GIRVar:set_memo -> GIRVar does
+		v.memoname=s
+	return v
+endtype
+
+type GIRInstPrinter is a function->void #(GIRInst)
+
+type GIRInstType is
+	cstr name
+	GIRInstPrinter printer
+
+	function(cstr name) GIRInstType::new -> GIRInstType does
+		GIRInstType new = malloc(@sizeof(GIRInstType)@)|GIRInstType
+		new.name=name
+	return new
+
+	function(GIRInstType self, GIRInstPrinter p) GIRInstType:set_printer -> GIRInstType does
+		self.printer=p
+	return self
+endtype
+

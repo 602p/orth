@@ -1,7 +1,0 @@
-Cast
-S/U Int math
-Float math
-Load
-Store
-Stack Alloc
-Branch

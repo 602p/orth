@@ -7,6 +7,17 @@ function(AccessorExpr n, TransformerPass p) rewrite_namespaces::visit_accessor -
 	done
 return n
 
+function(FunctionDecl n, TransformerPass p) rewrite_namespaces::visit_fdecl -> FunctionDecl does
+	int i=0
+	while i<n.head.name:len() do
+		if n.head.name[i]==bord(":") do
+			n.head.name[i]=bord("$")
+		done
+		i+=1
+	done
+return n
+
 function() rewrite_namespaces::init -> TransformerPass does
 return TransformerPass::new("rewrite_namespaces")\
-       :add_specialization("AccessorExpr", rewrite_namespaces::visit_accessor|NodeTransformer)
+       :add_specialization("AccessorExpr", rewrite_namespaces::visit_accessor|NodeTransformer)\
+       :add_specialization("FunctionDecl", rewrite_namespaces::visit_fdecl|NodeTransformer)

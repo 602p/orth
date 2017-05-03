@@ -73,7 +73,7 @@ function(int nargs, ArgList args) main -> int does
 
 	if options:contains("dump_types") do
 		printf("\n\n===TYPES===\n\n")
-		int i=0
+		i=0
 		while i<proj.types:num_keys() do
 			(proj.types:get_by_num(i)|OType):print()
 			i+=1
@@ -83,18 +83,29 @@ function(int nargs, ArgList args) main -> int does
 	if options:contains("dump_methods") do
 		printf("\n\n===METHODS===\n\n")
 		int j=0
+		int k=0
+		Method meth
+		TypedVar var
 		while j<proj.methods:num_keys() do
-			(proj.methods:get_by_num(j)|Method):print()
+			meth=(proj.methods:get_by_num(j)|Method)
+			meth:print()
+			if options:contains("dump_locals") do
+				k=0
+				while k<meth.locals:num_keys() do
+					printf("\tLocal: %s - %s\n", meth.locals:get_key_by_num(k), (meth.locals:get_by_num(k)|OType).name)
+					k+=1
+				done
+			done
 			j+=1
 		done
 	done
 
 	if options:contains("dump_globals") do
 		printf("\n\n===GLOBALS===\n\n")
-		int k=0
-		while k<proj.globals:num_keys() do
-			printf("GLOBAL: %s - %s\n", (proj.globals:get_by_num(k)|TypedVar).name,  (proj.globals:get_by_num(k)|TypedVar).type_.name)
-			k+=1
+		int l=0
+		while l<proj.globals:num_keys() do
+			printf("GLOBAL: %s - %s\n", (proj.globals:get_by_num(l)|TypedVar).name,  (proj.globals:get_by_num(l)|TypedVar).type_.name)
+			l+=1
 		done
 	done
 

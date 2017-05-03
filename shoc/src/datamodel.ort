@@ -236,28 +236,28 @@ type Method is
 	Project proj
 	List args
 	OType return_value
+	StrMap locals
 
 	function(Project proj, cstr name, List args, cstr return_value) Method::new -> Method does
 		Method new = malloc(@sizeof(Method)@)|Method
 		new.proj=proj
-		new.name=name:copy()
-		int i=0
-		while i<new.name:len() do
-			if new.name[i]==bord(":") do
-				new.name[i]=bord("$")
-			done
-			i+=1
-		done
+		new.locals=StrMap::new()
+		new.name=name
 
 		new.args=List::new()
-		i=0
-		while i<args.len do
-			new.args:append_TypedVar(TypedVar::from_decl(args:get(i)|cstr, proj))
-			i+=1
-		done
 
 		new.return_value=proj:get_type(return_value)
 	return new
+
+	function(Method func, cstr name, OType v) Method:add_local -> void does
+		func.locals:set(name, v|ptr)
+	return
+
+	function(Method func, cstr name) Method:has_local -> bool does
+	return func.locals:contains(name)
+
+	function(Method func, cstr name) Method:get_local -> OType does
+	return func.locals:get(name)|OType
 
 	function(Method func) Method:print -> void does
 		prints("METH: ")

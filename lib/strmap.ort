@@ -50,4 +50,7 @@ type StrMap is #...actually just a List!
 
 	function(StrMap self, int req) StrMap:get_by_num -> ptr does
 	return (self:_al():get(req)|MapEntry).value
+
+	function(StrMap self, int req) StrMap:get_key_by_num -> cstr does
+	return (self:_al():get(req)|MapEntry).key
 endtype

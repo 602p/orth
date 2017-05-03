@@ -8,12 +8,18 @@ type TransformerPass is
 	StrMap  visitor_map
 	ptr     extra_info
 	Project proj
+	bool    visit_children
 
 	function(cstr name) TransformerPass::new -> TransformerPass does
 		TransformerPass new = malloc(@sizeof(TransformerPass)@)|TransformerPass
 		new.name=name
+		new.visit_children=true
 		new.visitor_map=StrMap::new()
 	return new
+
+	function(TransformerPass p) TransformerPass:no_auto_visit -> TransformerPass does
+		p.visit_children=false
+	return p
 
 	function(TransformerPass p, Project proj) TransformerPass:set_project -> TransformerPass does
 		p.proj=proj
@@ -32,7 +38,9 @@ type TransformerPass is
 	return
 
 	function(TransformerPass self, Node n) TransformerPass:visit -> Node does
-		self:visit_children(n)
+		if self.visit_children do
+			self:visit_children(n)
+		done
 		if self.visitor_map:contains(n.type_.name) do
 			ptr entry = self.visitor_map:get(n.type_.name)
 			NodeTransformer v = entry|NodeTransformer
@@ -43,9 +51,13 @@ endtype
 
 function(Project p, Node n) Project:run_transformers -> Node does
 	int i=0
+	fprintf(stdout, "Running transformer passes... ")
+	fflush(stdout)
 	while i<p.transformer_passes.len do
-		printf("Running transformer pass '%s'\n", (p.transformer_passes:get(i)|TransformerPass).name)
+		fprintf(stdout, "%s ", (p.transformer_passes:get(i)|TransformerPass).name)
+		fflush(stdout)
 		n=(p.transformer_passes:get(i)|TransformerPass):visit(n)
 		i+=1
 	done
+	fprintf(stdout, "\n")
 return n

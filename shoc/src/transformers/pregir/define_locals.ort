@@ -1,0 +1,17 @@
+
+function(DeclExpr n, TransformerPass p) define_locals::visit_decl -> DeclExpr does
+	if -p.proj:in_method() do
+		return n
+	done
+
+	TypedVar v = TypedVar::from_decl(n.name, p.proj)
+
+	shoc::assert(-p.proj.globals:contains(v.name), "Global-shadowing declaration of variable "+v.name+" in method "+p.proj.curr_method.name)
+	shoc::assert(-p.proj.curr_method:has_local(v.name), "Duplicate declaration of local "+v.name+" in method "+p.proj.curr_method.name)
+
+	p.proj.curr_method:add_local(v.name, v.type_)
+return n
+
+function() define_locals::init -> TransformerPass does
+return TransformerPass::new("define_locals")\
+       :add_specialization("DeclExpr", define_locals::visit_decl|NodeTransformer)

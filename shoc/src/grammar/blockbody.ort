@@ -14,8 +14,9 @@ type BlockBody is packed
 			i+=1
 		done
 
-		parse::indent(depth-1)
+		
 		if node.has_runoff_clause do
+			parse::indent(depth-1)
 			printf("\\-- Runoff Clause: ")
 			node.runoff_clause:print(depth)
 		done

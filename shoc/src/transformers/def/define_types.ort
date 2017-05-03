@@ -13,6 +13,7 @@ return n
 
 function(TypeDeclHead n, TransformerPass p) define_types::visit_alias -> TypeDeclHead does
 	if n.is_func_alias do
+		shoc::assert(-p.proj.types:contains(n.name), "Duplicate definition of type "+n.name)
 		if -p.proj.types:contains(n.alias_type) do
 			shoc::bail_out("No such type "+n.alias_type+" for RT of FPtr in define_types::visit_alias, atype="+n.name)
 		done

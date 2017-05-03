@@ -1,5 +1,7 @@
 
-function() a -> int does
-	int i
-	int j
-return 0
+function(int ABCD) a -> int does
+	b=3
+	if (2*(3-2))==2 do
+		foo()
+	done
+return 1

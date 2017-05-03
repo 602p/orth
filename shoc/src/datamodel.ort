@@ -246,6 +246,12 @@ type Method is
 
 		new.args=List::new()
 
+		int i=0
+		while i<args.len do
+			new.args:append_TypedVar(TypedVar::from_decl(args:get(i), proj))
+			i+=1
+		done
+
 		new.return_value=proj:get_type(return_value)
 	return new
 

@@ -75,7 +75,7 @@ type FunctionBody is packed
 			parse::indent(depth+1)
 			if i==node.statements.len-1 do
 				printf("\\%i- ", i)
-				node.statements:get_Node(i):print(depth+2)
+				node.statements:get_Node(i):print(depth)
 			else do
 				printf("|%i- ", i)
 				node.statements:get_Node(i):print(depth+2)
@@ -168,7 +168,7 @@ type FunctionDecl is packed
 			parse::indent(depth+1)
 			if i==node.body.len-1 do
 				printf("\\%i- ", i)
-				node.body:get_Node(i):print(depth+2)
+				node.body:get_Node(i):print(depth)
 			else do
 				printf("|%i- ", i)
 				node.body:get_Node(i):print(depth+2)

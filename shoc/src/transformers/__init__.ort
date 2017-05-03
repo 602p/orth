@@ -1,16 +1,17 @@
 import transform
 
+import "transformers/lower/apply_includes.ort"
 import "transformers/lower/rw_namespaces.ort"
 
-import "transformers/def/apply_includes.ort"
+import "transformers/opt/elide_groupings.ort"
+import "transformers/opt/fold_constants.ort"
+import "transformers/opt/elide_branches.ort"
+import "transformers/opt/strip_seps.ort"
+
 import "transformers/def/predefine_types.ort"
 import "transformers/def/define_types.ort"
 import "transformers/def/define_syms.ort"
-
-import "transformers/opt/fold_constants.ort"
-import "transformers/opt/elide_groupings.ort"
-import "transformers/opt/elide_branches.ort"
-import "transformers/opt/strip_seps.ort"
+import "transformers/def/catch_duplicates.ort"
 
 import "transformers/pregir/define_locals.ort"
 
@@ -18,6 +19,7 @@ function(Project p) shoc::transformers::init -> void does
 	p:add_Transformer(apply_includes::init())
 
 	p:add_Transformer(rewrite_namespaces::init())
+
 	p:add_Transformer(elide_groupings::init())
 	p:add_Transformer(fold_constants::init())
 	p:add_Transformer(elide_branches::init())
@@ -26,6 +28,7 @@ function(Project p) shoc::transformers::init -> void does
 	p:add_Transformer(predefine_types::init())
 	p:add_Transformer(define_types::init())
 	p:add_Transformer(define_syms::init())
+	p:add_Transformer(catch_duplicates::init())
 
 	p:add_Transformer(define_locals::init())
 return

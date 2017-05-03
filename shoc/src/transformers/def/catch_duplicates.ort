@@ -1,0 +1,12 @@
+
+function(FileNode n, TransformerPass p) catch_duplicates::run -> FileNode does
+	int i=0
+	while i<p.proj.globals:num_keys() do
+		shoc::assert(-p.proj.methods:contains(p.proj.globals:get_key_by_num(i)), "Ambigous name, could be function or global: "+p.proj.globals:get_key_by_num(i))
+		i+=1
+	done
+return n
+
+function() catch_duplicates::init -> TransformerPass does
+return TransformerPass::new("catch_duplicates"):no_auto_visit()\
+       :add_specialization("FileNode", catch_duplicates::run|NodeTransformer) #Cheat - no recusion and visit only file = run once

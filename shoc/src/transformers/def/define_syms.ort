@@ -1,13 +1,18 @@
 
 function(FunctionDecl n, TransformerPass p) define_syms::visit_func -> FunctionDecl does
+	shoc::assert(-p.proj.methods:contains(n.head.name), "Duplicate definition of method "+n.head.name)
 	p.proj:add_Method(Method::new(p.proj, n.head.name, n.head.args, n.head.ret_type))
 return n
 
 function(FileNode n, TransformerPass p) define_syms::visit_file -> FileNode does
 	int i=0
+	cstr name
+	TypedVar v
 	while i<n.statements.len do
 		if n.statements:get_Node(i):is_a("DeclExpr") do
-			p.proj:add_Global(TypedVar::from_decl((n.statements:get_Node(i)|DeclExpr).name, p.proj))
+			v=TypedVar::from_decl((n.statements:get_Node(i)|DeclExpr).name, p.proj)
+			shoc::assert(-p.proj.globals:contains(v.name), "Duplicate definition of global "+v.name)
+			p.proj:add_Global(v)
 		done
 		i+=1
 	done

@@ -1,0 +1,72 @@
+import gir
+
+type GIRVar is
+	OType type_
+	cstr  memoname
+
+	function(OType t) GIRVar::new -> GIRVar does
+		GIRVar new = malloc(@sizeof(GIRVar)@)|GIRVar
+		new.type_=t
+		new.memoname=""
+	return new
+
+	function(GIRVar v, cstr s) GIRVar:set_memo -> GIRVar does
+		v.memoname=s
+	return v
+endtype
+
+type GIRInstPrinter is a function->void #(GIRInst)
+
+type GIRInstType is
+	cstr name
+	GIRInstPrinter printer
+
+	function(cstr name) GIRInstType::new -> GIRInstType does
+		GIRInstType new = malloc(@sizeof(GIRInstType)@)|GIRInstType
+		new.name=name
+	return new
+
+	function(GIRInstType self, GIRInstPrinter p) GIRInstType:set_printer -> GIRInstType does
+		self.printer=p
+	return self
+endtype
+
+type GIRInst is packed
+	GIRInstType _gir_ty #initially a cstr at construction, bound into a real GIRInstType in :emit_gir
+
+	function(GIRInst inst) GIRInst:print -> void does
+		inst._gir_ty.printer(inst)
+	return
+
+	function(GIRInst inst, cstr type_name) GIRInst:set_type -> void does
+		inst._gir_ty=type_name|GIRInstType
+	return
+endtype
+
+function(List l, GIRInst i) List:append_GIRInst -> void does
+	l:append(i|ptr)
+return
+
+function(List l, int i) List:get_GIRInst -> GIRInst does
+return l:get(i)|GIRInst
+
+function(TransformerPass p, GIRInst i) TransformerPass:emit_gir -> cstr does
+	i._gir_ty=p.proj:get_GIRInstType(i._gir_ty|cstr)
+	p.proj.curr_method.gir_code:append_GIRInst(i)
+return "?"
+
+function(Project p, GIRInst i, cstr name) Project:bind_gir_type -> void does
+	int k=0
+	while k<p.gir_types.len do
+		if (p.gir_types:get(k)|GIRInstType).name==name do
+			i._gir_ty=p.gir_types:get(k)|GIRInstType
+			return
+		done
+		k+=1
+	done
+	shoc::bail_out("Can't bind GIRInstType '"+name+"', dosen't exist")
+return 
+
+function(TransformerPass p) TransformerPass:get_temp -> cstr does
+	p.proj.ssa_count+=1
+return "t"+p.proj.ssa_count:str()+"_"

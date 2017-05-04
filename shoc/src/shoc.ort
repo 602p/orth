@@ -3,6 +3,7 @@ import parse
 import grammar
 import transformers
 import datamodel
+import generic_ir
 
 function(cstr err) shoc::bail_out -> void does
 	printf("\n\nshoc::bail_out called, orth::fail traceback follows...\n")
@@ -19,12 +20,14 @@ type Project is
 	List token_types
 	List node_types
 	List transformer_passes
+	List gir_types
 	StrMap options
 
 	int pointer_size
 
 	Method curr_method
 	cstr   curr_file
+	int    ssa_count
 
 	StrMap types
 	StrMap methods
@@ -39,9 +42,11 @@ function() shoc::get_empty_project -> Project does
 	p.token_types = List::new()
 	p.node_types = List::new()
 	p.transformer_passes = List::new()
+	p.gir_types = List::new()
 	p.options = StrMap::new()
 	p.pointer_size=0
 
+	p.ssa_count=0
 	p.curr_method=null|Method
 	p.curr_file="?"
 
@@ -55,6 +60,20 @@ return p
 function(Project p) Project:in_method -> bool does
 return p.curr_method|ptr!=null
 
+function(Project p, Method m) Project:enter_method -> void does
+	p.curr_method=m
+return
+
+function(Project p) Project:exit_method -> void does
+	p.curr_method=null|Method
+return
+
+function(Project p, cstr s) Project:enter_method_named -> void does
+	if p.methods:contains(s) do
+		p:enter_method(p:get_Method(s))
+	done #Fail silently for early passes
+return
+
 function(Project p) Project:with_base_tokens -> Project does
 	lex::init_default(p.token_types)
 return p
@@ -65,6 +84,10 @@ return p
 
 function(Project p) Project:with_base_passes -> Project does
 	shoc::transformers::init(p)
+return p
+
+function(Project p) Project:with_base_gir -> Project does
+	gir::init(p)
 return p
 
 function(Project p) Project:with_base_types -> Project does
@@ -89,6 +112,10 @@ function(Project p, TransformerPass t) Project:add_Transformer -> void does
 	t:set_project(p)
 return
 
+function(Project p, GIRInstType t) Project:add_GIRInstType -> void does
+	p.gir_types:append(t|ptr)
+return
+
 function(Project p, OType t) Project:add_Type -> void does
 	p.types:set(t.name, t|ptr)
 	t:set_project(p)
@@ -107,6 +134,28 @@ return p.methods:get(s)|Method
 
 function(Project p, Node n) Project:run_only_import -> Node does
 return (p.transformer_passes:get(0)|TransformerPass):visit(n)
+
+function(Project p, cstr n) Project:get_transformer_pass -> TransformerPass does
+	int i=0
+	while i<p.transformer_passes.len do
+		if (p.transformer_passes:get(i)|TransformerPass).name==n do
+			return p.transformer_passes:get(i)|TransformerPass
+		done
+		i+=1
+	done
+	shoc::bail_out("Request for nonexistant TransformerPass: "+n)
+return null|TransformerPass
+
+function(Project p, cstr n) Project:get_GIRInstType -> GIRInstType does
+	int i=0
+	while i<p.gir_types.len do
+		if (p.gir_types:get(i)|GIRInstType).name==n do
+			return p.gir_types:get(i)|GIRInstType
+		done
+		i+=1
+	done
+	shoc::bail_out("Request for nonexistant GIRInstType: "+n)
+return null|GIRInstType
 
 function(Project p, cstr text) Project:process_text -> Node does
 	text+="\n"

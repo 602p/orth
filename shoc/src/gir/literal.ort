@@ -1,0 +1,67 @@
+
+type GIRLiteral is packed
+	GIRInstType _gir_ty
+	OType type_
+	cstr  out_var
+	bool  is_null_literal
+	long  integer_value
+	cstr  string_value
+	float float_value
+
+	function(GIRLiteral self) GIRLiteral::print -> void does
+		printf("literal - %s '", self.type_.name)
+		if self.is_null_literal do
+			printf("<null literal>")
+		elif self.type_.variety==S_INT do
+			printf("%ld", self.integer_value)
+		elif self.type_.variety==U_INT do
+			printf("%lu", self.integer_value)
+		elif self.type_.variety==FLOAT do
+			printf("%f",  self.float_value)
+		elif self.type_.name=="cstr" do
+			printf("'%s'", self.string_value)
+		else do
+			shoc::bail_out("Don't know how to do a literal for type '"+self.type_.name+"' in GIRLiteral")
+		done
+		printf("' => %s\n", self.out_var)
+	return
+
+	function(OType type_, long value, cstr name) GIRLiteral::new_integer -> GIRInst does
+		GIRLiteral new = malloc(@sizeof(GIRLiteral)@)|GIRLiteral
+		(new|GIRInst):set_type("literal")
+		new.integer_value=value
+		new.type_=type_
+		new.is_null_literal=false
+		new.out_var=name
+		shoc::assert((type_.variety==S_INT):or(type_.variety==U_INT), "GIRLiteral::new_integer called with type that was not an integer")
+	return new|GIRInst
+
+	function(OType type_, cstr value, cstr name) GIRLiteral::new_cstr -> GIRInst does
+		GIRLiteral new = malloc(@sizeof(GIRLiteral)@)|GIRLiteral
+		(new|GIRInst):set_type("literal")
+		new.string_value=value
+		new.type_=type_
+		new.is_null_literal=false
+		new.out_var=name
+	return new|GIRInst
+
+	function(OType type_, float value, cstr name) GIRLiteral::new_float -> GIRInst does
+		GIRLiteral new = malloc(@sizeof(GIRLiteral)@)|GIRLiteral
+		(new|GIRInst):set_type("literal")
+		new.float_value=value
+		new.type_=type_
+		new.is_null_literal=false
+		new.out_var=name
+	return new|GIRInst
+
+	function(OType type_, cstr name) GIRLiteral::new_null -> GIRInst does
+		GIRLiteral new = malloc(@sizeof(GIRLiteral)@)|GIRLiteral
+		(new|GIRInst):set_type("literal")
+		new.type_=type_
+		new.is_null_literal=true
+		new.out_var=name
+	return new|GIRInst
+
+	function() GIRLiteral::impl -> GIRInstType does
+	return GIRInstType::new("literal"):set_printer(GIRLiteral::print|GIRInstPrinter)
+endtype

@@ -53,6 +53,7 @@ function(int nargs, ArgList args) main -> int does
 	                    :with_base_tokens()\
 	                    :with_base_grammar()\
 	                    :with_base_passes()\
+	                    :with_base_gir()\
 	                    :with_arch_bits(64)\
 	                    :with_base_types()\
 	                    :with_search_path(search_path)\
@@ -80,21 +81,20 @@ function(int nargs, ArgList args) main -> int does
 		done
 	done
 
-	if options:contains("dump_methods") do
+	if options:contains("dump_methods"):or(options:contains("dump_locals")):or(options:contains("dump_gir")) do
 		printf("\n\n===METHODS===\n\n")
 		int j=0
-		int k=0
 		Method meth
 		TypedVar var
 		while j<proj.methods:num_keys() do
 			meth=(proj.methods:get_by_num(j)|Method)
 			meth:print()
 			if options:contains("dump_locals") do
-				k=0
-				while k<meth.locals:num_keys() do
-					printf("\tLocal: %s - %s\n", meth.locals:get_key_by_num(k), (meth.locals:get_by_num(k)|OType).name)
-					k+=1
-				done
+				meth:print_locals()
+			done
+
+			if options:contains("dump_gir") do
+				meth:print_gir()
 			done
 			j+=1
 		done

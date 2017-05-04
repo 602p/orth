@@ -1,0 +1,5 @@
+import "gir/literal.ort"
+
+function(Project p) gir::init -> void does
+	p:add_GIRInstType(GIRLiteral::impl())
+return

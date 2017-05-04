@@ -237,6 +237,7 @@ type Method is
 	List args
 	OType return_value
 	StrMap locals
+	List gir_code
 
 	function(Project proj, cstr name, List args, cstr return_value) Method::new -> Method does
 		Method new = malloc(@sizeof(Method)@)|Method
@@ -245,6 +246,7 @@ type Method is
 		new.name=name
 
 		new.args=List::new()
+		new.gir_code=List::new()
 
 		int i=0
 		while i<args.len do
@@ -280,5 +282,22 @@ type Method is
 			i+=1
 		done
 		printf(")\n")
+	return
+
+	function(Method func) Method:print_locals -> void does
+		int k=0
+		while k<func.locals:num_keys() do
+			printf("\tLocal: %s - %s\n", func.locals:get_key_by_num(k), (func.locals:get_by_num(k)|OType).name)
+			k+=1
+		done
+	return
+
+	function(Method func) Method:print_gir -> void does
+		int k=0
+		while k<func.gir_code.len do
+			printf("%i - ", k)
+			func.gir_code:get_GIRInst(k):print()
+			k+=1
+		done
 	return
 endtype

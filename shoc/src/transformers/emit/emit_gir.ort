@@ -1,0 +1,18 @@
+import "transformers/emit/containers.ort"
+import "transformers/emit/literals.ort"
+import gir
+
+function() emit_value::init -> TransformerPass does
+return TransformerPass::new("emit_value"):no_auto_visit()\
+       :add_specialization("FileNode", emit_value::for_file|NodeTransformer)\
+       :add_specialization("FunctionDecl", emit_value::for_func|NodeTransformer)\
+       :add_specialization("LiteralExpr", emit_value::for_literal|NodeTransformer)
+
+function(TransformerPass p, Node n) TransformerPass:emit_value -> cstr does
+return p.proj:get_transformer_pass("emit_value"):visit_str(n)
+
+function() emit_addr::init -> TransformerPass does
+return TransformerPass::new("emit_addr"):no_auto_visit():no_default_run()
+
+function(TransformerPass p, Node n) TransformerPass:emit_addr -> cstr does
+return p.proj:get_transformer_pass("emit_addr"):visit_str(n)

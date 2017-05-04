@@ -191,9 +191,7 @@ type FunctionDecl is packed
 	return 2
 
 	function(FunctionDecl n, TransformerPass p) FunctionDecl::visit -> void does
-		if p.proj.methods:contains(n.head.name) do
-			p.proj.curr_method=p.proj:get_Method(n.head.name)
-		done
+		p.proj:enter_method_named(n.head.name)
 		int i=0
 		Node res
 		while i<n.body.len do
@@ -205,7 +203,7 @@ type FunctionDecl is packed
 			done
 			i+=1
 		done
-		p.proj.curr_method=null|Method
+		p.proj:exit_method()
 	return
 
 	function() FunctionDecl::impl -> NodeType does

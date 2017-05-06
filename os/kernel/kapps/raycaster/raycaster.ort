@@ -69,6 +69,8 @@ function(cstr args) rc_run -> void does
 	byte NONSOLID = " ":ord()|byte
 	float posX=22.
 	float posY=12.
+	float newPosX=posX
+	float newPosY=posY
 	float dirX=1.
 	float dirY=0.
 	float planeX=0.
@@ -119,7 +121,7 @@ function(cstr args) rc_run -> void does
 
 	int color
 
-	float movespeed=1.2
+	float movespeed=0.8
 	float oldDirX
 	float oldPlaneX
 
@@ -132,7 +134,7 @@ function(cstr args) rc_run -> void does
 
 	RCRotState new
 
-	int STEP_WIDTH=10
+	int STEP_WIDTH=1
 	int widedraw_w
 
 	rc_running = 1|bool
@@ -230,11 +232,19 @@ function(cstr args) rc_run -> void does
       		x+=STEP_WIDTH
 		done
 		if system_kbdstate:getkey(72) do #UP
-  			posX+=dirX*movespeed
-  			posY+=dirY*movespeed
+  			newPosX=posX+(dirX*movespeed)
+  			newPosY=posY+(dirY*movespeed)
   		elif system_kbdstate:getkey(80) do #DOWN
-  			posX-=dirX*movespeed
-  			posY-=dirY*movespeed
+  			newPosX=posX-(dirX*movespeed)
+  			newPosY=posY-(dirY*movespeed)
+  		done
+
+  		if map[((posY|int)*map_width)+(newPosX|int)]==NONSOLID do
+  			posX=newPosX
+  		done
+
+  		if map[((newPosY|int)*map_width)+(posX|int)]==NONSOLID do
+  			posY=newPosY
   		done
 
 		if system_kbdstate:getkey(75) do #LEFT

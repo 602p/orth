@@ -1,0 +1,7 @@
+#29
+
+import std
+
+function() main -> int does
+	printf("%i\n", 6*9/2+2)
+return 0

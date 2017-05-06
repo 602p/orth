@@ -240,7 +240,7 @@ class PtrCastExpr(ValueExpression):
 class BinOpExpr(ValueExpression):
 	#Operators like +, -, *, /, ^, &, <<, >>, ==, !=, <, >, <=, >= are all Binary operators
 	pattern=ValueExpression+T_BINARY_OPERATOR+ValueExpression
-	order_of_operations=["*", "/", "+", "-"]
+	order_of_operations=["*", "/", "+", "-", "^", "&", "<<", ">>", "==", "!=", "<", ">", "<=", ">="]
 	bad_lookahead_tokens=[T_DOT, T_CAST]
 
 	@classmethod

@@ -240,8 +240,15 @@ class PtrCastExpr(ValueExpression):
 class BinOpExpr(ValueExpression):
 	#Operators like +, -, *, /, ^, &, <<, >>, ==, !=, <, >, <=, >= are all Binary operators
 	pattern=ValueExpression+T_BINARY_OPERATOR+ValueExpression
-	order_of_operations=["*", "/", "+", "-", "%", "==", "!=", "<", ">", "<=", ">=", "^", "&", "<<", ">>"]
+	order_of_operations=[["*", "/"], ["+", "-"], "%", "==", "!=", "<", ">", "<=", ">=", "^", "&", "<<", ">>"]
 	bad_lookahead_tokens=[T_DOT, T_CAST]
+
+	@classmethod
+	def get_op_idx(cls, op):
+		for idx, item in enumerate(cls.order_of_operations):
+			if item==op: return idx
+			if isinstance(item, list):
+				if op in item: return idx
 
 	@classmethod
 	def aux_match(cls, view):
@@ -251,9 +258,8 @@ class BinOpExpr(ValueExpression):
 				if la.type==T_BINARY_OPERATOR:
 					other_op=la.value
 					this_op=view.get_forward_slice()[1].value
-					if this_op in cls.order_of_operations:
-						if other_op in cls.order_of_operations:
-							return cls.order_of_operations.index(this_op)<cls.order_of_operations.index(other_op)
+					if cls.get_op_idx(this_op)>=cls.get_op_idx(other_op):
+						return False
 		return True
 
 	def __init__(self, elements):

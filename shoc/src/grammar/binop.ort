@@ -2,11 +2,11 @@ function(cstr operator) orth::grammar::get_op_precedence -> int does
 	if operator=="*" do
 		return 0
 	elif operator=="/" do
-		return 1
+		return 0
 	elif operator=="+" do
-		return 2
+		return 1
 	elif operator=="-" do
-		return 3
+		return 1
 	elif operator=="%" do
 		return 4
 	elif operator=="==" do
@@ -82,7 +82,7 @@ type BinOpExpr is packed
 		if lookahead.is_token do
 			Token la = lookahead:t()
 			if la.type_.name=="T_BINOP" do
-				if orth::grammar::get_op_precedence(la.text)<orth::grammar::get_op_precedence(eles:get(1):t().text) do
+				if orth::grammar::get_op_precedence(la.text)<=orth::grammar::get_op_precedence(eles:get(1):t().text) do
 					return 0 #Order of operations
 				done
 			done

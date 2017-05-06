@@ -60,15 +60,15 @@ endtype
 
 function(Project p, Node n) Project:run_transformers -> Node does
 	int i=0
-	fprintf(stdout, "Running transformer passes... ")
-	fflush(stdout)
+	fprintf(stderr, "Running transformer passes... ")
+	fflush(stderr)
 	while i<p.transformer_passes.len do
 		if (p.transformer_passes:get(i)|TransformerPass).default_run do
-			fprintf(stdout, "%s ", (p.transformer_passes:get(i)|TransformerPass).name)
-			fflush(stdout)
+			fprintf(stderr, "%s ", (p.transformer_passes:get(i)|TransformerPass).name)
+			fflush(stderr)
 			n=(p.transformer_passes:get(i)|TransformerPass):visit(n)
 		done
 		i+=1
 	done
-	fprintf(stdout, "\n")
+	fprintf(stderr, "\n")
 return n

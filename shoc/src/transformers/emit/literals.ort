@@ -3,7 +3,7 @@ function(LiteralExpr n, TransformerPass p) emit_value::for_literal -> cstr does
 	if (n.value_type=="int")+(n.value_type=="bool") do
 		return p:emit_gir(GIRLiteral::new_integer(p.proj:get_type(n.value_type), n.value:int()|long, p:get_temp()))
 	elif n.value_type=="ptr" do
-		return p:emit_gir(GIRLiteral::new_null(p.proj:get_type("ptr", p:get_temp())))
+		return p:emit_gir(GIRLiteral::new_null(p.proj:get_type("ptr"), p:get_temp()))
 	elif n.value_type=="float" do
 		return p:emit_gir(GIRLiteral::new_float(p.proj:get_type("float"), 0.0, p:get_temp()))
 	elif n.value_type=="cstr" do

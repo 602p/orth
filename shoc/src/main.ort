@@ -50,14 +50,15 @@ function(int nargs, ArgList args) main -> int does
 	fd:close()
 
 	Project proj = shoc::get_empty_project()\
+	                    :with_options(options)\
 	                    :with_base_tokens()\
 	                    :with_base_grammar()\
 	                    :with_base_passes()\
 	                    :with_base_gir()\
 	                    :with_arch_bits(64)\
 	                    :with_base_types()\
-	                    :with_search_path(search_path)\
-	                    :with_options(options)
+	                    :with_search_path(search_path)
+	                   
 
 	List tokens = proj:tokenize(contents)
 	Node node   = proj:parse(tokens, contents)
@@ -70,6 +71,10 @@ function(int nargs, ArgList args) main -> int does
 
 	if options:contains("dump_ast") do
 		node:print_root()
+	done
+
+	if options:contains("math_test_out") do
+		printf("%s\n", ((node|FileNode).statements:get(0)|LiteralExpr).value)
 	done
 
 	if options:contains("dump_types") do

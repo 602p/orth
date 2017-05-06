@@ -34,6 +34,10 @@ function(Project p) shoc::transformers::init -> void does
 
 	p:add_Transformer(define_locals::init())
 
+	if p.options:contains("no_gir") do
+		return
+	done
+	
 	p:add_Transformer(emit_value::init())
 	p:add_Transformer(emit_addr::init())
 return

@@ -1,3 +1,38 @@
+function(cstr operator) orth::grammar::get_op_precedence -> int does
+	if operator=="*" do
+		return 0
+	elif operator=="/" do
+		return 1
+	elif operator=="+" do
+		return 2
+	elif operator=="-" do
+		return 3
+	elif operator=="%" do
+		return 4
+	elif operator=="==" do
+		return 5
+	elif operator=="!=" do
+		return 6
+	elif operator=="<" do
+		return 7
+	elif operator==">" do
+		return 8
+	elif operator=="<=" do
+		return 9
+	elif operator==">=" do
+		return 10
+	elif operator=="^" do
+		return 11
+	elif operator=="&" do
+		return 12
+	elif operator=="<<" do
+		return 13
+	elif operator==">>" do
+		return 14
+	done
+	shoc::bail_out("In orth::grammar::get_op_precedence: Unknown operatior:"+operator)
+return -1
+
 type BinOpExpr is packed
 	NodeType type_
 	cstr op
@@ -41,6 +76,16 @@ type BinOpExpr is packed
 
 		if parse::lookahead_is_possibly_function(eles) do
 			return 0 #Don't turn a(1)+2 into a,(1)+2
+		done
+
+		Element lookahead = eles:get_lookahead()
+		if lookahead.is_token do
+			Token la = lookahead:t()
+			if la.type_.name=="T_BINOP" do
+				if orth::grammar::get_op_precedence(la.text)<orth::grammar::get_op_precedence(eles:get(1):t().text) do
+					return 0 #Order of operations
+				done
+			done
 		done
 	return 3
 

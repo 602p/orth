@@ -233,6 +233,10 @@ class ASTNode(metaclass=ASTNodeMeta):
 	def __repr__(self): return str(self)
 
 	@classmethod
+	def aux_match(self, values):
+		return True
+
+	@classmethod
 	def match(self, values):
 		return self.pattern.cm_match(values)
 

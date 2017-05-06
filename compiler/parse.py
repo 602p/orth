@@ -82,7 +82,7 @@ def parse(tokens):
 						#If the lookahead token precludes matching, skip to the next type
 						continue
 				match = chain_matches(atype.pattern.chain, view.get_forward_slice())
-				if match:
+				if match and atype.aux_match(view):
 					# print(atype)
 					node=atype(view.get_forward_slice()[0:match])
 					node.line=view.get_forward_slice()[0].line

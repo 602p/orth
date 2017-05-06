@@ -142,9 +142,9 @@ endtype
 function(cstr prompt) read_int -> int does
 	_STDReadIntBox box = malloc(@sizeof(int)@)|_STDReadIntBox
 	printf(prompt)
-	scanf("%d", box)
+	scanf("%d", box|ptr)
 	int result=box.i
-	free(box)
+	free(box|ptr)
 return result
 
 function(cstr prompt) read_line -> cstr does

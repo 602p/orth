@@ -1,0 +1,7 @@
+#9
+
+import std
+
+function() main -> int does
+	printf("%i\n", 2*4+1)
+return 0

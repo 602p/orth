@@ -295,7 +295,7 @@ type Method is
 	function(Method func) Method:print_gir -> void does
 		int k=0
 		while k<func.gir_code.len do
-			printf("%i - ", k)
+			printf("\tGIR: %03i - ", k)
 			func.gir_code:get_GIRInst(k):print()
 			k+=1
 		done

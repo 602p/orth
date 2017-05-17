@@ -2,17 +2,32 @@ import gir
 
 type GIRVar is
 	OType type_
+	int   ssa_id
+	bool  is_ref
 	cstr  memoname
 
-	function(OType t) GIRVar::new -> GIRVar does
+	function(Project p, OType t) GIRVar::new -> GIRVar does
 		GIRVar new = malloc(@sizeof(GIRVar)@)|GIRVar
 		new.type_=t
 		new.memoname=""
+		new.is_ref=false
+		new.ssa_id=p.ssa_count
+		p.ssa_count+=1
 	return new
+
+	function(GIRVar v) GIRVar:ref -> GIRVar does
+		v.is_ref=true
+	return v
 
 	function(GIRVar v, cstr s) GIRVar:set_memo -> GIRVar does
 		v.memoname=s
 	return v
+
+	function(GIRVar v) GIRVar:str -> cstr does
+		if v.is_ref do
+			return v.ssa_id:str()+"("+v.type_.name+"*: "+v.memoname+")"
+		done
+	return v.ssa_id:str()+"("+v.type_.name+": "+v.memoname+")"
 endtype
 
 type GIRInstPrinter is a function->void #(GIRInst)
@@ -41,6 +56,11 @@ type GIRInst is packed
 	function(GIRInst inst, cstr type_name) GIRInst:set_type -> void does
 		inst._gir_ty=type_name|GIRInstType
 	return
+
+	function(Project proj, cstr typename, int size) GIRInst::create -> GIRInst does
+		GIRInst new = malloc(size)|GIRInst
+		proj:bind_gir_type(new, typename)
+	return new
 endtype
 
 function(List l, GIRInst i) List:append_GIRInst -> void does
@@ -50,9 +70,8 @@ return
 function(List l, int i) List:get_GIRInst -> GIRInst does
 return l:get(i)|GIRInst
 
-function(TransformerPass p, GIRInst i) TransformerPass:emit_gir -> cstr does
-	i._gir_ty=p.proj:get_GIRInstType(i._gir_ty|cstr)
-	p.proj.curr_method.gir_code:append_GIRInst(i)
+function(Project p, GIRInst i) Project:emit_gir -> cstr does
+	p.curr_method.gir_code:append_GIRInst(i)
 return "?"
 
 function(Project p, GIRInst i, cstr name) Project:bind_gir_type -> void does
@@ -65,8 +84,4 @@ function(Project p, GIRInst i, cstr name) Project:bind_gir_type -> void does
 		k+=1
 	done
 	shoc::bail_out("Can't bind GIRInstType '"+name+"', dosen't exist")
-return 
-
-function(TransformerPass p) TransformerPass:get_temp -> cstr does
-	p.proj.ssa_count+=1
-return "t"+p.proj.ssa_count:str()+"_"
+return

@@ -1,0 +1,4 @@
+
+function(ReturnExpr n, TransformerPass p) emit_value::for_return -> GIRVar does
+	printf("\nWARN: emit_value::for_return unimplemented\n")
+return null|GIRVar

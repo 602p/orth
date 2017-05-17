@@ -1,0 +1,12 @@
+
+function(NameExpr n, TransformerPass p) emit_addr::for_name -> GIRVar does
+return GIRGetLocal::emit(p.proj, p.proj:get_type("int"), n.name)
+
+function(NameExpr n, TransformerPass p) emit_value::for_name -> GIRVar does
+return GIRLoad::emit(p.proj, p:emit_addr(n|Node))
+
+function(DeclExpr n, TransformerPass p) emit_addr::for_decl -> GIRVar does
+return GIRGetLocal::emit(p.proj, p.proj:get_type("int"), TypedVar::from_decl(n.name, p.proj).name)
+
+function(DeclExpr n, TransformerPass p) emit_value::for_decl -> GIRVar does
+return GIRLoad::emit(p.proj, p:emit_addr(n|Node))

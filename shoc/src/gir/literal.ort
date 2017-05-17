@@ -1,15 +1,15 @@
 
 type GIRLiteral is packed
 	GIRInstType _gir_ty
-	OType type_
-	cstr  out_var
-	bool  is_null_literal
-	long  integer_value
-	cstr  string_value
-	float float_value
+	OType  type_
+	GIRVar out_var
+	bool   is_null_literal
+	long   integer_value
+	cstr   string_value
+	float  float_value
 
 	function(GIRLiteral self) GIRLiteral::print -> void does
-		printf("literal - %s '", self.type_.name)
+		printf("literal \t%s \t", self.type_.name)
 		if self.is_null_literal do
 			printf("<null literal>")
 		elif self.type_.variety==S_INT do
@@ -23,44 +23,48 @@ type GIRLiteral is packed
 		else do
 			shoc::bail_out("Don't know how to do a literal for type '"+self.type_.name+"' in GIRLiteral")
 		done
-		printf("' => %s\n", self.out_var)
+		printf(" => %s\n", self.out_var:str())
 	return
 
-	function(OType type_, long value, cstr name) GIRLiteral::new_integer -> GIRInst does
-		GIRLiteral new = malloc(@sizeof(GIRLiteral)@)|GIRLiteral
-		(new|GIRInst):set_type("literal")
-		new.integer_value=value
-		new.type_=type_
-		new.is_null_literal=false
-		new.out_var=name
-		shoc::assert((type_.variety==S_INT):or(type_.variety==U_INT), "GIRLiteral::new_integer called with type that was not an integer")
-	return new|GIRInst
-
-	function(OType type_, cstr value, cstr name) GIRLiteral::new_cstr -> GIRInst does
-		GIRLiteral new = malloc(@sizeof(GIRLiteral)@)|GIRLiteral
-		(new|GIRInst):set_type("literal")
-		new.string_value=value
-		new.type_=type_
-		new.is_null_literal=false
-		new.out_var=name
-	return new|GIRInst
-
-	function(OType type_, float value, cstr name) GIRLiteral::new_float -> GIRInst does
-		GIRLiteral new = malloc(@sizeof(GIRLiteral)@)|GIRLiteral
-		(new|GIRInst):set_type("literal")
-		new.float_value=value
-		new.type_=type_
-		new.is_null_literal=false
-		new.out_var=name
-	return new|GIRInst
-
-	function(OType type_, cstr name) GIRLiteral::new_null -> GIRInst does
-		GIRLiteral new = malloc(@sizeof(GIRLiteral)@)|GIRLiteral
-		(new|GIRInst):set_type("literal")
-		new.type_=type_
+	function(Project p) GIRLiteral::emit_null -> GIRVar does
+		GIRLiteral new = GIRInst::create(p, "literal", @sizeof(GIRLiteral)@)|GIRLiteral
+		new.type_=p:get_type("ptr")
 		new.is_null_literal=true
-		new.out_var=name
-	return new|GIRInst
+		new.out_var=GIRVar::new(p, new.type_):set_memo("Null ptr literal")
+		p:emit_gir(new|GIRInst)
+	return new.out_var
+
+	function(Project p, long value) GIRLiteral::emit_int -> GIRVar does
+		GIRLiteral new = GIRInst::create(p, "literal", @sizeof(GIRLiteral)@)|GIRLiteral
+		new.type_=p:get_type("int")
+		new.integer_value=value
+		new.out_var=GIRVar::new(p, new.type_):set_memo("Integer literal")
+		p:emit_gir(new|GIRInst)
+	return new.out_var
+
+	function(Project p, bool value) GIRLiteral::emit_bool -> GIRVar does
+		GIRLiteral new = GIRInst::create(p, "literal", @sizeof(GIRLiteral)@)|GIRLiteral
+		new.type_=p:get_type("bool")
+		new.integer_value=value|long
+		new.out_var=GIRVar::new(p, new.type_):set_memo("Boolean literal")
+		p:emit_gir(new|GIRInst)
+	return new.out_var
+
+	function(Project p, float value) GIRLiteral::emit_float -> GIRVar does
+		GIRLiteral new = GIRInst::create(p, "literal", @sizeof(GIRLiteral)@)|GIRLiteral
+		new.type_=p:get_type("float")
+		new.float_value=value
+		new.out_var=GIRVar::new(p, new.type_):set_memo("Float literal")
+		p:emit_gir(new|GIRInst)
+	return new.out_var
+
+	function(Project p, cstr value) GIRLiteral::emit_cstr -> GIRVar does
+		GIRLiteral new = GIRInst::create(p, "literal", @sizeof(GIRLiteral)@)|GIRLiteral
+		new.type_=p:get_type("cstr")
+		new.string_value=value
+		new.out_var=GIRVar::new(p, new.type_):set_memo("String literal")
+		p:emit_gir(new|GIRInst)
+	return new.out_var
 
 	function() GIRLiteral::impl -> GIRInstType does
 	return GIRInstType::new("literal"):set_printer(GIRLiteral::print|GIRInstPrinter)

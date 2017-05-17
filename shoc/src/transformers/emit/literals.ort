@@ -1,14 +1,16 @@
 
-function(LiteralExpr n, TransformerPass p) emit_value::for_literal -> cstr does
-	if (n.value_type=="int")+(n.value_type=="bool") do
-		return p:emit_gir(GIRLiteral::new_integer(p.proj:get_type(n.value_type), n.value:int()|long, p:get_temp()))
+function(LiteralExpr n, TransformerPass p) emit_value::for_literal -> GIRVar does
+	if n.value_type=="int" do
+		return GIRLiteral::emit_int(p.proj, n.value:int()|long)
+	elif n.value_type=="bool" do
+		return GIRLiteral::emit_bool(p.proj, n.value:int()|bool)
 	elif n.value_type=="ptr" do
-		return p:emit_gir(GIRLiteral::new_null(p.proj:get_type("ptr"), p:get_temp()))
+		return GIRLiteral::emit_null(p.proj)
 	elif n.value_type=="float" do
-		return p:emit_gir(GIRLiteral::new_float(p.proj:get_type("float"), 0.0, p:get_temp()))
+		return GIRLiteral::emit_float(p.proj, 0.0)
 	elif n.value_type=="cstr" do
-		return p:emit_gir(GIRLiteral::new_cstr(p.proj:get_type("cstr"), n.value, p:get_temp()))
+		return GIRLiteral::emit_cstr(p.proj, n.value)
 	else do
 		shoc::bail_out("Unknown literal type: "+n.value_type)
 	done
-return ""
+return null|GIRVar

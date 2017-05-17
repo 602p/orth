@@ -1,0 +1,24 @@
+
+type GIRLoad is packed
+	GIRInstType _gir_ty
+	OType  var_type_
+	GIRVar location
+	GIRVar out_var
+
+	function(GIRLoad self) GIRLoad::print -> void does
+		printf("load    \t%s \t%s <--from-- %s\n", self.var_type_.name, self.out_var:str(), self.location:str())
+	return
+
+	function(Project p, GIRVar location) GIRLoad::emit -> GIRVar does
+		shoc::assert(location.is_ref, "Can't load from non-rvalue")
+
+		GIRLoad new = GIRInst::create(p, "load", @sizeof(GIRLoad)@)|GIRLoad
+		new.var_type_=location.type_
+		new.location=location
+		new.out_var=GIRVar::new(p, new.var_type_):set_memo("Load from "+location.ssa_id:str())
+		p:emit_gir(new|GIRInst)
+	return new.out_var
+
+	function() GIRLoad::impl -> GIRInstType does
+	return GIRInstType::new("load"):set_printer(GIRLoad::print|GIRInstPrinter)
+endtype

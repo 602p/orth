@@ -1,0 +1,3 @@
+
+function(AssignmentExpr n, TransformerPass p) emit_value::for_assignment -> GIRVar does
+return GIRStore::emit(p.proj, p:emit_addr(n.lhs), p:emit_value(n.rhs))

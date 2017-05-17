@@ -1,0 +1,26 @@
+
+type GIRStore is packed
+	GIRInstType _gir_ty
+	OType  var_type_
+	GIRVar location
+	GIRVar value
+
+	function(GIRStore self) GIRStore::print -> void does
+		printf("store   \t%s \t%s --to--> %s\n", self.var_type_.name, self.value:str(), self.location:str())
+	return
+
+	function(Project p, GIRVar location, GIRVar value) GIRStore::emit -> GIRVar does
+		shoc::assert(value.type_.name==location.type_.name, "Mismatching type for store")
+		shoc::assert(location.is_ref, "Can't store to non-rvalue")
+		shoc::assert(-value.is_ref, "Can't store from rvalue - bad context?")
+
+		GIRStore new = GIRInst::create(p, "store", @sizeof(GIRStore)@)|GIRStore
+		new.var_type_=value.type_
+		new.location=location
+		new.value=value
+		p:emit_gir(new|GIRInst)
+	return null|GIRVar
+
+	function() GIRStore::impl -> GIRInstType does
+	return GIRInstType::new("store"):set_printer(GIRStore::print|GIRInstPrinter)
+endtype

@@ -1,0 +1,22 @@
+
+type GIRGetLocal is packed
+	GIRInstType _gir_ty
+	OType  var_type
+	cstr   var_name
+	GIRVar out_var
+
+	function(GIRGetLocal self) GIRGetLocal::print -> void does
+		printf("get_local \t%s \t%s => %s\n", self.var_type.name, self.var_name, self.out_var:str())
+	return
+
+	function(Project p, OType type_, cstr name) GIRGetLocal::emit -> GIRVar does
+		GIRGetLocal new = GIRInst::create(p, "get_local", @sizeof(GIRGetLocal)@)|GIRGetLocal
+		new.var_type=type_
+		new.var_name=name
+		new.out_var=GIRVar::new(p, new.var_type):ref():set_memo("Address of local:"+name)
+		p:emit_gir(new|GIRInst)
+	return new.out_var|GIRVar
+
+	function() GIRGetLocal::impl -> GIRInstType does
+	return GIRInstType::new("get_local"):set_printer(GIRGetLocal::print|GIRInstPrinter)
+endtype

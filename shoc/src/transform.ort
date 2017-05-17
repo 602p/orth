@@ -54,8 +54,8 @@ type TransformerPass is
 		done
 	return n
 
-	function(TransformerPass self, Node n) TransformerPass:visit_str -> cstr does
-	return self:visit(n)|cstr
+	function(TransformerPass self, Node n) TransformerPass:visit_GIRVar -> GIRVar does
+	return self:visit(n)|GIRVar
 endtype
 
 function(Project p, Node n) Project:run_transformers -> Node does

@@ -1,0 +1,30 @@
+
+type GIRBinOp is packed
+	GIRInstType _gir_ty
+	OType  var_type_
+	GIRVar lhs
+	GIRVar rhs
+	GIRVar out_var
+	cstr   operator
+
+	function(GIRBinOp self) GIRBinOp::print -> void does
+		printf("binop       \t%s \t%s %s %s => %s\n", self.var_type_.name, self.lhs:str(), self.operator, self.rhs:str(), self.out_var:str())
+	return
+
+	function(Project p, GIRVar lhs, GIRVar rhs, OType res_type, cstr op) GIRBinOp::emit -> GIRVar does
+		shoc::assert((-lhs.is_ref) & (-rhs.is_ref), "Can't binop rvalues - bad context?")
+		shoc::assert(lhs.type_.name==rhs.type_.name, "Mismatching types for binop "+op)
+
+		GIRBinOp new = GIRInst::create(p, "binop", @sizeof(GIRBinOp)@)|GIRBinOp
+		new.var_type_=res_type
+		new.lhs=lhs
+		new.operator=op
+		new.rhs=rhs
+		new.out_var=GIRVar::new(p, res_type):set_memo("Result of "+lhs.ssa_id:str()+" "+op+" "+rhs.ssa_id:str())
+		p:emit_gir(new|GIRInst)
+	return new.out_var
+
+	function() GIRBinOp::impl -> GIRInstType does
+	return GIRInstType::new("binop"):set_printer(GIRBinOp::print|GIRInstPrinter)
+endtype
+

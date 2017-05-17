@@ -2,6 +2,7 @@ import transform
 
 import "transformers/lower/apply_includes.ort"
 import "transformers/lower/rw_namespaces.ort"
+import "transformers/lower/expand_augassign.ort"
 
 import "transformers/opt/elide_groupings.ort"
 import "transformers/opt/fold_constants.ort"
@@ -21,6 +22,7 @@ function(Project p) shoc::transformers::init -> void does
 	p:add_Transformer(apply_includes::init())
 
 	p:add_Transformer(rewrite_namespaces::init())
+	p:add_Transformer(expand_augassign::init())
 
 	p:add_Transformer(elide_groupings::init())
 	p:add_Transformer(fold_constants::init())

@@ -76,7 +76,7 @@ with open("out.ll", 'w') as fd:
 
 if not "nobuild" in sys.argv:
 	print("Compiling...                       ")
-	assert os.system("llc out.ll")==0, "Command Failed"
+	assert os.system("llc-3.5 out.ll")==0, "Command Failed"
 
 if not "nolink" in sys.argv:
 	print("Linking...                       ")

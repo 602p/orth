@@ -1,4 +1,8 @@
 
 function(ReturnExpr n, TransformerPass p) emit_value::for_return -> GIRVar does
-	printf("\nWARN: emit_value::for_return unimplemented\n")
+	if n.is_void do
+		GIRReturn::emit_void(p.proj)
+	else do
+		GIRReturn::emit(p.proj, p:emit_value(n.value))
+	done
 return null|GIRVar

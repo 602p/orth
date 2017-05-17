@@ -3,6 +3,7 @@ import "gir/store.ort"
 import "gir/load.ort"
 import "gir/get_local.ort"
 import "gir/binop.ort"
+import "gir/return.ort"
 
 function(Project p) gir::init -> void does
 	p:add_GIRInstType(GIRLiteral::impl())
@@ -10,4 +11,5 @@ function(Project p) gir::init -> void does
 	p:add_GIRInstType(GIRLoad::impl())
 	p:add_GIRInstType(GIRGetLocal::impl())
 	p:add_GIRInstType(GIRBinOp::impl())
+	p:add_GIRInstType(GIRReturn::impl())
 return

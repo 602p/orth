@@ -1,4 +1,6 @@
 
-function() a -> void does
-	int foo = 6*9/2+2*88/4+9*5*6-11-5/5*78+66/2*2
-return
+function() main -> int does
+	int foo = 10+2
+	int bar = 2*2
+	int baz = foo/bar
+return baz

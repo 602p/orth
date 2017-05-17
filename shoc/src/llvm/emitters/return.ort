@@ -1,0 +1,8 @@
+
+function(GIRReturn i, LLVMEmitter e) llvm::emit_return -> void does
+	if i.is_void do
+		e:emitl("ret void")
+	else do
+		e:emitl("ret "+e:get_vty(i.value)+" "+e:get_ssa_var(i.value))
+	done
+return

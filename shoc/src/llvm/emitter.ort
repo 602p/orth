@@ -1,0 +1,72 @@
+
+type LLVMGIREmitter is a function->cstr #(GIRInst, LLVMEmitter)
+
+type LLVMEmitter is
+	StrMap gir_emitters
+	StrMap locals_maps
+	StrMap ssa_map
+	StrMap types_map
+	File   fd
+	cstr   current_method
+
+	function(File fd) LLVMEmitter::new -> LLVMEmitter does
+		LLVMEmitter new = malloc(@sizeof(LLVMEmitter)@)|LLVMEmitter
+		new.gir_emitters=StrMap::new()
+		new.locals_maps=StrMap::new()
+		new.ssa_map=StrMap::new()
+		new.types_map=StrMap::new()
+
+		new.types_map:set("int", "i32")
+
+		new.fd=fd
+		new.current_method="???"
+	return new
+
+	function(LLVMEmitter self, cstr gir_type, LLVMGIREmitter e) LLVMEmitter:register_emitter -> LLVMEmitter does
+		self.gir_emitters:set(gir_type, e|ptr)
+	return self
+
+	function(LLVMEmitter self, cstr gir_type) LLVMEmitter:get_emitter -> LLVMGIREmitter does
+	return self.gir_emitters:get(gir_type)|LLVMGIREmitter
+
+	function(LLVMEmitter self, GIRInst i) LLVMEmitter:emit_inst -> void does
+		self:get_emitter(i._gir_ty.name)(i, self)
+	return
+
+	function(LLVMEmitter self, cstr text) LLVMEmitter:emit -> void does
+		self.fd:write(text)
+	return
+
+	function(LLVMEmitter self, cstr text) LLVMEmitter:emitl -> void does
+		self.fd:write(text)
+		self.fd:write("\n")
+	return
+
+	function(LLVMEmitter self, cstr name) LLVMEmitter:enter_method -> LLVMEmitter does
+		self.current_method=name
+		self.locals_maps:set(name, StrMap::new()|ptr)
+	return self
+
+	function(LLVMEmitter self, cstr name) LLVMEmitter:get_local_addr_var -> cstr does
+	return (self.locals_maps:get(self.current_method)|StrMap):get(name)
+
+	function(LLVMEmitter self, cstr name, cstr llvm_name) LLVMEmitter:set_local_addr_var -> void does
+		(self.locals_maps:get(self.current_method)|StrMap):set(name, llvm_name)
+	return
+
+	function(LLVMEmitter self, GIRVar name) LLVMEmitter:get_ssa_var -> cstr does
+	return self.ssa_map:get(name:str()) #TODO:Horrible!
+
+	function(LLVMEmitter self, GIRVar name, cstr llvm_name) LLVMEmitter:set_ssa_var -> void does
+		self.ssa_map:set(name:str(), llvm_name)
+	return
+
+	function(LLVMEmitter self, GIRVar var) LLVMEmitter:get_vty -> cstr does
+		if var.is_ref do
+			return (self.types_map:get(var.type_.name)|cstr)+"*"
+		done
+	return self.types_map:get(var.type_.name)
+
+	function(LLVMEmitter self, OType ty) LLVMEmitter:get_ty -> cstr does
+	return self.types_map:get(ty.name)
+endtype

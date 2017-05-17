@@ -1,0 +1,4 @@
+
+function(GIRStore i, LLVMEmitter e) llvm::emit_store -> void does
+	e:emitl("store "+e:get_vty(i.value)+" "+e:get_ssa_var(i.value)+", "+e:get_vty(i.location)+" "+e:get_ssa_var(i.location))
+return

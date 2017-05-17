@@ -1,0 +1,32 @@
+import "llvm/emitter.ort"
+import "llvm/emitters/method.ort"
+import "llvm/emitters/literal.ort"
+import "llvm/emitters/return.ort"
+import "llvm/emitters/get_local.ort"
+import "llvm/emitters/load.ort"
+import "llvm/emitters/store.ort"
+import "llvm/emitters/binop.ort"
+
+function(GIRVar var) llvm::make_local_handle -> cstr does
+return "%t_"+var.ssa_id:str()
+
+function(Project p, cstr filename) Project:emit_as_llvm -> Project does
+	File out = File::open(filename, "w")
+	LLVMEmitter context = LLVMEmitter::new(out)\
+	                                  :register_emitter("literal",   llvm::emit_literal   |LLVMGIREmitter)\
+	                                  :register_emitter("return",    llvm::emit_return    |LLVMGIREmitter)\
+	                                  :register_emitter("get_local", llvm::emit_get_local |LLVMGIREmitter)\
+	                                  :register_emitter("load",      llvm::emit_load      |LLVMGIREmitter)\
+	                                  :register_emitter("store",     llvm::emit_store     |LLVMGIREmitter)\
+	                                  :register_emitter("binop",     llvm::emit_binop     |LLVMGIREmitter)
+
+	printf("\nLLVM Emitter Emitting methods..\n")
+	int j=0
+	Method meth
+	while j<p.methods:num_keys() do
+		llvm::emit_method(p.methods:get_by_num(j)|Method, context)
+		j+=1
+	done
+
+	out:close()
+return p

@@ -1,0 +1,5 @@
+
+function(GIRLiteral i, LLVMEmitter e) llvm::emit_literal -> void does
+	e:set_ssa_var(i.out_var, llvm::make_local_handle(i.out_var))
+	e:emitl(e:get_ssa_var(i.out_var)+" = add i32 0, "+(i.integer_value|int):str())
+return

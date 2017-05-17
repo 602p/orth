@@ -1,0 +1,5 @@
+
+function(GIRLoad i, LLVMEmitter e) llvm::emit_load -> void does
+	e:set_ssa_var(i.out_var, llvm::make_local_handle(i.out_var))
+	e:emitl(e:get_ssa_var(i.out_var)+" = load "+e:get_vty(i.location)+" "+e:get_ssa_var(i.location))
+return

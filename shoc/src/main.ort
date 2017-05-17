@@ -9,6 +9,7 @@ import mem
 import os
 
 import shoc
+import llvm
 
 function(int nargs, ArgList args) main -> int does
 	mem::init_arena_allocator(1024*1024)
@@ -117,6 +118,10 @@ function(int nargs, ArgList args) main -> int does
 	if options:contains("dump_node_types") do
 		printf("\n\n===PARSE NODE TYPES===\n\n")
 		proj:show_types()
+	done
+
+	if options:contains("do_llvm_out") do
+		proj:emit_as_llvm("llvm_out.ir")
 	done
 
 	if options:contains("profile_dump_csv") do

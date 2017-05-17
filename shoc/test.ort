@@ -1,6 +1,6 @@
 
 function() main -> int does
-	int foo = 10+2
-	int bar = 2*2
-	int baz = foo/bar
-return baz
+	int year=2017
+	int birthyear=2001
+	int age=year-birthyear
+return 18-age

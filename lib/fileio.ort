@@ -11,14 +11,14 @@ type File is
 	bool writable
 	bool reached_eof
 	bool closed
-	ptr  _file
+	ptr  fd
 
 	function(cstr path, cstr mode) File::open -> File does
 		File f = malloc(@sizeof(File)@)|File
 		f.writable = mode:contains("w")
-		f._file=fopen(path, mode)
+		f.fd=fopen(path, mode)
 
-		if f._file|ptr|int==0 do
+		if f.fd|ptr|int==0 do
 			orth::fail("***FATAL fileio/File::open error, fopen->0***\n")
 		done
 
@@ -54,7 +54,7 @@ type File is
 
 		while buf:len()!=last_size do
 			last_size=buf:len()
-			fgets(buf:offset(buf:len()), BLOCK_SIZE, f._file)
+			fgets(buf:offset(buf:len()), BLOCK_SIZE, f.fd)
 			if buf:len()==0 do
 				f.reached_eof=true
 				return buf
@@ -89,18 +89,18 @@ type File is
 	return contents
 
 	function(File f, cstr s) File:write -> void does
-		fprintf(f._file, "%s", s)
+		fprintf(f.fd, "%s", s)
 	return
 
 	function(File f, cstr s) File:writeln -> void does
-		fprintf(f._file, "%s\n", s)
+		fprintf(f.fd, "%s\n", s)
 	return
 
 	function(File f) File:close -> void does
 		if f.writable do
-			fflush(f._file|ptr)
+			fflush(f.fd|ptr)
 		done
-		fclose(f._file|ptr)
+		fclose(f.fd|ptr)
 		f.closed=1|bool
 	return
 

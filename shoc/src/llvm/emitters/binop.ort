@@ -1,0 +1,15 @@
+
+function(GIRBinOp i, LLVMEmitter e) llvm::emit_binop -> void does
+	e:set_ssa_var(i.out_var, llvm::make_local_handle(i.out_var))
+	if i.operator=="+" do
+		e:emitl(e:get_ssa_var(i.out_var)+" = add "+e:get_vty(i.lhs)+" "+e:get_ssa_var(i.lhs)+", "+e:get_ssa_var(i.rhs))
+	elif i.operator=="-" do
+		e:emitl(e:get_ssa_var(i.out_var)+" = sub "+e:get_vty(i.lhs)+" "+e:get_ssa_var(i.lhs)+", "+e:get_ssa_var(i.rhs))
+	elif i.operator=="*" do
+		e:emitl(e:get_ssa_var(i.out_var)+" = mul "+e:get_vty(i.lhs)+" "+e:get_ssa_var(i.lhs)+", "+e:get_ssa_var(i.rhs))
+	elif i.operator=="/" do
+		e:emitl(e:get_ssa_var(i.out_var)+" = sdiv "+e:get_vty(i.lhs)+" "+e:get_ssa_var(i.lhs)+", "+e:get_ssa_var(i.rhs))
+	else do
+		shoc::bail_out("Unimplmented operator")
+	done
+return

@@ -1,0 +1,19 @@
+
+function(Method m, LLVMEmitter e) llvm::emit_method -> void does
+	e:enter_method(m.name)
+	e:emitl("define i32 @"+m.name+"(){")
+	int i=0
+	cstr local_name
+	while i<m.locals:num_keys() do
+		local_name=m.locals:get_key_by_num(i)
+		e:set_local_addr_var(local_name, "%v_"+local_name)
+		e:emitl(e:get_local_addr_var(local_name)+" = alloca i32")
+		i+=1
+	done
+	i=0
+	while i<m.gir_code.len do
+		e:emit_inst(m.gir_code:get_GIRInst(i))
+		i+=1
+	done
+	e:emitl("}")
+return

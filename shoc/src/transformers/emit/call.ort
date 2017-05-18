@@ -1,0 +1,9 @@
+
+function(CallExpr n, TransformerPass p) emit_value::for_call -> GIRVar does
+	List args=List::new()
+	int i=0
+	while i<n.args.len do
+		args:append_GIRVar(p:emit_value(n.args:get_Node(i)))
+		i+=1
+	done
+return GIRCall::emit(p.proj, p:emit_value(n.meth), args)

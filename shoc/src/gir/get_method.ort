@@ -1,0 +1,22 @@
+
+type GIRGetMethod is packed
+	GIRInstType _gir_ty
+	OType  var_type
+	cstr   meth_name
+	GIRVar out_var
+
+	function(GIRGetMethod self) GIRGetMethod::print -> void does
+		printf("get_method \t%s \t%s => %s\n", self.var_type.name, self.meth_name, self.out_var:str())
+	return
+
+	function(Project p, Method meth) GIRGetMethod::emit -> GIRVar does
+		GIRGetMethod new = GIRInst::create(p, "get_method", @sizeof(GIRGetMethod)@)|GIRGetMethod
+		new.var_type=meth.return_value
+		new.meth_name=meth.name
+		new.out_var=GIRVar::new(p, meth.ptr_type):set_memo("Address of method:"+meth.name)
+		p:emit_gir(new|GIRInst)
+	return new.out_var|GIRVar
+
+	function() GIRGetMethod::impl -> GIRInstType does
+	return GIRInstType::new("get_method"):set_printer(GIRGetMethod::print|GIRInstPrinter)
+endtype

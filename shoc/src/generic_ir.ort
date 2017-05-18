@@ -70,6 +70,13 @@ return
 function(List l, int i) List:get_GIRInst -> GIRInst does
 return l:get(i)|GIRInst
 
+function(List l, GIRVar i) List:append_GIRVar -> void does
+	l:append(i|ptr)
+return
+
+function(List l, int i) List:get_GIRVar -> GIRVar does
+return l:get(i)|GIRVar
+
 function(Project p, GIRInst i) Project:emit_gir -> cstr does
 	p.curr_method.gir_code:append_GIRInst(i)
 return "?"

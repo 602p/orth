@@ -1,6 +1,10 @@
 
+function() foo -> int does
+	int a=3*3
+	int b=a+1
+return b
+
 function() main -> int does
-	float bar = 3|float
-	uint baz = bar|uint
-	ptr quux=baz|ptr
-return 0
+	int i = foo()-1
+	i+=foo()
+return i

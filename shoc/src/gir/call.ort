@@ -1,0 +1,42 @@
+
+type GIRCall is packed
+	GIRInstType _gir_ty
+	OType  ret_type
+	GIRVar method
+	List   args
+	GIRVar out_var
+
+	function(GIRCall self) GIRCall::print -> void does
+		printf("call       \t%s \t%s with args [", self.ret_type.name, self.method:str())
+		int i=0
+		while i<self.args.len do
+			printf("%s", self.args:get_GIRVar(i):str())
+			if i!=self.args.len-1 do
+				printf(", ")
+			done
+			i+=1
+		done
+		printf("]")
+		if -self.ret_type.variety==VOID do
+			printf(" => %s", self.out_var:str())
+		done
+		printf("\n")
+	return
+
+	function(Project p, GIRVar method, List args) GIRCall::emit -> GIRVar does
+		shoc::assert(method.type_:is_fptr(), "Must call fptr")
+
+		GIRCall new = GIRInst::create(p, "call", @sizeof(GIRCall)@)|GIRCall
+		new.ret_type=method.type_:as_fptr().return_value
+		new.method=method
+		new.args=args
+		if new.ret_type.variety!=VOID do
+			new.out_var=GIRVar::new(p, method.type_:as_fptr().return_value):set_memo("Result of calling "+method:str())
+		done
+		p:emit_gir(new|GIRInst)
+	return new.out_var
+
+	function() GIRCall::impl -> GIRInstType does
+	return GIRInstType::new("call"):set_printer(GIRCall::print|GIRInstPrinter)
+endtype
+

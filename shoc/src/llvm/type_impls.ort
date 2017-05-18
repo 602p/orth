@@ -30,3 +30,25 @@ function(GIRVar value, OType target, cstr dest, LLVMEmitter e) llvm::impl_cast -
 		shoc::bail_out("Invalid type "+value.type_.name+" for cast")
 	done
 return
+
+function(LLVMEmitter ctx, OType t) llvm::register_type -> void does
+	if t:is_fptr() do
+		cstr rep = ctx:get_ty(t:as_fptr().return_value)+" ("
+		if t:as_fptr().args|ptr==null do
+			rep+="..."
+		else do
+			int i=0
+			while i<t:as_fptr().args.len do
+				rep+=ctx:get_ty(t:as_fptr().args:get_OType(i))
+				if i!=t:as_fptr().args.len-1 do
+					rep+=", "
+				done
+				i+=1
+			done
+		done
+		rep+=")*"
+		ctx.types_map:set(t.name, rep)
+	else do
+		shoc::bail_out("Unimplemented register_type - "+t.name)
+	done
+return

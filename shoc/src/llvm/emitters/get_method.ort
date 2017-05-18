@@ -1,0 +1,4 @@
+
+function(GIRGetMethod i, LLVMEmitter e) llvm::emit_get_method -> void does
+	e:set_ssa_var(i.out_var, "@"+i.meth_name)
+return

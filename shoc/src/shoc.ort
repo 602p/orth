@@ -104,7 +104,7 @@ function(Project p, StrMap l) Project:with_options -> Project does
 return p
 
 function(Project p, int bits) Project:with_arch_bits -> Project does
-	p.pointer_size=bits/8
+	p.pointer_size=bits
 return p
 
 function(Project p, TransformerPass t) Project:add_Transformer -> void does

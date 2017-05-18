@@ -1,8 +1,15 @@
 
 function(NameExpr n, TransformerPass p) emit_addr::for_name -> GIRVar does
-return GIRGetLocal::emit(p.proj, p.proj.curr_method:get_local(n.name), n.name)
+	if p.proj.curr_method:has_local(n.name) do
+		return GIRGetLocal::emit(p.proj, p.proj.curr_method:get_local(n.name), n.name)
+	done
+	shoc::bail_out("Can't resolve name "+n.name)
+return null|GIRVar
 
 function(NameExpr n, TransformerPass p) emit_value::for_name -> GIRVar does
+	if p.proj.methods:contains(n.name) do
+		return GIRGetMethod::emit(p.proj, p.proj:get_Method(n.name))
+	done
 return GIRLoad::emit(p.proj, p:emit_addr(n|Node))
 
 function(DeclExpr n, TransformerPass p) emit_addr::for_decl -> GIRVar does

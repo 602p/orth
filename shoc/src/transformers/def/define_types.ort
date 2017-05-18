@@ -17,7 +17,7 @@ function(TypeDeclHead n, TransformerPass p) define_types::visit_alias -> TypeDec
 		if -p.proj.types:contains(n.alias_type) do
 			shoc::bail_out("No such type "+n.alias_type+" for RT of FPtr in define_types::visit_alias, atype="+n.name)
 		done
-		p.proj:add_Type(FPtrOType::new(n.name, p.proj:get_type(n.alias_type)))
+		p.proj:add_Type(FPtrOType::new_varargs(n.name, p.proj:get_type(n.alias_type)))
 	done
 return n
 

@@ -1,0 +1,19 @@
+
+function(GIRCall i, LLVMEmitter e) llvm::emit_call -> void does
+	if i.ret_type.variety!=VOID do
+		e:set_ssa_var(i.out_var, llvm::make_local_handle(i.out_var))
+		e:emit(e:get_ssa_var(i.out_var)+" = ")
+	done
+
+	e:emit("call "+e:get_vty(i.method)+" "+e:get_ssa_var(i.method)+" (")
+
+	int a=0
+	while a<i.args.len do
+		e:emit(e:get_ssa_var(i.args:get_GIRVar(a)))
+		if a!=i.args.len-1 do
+			e:emit(", ")
+		done
+		a+=1
+	done
+	e:emitl(")")
+return

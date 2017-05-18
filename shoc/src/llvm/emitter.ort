@@ -33,6 +33,7 @@ type LLVMEmitter is
 		new.types_map:set("float", "double")
 
 		new.types_map:set("ptr", "i8*")
+		new.types_map:set("cstr", "i8*")
 
 		new.types_map:set("void", "void")
 

@@ -49,8 +49,15 @@ function(List l, TypedVar v) List:append_TypedVar -> void does
 	l:append(v|ptr)
 return
 
+function(List l, OType v) List:append_OType -> void does
+	l:append(v|ptr)
+return
+
 function(List l, int i) List:get_TypedVar -> TypedVar does
 return l:get(i)|TypedVar
+
+function(List l, int i) List:get_OType -> OType does
+return l:get(i)|OType
 
 type OType is packed
 	int variety
@@ -128,12 +135,23 @@ type FPtrOType is packed
 	int variety
 	cstr name
 	Project proj
+	List args
 	OType return_value
 
-	function(cstr name, OType return_value) FPtrOType::new -> OType does
+	function(cstr name, OType return_value, List args) FPtrOType::new -> OType does
 		FPtrOType new = malloc(@sizeof(FPtrOType)@)|FPtrOType
 
 		new.name=name
+		new.args=args
+		new.variety=F_PTR
+		new.return_value=return_value
+	return new|OType
+
+	function(cstr name, OType return_value) FPtrOType::new_varargs -> OType does
+		FPtrOType new = malloc(@sizeof(FPtrOType)@)|FPtrOType
+
+		new.name=name
+		new.args=null|List
 		new.variety=F_PTR
 		new.return_value=return_value
 	return new|OType
@@ -144,7 +162,20 @@ type FPtrOType is packed
 	function(FPtrOType t) FPtrOType:print -> void does
 		printf("%i F %s\t", t.variety, datamodel::variety_to_name(t.variety))
 		prints_tab(t.name, 30)
-		printf("%i bits \t->%s\n", t:get_size(), t.return_value.name)
+		printf("%i bits \t->%s (", t:get_size(), t.return_value.name)
+		if t.args|ptr==null do
+			printf("...")
+		else do
+			int i=0
+			while i<t.args.len do
+				printf("%s", t.args:get_OType(i))
+				if i!=t.args.len-1 do
+					printf(", ")
+				done
+				i+=1
+			done
+		done
+		printf(")\n")
 	return
 endtype
 
@@ -222,8 +253,8 @@ function(Project p) shoc::datamodel::init_base -> void does
 
 	p:add_Type(PrimitiveOType::new("bool", U_INT, 1))
 
-	p:add_Type(PrimitiveOType::new("ptr", POINTER, p.pointer_size*8))
-	p:add_Type(PrimitiveOType::new("cstr", POINTER, p.pointer_size*8))
+	p:add_Type(PrimitiveOType::new("ptr", POINTER, p.pointer_size))
+	p:add_Type(PrimitiveOType::new("cstr", POINTER, p.pointer_size))
 
 	p:add_Type(PrimitiveOType::new("void", VOID, 0))
 return
@@ -236,6 +267,7 @@ type Method is
 	Project proj
 	List args
 	OType return_value
+	OType ptr_type
 	StrMap locals
 	List gir_code
 
@@ -248,13 +280,19 @@ type Method is
 		new.args=List::new()
 		new.gir_code=List::new()
 
+		List fptr_type_args=List::new()
+
 		int i=0
 		while i<args.len do
 			new.args:append_TypedVar(TypedVar::from_decl(args:get(i), proj))
+			fptr_type_args:append_OType(TypedVar::from_decl(args:get(i), proj).type_)
 			i+=1
 		done
 
 		new.return_value=proj:get_type(return_value)
+
+		new.ptr_type=FPtrOType::new("$"+name, new.return_value, fptr_type_args)
+		proj:add_Type(new.ptr_type)
 	return new
 
 	function(Method func, cstr name, OType v) Method:add_local -> void does

@@ -3,8 +3,6 @@ function(GIRVar lhs_v, GIRVar rhs_v, cstr op, cstr dest, LLVMEmitter e) llvm::s_
 	cstr lhs = e:get_ssa_var(lhs_v)
 	cstr rhs = e:get_ssa_var(rhs_v)
 
-	printf("Operator='%s', v=%i\n", op, op=="*")
-
 	if op=="+" do
 		e:emitl(dest+" = add "+ty+" "+lhs+", "+rhs)
 	elif op=="-" do
@@ -22,17 +20,17 @@ function(GIRVar lhs_v, GIRVar rhs_v, cstr op, cstr dest, LLVMEmitter e) llvm::s_
 	elif op=="&" do
 		e:emitl(dest+" = and "+ty+" "+lhs+", "+rhs)
 	elif op=="==" do
-		e:emitl(dest+" = eq "+ty+" "+lhs+", "+rhs)
+		e:emitl(dest+" = icmp eq "+ty+" "+lhs+", "+rhs)
 	elif op=="!=" do
-		e:emitl(dest+" = ne "+ty+" "+lhs+", "+rhs)
+		e:emitl(dest+" = icmp ne "+ty+" "+lhs+", "+rhs)
 	elif op==">" do
-		e:emitl(dest+" = sgt "+ty+" "+lhs+", "+rhs)
+		e:emitl(dest+" = icmp sgt "+ty+" "+lhs+", "+rhs)
 	elif op=="<" do
-		e:emitl(dest+" = slt "+ty+" "+lhs+", "+rhs)
+		e:emitl(dest+" = icmp slt "+ty+" "+lhs+", "+rhs)
 	elif op==">=" do
-		e:emitl(dest+" = sge "+ty+" "+lhs+", "+rhs)
+		e:emitl(dest+" = icmp sge "+ty+" "+lhs+", "+rhs)
 	elif op=="<=" do
-		e:emitl(dest+" = sle "+ty+" "+lhs+", "+rhs)
+		e:emitl(dest+" = icmp sle "+ty+" "+lhs+", "+rhs)
 	else do
 		shoc::bail_out("Unsupported operator '"+op+"' on signed ints")
 	done
@@ -60,17 +58,17 @@ function(GIRVar lhs_v, GIRVar rhs_v, cstr op, cstr dest, LLVMEmitter e) llvm::u_
 	elif op=="&" do
 		e:emitl(dest+" = and "+ty+" "+lhs+", "+rhs)
 	elif op=="==" do
-		e:emitl(dest+" = eq "+ty+" "+lhs+", "+rhs)
+		e:emitl(dest+" = icmp eq "+ty+" "+lhs+", "+rhs)
 	elif op=="!=" do
-		e:emitl(dest+" = ne "+ty+" "+lhs+", "+rhs)
+		e:emitl(dest+" = icmp ne "+ty+" "+lhs+", "+rhs)
 	elif op==">" do
-		e:emitl(dest+" = ugt "+ty+" "+lhs+", "+rhs)
+		e:emitl(dest+" = icmp ugt "+ty+" "+lhs+", "+rhs)
 	elif op=="<" do
-		e:emitl(dest+" = ult "+ty+" "+lhs+", "+rhs)
+		e:emitl(dest+" = icmp ult "+ty+" "+lhs+", "+rhs)
 	elif op==">=" do
-		e:emitl(dest+" = uge "+ty+" "+lhs+", "+rhs)
+		e:emitl(dest+" = icmp uge "+ty+" "+lhs+", "+rhs)
 	elif op=="<=" do
-		e:emitl(dest+" = ule "+ty+" "+lhs+", "+rhs)
+		e:emitl(dest+" = icmp ule "+ty+" "+lhs+", "+rhs)
 	else do
 		shoc::bail_out("Unsupported operator '"+op+"' on unsigned ints")
 	done

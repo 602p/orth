@@ -1,10 +1,10 @@
 
-function() foo -> int does
-	int a=3*3
+function(int value) foo -> int does
+	int a=value*value
 	int b=a+1
 return b
 
 function() main -> int does
-	int i = foo()-1
-	i+=foo()
+	int i = foo(2)
+	i+=foo(3)
 return i

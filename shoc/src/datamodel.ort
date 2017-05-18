@@ -283,15 +283,18 @@ type Method is
 		List fptr_type_args=List::new()
 
 		int i=0
+		TypedVar tv
 		while i<args.len do
-			new.args:append_TypedVar(TypedVar::from_decl(args:get(i), proj))
-			fptr_type_args:append_OType(TypedVar::from_decl(args:get(i), proj).type_)
+			tv=TypedVar::from_decl(args:get(i), proj)
+			new.args:append_TypedVar(tv)
+			fptr_type_args:append_OType(tv.type_)
+			new.locals:set(tv.name, tv.type_|ptr)
 			i+=1
 		done
 
 		new.return_value=proj:get_type(return_value)
 
-		new.ptr_type=FPtrOType::new("$"+name, new.return_value, fptr_type_args)
+		new.ptr_type=FPtrOType::new("$fp_"+name, new.return_value, fptr_type_args)
 		proj:add_Type(new.ptr_type)
 	return new
 

@@ -1,7 +1,7 @@
 
 function(BinOpExpr n, TransformerPass p) emit_value::for_binop -> GIRVar does
 	GIRVar lhs = p:emit_value(n.lhs)
-	if n.op:contains("=") do
+	if n.op:contains("="):or(n.op:contains(">")):or(n.op:contains("<")) do
 		return GIRBinOp::emit(p.proj, lhs, p:emit_value(n.rhs), p.proj:get_type("bool"), n.op)
 	done
 return GIRBinOp::emit(p.proj, lhs, p:emit_value(n.rhs), lhs.type_, n.op)

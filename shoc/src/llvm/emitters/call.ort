@@ -9,7 +9,7 @@ function(GIRCall i, LLVMEmitter e) llvm::emit_call -> void does
 
 	int a=0
 	while a<i.args.len do
-		e:emit(e:get_ssa_var(i.args:get_GIRVar(a)))
+		e:emit(e:get_vty(i.args:get_GIRVar(a))+" "+e:get_ssa_var(i.args:get_GIRVar(a)))
 		if a!=i.args.len-1 do
 			e:emit(", ")
 		done

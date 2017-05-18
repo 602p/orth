@@ -24,7 +24,7 @@ function(GIRVar value, OType target, cstr dest, LLVMEmitter e) llvm::impl_cast -
 		llvm::float::impl_cast(value, target, dest, e)
 	elif value.type_.variety==STRUCT do
 		llvm::struct::impl_cast(value, target, dest, e)
-	elif value.type_.variety==POINTER do
+	elif (value.type_.variety==POINTER)+(value.type_.variety==F_PTR) do
 		llvm::pointer::impl_cast(value, target, dest, e)
 	else do
 		shoc::bail_out("Invalid type "+value.type_.name+" for cast")

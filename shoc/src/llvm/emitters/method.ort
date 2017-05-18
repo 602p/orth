@@ -6,6 +6,9 @@ function(Method m, LLVMEmitter e) llvm::emit_method -> void does
 	int i=0
 	while i<m.args.len do
 		e:emit(e:get_ty(m.args:get_TypedVar(i).type_)+" %arg_"+m.args:get_TypedVar(i).name)
+		if i!=m.args.len-1 do
+			e:emit(", ")
+		done
 		i+=1
 	done
 	e:emitl("){")

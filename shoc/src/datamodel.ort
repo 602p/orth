@@ -168,7 +168,7 @@ type FPtrOType is packed
 		else do
 			int i=0
 			while i<t.args.len do
-				printf("%s", t.args:get_OType(i))
+				printf("%s", t.args:get_OType(i).name)
 				if i!=t.args.len-1 do
 					printf(", ")
 				done

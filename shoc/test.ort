@@ -1,10 +1,16 @@
 
-function(int value) foo -> int does
-	int a=value*value
-	int b=a+1
-return b
+type TestFP is a function->int
+
+function(int value) square -> int does
+return value*value
+
+function(int value) add1 -> int does
+return value+1
+
+function(TestFP func, int val) do_twice -> int does
+return func(func(val))
 
 function() main -> int does
-	int i = foo(2)
-	i+=foo(3)
+	TestFP f = add1|TestFP
+	int i = do_twice(f, 1+1)
 return i

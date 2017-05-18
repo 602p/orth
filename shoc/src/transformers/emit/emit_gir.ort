@@ -4,6 +4,7 @@ import "transformers/emit/assign.ort"
 import "transformers/emit/return.ort"
 import "transformers/emit/name.ort"
 import "transformers/emit/binop.ort"
+import "transformers/emit/cast.ort"
 import gir
 
 function() emit_value::init -> TransformerPass does
@@ -15,7 +16,8 @@ return TransformerPass::new("emit_value"):no_auto_visit()\
        :add_specialization("ReturnExpr", emit_value::for_return|NodeTransformer)\
        :add_specialization("NameExpr", emit_value::for_name|NodeTransformer)\
 	   :add_specialization("DeclExpr", emit_value::for_decl|NodeTransformer)\
-	   :add_specialization("BinOpExpr", emit_value::for_binop|NodeTransformer)
+	   :add_specialization("BinOpExpr", emit_value::for_binop|NodeTransformer)\
+	   :add_specialization("CastExpr", emit_value::for_cast|NodeTransformer)
 
 function(TransformerPass p, Node n) TransformerPass:emit_value -> GIRVar does
 	shoc::assert(p.proj:get_transformer_pass("emit_value")\

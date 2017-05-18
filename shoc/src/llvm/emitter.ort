@@ -17,6 +17,24 @@ type LLVMEmitter is
 		new.types_map=StrMap::new()
 
 		new.types_map:set("int", "i32")
+		new.types_map:set("short", "i16")
+		new.types_map:set("byte", "i8")
+		new.types_map:set("long", "i64")
+		new.types_map:set("xlong", "i128")
+		
+		new.types_map:set("uint", "i32")
+		new.types_map:set("ushort", "i16")
+		new.types_map:set("ubyte", "i8")
+		new.types_map:set("ulong", "i64")
+		new.types_map:set("uxlong", "i128")
+
+		new.types_map:set("bool", "i1")
+
+		new.types_map:set("float", "double")
+
+		new.types_map:set("ptr", "i8*")
+
+		new.types_map:set("void", "void")
 
 		new.fd=fd
 		new.current_method="???"

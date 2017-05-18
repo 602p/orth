@@ -1,0 +1,5 @@
+
+function(GIRCast i, LLVMEmitter e) llvm::emit_cast -> void does
+	e:set_ssa_var(i.out_var, llvm::make_local_handle(i.out_var))
+	llvm::impl_cast(i.source, i.target_type, e:get_ssa_var(i.out_var), e)
+return

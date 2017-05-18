@@ -1,0 +1,22 @@
+
+type GIRCast is packed
+	GIRInstType _gir_ty
+	OType  target_type
+	GIRVar source
+	GIRVar out_var
+
+	function(GIRCast self) GIRCast::print -> void does
+		printf("cast    \t->%s \t%s --cast-to-%s--> %s\n", self.target_type.name, self.source:str(), self.target_type.name, self.out_var:str())
+	return
+
+	function(Project p, GIRVar source, OType target_type) GIRCast::emit -> GIRVar does
+		GIRCast new = GIRInst::create(p, "cast", @sizeof(GIRCast)@)|GIRCast
+		new.target_type=target_type
+		new.source=source
+		new.out_var=GIRVar::new(p, new.target_type):set_memo("cast from "+source.ssa_id:str())
+		p:emit_gir(new|GIRInst)
+	return new.out_var
+
+	function() GIRCast::impl -> GIRInstType does
+	return GIRInstType::new("cast"):set_printer(GIRCast::print|GIRInstPrinter)
+endtype

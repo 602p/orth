@@ -1,0 +1,32 @@
+import "llvm/binop_impls.ort"
+import "llvm/cast_impls.ort"
+
+function(GIRVar lhs, GIRVar rhs, cstr op, cstr dest, LLVMEmitter e) llvm::impl_binop -> void does
+	shoc::assert(lhs.type_.name==rhs.type_.name, "Invalid binop on nonmatching operands: "+op)
+
+	if lhs.type_.variety==S_INT do
+		llvm::s_int::impl_binop(lhs, rhs, op, dest, e)
+	elif lhs.type_.variety==U_INT do
+		llvm::u_int::impl_binop(lhs, rhs, op, dest, e)
+	elif lhs.type_.variety==FLOAT do
+		llvm::float::impl_binop(lhs, rhs, op, dest, e)
+	else do
+		shoc::bail_out("Invalid type "+lhs.type_.name+" for binop :"+op)
+	done
+return
+
+function(GIRVar value, OType target, cstr dest, LLVMEmitter e) llvm::impl_cast -> void does
+	if value.type_.variety==S_INT do
+		llvm::s_int::impl_cast(value, target, dest, e)
+	elif value.type_.variety==U_INT do
+		llvm::u_int::impl_cast(value, target, dest, e)
+	elif value.type_.variety==FLOAT do
+		llvm::float::impl_cast(value, target, dest, e)
+	elif value.type_.variety==STRUCT do
+		llvm::struct::impl_cast(value, target, dest, e)
+	elif value.type_.variety==POINTER do
+		llvm::pointer::impl_cast(value, target, dest, e)
+	else do
+		shoc::bail_out("Invalid type "+value.type_.name+" for cast")
+	done
+return

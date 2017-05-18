@@ -1,0 +1,54 @@
+
+function(GIRVar value, OType target, cstr dest, LLVMEmitter e) llvm::s_int::impl_cast -> void does
+	if (target.variety==S_INT) + (target.variety==U_INT) do
+		if target:as_primitive().size > value.type_:as_primitive().size do
+			e:emitl(dest+" = zext "+e:get_vty(value)+" "+e:get_ssa_var(value)+" to "+e:get_ty(target))
+		elif target:as_primitive().size < value.type_:as_primitive().size do
+			e:emitl(dest+" = trunc "+e:get_vty(value)+" "+e:get_ssa_var(value)+" to "+e:get_ty(target))
+		elif target:as_primitive().size == value.type_:as_primitive().size do
+			e:emitl(dest+" = add "+e:get_vty(value)+" 0, "+e:get_ssa_var(value))
+		done
+	elif (target.variety==POINTER) + (target.variety==F_PTR) + (target.variety==STRUCT) do
+		e:emitl(dest+" = inttoptr "+e:get_vty(value)+" "+e:get_ssa_var(value)+" to "+e:get_ty(target))
+	elif target.variety==FLOAT do
+		e:emitl(dest+" = sitofp "+e:get_vty(value)+" "+e:get_ssa_var(value)+" to double")
+	else do
+		shoc::bail_out("Can't cast to void")
+	done
+return
+
+function(GIRVar value, OType target, cstr dest, LLVMEmitter e) llvm::u_int::impl_cast -> void does
+	if target.variety==FLOAT do
+		e:emitl(dest+" = uitofp "+e:get_vty(value)+" "+e:get_ssa_var(value)+" to double")
+	else do
+		llvm::s_int::impl_cast(value, target, dest, e)
+	done
+return
+
+function(GIRVar value, OType target, cstr dest, LLVMEmitter e) llvm::float::impl_cast -> void does
+	if target.variety==S_INT do
+		e:emitl(dest+" = fptosi double "+e:get_ssa_var(value)+" to "+e:get_ty(target))
+	elif target.variety==U_INT do
+		e:emitl(dest+" = fptoui double "+e:get_ssa_var(value)+" to "+e:get_ty(target))
+	else do
+		shoc::bail_out("Unimplemented cast from float - are you really trying to cast a float to a pointer???")
+	done
+return
+
+function(GIRVar value, OType target, cstr dest, LLVMEmitter e) llvm::pointer::impl_cast -> void does
+	if (target.variety==S_INT) + (target.variety==U_INT) do
+		e:emitl(dest+" = ptrtoint "+e:get_vty(value)+" "+e:get_ssa_var(value)+" to "+e:get_ty(target))
+	elif (target.variety==STRUCT) + (target.variety==F_PTR) + (target.variety==POINTER) do
+		e:emitl(dest+" = bitcast "+e:get_vty(value)+" "+e:get_ssa_var(value)+" to "+e:get_ty(target))
+	else do
+		shoc::bail_out("Unimplemented cast frm ppinter")
+	done
+return
+
+function(GIRVar value, OType target, cstr dest, LLVMEmitter e) llvm::struct::impl_cast -> void does
+	if (target.variety==STRUCT) + (target.variety==F_PTR) + (target.variety==POINTER) do
+		e:emitl(dest+" = bitcast "+e:get_vty(value)+" "+e:get_ssa_var(value)+" to "+e:get_ty(target))
+	else do
+		shoc::bail_out("iniuiuimplenentede csat frm struuufct")
+	done
+return

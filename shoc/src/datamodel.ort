@@ -120,7 +120,7 @@ type PrimitiveOType is packed
 	function(PrimitiveOType t) PrimitiveOType:print -> void does
 		printf("%i P %s\t", t.variety, datamodel::variety_to_name(t.variety))
 		prints_tab(t.name, 30)
-		printf("%i bytes\n", t:get_size())
+		printf("%i bits\n", t:get_size())
 	return
 endtype
 
@@ -144,7 +144,7 @@ type FPtrOType is packed
 	function(FPtrOType t) FPtrOType:print -> void does
 		printf("%i F %s\t", t.variety, datamodel::variety_to_name(t.variety))
 		prints_tab(t.name, 30)
-		printf("%i bytes \t->%s\n", t:get_size(), t.return_value.name)
+		printf("%i bits \t->%s\n", t:get_size(), t.return_value.name)
 	return
 endtype
 
@@ -184,7 +184,7 @@ type StructOType is packed
 	function(StructOType t) StructOType:print -> void does
 		printf("%i S %s\t", t.variety, datamodel::variety_to_name(t.variety))
 		prints_tab(t.name, 30)
-		printf("%i bytes \t{", t:get_size())
+		printf("%i bits \t{", t:get_size())
 		int i=0
 		while i<t.fields.len do
 			printf("%s: %s", t.fields:get_TypedVar(i).name, t.fields:get_TypedVar(i).type_.name)
@@ -206,24 +206,24 @@ function(Project p) shoc::datamodel::init_base -> void does
 	F_PTR=5
 	STRUCT=6
 
-	p:add_Type(PrimitiveOType::new("int", S_INT, 4))
-	p:add_Type(PrimitiveOType::new("short", S_INT, 2))
-	p:add_Type(PrimitiveOType::new("byte", S_INT, 1))
-	p:add_Type(PrimitiveOType::new("long", S_INT, 8))
-	p:add_Type(PrimitiveOType::new("xlong", S_INT, 16))
+	p:add_Type(PrimitiveOType::new("int", S_INT, 4*8))
+	p:add_Type(PrimitiveOType::new("short", S_INT, 2*8))
+	p:add_Type(PrimitiveOType::new("byte", S_INT, 1*8))
+	p:add_Type(PrimitiveOType::new("long", S_INT, 8*8))
+	p:add_Type(PrimitiveOType::new("xlong", S_INT, 16*8))
 
-	p:add_Type(PrimitiveOType::new("uint", U_INT, 4))
-	p:add_Type(PrimitiveOType::new("ushort", U_INT, 2))
-	p:add_Type(PrimitiveOType::new("ubyte", U_INT, 1))
-	p:add_Type(PrimitiveOType::new("ulong", U_INT, 8))
-	p:add_Type(PrimitiveOType::new("uxlong", U_INT, 16))
+	p:add_Type(PrimitiveOType::new("uint", U_INT, 4*8))
+	p:add_Type(PrimitiveOType::new("ushort", U_INT, 2*8))
+	p:add_Type(PrimitiveOType::new("ubyte", U_INT, 1*8))
+	p:add_Type(PrimitiveOType::new("ulong", U_INT, 8*8))
+	p:add_Type(PrimitiveOType::new("uxlong", U_INT, 16*8))
 
-	p:add_Type(PrimitiveOType::new("float", FLOAT, 8))
+	p:add_Type(PrimitiveOType::new("float", FLOAT, 8*8))
 
 	p:add_Type(PrimitiveOType::new("bool", U_INT, 1))
 
-	p:add_Type(PrimitiveOType::new("ptr", POINTER, p.pointer_size))
-	p:add_Type(PrimitiveOType::new("cstr", POINTER, p.pointer_size))
+	p:add_Type(PrimitiveOType::new("ptr", POINTER, p.pointer_size*8))
+	p:add_Type(PrimitiveOType::new("cstr", POINTER, p.pointer_size*8))
 
 	p:add_Type(PrimitiveOType::new("void", VOID, 0))
 return

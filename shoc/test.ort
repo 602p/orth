@@ -1,6 +1,6 @@
 
 function() main -> int does
-	int year=2017
-	int birthyear=2001
-	int age=year-birthyear
-return 18-age
+	float bar = 3|float
+	uint baz = bar|uint
+	ptr quux=baz|ptr
+return 0

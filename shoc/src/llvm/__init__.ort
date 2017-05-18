@@ -1,4 +1,5 @@
 import "llvm/emitter.ort"
+import "llvm/type_impls.ort"
 import "llvm/emitters/method.ort"
 import "llvm/emitters/literal.ort"
 import "llvm/emitters/return.ort"
@@ -6,6 +7,7 @@ import "llvm/emitters/get_local.ort"
 import "llvm/emitters/load.ort"
 import "llvm/emitters/store.ort"
 import "llvm/emitters/binop.ort"
+import "llvm/emitters/cast.ort"
 
 function(GIRVar var) llvm::make_local_handle -> cstr does
 return "%t_"+var.ssa_id:str()
@@ -18,7 +20,8 @@ function(Project p, cstr filename) Project:emit_as_llvm -> Project does
 	                                  :register_emitter("get_local", llvm::emit_get_local |LLVMGIREmitter)\
 	                                  :register_emitter("load",      llvm::emit_load      |LLVMGIREmitter)\
 	                                  :register_emitter("store",     llvm::emit_store     |LLVMGIREmitter)\
-	                                  :register_emitter("binop",     llvm::emit_binop     |LLVMGIREmitter)
+	                                  :register_emitter("binop",     llvm::emit_binop     |LLVMGIREmitter)\
+	                                  :register_emitter("cast",      llvm::emit_cast      |LLVMGIREmitter)
 
 	printf("\nLLVM Emitter Emitting methods..\n")
 	int j=0
@@ -26,6 +29,37 @@ function(Project p, cstr filename) Project:emit_as_llvm -> Project does
 	while j<p.methods:num_keys() do
 		llvm::emit_method(p.methods:get_by_num(j)|Method, context)
 		j+=1
+	done
+
+	if p.options:contains("dump_llvm_mappings") do
+		printf("\n===LLVM EMITTER INFO===\n")
+		int a=0
+		int b
+		printf("\nLocals Mappings:\n")
+		while a<context.locals_maps:num_keys() do
+			b=0
+			printf(" Mapping for function: %s\n", context.locals_maps:get_key_by_num(a))
+			while b<(context.locals_maps:get(context.locals_maps:get_key_by_num(a))|StrMap):num_keys() do
+				printf("\t%s -> %s\n", (context.locals_maps:get(context.locals_maps:get_key_by_num(a))|StrMap):get_key_by_num(b),\
+					                   (context.locals_maps:get(context.locals_maps:get_key_by_num(a))|StrMap):get_by_num(b))
+				b+=1
+			done
+			a+=1
+		done
+
+		a=0
+		printf("\nSSA Mappings:\n")
+		while a<context.ssa_map:num_keys() do
+			printf("\t%s -> %s\n", context.ssa_map:get_key_by_num(a), context.ssa_map:get_by_num(a))
+			a+=1
+		done
+
+		a=0
+		printf("\nType Mappings:\n")
+		while a<context.types_map:num_keys() do
+			printf("\t%s -> %s\n", context.types_map:get_key_by_num(a), context.types_map:get_by_num(a))
+			a+=1
+		done
 	done
 
 	out:close()

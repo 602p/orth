@@ -1,0 +1,108 @@
+function(GIRVar lhs_v, GIRVar rhs_v, cstr op, cstr dest, LLVMEmitter e) llvm::s_int::impl_binop -> void does
+	cstr ty = e:get_vty(lhs_v)
+	cstr lhs = e:get_ssa_var(lhs_v)
+	cstr rhs = e:get_ssa_var(rhs_v)
+
+	printf("Operator='%s', v=%i\n", op, op=="*")
+
+	if op=="+" do
+		e:emitl(dest+" = add "+ty+" "+lhs+", "+rhs)
+	elif op=="-" do
+		e:emitl(dest+" = sub "+ty+" "+lhs+", "+rhs)
+	elif op=="*" do
+		e:emitl(dest+" = mul "+ty+" "+lhs+", "+rhs)
+	elif op=="/" do
+		e:emitl(dest+" = sdiv "+ty+" "+lhs+", "+rhs)
+	elif op=="%" do
+		e:emitl(dest+" = srem "+ty+" "+lhs+", "+rhs)
+	elif op=="<<" do
+		e:emitl(dest+" = shl "+ty+" "+lhs+", "+rhs)
+	elif op==">>" do
+		e:emitl(dest+" = lshr "+ty+" "+lhs+", "+rhs)
+	elif op=="&" do
+		e:emitl(dest+" = and "+ty+" "+lhs+", "+rhs)
+	elif op=="==" do
+		e:emitl(dest+" = eq "+ty+" "+lhs+", "+rhs)
+	elif op=="!=" do
+		e:emitl(dest+" = ne "+ty+" "+lhs+", "+rhs)
+	elif op==">" do
+		e:emitl(dest+" = sgt "+ty+" "+lhs+", "+rhs)
+	elif op=="<" do
+		e:emitl(dest+" = slt "+ty+" "+lhs+", "+rhs)
+	elif op==">=" do
+		e:emitl(dest+" = sge "+ty+" "+lhs+", "+rhs)
+	elif op=="<=" do
+		e:emitl(dest+" = sle "+ty+" "+lhs+", "+rhs)
+	else do
+		shoc::bail_out("Unsupported operator '"+op+"' on signed ints")
+	done
+return
+
+function(GIRVar lhs_v, GIRVar rhs_v, cstr op, cstr dest, LLVMEmitter e) llvm::u_int::impl_binop -> void does
+	cstr ty = e:get_vty(lhs_v)
+	cstr lhs = e:get_ssa_var(lhs_v)
+	cstr rhs = e:get_ssa_var(rhs_v)
+
+	if op=="+" do
+		e:emitl(dest+" = add "+ty+" "+lhs+", "+rhs)
+	elif op=="-" do
+		e:emitl(dest+" = sub "+ty+" "+lhs+", "+rhs)
+	elif op=="*" do
+		e:emitl(dest+" = mul "+ty+" "+lhs+", "+rhs)
+	elif op=="/" do
+		e:emitl(dest+" = udiv "+ty+" "+lhs+", "+rhs)
+	elif op=="%" do
+		e:emitl(dest+" = urem "+ty+" "+lhs+", "+rhs)
+	elif op=="<<" do
+		e:emitl(dest+" = shl "+ty+" "+lhs+", "+rhs)
+	elif op==">>" do
+		e:emitl(dest+" = lshr "+ty+" "+lhs+", "+rhs)
+	elif op=="&" do
+		e:emitl(dest+" = and "+ty+" "+lhs+", "+rhs)
+	elif op=="==" do
+		e:emitl(dest+" = eq "+ty+" "+lhs+", "+rhs)
+	elif op=="!=" do
+		e:emitl(dest+" = ne "+ty+" "+lhs+", "+rhs)
+	elif op==">" do
+		e:emitl(dest+" = ugt "+ty+" "+lhs+", "+rhs)
+	elif op=="<" do
+		e:emitl(dest+" = ult "+ty+" "+lhs+", "+rhs)
+	elif op==">=" do
+		e:emitl(dest+" = uge "+ty+" "+lhs+", "+rhs)
+	elif op=="<=" do
+		e:emitl(dest+" = ule "+ty+" "+lhs+", "+rhs)
+	else do
+		shoc::bail_out("Unsupported operator '"+op+"' on unsigned ints")
+	done
+return
+
+function(GIRVar lhs_v, GIRVar rhs_v, cstr op, cstr dest, LLVMEmitter e) llvm::float::impl_binop -> void does
+	cstr lhs = e:get_ssa_var(lhs_v)
+	cstr rhs = e:get_ssa_var(rhs_v)
+
+	if op=="+" do
+		e:emitl(dest+" = fadd double "+lhs+", "+rhs)
+	elif op=="-" do
+		e:emitl(dest+" = fsub double "+lhs+", "+rhs)
+	elif op=="*" do
+		e:emitl(dest+" = fmul double "+lhs+", "+rhs)
+	elif op=="/" do
+		e:emitl(dest+" = fdiv double "+lhs+", "+rhs)
+	elif op=="%" do
+		e:emitl(dest+" = frem double "+lhs+", "+rhs)
+	elif op=="==" do
+		e:emitl(dest+" = fcmp oeq double "+lhs+", "+rhs)
+	elif op=="!=" do
+		e:emitl(dest+" = fcmp one double "+lhs+", "+rhs)
+	elif op==">" do
+		e:emitl(dest+" = fcmp olt double "+lhs+", "+rhs)
+	elif op=="<" do
+		e:emitl(dest+" = fcmp ogt double "+lhs+", "+rhs)
+	elif op==">=" do
+		e:emitl(dest+" = fcmp oge double "+lhs+", "+rhs)
+	elif op=="<=" do
+		e:emitl(dest+" = fcmp ole double "+lhs+", "+rhs)
+	else do
+		shoc::bail_out("Unsupported operator '"+op+"' on floats")
+	done
+return

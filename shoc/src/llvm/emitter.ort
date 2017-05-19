@@ -8,6 +8,7 @@ type LLVMEmitter is
 	StrMap types_map
 	File   fd
 	cstr   current_method
+	int    ssa_count
 
 	function(File fd) LLVMEmitter::new -> LLVMEmitter does
 		LLVMEmitter new = malloc(@sizeof(LLVMEmitter)@)|LLVMEmitter
@@ -15,6 +16,7 @@ type LLVMEmitter is
 		new.locals_maps=StrMap::new()
 		new.ssa_map=StrMap::new()
 		new.types_map=StrMap::new()
+		new.ssa_count=0
 
 		new.types_map:set("int", "i32")
 		new.types_map:set("short", "i16")
@@ -40,6 +42,10 @@ type LLVMEmitter is
 		new.fd=fd
 		new.current_method="???"
 	return new
+
+	function(LLVMEmitter self) LLVMEmitter:get_next_ssa -> int does
+		self.ssa_count+=1
+	return self.ssa_count
 
 	function(LLVMEmitter self, cstr gir_type, LLVMGIREmitter e) LLVMEmitter:register_emitter -> LLVMEmitter does
 		self.gir_emitters:set(gir_type, e|ptr)

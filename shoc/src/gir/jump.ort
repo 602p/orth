@@ -1,0 +1,38 @@
+
+type GIRJump is packed
+	GIRInstType _gir_ty
+	bool   is_cond
+	GIRVar cond
+	cstr   target_label
+
+	function(GIRJump self) GIRJump::print -> void does
+		printf("jump       \t->%s\t", self.target_label)
+		if self.is_cond do
+			printf("cond: %s", self.cond:str())
+		else do
+			printf("unconditional")
+		done
+		printf("\n")
+	return
+
+	function(Project p, cstr target) GIRJump::emit_ncond -> void does
+		GIRJump new = GIRInst::create(p, "jump", @sizeof(GIRJump)@)|GIRJump
+		new.target_label=target
+		new.is_cond=false
+		p:emit_gir(new|GIRInst)
+	return
+
+	function(Project p, GIRVar condition, cstr target) GIRJump::emit_cond -> void does
+		shoc::assert(condition.type_.name=="bool", "Can't cbranch from non-bool")
+
+		GIRJump new = GIRInst::create(p, "jump", @sizeof(GIRJump)@)|GIRJump
+		new.target_label=target
+		new.is_cond=true
+		new.cond=condition
+		p:emit_gir(new|GIRInst)
+	return
+
+	function() GIRJump::impl -> GIRInstType does
+	return GIRInstType::new("jump"):set_printer(GIRJump::print|GIRInstPrinter)
+endtype
+

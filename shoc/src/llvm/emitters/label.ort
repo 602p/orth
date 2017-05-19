@@ -1,0 +1,4 @@
+
+function(GIRLabel i, LLVMEmitter e) llvm::emit_label -> void does
+	e:emitl(i.label_name+":")
+return

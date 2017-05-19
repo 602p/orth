@@ -6,6 +6,7 @@ import "transformers/emit/name.ort"
 import "transformers/emit/binop.ort"
 import "transformers/emit/cast.ort"
 import "transformers/emit/call.ort"
+import "transformers/emit/if.ort"
 import gir
 
 function(Node n, TransformerPass p) emit_value::noop -> cstr does
@@ -15,6 +16,7 @@ function() emit_value::init -> TransformerPass does
 return TransformerPass::new("emit_value"):no_auto_visit()\
        :add_specialization("FileNode", emit_value::for_file|NodeTransformer)\
        :add_specialization("FunctionDecl", emit_value::for_func|NodeTransformer)\
+       :add_specialization("BlockBody", emit_value::for_blockbody|NodeTransformer)\
        :add_specialization("LiteralExpr", emit_value::for_literal|NodeTransformer)\
        :add_specialization("AssignmentExpr", emit_value::for_assignment|NodeTransformer)\
        :add_specialization("ReturnExpr", emit_value::for_return|NodeTransformer)\
@@ -23,7 +25,8 @@ return TransformerPass::new("emit_value"):no_auto_visit()\
 	   :add_specialization("BinOpExpr", emit_value::for_binop|NodeTransformer)\
 	   :add_specialization("CastExpr", emit_value::for_cast|NodeTransformer)\
 	   :add_specialization("CallExpr", emit_value::for_call|NodeTransformer)\
-	   :add_specialization("TypeDeclHead", emit_value::noop|NodeTransformer)
+	   :add_specialization("TypeDeclHead", emit_value::noop|NodeTransformer)\
+	   :add_specialization("IfExpr", emit_value::for_if|NodeTransformer)
 
 function(TransformerPass p, Node n) TransformerPass:emit_value -> GIRVar does
 	shoc::assert(p.proj:get_transformer_pass("emit_value")\

@@ -1,0 +1,10 @@
+
+function(GIRJump i, LLVMEmitter e) llvm::emit_jump -> void does
+	if i.is_cond do
+		cstr next_inst_branch="lblN_"+e:get_next_ssa():str()
+		e:emitl("br i1 "+e:get_ssa_var(i.cond)+", label %"+i.target_label+", label %"+next_inst_branch)
+		e:emitl(next_inst_branch+":")
+	else do
+		e:emitl("br label %"+i.target_label)
+	done
+return

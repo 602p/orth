@@ -11,8 +11,7 @@ type GIRVar is
 		new.type_=t
 		new.memoname=""
 		new.is_ref=false
-		new.ssa_id=p.ssa_count
-		p.ssa_count+=1
+		new.ssa_id=p:get_next_ssa_id()
 	return new
 
 	function(GIRVar v) GIRVar:ref -> GIRVar does
@@ -29,6 +28,10 @@ type GIRVar is
 		done
 	return v.ssa_id:str()+"("+v.type_.name+": "+v.memoname+")"
 endtype
+
+function(Project p) Project:get_next_ssa_id -> int does
+	p.ssa_count+=1
+return p.ssa_count
 
 type GIRInstPrinter is a function->void #(GIRInst)
 

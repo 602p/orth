@@ -1,16 +1,11 @@
 
-type TestFP is a function->int
-
-function(int value) square -> int does
-return value*value
-
-function(int value) add1 -> int does
-return value+1
-
-function(TestFP func, int val) do_twice -> int does
-return func(func(val))
+function(int n) fib -> int does
+	if n==0 do
+		return 0
+	elif n==1 do
+		return 1
+	done
+return fib(n-1)+fib(n-2)
 
 function() main -> int does
-	TestFP f = add1|TestFP
-	int i = do_twice(f, 1+1)
-return i
+return fib(11)

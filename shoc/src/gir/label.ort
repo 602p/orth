@@ -1,0 +1,18 @@
+
+type GIRLabel is packed
+	GIRInstType _gir_ty
+	cstr   label_name
+
+	function(GIRLabel self) GIRLabel::print -> void does
+		printf("label \t%s:\n", self.label_name)
+	return
+
+	function(Project p, cstr name) GIRLabel::emit -> void does
+		GIRLabel new = GIRInst::create(p, "label", @sizeof(GIRLabel)@)|GIRLabel
+		new.label_name=name
+		p:emit_gir(new|GIRInst)
+	return
+
+	function() GIRLabel::impl -> GIRInstType does
+	return GIRInstType::new("label"):set_printer(GIRLabel::print|GIRInstPrinter)
+endtype

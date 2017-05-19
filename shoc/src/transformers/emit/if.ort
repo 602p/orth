@@ -1,0 +1,21 @@
+
+function(IfExpr n, TransformerPass p) emit_value::for_if -> ptr does
+	cstr true_branch = "lblT_"+p.proj:get_next_ssa_id():str()
+	cstr false_branch = "lblF_"+p.proj:get_next_ssa_id():str()
+	cstr done_branch = "lblD_"+p.proj:get_next_ssa_id():str()
+	GIRJump::emit_cond(p.proj, p:emit_value(n.condition), true_branch)
+	if n.body.has_runoff_clause do
+		GIRJump::emit_ncond(p.proj, false_branch)
+	else do
+		GIRJump::emit_ncond(p.proj, done_branch)
+	done
+	GIRLabel::emit(p.proj, true_branch)
+	p:emit_value(n.body|Node)
+	GIRJump::emit_ncond(p.proj, done_branch)
+	if n.body.has_runoff_clause do
+		GIRLabel::emit(p.proj, false_branch)
+		p:emit_value(n.body.runoff_clause)
+		GIRJump::emit_ncond(p.proj, done_branch)
+	done
+	GIRLabel::emit(p.proj, done_branch)
+return null

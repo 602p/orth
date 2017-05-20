@@ -1,19 +1,13 @@
 
-extern(...) malloc -> ptr
-
-type Node is
-	int a
-	Node next
-endtype
-
-function() make_node -> Node does
-return malloc(@sizeof(Node)@)|Node
+extern(...) printf -> int
 
 function() main -> int does
-	Node head = make_node()
-	head.next=make_node()
-	head.next.next=make_node()
-	head.a=1
-	head.next.a=2
-	head.next.next.a=3
-return head.next.next.a
+	cstr text = "Hello, World!"
+	int i=0
+	bool run = true
+	while run do
+		printf("text[%02i] = '%c'\n", i, text[i])
+		run=text[i]!=0|byte
+		i+=1
+	done
+return 0

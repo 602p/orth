@@ -1,0 +1,22 @@
+
+type GIRGetIndex is packed
+	GIRInstType _gir_ty
+	GIRVar source
+	GIRVar out_var
+	GIRVar offset
+
+	function(GIRGetIndex self) GIRGetIndex::print -> void does
+		printf("get_index\tbyte \t%s[%s] => %s\n", self.source:str(), self.offset:str(), self.out_var:str())
+	return
+
+	function(Project p, GIRVar source, GIRVar offset) GIRGetIndex::emit -> GIRVar does
+		GIRGetIndex new = GIRInst::create(p, "get_index", @sizeof(GIRGetIndex)@)|GIRGetIndex
+		new.source=source
+		new.offset=offset
+		new.out_var=GIRVar::new(p, p:get_type("byte")):set_memo("get_index "+new.offset:str()+" from "+source.ssa_id:str()):ref()
+		p:emit_gir(new|GIRInst)
+	return new.out_var
+
+	function() GIRGetIndex::impl -> GIRInstType does
+	return GIRInstType::new("get_index"):set_printer(GIRGetIndex::print|GIRInstPrinter)
+endtype

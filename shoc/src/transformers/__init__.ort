@@ -16,7 +16,7 @@ import "transformers/def/catch_duplicates.ort"
 
 import "transformers/pregir/define_locals.ort"
 
-import "transformers/emit/emit_gir.ort"
+import "transformers/emit/__init__.ort"
 
 function(Project p) shoc::transformers::init -> void does
 	p:add_Transformer(apply_includes::init())

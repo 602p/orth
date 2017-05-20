@@ -1,0 +1,6 @@
+
+function(IndexExpr n, TransformerPass p) emit_addr::for_index -> GIRVar does
+return GIRGetIndex::emit(p.proj, p:emit_value(n.array), p:emit_value(n.value))
+
+function(IndexExpr n, TransformerPass p) emit_value::for_index -> GIRVar does
+return GIRLoad::emit(p.proj, p:emit_addr(n|Node))

@@ -10,6 +10,7 @@ import "transformers/emit/if.ort"
 import "transformers/emit/while.ort"
 import "transformers/emit/accessor.ort"
 import "transformers/emit/instrinsic.ort"
+import "transformers/emit/index.ort"
 import gir
 
 function(Node n, TransformerPass p) emit_value::noop -> cstr does
@@ -33,13 +34,15 @@ return TransformerPass::new("emit_value"):no_auto_visit()\
 	   :add_specialization("IfExpr",         emit_value::for_if         |NodeTransformer)\
 	   :add_specialization("WhileExpr",      emit_value::for_while      |NodeTransformer)\
 	   :add_specialization("AccessorExpr",   emit_value::for_accessor   |NodeTransformer)\
-	   :add_specialization("IntrinsicExpr",  emit_value::for_intrinsic |NodeTransformer)
+	   :add_specialization("IntrinsicExpr",  emit_value::for_intrinsic  |NodeTransformer)\
+	   :add_specialization("IndexExpr",      emit_value::for_index      |NodeTransformer)
 	   
 function() emit_addr::init -> TransformerPass does
 return TransformerPass::new("emit_addr"):no_auto_visit():no_default_run()\
 		:add_specialization("NameExpr",      emit_addr::for_name        |NodeTransformer)\
 		:add_specialization("DeclExpr",      emit_addr::for_decl        |NodeTransformer)\
-		:add_specialization("AccessorExpr",  emit_addr::for_accessor    |NodeTransformer)
+		:add_specialization("AccessorExpr",  emit_addr::for_accessor    |NodeTransformer)\
+		:add_specialization("IndexExpr",     emit_addr::for_index       |NodeTransformer)
 
 function(TransformerPass p, Node n) TransformerPass:emit_value -> GIRVar does
 	shoc::assert(p.proj:get_transformer_pass("emit_value")\

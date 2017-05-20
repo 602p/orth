@@ -13,6 +13,7 @@ import "llvm/emitters/call.ort"
 import "llvm/emitters/label.ort"
 import "llvm/emitters/jump.ort"
 import "llvm/emitters/get_member.ort"
+import "llvm/emitters/get_index.ort"
 
 function(GIRVar var) llvm::make_local_handle -> cstr does
 return "%t_"+var.ssa_id:str()
@@ -31,7 +32,8 @@ function(Project p, cstr filename) Project:emit_as_llvm -> Project does
 	                                  :register_emitter("call",       llvm::emit_call        |LLVMGIREmitter)\
 	                                  :register_emitter("label",      llvm::emit_label       |LLVMGIREmitter)\
 	                                  :register_emitter("jump",       llvm::emit_jump        |LLVMGIREmitter)\
-	                                  :register_emitter("get_member", llvm::emit_get_member  |LLVMGIREmitter)
+	                                  :register_emitter("get_member", llvm::emit_get_member  |LLVMGIREmitter)\
+	                                  :register_emitter("get_index",  llvm::emit_get_index   |LLVMGIREmitter)
 
 	printf("\nLLVM Emitter Running..\n")
 	int j=0

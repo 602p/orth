@@ -429,3 +429,28 @@ function(Project proj) Project:show_types -> void does
 	done
 	printf("\n")
 return
+
+function(cstr literal) shoc::parse_string_literal -> cstr does
+	cstr parsed = malloc(literal:len()+1)
+	int i=0
+	int o=0
+	while i<literal:len() do
+		if literal[i]|int==92 do
+			i+=1
+			if literal[i]==bord("n") do
+				parsed[o]=bord("\n")
+			elif literal[i]==bord("t") do
+				parsed[o]=bord("\t")
+			elif literal[i]==bord("\\") do
+				parsed[o]=bord("\\")
+			else do
+				shoc::bail_out("Unknown escape: "+(parsed[o]|int):str())
+			done
+		else do
+			parsed[o]=literal[i]
+		done
+		i+=1
+		o+=1
+	done
+	parsed[o]=bord("\0")
+return parsed

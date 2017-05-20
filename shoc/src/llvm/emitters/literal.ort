@@ -1,5 +1,35 @@
 
+function(cstr literal) llvm::encode_literal -> cstr does
+	cstr encoded = malloc((literal:len()*3)+1)
+	int i=0
+	while i<literal:len() do
+		encoded[i*3]=bord("\\")
+		encoded[(i*3)+1]=("0123456789ABCDEF")[(literal[i]|int)>>4]
+		encoded[(i*3)+2]=("0123456789ABCDEF")[(literal[i]|int)&15]
+		i+=1
+	done
+	encoded[encoded:len()]=bord("\0")
+return encoded
+
 function(GIRLiteral i, LLVMEmitter e) llvm::emit_literal -> void does
 	e:set_ssa_var(i.out_var, llvm::make_local_handle(i.out_var))
-	e:emitl(e:get_ssa_var(i.out_var)+" = add "+e:get_vty(i.out_var)+" 0, "+(i.integer_value|int):str())
+	if (i.type_.variety==S_INT):or(i.type_.variety==U_INT) do
+		e:emitl(e:get_ssa_var(i.out_var)+" = add "+e:get_vty(i.out_var)+" 0, "+(i.integer_value|int):str())
+	elif i.type_.name=="cstr" do
+		cstr global_name="strL_"+e:get_next_ssa():str()
+		cstr str_type="["+(i.string_value:len()+1):str()+" x i8]"
+
+		cstr quote=malloc(2)
+		quote[0]=34|byte
+		quote[1]=0|byte
+
+		e:cache_global_stmt("@"+global_name+" = private unnamed_addr constant "+str_type+" c"+quote\
+			+llvm::encode_literal(i.string_value)+"\\00"+quote)
+
+		cstr temp_name="strA_"+e:get_next_ssa():str()
+		e:emitl("%"+temp_name+" = getelementptr "+str_type+"* @"+global_name)
+		e:emitl(e:get_ssa_var(i.out_var)+" = bitcast "+str_type+"* %"+temp_name+" to i8*")
+	else do
+		shoc::bail_out("Unknown literal type "+i.type_.name)
+	done
 return

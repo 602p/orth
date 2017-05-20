@@ -48,6 +48,8 @@ function(Project p, cstr filename) Project:emit_as_llvm -> Project does
 		j+=1
 	done
 
+	context:emit_cached_globals()
+
 	if p.options:contains("dump_llvm_mappings") do
 		printf("\n===LLVM EMITTER INFO===\n")
 		int a=0

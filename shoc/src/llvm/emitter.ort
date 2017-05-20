@@ -9,6 +9,7 @@ type LLVMEmitter is
 	File   fd
 	cstr   current_method
 	int    ssa_count
+	List   cached_globals
 
 	function(File fd) LLVMEmitter::new -> LLVMEmitter does
 		LLVMEmitter new = malloc(@sizeof(LLVMEmitter)@)|LLVMEmitter
@@ -16,6 +17,7 @@ type LLVMEmitter is
 		new.locals_maps=StrMap::new()
 		new.ssa_map=StrMap::new()
 		new.types_map=StrMap::new()
+		new.cached_globals=List::new()
 		new.ssa_count=0
 
 		new.types_map:set("int", "i32")
@@ -42,6 +44,18 @@ type LLVMEmitter is
 		new.fd=fd
 		new.current_method="???"
 	return new
+
+	function(LLVMEmitter self, cstr text) LLVMEmitter:cache_global_stmt -> void does
+		self.cached_globals:append(text)
+	return
+
+	function(LLVMEmitter self) LLVMEmitter:emit_cached_globals -> void does
+		int i=0
+		while i<self.cached_globals.len do
+			self:emitl(self.cached_globals:get(i))
+			i+=1
+		done
+	return
 
 	function(LLVMEmitter self) LLVMEmitter:get_next_ssa -> int does
 		self.ssa_count+=1

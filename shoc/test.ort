@@ -1,7 +1,6 @@
 
-extern(int i) putchar -> int
+extern(...) printf -> int
 
 function() main -> int does
-	putchar(65)
-	putchar(10)
+	printf("Hello, world!\n")
 return 0

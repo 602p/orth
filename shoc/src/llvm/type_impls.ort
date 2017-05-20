@@ -31,6 +31,12 @@ function(GIRVar value, OType target, cstr dest, LLVMEmitter e) llvm::impl_cast -
 	done
 return
 
+function(LLVMEmitter ctx, OType t) llvm::define_type -> void does
+	if t:is_struct() do
+		ctx.types_map:set(t.name, "%ty_"+t.name+"_struct*")
+	done
+return
+
 function(LLVMEmitter ctx, OType t) llvm::register_type -> void does
 	if t:is_fptr() do
 		cstr rep = ctx:get_ty(t:as_fptr().return_value)+" ("
@@ -58,8 +64,10 @@ function(LLVMEmitter ctx, OType t) llvm::register_type -> void does
 			done
 			j+=1
 		done
-		rep+="}>*"
-		ctx.types_map:set(t.name, rep)
+		rep+="}>"
+		ctx:emitl("%ty_"+t.name+"_struct = type"+rep)
+	elif t:is_primitive() do
+		0
 	else do
 		shoc::bail_out("Unimplemented register_type - "+t.name)
 	done

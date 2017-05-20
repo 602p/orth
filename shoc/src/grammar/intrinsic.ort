@@ -1,14 +1,14 @@
 type IntrinsicExpr is packed
 	NodeType type_
-	cstr name
+	cstr text
 
 	function(IntrinsicExpr node, int depth) IntrinsicExpr::print -> void does
-		printf("IntrinsicExpr: '%s'\n", node.name)
+		printf("IntrinsicExpr: '%s'\n", node.text)
 	return
 
 	function(EleList eles) IntrinsicExpr::create -> IntrinsicExpr does
 		IntrinsicExpr new = malloc(@sizeof(IntrinsicExpr)@)|IntrinsicExpr
-		new.name=eles:get(0):t().text
+		new.text=eles:get(0):t().text
 	return new
 
 	function(EleList eles) IntrinsicExpr::match -> int does

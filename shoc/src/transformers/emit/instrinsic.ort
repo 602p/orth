@@ -1,0 +1,9 @@
+
+function(IntrinsicExpr n, TransformerPass p) emit_value::for_intrinsic -> GIRVar does
+	if n.text:startswith("@sizeof(") do
+		cstr off = n.text:offset("@sizeof(":len())
+		cstr sub = off:substr(0, off:len()-2)
+		return GIRLiteral::emit_int(p.proj, (p.proj:get_type(sub):get_size()/8)|long)
+	done
+	shoc::bail_out("Unimplemented intrinsic: "+n.text)
+return null|GIRVar

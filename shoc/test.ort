@@ -1,13 +1,19 @@
 
 extern(...) malloc -> ptr
 
-type Foo is
+type Node is
 	int a
-	int b
-	int c
+	Node next
 endtype
 
+function() make_node -> Node does
+return malloc(@sizeof(Node)@)|Node
+
 function() main -> int does
-	Foo a=malloc(20)|Foo
-	a.b=1
-return a.b
+	Node head = make_node()
+	head.next=make_node()
+	head.next.next=make_node()
+	head.a=1
+	head.next.a=2
+	head.next.next.a=3
+return head.next.next.a

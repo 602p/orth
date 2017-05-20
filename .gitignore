@@ -105,3 +105,5 @@ out.s
 shoc.o
 shoc/shoc
 profile.csv
+a.out
+llvm_out*

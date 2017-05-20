@@ -9,6 +9,7 @@ import "transformers/emit/call.ort"
 import "transformers/emit/if.ort"
 import "transformers/emit/while.ort"
 import "transformers/emit/accessor.ort"
+import "transformers/emit/instrinsic.ort"
 import gir
 
 function(Node n, TransformerPass p) emit_value::noop -> cstr does
@@ -31,7 +32,8 @@ return TransformerPass::new("emit_value"):no_auto_visit()\
 	   :add_specialization("TypeDecl",       emit_value::noop           |NodeTransformer) <#TODO: SHIM#> \
 	   :add_specialization("IfExpr",         emit_value::for_if         |NodeTransformer)\
 	   :add_specialization("WhileExpr",      emit_value::for_while      |NodeTransformer)\
-	   :add_specialization("AccessorExpr",   emit_value::for_accessor   |NodeTransformer)
+	   :add_specialization("AccessorExpr",   emit_value::for_accessor   |NodeTransformer)\
+	   :add_specialization("IntrinsicExpr",  emit_value::for_intrinsic |NodeTransformer)
 	   
 function() emit_addr::init -> TransformerPass does
 return TransformerPass::new("emit_addr"):no_auto_visit():no_default_run()\

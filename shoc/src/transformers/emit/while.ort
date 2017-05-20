@@ -1,0 +1,17 @@
+
+function(WhileExpr n, TransformerPass p) emit_value::for_while -> ptr does
+	cstr test_branch = "lblLT_"+p.proj:get_next_ssa_id():str()
+	cstr loop_branch = "lblLL_"+p.proj:get_next_ssa_id():str()
+	cstr done_branch = "lblLD_"+p.proj:get_next_ssa_id():str()
+
+	GIRJump::emit_ncond(p.proj, test_branch)
+
+	GIRLabel::emit(p.proj, test_branch)
+	GIRJump::emit_cond(p.proj, p:emit_value(n.condition), loop_branch)
+	GIRJump::emit_ncond(p.proj, done_branch)
+
+	GIRLabel::emit(p.proj, loop_branch)
+	p:emit_value(n.body|Node)
+	GIRJump::emit_ncond(p.proj, test_branch)
+	GIRLabel::emit(p.proj, done_branch)
+return null

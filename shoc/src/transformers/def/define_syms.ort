@@ -1,7 +1,7 @@
 
 function(FunctionDecl n, TransformerPass p) define_syms::visit_func -> FunctionDecl does
 	shoc::assert(-p.proj.methods:contains(n.head.name), "Duplicate definition of method "+n.head.name)
-	p.proj:add_Method(Method::new(p.proj, n.head.name, n.head.args, n.head.ret_type))
+	p.proj:add_Method(Method::new(p.proj, n.head.name, n.head.args, n.head.varargs, n.head.ret_type, n.head.is_extern))
 return n
 
 function(FileNode n, TransformerPass p) define_syms::visit_file -> FileNode does

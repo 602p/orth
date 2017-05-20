@@ -24,6 +24,33 @@ type ZeroArgList is packed
 					:matches(2):matches_only_tokens():addtype("ArgList")
 endtype
 
+type VarArgsList is packed
+	NodeType type_
+
+	function(VarArgsList node, int depth) VarArgsList::print -> void does
+		printf("VarArgsList\n")
+	return
+
+	function(EleList eles) VarArgsList::create -> VarArgsList does
+		VarArgsList new = malloc(@sizeof(VarArgsList)@)|VarArgsList
+	return new
+
+	function(EleList eles) VarArgsList::match -> int does
+		if (-eles:get(0):t():is_a("T_ARGLIST_START")):or(\
+		    -eles:get(2):t():is_a("T_ARGLIST_END")):or(\
+		    -eles:get(1):t():is_a("T_ARGLIST_VARARGS")) do
+			return 0
+		done
+	return 3
+
+	function() VarArgsList::impl -> NodeType does
+	return NodeType::new("VarArgsList")\
+					:set_printer(VarArgsList::print |NodePrinter)\
+					:set_creator(VarArgsList::create|NodeCreator)\
+					:set_matcher(VarArgsList::match |NodeMatcher)\
+					:matches(3):matches_only_tokens():addtype("ArgList")
+endtype
+
 type OneArgList is packed
 	NodeType type_
 	cstr text

@@ -1,39 +1,54 @@
 
 function(Method m, LLVMEmitter e) llvm::emit_method -> void does
 	e:enter_method(m.name)
-	e:emit("define i32 @"+m.name+"(")
+	if m.is_extern do
+		e:emit("declare")
+	else do
+		e:emit("define")
+	done
+	e:emit(" "+e:get_ty(m.return_value)+" @"+m.name+"(")
 
-	int i=0
-	while i<m.args.len do
-		e:emit(e:get_ty(m.args:get_TypedVar(i).type_)+" %arg_"+m.args:get_TypedVar(i).name)
-		if i!=m.args.len-1 do
-			e:emit(", ")
+	int i
+	if m.varargs do
+		e:emit("...")
+	else do
+		i=0
+		while i<m.args.len do
+			e:emit(e:get_ty(m.args:get_TypedVar(i).type_)+" %arg_"+m.args:get_TypedVar(i).name)
+			if i!=m.args.len-1 do
+				e:emit(", ")
+			done
+			i+=1
 		done
-		i+=1
 	done
-	e:emitl("){")
+	e:emitl(")")
 
-	i=0
-	cstr local_name
-	while i<m.locals:num_keys() do
-		local_name=m.locals:get_key_by_num(i)
-		e:set_local_addr_var(local_name, "%v_"+local_name)
-		e:emitl(e:get_local_addr_var(local_name)+" = alloca "+e:get_ty(m.locals:get_by_num(i)|OType))
-		i+=1
-	done
+	if -m.is_extern do
+		e:emitl("{")
 
-	int i=0
-	while i<m.args.len do
-		e:set_local_addr_var(m.args:get_TypedVar(i).name, "%v_"+m.args:get_TypedVar(i).name)
-		e:emitl("store "+e:get_ty(m.args:get_TypedVar(i).type_)+" %arg_"+m.args:get_TypedVar(i).name+\
-			", "+e:get_ty(m.args:get_TypedVar(i).type_)+"* %v_"+m.args:get_TypedVar(i).name)
-		i+=1
-	done
+		i=0
+		cstr local_name
+		while i<m.locals:num_keys() do
+			local_name=m.locals:get_key_by_num(i)
+			e:set_local_addr_var(local_name, "%v_"+local_name)
+			e:emitl(e:get_local_addr_var(local_name)+" = alloca "+e:get_ty(m.locals:get_by_num(i)|OType))
+			i+=1
+		done
 
-	i=0
-	while i<m.gir_code.len do
-		e:emit_inst(m.gir_code:get_GIRInst(i))
-		i+=1
+		int i=0
+		while i<m.args.len do
+			e:set_local_addr_var(m.args:get_TypedVar(i).name, "%v_"+m.args:get_TypedVar(i).name)
+			e:emitl("store "+e:get_ty(m.args:get_TypedVar(i).type_)+" %arg_"+m.args:get_TypedVar(i).name+\
+				", "+e:get_ty(m.args:get_TypedVar(i).type_)+"* %v_"+m.args:get_TypedVar(i).name)
+			i+=1
+		done
+
+		i=0
+		while i<m.gir_code.len do
+			e:emit_inst(m.gir_code:get_GIRInst(i))
+			i+=1
+		done
+		e:emitl("}")
+
 	done
-	e:emitl("}")
 return

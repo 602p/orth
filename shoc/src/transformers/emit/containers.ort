@@ -16,11 +16,13 @@ function(BlockBody n, TransformerPass p) emit_value::for_blockbody -> BlockBody 
 return n
 
 function(FunctionDecl n, TransformerPass p) emit_value::for_func -> FunctionDecl does
-	int i=0
-	p.proj:enter_method_named(n.head.name)
-	while i<n.body.len do
-		p:emit_value(n.body:get_Node(i))
-		i+=1
+	if -n.head.is_extern do
+		int i=0
+		p.proj:enter_method_named(n.head.name)
+		while i<n.body.len do
+			p:emit_value(n.body:get_Node(i))
+			i+=1
+		done
+		p.proj:exit_method()
 	done
-	p.proj:exit_method()
 return n

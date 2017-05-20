@@ -45,6 +45,7 @@ function(List l) grammar::install -> void does
 	l:append_NodeType(ZeroTuple::impl())
 
 	l:append_NodeType(ZeroArgList::impl())
+	l:append_NodeType(VarArgsList::impl())
 	l:append_NodeType(OneArgList::impl())
 	l:append_NodeType(MultiArgListStart::impl())
 	l:append_NodeType(MultiArgListExt::impl())

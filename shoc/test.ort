@@ -1,11 +1,7 @@
 
-function(int n) fib -> int does
-	if n==0 do
-		return 0
-	elif n==1 do
-		return 1
-	done
-return fib(n-1)+fib(n-2)
+extern(int i) putchar -> int
 
 function() main -> int does
-return fib(11)
+	putchar(65)
+	putchar(10)
+return 0

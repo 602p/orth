@@ -266,16 +266,20 @@ type Method is
 	cstr name
 	Project proj
 	List args
+	bool varargs
 	OType return_value
 	OType ptr_type
 	StrMap locals
 	List gir_code
+	bool is_extern
 
-	function(Project proj, cstr name, List args, cstr return_value) Method::new -> Method does
+	function(Project proj, cstr name, List args, bool varargs, cstr return_value, bool is_extern) Method::new -> Method does
 		Method new = malloc(@sizeof(Method)@)|Method
 		new.proj=proj
 		new.locals=StrMap::new()
 		new.name=name
+		new.is_extern=is_extern
+		new.varargs=varargs
 
 		new.args=List::new()
 		new.gir_code=List::new()
@@ -294,7 +298,11 @@ type Method is
 
 		new.return_value=proj:get_type(return_value)
 
-		new.ptr_type=FPtrOType::new("$fp_"+name, new.return_value, fptr_type_args)
+		if new.varargs do
+			new.ptr_type=FPtrOType::new_varargs("$fp_"+name, new.return_value)
+		else do
+			new.ptr_type=FPtrOType::new("$fp_"+name, new.return_value, fptr_type_args)
+		done
 		proj:add_Type(new.ptr_type)
 	return new
 

@@ -1,11 +1,20 @@
 type FunctionDeclHead is packed
 	NodeType type_
 	List args
+	bool varargs
+	bool is_extern
 	cstr name
 	cstr ret_type
 
 	function(FunctionDeclHead node, int depth) FunctionDeclHead::print -> void does
-		printf("FunctionDeclHead: Name='%s' Type='%s' Nargs=%i\n", node.name, node.ret_type, node.args.len)
+		printf("FunctionDeclHead: Name='%s' Type='%s' Nargs=%i", node.name, node.ret_type, node.args.len)
+		if node.varargs do
+			printf("...varargs")
+		done
+		if node.is_extern do
+			printf(" (external linkage)")
+		done
+		printf("\n")
 		int i=0
 		while i<node.args.len do
 			parse::indent(depth+1)
@@ -22,6 +31,7 @@ type FunctionDeclHead is packed
 		FunctionDeclHead new = malloc(@sizeof(FunctionDeclHead)@)|FunctionDeclHead
 		new.name=eles:get(2):t().text
 		new.ret_type=eles:get(4):t().text
+		new.is_extern=eles:get(0):t():is_a("T_FUNCTIONDECL_EXTERN")
 
 		Node args = eles:get(1):n()
 		if args:is_a("ZeroArgList") do
@@ -29,6 +39,9 @@ type FunctionDeclHead is packed
 		elif args:is_a("OneArgList") do
 			new.args=List::new()
 			new.args:append((eles:get(1):n()|OneArgList).text)
+		elif args:is_a("VarArgsList") do
+			new.args=List::new()
+			new.varargs=true
 		else do #it's a MultiArgList
 			new.args=(eles:get(1):n()|MultiArgList).args
 		done
@@ -41,8 +54,20 @@ type FunctionDeclHead is packed
 			 eles:get(1).is_token):or(\
 			-eles:get(2).is_token):or(\
 			-eles:get(3).is_token):or(\
-			-eles:get(4).is_token):or(\
-			-eles:get(5).is_token) do
+			-eles:get(4).is_token) do
+			return 0
+		done
+
+		if eles:get(0):t():is_a("T_FUNCTIONDECL_EXTERN") do
+			if eles:get(1):n():is_a("ArgList")&(\
+		     eles:get(2):t():is_a("T_FUNCTIONDECL_NAME"))&(\
+		     eles:get(3):t():is_a("T_FUNCTIONDECL_RETURN"))&(\
+		     eles:get(4):t():is_a("T_FUNCTIONDECL_RETURN_TY")) do
+		    	return 5
+		    done
+		done
+
+		if -eles:get(5).is_token do
 			return 0
 		done
 
@@ -61,7 +86,7 @@ type FunctionDeclHead is packed
 					:set_printer(FunctionDeclHead::print |NodePrinter)\
 					:set_creator(FunctionDeclHead::create|NodeCreator)\
 					:set_matcher(FunctionDeclHead::match |NodeMatcher)\
-					:matches(6)
+					:matches(5)
 endtype
 
 type FunctionBody is packed
@@ -163,27 +188,36 @@ type FunctionDecl is packed
 		parse::indent(depth+1)
 		printf("|- Head: ")
 		(node.head|Node):print(depth+1)
-		int i=0
-		while i<node.body.len do
-			parse::indent(depth+1)
-			if i==node.body.len-1 do
-				printf("\\%i- ", i)
-				node.body:get_Node(i):print(depth)
-			else do
-				printf("|%i- ", i)
-				node.body:get_Node(i):print(depth+2)
+		if -node.head.is_extern do
+			int i=0
+			while i<node.body.len do
+				parse::indent(depth+1)
+				if i==node.body.len-1 do
+					printf("\\%i- ", i)
+					node.body:get_Node(i):print(depth)
+				else do
+					printf("|%i- ", i)
+					node.body:get_Node(i):print(depth+2)
+				done
+				i+=1
 			done
-			i+=1
 		done
 	return
 
 	function(EleList eles) FunctionDecl::create -> FunctionDecl does
 		FunctionDecl new = malloc(@sizeof(FunctionDecl)@)|FunctionDecl
 		new.head=eles:get(0):n()|FunctionDeclHead
-		new.body=(eles:get(1):n()|FunctionBody).statements
+		if -new.head.is_extern do
+			new.body=(eles:get(1):n()|FunctionBody).statements
+		done
 	return new
 
 	function(EleList eles) FunctionDecl::match -> int does
+		if eles:get(0):n():is_a("FunctionDeclHead") do
+			if (eles:get(0):n()|FunctionDeclHead).is_extern do
+				return 1
+			done
+		done
 		if (-eles:get(0):n():is_a("FunctionDeclHead")):or(\
 		    -eles:get(1):n():is_a("FunctionBody")) do
 			return 0
@@ -192,16 +226,18 @@ type FunctionDecl is packed
 
 	function(FunctionDecl n, TransformerPass p) FunctionDecl::visit -> void does
 		p.proj:enter_method_named(n.head.name)
-		int i=0
-		Node res
-		while i<n.body.len do
-			res=p:visit(n.body:get_Node(i))
-			if res|ptr==null do
-				n.body:del(i)
-			else do
-				n.body:set(i, res|ptr)
+		if -n.head.is_extern do
+			int i=0
+			Node res
+			while i<n.body.len do
+				res=p:visit(n.body:get_Node(i))
+				if res|ptr==null do
+					n.body:del(i)
+				else do
+					n.body:set(i, res|ptr)
+				done
+				i+=1
 			done
-			i+=1
 		done
 		p.proj:exit_method()
 	return

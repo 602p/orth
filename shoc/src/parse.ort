@@ -341,7 +341,7 @@ function(Project p, List tokens, cstr text) Project:parse -> Node does
 	int      current_type_idx
 	NodeType current_type
 	int      match_count
-	bool     DEBUG=false
+	bool     DEBUG=p.options:contains("parse_debug")
 
 	while eles.position>=0 do
 		progress=true

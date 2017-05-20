@@ -48,6 +48,18 @@ function(LLVMEmitter ctx, OType t) llvm::register_type -> void does
 		done
 		rep+=")*"
 		ctx.types_map:set(t.name, rep)
+	elif t:is_struct() do
+		cstr rep = "<{"
+		int j=0
+		while j<t:as_struct().fields.len do
+			rep+=ctx:get_ty(t:as_struct().fields:get_TypedVar(j).type_)
+			if j!=t:as_struct().fields.len-1 do
+				rep+=", "
+			done
+			j+=1
+		done
+		rep+="}>*"
+		ctx.types_map:set(t.name, rep)
 	else do
 		shoc::bail_out("Unimplemented register_type - "+t.name)
 	done

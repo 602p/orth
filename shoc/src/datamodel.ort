@@ -199,6 +199,45 @@ type StructOType is packed
 		self.fields:append_TypedVar(TypedVar::from_decl(decl_string, self.proj))
 	return
 
+	function(StructOType self, cstr field_name) StructOType:get_field_offset -> int does
+		int i=0
+		int sum=0
+		while i<self.fields.len do
+			if self.fields:get_TypedVar(i).name==field_name do
+				return sum
+			else do
+				if self.fields:get_TypedVar(i).type_:is_struct() do
+					sum+=self.proj.pointer_size
+				else do
+					sum+=self.fields:get_TypedVar(i).type_:get_size()
+				done
+			done
+			i+=1
+		done
+	return -1
+
+	function(StructOType self, cstr field_name) StructOType:get_field_index -> int does
+		int i=0
+		while i<self.fields.len do
+			if self.fields:get_TypedVar(i).name==field_name do
+				return i
+			done
+			i+=1
+		done
+		shoc::bail_out("No filed "+field_name+" in type "+self.name)
+	return -1
+
+	function(StructOType self, cstr field_name) StructOType:get_field_type -> OType does
+		int i=0
+		while i<self.fields.len do
+			if self.fields:get_TypedVar(i).name==field_name do
+				return self.fields:get_TypedVar(i).type_
+			done
+			i+=1
+		done
+		shoc::bail_out("No field "+field_name+" in type "+self.name)
+	return null|OType
+
 	function(StructOType self) StructOType:get_size -> int does
 		int i=0
 		int sum=0

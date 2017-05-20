@@ -1,0 +1,6 @@
+
+function(AccessorExpr n, TransformerPass p) emit_addr::for_accessor -> GIRVar does
+return GIRGetMember::emit(p.proj, p:emit_value(n.object), n.field)
+
+function(AccessorExpr n, TransformerPass p) emit_value::for_accessor -> GIRVar does
+return GIRLoad::emit(p.proj, p:emit_addr(n|Node))

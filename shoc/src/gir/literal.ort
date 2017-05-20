@@ -43,6 +43,14 @@ type GIRLiteral is packed
 		p:emit_gir(new|GIRInst)
 	return new.out_var
 
+	function(Project p, long value) GIRLiteral::emit_long -> GIRVar does
+		GIRLiteral new = GIRInst::create(p, "literal", @sizeof(GIRLiteral)@)|GIRLiteral
+		new.type_=p:get_type("long")
+		new.integer_value=value
+		new.out_var=GIRVar::new(p, new.type_):set_memo("Integer literal")
+		p:emit_gir(new|GIRInst)
+	return new.out_var
+
 	function(Project p, bool value) GIRLiteral::emit_bool -> GIRVar does
 		GIRLiteral new = GIRInst::create(p, "literal", @sizeof(GIRLiteral)@)|GIRLiteral
 		new.type_=p:get_type("bool")

@@ -1,0 +1,6 @@
+
+function(GIRGetMember i, LLVMEmitter e) llvm::emit_get_member -> void does
+	e:set_ssa_var(i.out_var, llvm::make_local_handle(i.out_var))
+	e:emitl(e:get_ssa_var(i.out_var)+" = getelementptr "+e:get_vty(i.source)+\
+		" "+e:get_ssa_var(i.source)+", i32 0, i32 "+i.source.type_:as_struct():get_field_index(i.field):str())
+return

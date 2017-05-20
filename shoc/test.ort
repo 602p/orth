@@ -1,12 +1,13 @@
 
-extern(...) printf -> int
+extern(...) malloc -> ptr
 
-function(int argc, ptr _) main -> int does
-	int bottles=20
-	while bottles>1 do
-		printf("%i bottles of beer on the wall []...\n", bottles)
-		bottles-=1
-	done
-	printf("1 bottle of beer on the wall []...\n")
-	printf("All gone!\n")
-return 0
+type Foo is
+	int a
+	int b
+	int c
+endtype
+
+function() main -> int does
+	Foo a=malloc(20)|Foo
+	a.b=1
+return a.b

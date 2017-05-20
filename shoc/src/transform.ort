@@ -56,6 +56,9 @@ type TransformerPass is
 
 	function(TransformerPass self, Node n) TransformerPass:visit_GIRVar -> GIRVar does
 	return self:visit(n)|GIRVar
+
+	function(TransformerPass self, Node n) TransformerPass:visit_OType -> OType does
+	return self:visit(n)|OType
 endtype
 
 function(Project p, Node n) Project:run_transformers -> Node does

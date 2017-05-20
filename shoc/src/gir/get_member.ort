@@ -1,0 +1,22 @@
+
+type GIRGetMember is packed
+	GIRInstType _gir_ty
+	GIRVar source
+	GIRVar out_var
+	cstr   field
+
+	function(GIRGetMember self) GIRGetMember::print -> void does
+		printf("get_member\t%s \t%s.%s => %s\n", self.out_var.type_.name, self.source:str(), self.field, self.out_var:str())
+	return
+
+	function(Project p, GIRVar source, cstr member) GIRGetMember::emit -> GIRVar does
+		GIRGetMember new = GIRInst::create(p, "get_member", @sizeof(GIRGetMember)@)|GIRGetMember
+		new.source=source
+		new.field=member
+		new.out_var=GIRVar::new(p, source.type_:as_struct():get_field_type(member)):set_memo("get_member "+new.field+" from "+source.ssa_id:str()):ref()
+		p:emit_gir(new|GIRInst)
+	return new.out_var
+
+	function() GIRGetMember::impl -> GIRInstType does
+	return GIRInstType::new("get_member"):set_printer(GIRGetMember::print|GIRInstPrinter)
+endtype

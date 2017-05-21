@@ -3,3 +3,9 @@ function(GIRCast i, LLVMEmitter e) llvm::emit_cast -> void does
 	e:set_ssa_var(i.out_var, llvm::make_local_handle(i.out_var))
 	llvm::impl_cast(i.source, i.target_type, e:get_ssa_var(i.out_var), e)
 return
+
+function(GIRPointerCast i, LLVMEmitter e) llvm::emit_ptr_cast -> void does
+	# printf("%s\n", i.out_var:str())
+	e:set_ssa_var(i.out_var, llvm::make_local_handle(i.out_var))
+	e:emitl(e:get_ssa_var(i.out_var)+" = inttoptr "+e:get_vty(i.source)+" "+e:get_ssa_var(i.source)+" to "+e:get_vty(i.out_var))
+return

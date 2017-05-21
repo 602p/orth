@@ -1,0 +1,49 @@
+
+function() get_type::init -> TransformerPass does
+return TransformerPass::new("get_type"):no_auto_visit():no_default_run()\
+					   :add_specialization("NameExpr", get_type::for_name|NodeTransformer)\
+					   :add_specialization("BinOpExpr", get_type::for_binop|NodeTransformer)\
+					   :add_specialization("CallExpr", get_type::for_call|NodeTransformer)\
+					   :add_specialization("AccessorExpr", get_type::for_accessor|NodeTransformer)\
+					   :add_specialization("CastExpr", get_type::for_cast|NodeTransformer)\
+					   :add_specialization("IntrinsicExpr", get_type::for_intrinsic|NodeTransformer)\
+					   :add_specialization("IndexExpr", get_type::for_index|NodeTransformer)\
+					   :add_specialization("LiteralExpr", get_type::for_literal|NodeTransformer)
+
+function(NameExpr n, TransformerPass p) get_type::for_name -> OType does
+	if p.proj.curr_method|ptr==null do
+		printf("ERR: curr_method is null\n")
+	done
+	if p.proj.curr_method.locals:contains(n.name) do
+		return p.proj.curr_method.locals:get(n.name)|OType
+	elif p.proj.globals:contains(n.name) do
+		return p.proj.globals:get(n.name)|OType
+	done
+return p.proj:get_Method(n.name).ptr_type
+
+function(BinOpExpr n, TransformerPass p) get_type::for_binop -> OType does
+	if n.op:contains("=") do
+		return p.proj:get_type("bool")
+	done
+return p.proj:get_node_type(n.lhs)
+
+function(CallExpr n, TransformerPass p) get_type::for_call -> OType does
+return p.proj:get_node_type(n.meth):as_fptr().return_value
+
+function(AccessorExpr n, TransformerPass p) get_type::for_accessor -> OType does
+return p.proj:get_node_type(n.object):as_struct():get_field_type(n.field)
+
+function(CastExpr n, TransformerPass p) get_type::for_cast -> OType does
+return p.proj:get_type(n.target)
+
+function(IntrinsicExpr n, TransformerPass p) get_type::for_intrinsic -> OType does
+return p.proj:get_type("int")
+
+function(IndexExpr n, TransformerPass p) get_type::for_index -> OType does
+return p.proj:get_type("byte")
+
+function(LiteralExpr n, TransformerPass p) get_type::for_literal -> OType does
+return p.proj:get_type(n.value_type)
+
+function(Project p, Node n) Project:get_node_type -> OType does
+return p:get_transformer_pass("get_type"):visit_OType(n)

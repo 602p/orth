@@ -26,3 +26,13 @@ function(FunctionDecl n, TransformerPass p) emit_value::for_func -> FunctionDecl
 		p.proj:exit_method()
 	done
 return n
+
+function(TypeDecl n, TransformerPass p) emit_value::for_typedecl -> TypeDecl does
+	int i=0
+	while i<n.body.statements.len do
+		if -n.body.statements:get_Node(i):is_a("DeclExpr") do
+			p:emit_value(n.body.statements:get_Node(i))
+		done
+		i+=1
+	done
+return n

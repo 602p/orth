@@ -48,7 +48,7 @@ return
 function(GIRVar value, OType target, cstr dest, LLVMEmitter e) llvm::struct::impl_cast -> void does
 	if (target.variety==STRUCT) + (target.variety==F_PTR) + (target.variety==POINTER) do
 		e:emitl(dest+" = bitcast "+e:get_vty(value)+" "+e:get_ssa_var(value)+" to "+e:get_ty(target))
-	else do
-		shoc::bail_out("iniuiuimplenentede csat frm struuufct")
+	elif (target.variety==S_INT) + (target.variety==U_INT) do
+		e:emitl(dest+" = ptrtoint "+e:get_vty(value)+" "+e:get_ssa_var(value)+" to "+e:get_ty(target))
 	done
 return

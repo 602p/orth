@@ -1,0 +1,14 @@
+
+function(CallExpr n, TransformerPass p) rewrite_calls::visit_call -> CallExpr does
+	if n.meth:is_a("AccessorExpr") do
+		AccessorExpr acc = n.meth|AccessorExpr
+		if acc.mode==":" do
+			n.meth=NameExpr::create_direct(p.proj, p.proj:get_node_type(acc.object).name+"$"+acc.field)|Node
+			n.args:insert(0, acc.object|ptr)
+		done
+	done
+return n
+
+function() rw_calls::init -> TransformerPass does
+return TransformerPass::new("rewrite_calls")\
+       :add_specialization("CallExpr", rewrite_calls::visit_call|NodeTransformer)

@@ -15,8 +15,11 @@ import "transformers/def/define_syms.ort"
 import "transformers/def/catch_duplicates.ort"
 
 import "transformers/pregir/define_locals.ort"
+import "transformers/pregir/rw_calls.ort"
 
 import "transformers/emit/__init__.ort"
+
+import "transformers/get_type.ort"
 
 function(Project p) shoc::transformers::init -> void does
 	p:add_Transformer(apply_includes::init())
@@ -35,6 +38,9 @@ function(Project p) shoc::transformers::init -> void does
 	p:add_Transformer(catch_duplicates::init())
 
 	p:add_Transformer(define_locals::init())
+	p:add_Transformer(rw_calls::init())
+
+	p:add_Transformer(get_type::init())
 
 	if p.options:contains("no_gir") do
 		return

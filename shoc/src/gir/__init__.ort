@@ -9,8 +9,7 @@ import "gir/cast.ort"
 import "gir/call.ort"
 import "gir/label.ort"
 import "gir/jump.ort"
-import "gir/get_member.ort"
-import "gir/get_index.ort"
+import "gir/cast_ptr.ort"
 
 function(Project p) gir::init -> void does
 	p:add_GIRInstType(GIRLiteral::impl())
@@ -24,6 +23,5 @@ function(Project p) gir::init -> void does
 	p:add_GIRInstType(GIRCall::impl())
 	p:add_GIRInstType(GIRLabel::impl())
 	p:add_GIRInstType(GIRJump::impl())
-	p:add_GIRInstType(GIRGetMember::impl())
-	p:add_GIRInstType(GIRGetIndex::impl())
+	p:add_GIRInstType(GIRPointerCast::impl())
 return

@@ -1,13 +1,17 @@
 
 extern(...) printf -> int
+extern(int s) malloc -> ptr
+
+type Foo is
+	int a
+
+	function(Foo a, cstr t) Foo:print -> void does
+		printf(t, a.a)
+	return
+endtype
 
 function() main -> int does
-	cstr text = "Hello, World!"
-	int i=0
-	bool run = true
-	while run do
-		printf("text[%02i] = '%c'\n", i, text[i])
-		run=text[i]!=0|byte
-		i+=1
-	done
-return 0
+	Foo f = malloc(@sizeof(Foo)@)|Foo
+	f.a=72
+	f:print("Foo %i\n")
+return f.a

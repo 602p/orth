@@ -30,7 +30,7 @@ return TransformerPass::new("emit_value"):no_auto_visit()\
 	   :add_specialization("CastExpr",       emit_value::for_cast       |NodeTransformer)\
 	   :add_specialization("CallExpr",       emit_value::for_call       |NodeTransformer)\
 	   :add_specialization("TypeDeclHead",   emit_value::noop           |NodeTransformer)\
-	   :add_specialization("TypeDecl",       emit_value::noop           |NodeTransformer) <#TODO: SHIM#> \
+	   :add_specialization("TypeDecl",       emit_value::for_typedecl   |NodeTransformer)\
 	   :add_specialization("IfExpr",         emit_value::for_if         |NodeTransformer)\
 	   :add_specialization("WhileExpr",      emit_value::for_while      |NodeTransformer)\
 	   :add_specialization("AccessorExpr",   emit_value::for_accessor   |NodeTransformer)\

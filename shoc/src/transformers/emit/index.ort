@@ -1,6 +1,9 @@
 
 function(IndexExpr n, TransformerPass p) emit_addr::for_index -> GIRVar does
-return GIRGetIndex::emit(p.proj, p:emit_value(n.array), p:emit_value(n.value))
+	GIRVar addr_int = GIRCast::emit(p.proj, p:emit_value(n.array), p.proj:get_type("long"))
+	GIRVar valu_int = GIRCast::emit(p.proj, p:emit_value(n.value), p.proj:get_type("long"))
+	GIRVar offs_int = GIRBinOp::emit(p.proj, addr_int, valu_int, p.proj:get_type("long"), "+")
+return GIRPointerCast::emit(p.proj, offs_int, p.proj:get_type("byte"))
 
 function(IndexExpr n, TransformerPass p) emit_value::for_index -> GIRVar does
 return GIRLoad::emit(p.proj, p:emit_addr(n|Node))

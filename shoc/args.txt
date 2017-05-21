@@ -1,7 +1,0 @@
-
--s<path> = add <path> to the search path
--f<flag> = set <flag> to "1"
-	-fno_str_mul_fold	= disable cstr literal scalar multiplication folding
-	-fno_str_mul_fold	= disable cstr literal + cstr literal concatination folding
-	-fprofile			= enable the orth profiler
-	-fprofile_dump_csv	= enable the orth profiler, and save profiling data to "profile.csv"

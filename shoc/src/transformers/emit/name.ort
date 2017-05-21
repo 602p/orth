@@ -7,10 +7,11 @@ function(NameExpr n, TransformerPass p) emit_addr::for_name -> GIRVar does
 return null|GIRVar
 
 function(NameExpr n, TransformerPass p) emit_value::for_name -> GIRVar does
-	if p.proj.methods:contains(n.name) do
-		return GIRGetMethod::emit(p.proj, p.proj:get_Method(n.name))
+	# printf("'%s' req in %s -> %i\n", n.name, p.proj.curr_method.name, (p.proj.curr_method.locals:contains(n.name)|int))
+	if p.proj.curr_method.locals:contains(n.name) do
+		return GIRLoad::emit(p.proj, p:emit_addr(n|Node))
 	done
-return GIRLoad::emit(p.proj, p:emit_addr(n|Node))
+return GIRGetMethod::emit(p.proj, p.proj:get_Method(n.name))
 
 function(DeclExpr n, TransformerPass p) emit_addr::for_decl -> GIRVar does
 	cstr name = TypedVar::from_decl(n.name, p.proj).name

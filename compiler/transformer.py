@@ -475,7 +475,7 @@ class FileTransformer(Transformer):
 			if isinstance(func, TypeDecl):
 				print("Saw type: "+func.name)
 			if isinstance(func, ImportExpr) or (isinstance(func, TypeDecl) and not isinstance(func, AliasTypeDecl))\
-			   or isinstance(func, IntrinsicExpr):
+			   or isinstance(func, IntrinsicExpr) or isinstance(func, ExternFunc):
 				transform.get_transformer(func, self).define(out)
 
 	def prepare(self, out):
@@ -629,3 +629,19 @@ class ImportTransformer(Transformer):
 				self.node.contents=self.get_file_transformer(out).node
 				self.get_file_transformer(out).transform(out)
 			
+class ExternFuncTransformer(Transformer):
+	transforms=ExternFunc
+
+	def define(self, out):
+		print("AAA")
+		rt=datamodel.builtin_types[self.node.returntype]
+		extrep=""
+		if isinstance(self.node, VAExternFunc):
+			extrep="..."
+		else:
+			for idx, v in enumerate(self.node.args):
+				extrep+=datamodel.builtin_types[v.type].get_llvm_representation()
+				if idx!=len(self.node.args)-1:
+					extrep+=", "
+		out.emitl("declare {} @{}({})".format(rt.get_llvm_representation(), self.node.name, extrep))
+		out.set_signature(self.node.name, datamodel.ManualFunctionOType(self.node.name, "("+extrep+")", rt))

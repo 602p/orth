@@ -25,9 +25,13 @@ def match_element(element, tokens):
 	#as python objects are only ever instances of one type. Use that instead where
 	#applicable. (Not always applicable, e.g. ASTNodes may be matched by any
 	#of the eventual parent types)
+	# print("Trying match: "+str(element))
 	token=tokens[0]
 	if type(element)==TokenType: #isinstance is really slow, use this narrow check instead
+		# print(".")
+		# print(type(token))
 		if type(token)==Token: #isinstance is really slow, use this narrow check instead
+			# print(".")
 			if token.type==element:
 				return 1
 	elif type(element)==set: #isinstance is really slow, use this narrow check instead
@@ -48,6 +52,7 @@ def match_element(element, tokens):
 	return False
 
 def chain_matches(pattern, tokens):
+	# print("TRYING")
 	#Implementation of a ChainMatcher.
 	#Check if a pattern (list) matches against a sequence of tokens
 	consumed=0
@@ -81,6 +86,7 @@ def parse(tokens):
 					if view.get_lookahead() and view.get_lookahead().type in atype.bad_lookahead_tokens:
 						#If the lookahead token precludes matching, skip to the next type
 						continue
+				# print("Tryna match "+str(atype))
 				match = chain_matches(atype.pattern.chain, view.get_forward_slice())
 				if match and atype.aux_match(view):
 					# print(atype)
@@ -95,6 +101,7 @@ def parse(tokens):
 												#with node
 					progress=True
 					break
+		# print(view.get_forward_slice())
 		view.next()
 
 	for item in view.tokens:

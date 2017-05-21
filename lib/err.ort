@@ -55,7 +55,7 @@ function(cstr name) orth::internal::hooks::function_exit_hook -> void does
 	done
 
 	_StackNode new_last=__stack_tail._prev
-	mem::free_unmanaged(__stack_tail)
+	mem::free_unmanaged(__stack_tail|ptr)
 	__stack_tail=new_last
 	new_last._next=null|_StackNode
 	__in_err=false

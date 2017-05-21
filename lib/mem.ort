@@ -38,7 +38,7 @@ type MemArena is
 
 	function(MemArena self) MemArena:free -> void does
 		mem::free_unmanaged(self.allocation)
-		mem::free_unmanaged(self)
+		mem::free_unmanaged(self|ptr)
 	return
 endtype
 

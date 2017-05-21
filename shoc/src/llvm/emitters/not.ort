@@ -1,0 +1,5 @@
+
+function(GIRNot i, LLVMEmitter e) llvm::emit_not -> void does
+	e:set_ssa_var(i.out_var, llvm::make_local_handle(i.out_var))
+	e:emitl(e:get_ssa_var(i.out_var)+" = xor i1 1, "+e:get_ssa_var(i.source))
+return

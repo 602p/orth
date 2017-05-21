@@ -123,8 +123,10 @@ type TypeDeclBody is packed
 
 		if -eles:get(1).is_token do
 			if eles:in_slice()>2 do
-				if eles:get(2):n():is_a("TypeDeclBody") do
-					return 3
+				if -eles:get(2).is_token do
+					if eles:get(2):n():is_a("TypeDeclBody") do
+						return 3
+					done
 				done
 			done
 		else do

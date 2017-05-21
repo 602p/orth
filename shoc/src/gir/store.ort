@@ -10,7 +10,9 @@ type GIRStore is packed
 	return
 
 	function(Project p, GIRVar location, GIRVar value) GIRStore::emit -> GIRVar does
-		shoc::assert(value.type_.name==location.type_.name, "Mismatching type for store")
+		if p.options:contains("no_store_check") do
+			shoc::assert(value.type_.name==location.type_.name, "Mismatching type for store, "+value.type_.name+" != "+location.type_.name)
+		done
 		shoc::assert(location.is_ref, "Can't store to non-rvalue")
 		shoc::assert(-value.is_ref, "Can't store from rvalue - bad context?")
 

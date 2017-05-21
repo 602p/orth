@@ -6,9 +6,9 @@ function(int i) a -> int does
 	printf("A called with %i\n", i)
 return 7+i
 
-function(int i) b -> int does
-	printf("B called with %i\n", i)
-return 12+i
+# function(int i) b -> int does
+# 	printf("B called with %i\n", i)
+# return 12+i
 
 function() main -> int does
 	myproto fptr = a|myproto

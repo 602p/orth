@@ -1,8 +1,7 @@
-@declare_c_func("printf", "int", "(...)")@
+extern(...) printf->int
 
 function() main -> int does
 	printf("Hello World!\n")
-	int a = ((1+2)*3)+((1-2)*(8*2))
 return 0
 
 #ABC

@@ -5,7 +5,14 @@ import transformers
 import datamodel
 import generic_ir
 
+Project _project
+
 function(cstr err) shoc::bail_out -> void does
+	if _project|ptr!=null do
+		if _project.curr_method|ptr !=null do
+			printf("Last method: %s\n", _project.curr_method.name)
+		done
+	done
 	printf("\n\nshoc::bail_out called, orth::fail traceback follows...\n")
 	orth::fail(err)
 return
@@ -38,6 +45,7 @@ endtype
 
 function() shoc::get_empty_project -> Project does
 	Project p = malloc(@sizeof(Project)@)|Project
+	_project=p
 
 	p.token_types = List::new()
 	p.node_types = List::new()

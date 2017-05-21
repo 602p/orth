@@ -1,0 +1,10 @@
+
+function(UnOpExpr n, TransformerPass p) emit_value::for_unop -> GIRVar does
+	if p.proj:get_node_type(n.value).name=="bool" do
+		return GIRNot::emit(p.proj, p:emit_value(n.value))
+	done
+return GIRBinOp::emit(p.proj,\
+	GIRCast::emit(p.proj,\
+		GIRLiteral::emit_int(p.proj, 0|long),\
+		p.proj:get_node_type(n.value)),\
+	p:emit_value(n.value), p.proj:get_node_type(n.value), "-")

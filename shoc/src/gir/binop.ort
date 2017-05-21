@@ -13,7 +13,9 @@ type GIRBinOp is packed
 
 	function(Project p, GIRVar lhs, GIRVar rhs, OType res_type, cstr op) GIRBinOp::emit -> GIRVar does
 		shoc::assert((-lhs.is_ref) & (-rhs.is_ref), "Can't binop rvalues - bad context?")
-		shoc::assert(lhs.type_.name==rhs.type_.name, "Mismatching types for binop "+op)
+		if -p.options:contains("no_binop_tc") do
+			shoc::assert(lhs.type_.name==rhs.type_.name, "Mismatching types for binop "+op+": "+lhs.type_.name+" != "+rhs.type_.name)
+		done
 
 		GIRBinOp new = GIRInst::create(p, "binop", @sizeof(GIRBinOp)@)|GIRBinOp
 		new.var_type_=res_type

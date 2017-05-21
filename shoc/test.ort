@@ -1,17 +1,33 @@
 
 extern(...) printf -> int
-extern(int s) malloc -> ptr
+extern(int amt) malloc -> ptr
 
 type Foo is
-	int a
+	ptr data
+	Foo next
 
-	function(Foo a, cstr t) Foo:print -> void does
-		printf(t, a.a)
-	return
+	function(ptr data) Foo::make -> Foo does
+		Foo new = malloc(@sizeof(Foo)@)|Foo
+		new.data=data
+		new.next=null|Foo
+	return new
+endtype
+
+type Bar is
+	int len
+	Foo f
+	Foo f2
+
+	function() Bar::make -> Bar does
+		Bar new = malloc(@sizeof(Bar)@)|Bar
+		new.len=0
+	return new
 endtype
 
 function() main -> int does
-	Foo f = malloc(@sizeof(Foo)@)|Foo
-	f.a=72
-	f:print("Foo %i\n")
-return f.a
+	Bar b = Bar::make()
+	Foo f = Foo::make("nutshack")
+	b.f=f
+	printf("%s\n", b.f.data)
+	printf("%s\n", f.data)
+return 0

@@ -15,6 +15,11 @@ type NameExpr is packed
 		NameExpr new = malloc(@sizeof(NameExpr)@)|NameExpr
 		new.type_=p:type_by_name("NameExpr")
 		new.name=name
+		int i=0
+		while new.name[i]==bord(" ") do
+			i+=1
+		done
+		new.name=new.name:offset(i)
 	return new
 
 	function(EleList eles) NameExpr::match -> int does

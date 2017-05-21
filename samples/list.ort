@@ -1,10 +1,29 @@
 import std
 import linkedlist
+import err_lite
 
 function() main -> int does
-	List l = List::new()
-	l:append("Foo")
-	l:append("Bar")
-	l:append("Baz")
-	printf("%s\n", l:get(0))
+	List l=List::new()
+	LinkedListNode n = LinkedListNode::new("foo")
+	printf("nv=%u\n", n.value)
+	l.head=n
+	printf("nv=%u\n", n.value)
+	printf("hv=%u\n", l.head.value)
+	# printf(".\n")
+	# List l = List::new()
+	# printf(".\n")
+	# cstr a = "Foo"
+	# printf("Address of a=%u\n", a)
+	# l:append(a)
+	# printf("Address of r=%u\n", l:get(0))
+	# printf("Address of lhv=%u\n", l.head.value)
+	# printf(".\n")
+	# l:append("Bar")
+	# printf(".\n")
+	# l:append("Baz")
+	# printf(".\n")
+	# cstr r=l:get(0)
+	# printf("%s\n", r)
+	# printf("Address of r=%u\n", r)
+	# printf("Address of lhv=%u\n", l.head.value)
 return 0

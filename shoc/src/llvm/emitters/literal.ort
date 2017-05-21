@@ -29,6 +29,10 @@ function(GIRLiteral i, LLVMEmitter e) llvm::emit_literal -> void does
 		cstr temp_name="strA_"+e:get_next_ssa():str()
 		e:emitl("%"+temp_name+" = getelementptr "+str_type+"* @"+global_name)
 		e:emitl(e:get_ssa_var(i.out_var)+" = bitcast "+str_type+"* %"+temp_name+" to i8*")
+	elif (i.type_.variety==POINTER) do
+		cstr int_name="%nulL_"+e:get_next_ssa():str()
+		e:emitl(int_name+"=add i32 0,0")
+		e:emitl(e:get_ssa_var(i.out_var)+" = inttoptr i32 "+int_name+" to i8* ")
 	else do
 		shoc::bail_out("Unknown literal type "+i.type_.name)
 	done

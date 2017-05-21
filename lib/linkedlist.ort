@@ -78,11 +78,15 @@ type List is
 
     function(List l, ptr item) List:append -> void does
         LinkedListNode new = LinkedListNode::new(item)
+        # printf("new v=%u\n", new.value)
         if l.len>0 do
             LinkedListNode last = l:get_node(l.len-1)
             last.next=new
         else do
             l.head=new
+            # printf("head v=%u\n", l.head.value)
+            # printf("new v=%u\n", new.value)
+            # printf("new=%u, l.head=%u\n", new, l.head)
         done
         l.len+=1
         l.cache_ready=false

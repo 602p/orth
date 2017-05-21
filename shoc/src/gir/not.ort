@@ -1,0 +1,20 @@
+
+type GIRNot is packed
+	GIRInstType _gir_ty
+	GIRVar source
+	GIRVar out_var
+
+	function(GIRNot self) GIRNot::print -> void does
+		printf("not    \t%s \tnot %s\n", self.out_var.type_.name, self.source:str())
+	return
+
+	function(Project p, GIRVar source) GIRNot::emit -> GIRVar does
+		GIRNot new = GIRInst::create(p, "not", @sizeof(GIRNot)@)|GIRNot
+		new.source=source
+		new.out_var=GIRVar::new(p, new.source.type_):set_memo("not from "+source.ssa_id:str())
+		p:emit_gir(new|GIRInst)
+	return new.out_var
+
+	function() GIRNot::impl -> GIRInstType does
+	return GIRInstType::new("not"):set_printer(GIRNot::print|GIRInstPrinter)
+endtype

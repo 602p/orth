@@ -1,45 +1,45 @@
-@declare_c_func("printf", "int", "(...)")@
-@declare_c_func("puts", "int", "(i8*)")@
-@declare_c_func("system", "int", "(i8*)")@
-@declare_c_func("sprintf", "int", "(...)")@
-@declare_c_func("scanf", "int", "(...)")@
-@declare_c_func("malloc", "ptr", "(i32)")@
-@declare_c_func("usleep", "void", "(i32)")@
-@declare_c_func("realloc", "ptr", "(i8*, i32)")@
-@declare_c_func("strcat", "cstr", "(i8*, i8*)")@
-@declare_c_func("memcpy", "void", "(i8*, i8*, i32)")@
-@declare_c_func("memset", "void", "(i8*, i32, i32)")@
-@declare_c_func("strcpy", "cstr", "(i8*, i8*)")@
-@declare_c_func("strncpy", "void", "(i8*, i8*, i32)")@
-@declare_c_func("strlen", "int", "(i8*)")@
-@declare_c_func("atoi", "int", "(i8*)")@
-@declare_c_func("strtod", "float", "(i8*, i8*)")@
-@declare_c_func("strcmp", "int", "(i8*, i8*)")@
-@declare_c_func("strncmp", "int", "(i8*, i8*, i32)")@
-@declare_c_func("free", "void", "(i8*)")@
-@declare_c_func("exit", "int", "(i32)")@
-@declare_c_func("clock", "long", "()")@
+# @declare_c_func("printf", "int", "(...)")@
+# @declare_c_func("puts", "int", "(i8*)")@
+# @declare_c_func("system", "int", "(i8*)")@
+# @declare_c_func("sprintf", "int", "(...)")@
+# @declare_c_func("scanf", "int", "(...)")@
+# @declare_c_func("malloc", "ptr", "(i32)")@
+# @declare_c_func("usleep", "void", "(i32)")@
+# @declare_c_func("realloc", "ptr", "(i8*, i32)")@
+# @declare_c_func("strcat", "cstr", "(i8*, i8*)")@
+# @declare_c_func("memcpy", "void", "(i8*, i8*, i32)")@
+# @declare_c_func("memset", "void", "(i8*, i32, i32)")@
+# @declare_c_func("strcpy", "cstr", "(i8*, i8*)")@
+# @declare_c_func("strncpy", "void", "(i8*, i8*, i32)")@
+# @declare_c_func("strlen", "int", "(i8*)")@
+# @declare_c_func("atoi", "int", "(i8*)")@
+# @declare_c_func("strtod", "float", "(i8*, i8*)")@
+# @declare_c_func("strcmp", "int", "(i8*, i8*)")@
+# @declare_c_func("strncmp", "int", "(i8*, i8*, i32)")@
+# @declare_c_func("free", "void", "(i8*)")@
+# @declare_c_func("exit", "int", "(i32)")@
+# @declare_c_func("clock", "long", "()")@
 
-# extern(...) printf -> int
-# extern(cstr str) puts -> int
-# extern(cstr str) system -> int
-# extern(...) sprintf -> int
-# extern(...) scanf -> int
-# extern(int amt) malloc -> ptr
-# extern(int amt) usleep -> void
-# extern(cstr a, cstr b) strcat -> cstr
-# extern(ptr a, ptr b, int amt) memcpy -> void
-# extern(ptr a, int l, int v) memset -> void
-# extern(cstr a, cstr b) strcpy -> cstr
-# extern(cstr a, cstr b, int c) strncpy -> void
-# extern(cstr s) strlen -> int
-# extern(cstr s) atoi -> int
-# extern(cstr a, cstr b) strtod -> float
-# extern(cstr a, cstr b) strcmp -> int
-# extern(cstr a, cstr b, int c) strncmp -> int
-# extern(...) free -> void
-# extern(int c) exit -> int
-# extern() clock -> long
+extern(...) printf -> int
+extern(cstr str) puts -> int
+extern(cstr str) system -> int
+extern(...) sprintf -> int
+extern(...) scanf -> int
+extern(int amt) malloc -> ptr
+extern(int amt) usleep -> void
+extern(cstr a, cstr b) strcat -> cstr
+extern(ptr a, ptr b, int amt) memcpy -> void
+extern(ptr a, int l, int v) memset -> void
+extern(cstr a, cstr b) strcpy -> cstr
+extern(cstr a, cstr b, int c) strncpy -> void
+extern(cstr s) strlen -> int
+extern(cstr s) atoi -> int
+extern(cstr a, cstr b) strtod -> float
+extern(cstr a, cstr b) strcmp -> int
+extern(cstr a, cstr b, int c) strncmp -> int
+extern(...) free -> void
+extern(int c) exit -> int
+extern() clock -> long
 
 function(cstr a, cstr b) cstr:__add__ -> cstr does
 	cstr result = malloc(strlen(a)+strlen(b)+1)

@@ -23,7 +23,7 @@ type GIRJump is packed
 	return
 
 	function(Project p, GIRVar condition, cstr target) GIRJump::emit_cond -> void does
-		shoc::assert(condition.type_.name=="bool", "Can't cbranch from non-bool")
+		shoc::assert(condition.type_.name=="bool", "Can't cbranch from non-bool: "+condition.type_.name)
 
 		GIRJump new = GIRInst::create(p, "jump", @sizeof(GIRJump)@)|GIRJump
 		new.target_label=target

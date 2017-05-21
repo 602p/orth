@@ -1,7 +1,7 @@
 
 function(AccessorExpr n, TransformerPass p) emit_addr::for_accessor -> GIRVar does
 	GIRVar addr_int = GIRCast::emit(p.proj, p:emit_value(n.object), p.proj:get_type("long"))
-	GIRVar valu_int = GIRLiteral::emit_long(p.proj, p.proj:get_node_type(n.object):as_struct():get_field_offset(n.field)|long)
+	GIRVar valu_int = GIRLiteral::emit_long(p.proj, (p.proj:get_node_type(n.object):as_struct():get_field_offset(n.field)/8)|long)
 	GIRVar offs_int = GIRBinOp::emit(p.proj, addr_int, valu_int, p.proj:get_type("long"), "+")
 return GIRPointerCast::emit(p.proj, offs_int, p.proj:get_node_type(n.object):as_struct():get_field_type(n.field))
 

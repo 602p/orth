@@ -11,6 +11,7 @@ import "transformers/emit/while.ort"
 import "transformers/emit/accessor.ort"
 import "transformers/emit/instrinsic.ort"
 import "transformers/emit/index.ort"
+import "transformers/emit/unop.ort"
 import gir
 
 function(Node n, TransformerPass p) emit_value::noop -> cstr does
@@ -30,12 +31,14 @@ return TransformerPass::new("emit_value"):no_auto_visit()\
 	   :add_specialization("CastExpr",       emit_value::for_cast       |NodeTransformer)\
 	   :add_specialization("CallExpr",       emit_value::for_call       |NodeTransformer)\
 	   :add_specialization("TypeDeclHead",   emit_value::noop           |NodeTransformer)\
+	   :add_specialization("SepExpr",        emit_value::noop           |NodeTransformer)\
 	   :add_specialization("TypeDecl",       emit_value::for_typedecl   |NodeTransformer)\
 	   :add_specialization("IfExpr",         emit_value::for_if         |NodeTransformer)\
 	   :add_specialization("WhileExpr",      emit_value::for_while      |NodeTransformer)\
 	   :add_specialization("AccessorExpr",   emit_value::for_accessor   |NodeTransformer)\
 	   :add_specialization("IntrinsicExpr",  emit_value::for_intrinsic  |NodeTransformer)\
-	   :add_specialization("IndexExpr",      emit_value::for_index      |NodeTransformer)
+	   :add_specialization("IndexExpr",      emit_value::for_index      |NodeTransformer)\
+	   :add_specialization("UnOpExpr",       emit_value::for_unop       |NodeTransformer)
 	   
 function() emit_addr::init -> TransformerPass does
 return TransformerPass::new("emit_addr"):no_auto_visit():no_default_run()\

@@ -1,4 +1,35 @@
 
+function(cstr operator) shoc::get_magic-> cstr does
+	if operator=="*" do
+		return "__mul__"
+	elif operator=="+" do
+		return "__add__"
+	elif operator=="-" do
+		return "__sub__"
+	elif operator=="/" do
+		return "__div__"
+	elif operator=="==" do
+		return "__eq__"
+	elif operator=="!=" do
+		return "__ne__"
+	elif operator==">" do
+		return "__gt__"
+	elif operator=="<" do
+		return "__lt__"
+	elif operator==">=" do
+		return "__ge__"
+	elif operator=="<=" do
+		return "__le__"
+	elif operator=="%" do
+		return "__mod__"
+	elif operator=="<<" do
+		return "__shl__"
+	elif operator==">>" do
+		return "__shr__"
+	done
+	shoc::bail_out("Unimplemented magic: "+operator)
+return "?"
+
 function(CallExpr n, TransformerPass p) rewrite_calls::visit_call -> CallExpr does
 	if n.meth:is_a("AccessorExpr") do
 		AccessorExpr acc = n.meth|AccessorExpr
@@ -9,6 +40,29 @@ function(CallExpr n, TransformerPass p) rewrite_calls::visit_call -> CallExpr do
 	done
 return n
 
+function(BinOpExpr n, TransformerPass p) rewrite_calls::visit_binop -> Node does
+	cstr name=p.proj:get_node_type(n.lhs).name+"$"+shoc::get_magic(n.op)
+	if p.proj.methods:contains(name) do
+		List args=List::new()
+		args:append_Node(n.lhs)
+		args:append_Node(n.rhs)
+		return CallExpr::create_direct(p.proj,\
+			NameExpr::create_direct(p.proj, name)|Node, args)|Node
+	done
+return n|Node
+
+function(UnOpExpr n, TransformerPass p) rewrite_calls::visit_unop -> Node does
+	cstr name=p.proj:get_node_type(n.value).name+"$__neg__"
+	if p.proj.methods:contains(name) do
+		List args=List::new()
+		args:append_Node(n.value)
+		return CallExpr::create_direct(p.proj,\
+			NameExpr::create_direct(p.proj, name)|Node, args)|Node
+	done
+return n|Node
+
 function() rw_calls::init -> TransformerPass does
 return TransformerPass::new("rewrite_calls")\
-       :add_specialization("CallExpr", rewrite_calls::visit_call|NodeTransformer)
+       :add_specialization("CallExpr", rewrite_calls::visit_call|NodeTransformer)\
+       :add_specialization("BinOpExpr", rewrite_calls::visit_binop|NodeTransformer)\
+       :add_specialization("UnOpExpr", rewrite_calls::visit_unop|NodeTransformer)

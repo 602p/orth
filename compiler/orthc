@@ -24,6 +24,7 @@ if "dump_tokens" in sys.argv:
 
 print("Parsing...                       ")
 node=parse.parse(tokens)
+print(node)
 
 if "dump_bd" in sys.argv:
 	print("Parsing... [Drawing BD]                 ")

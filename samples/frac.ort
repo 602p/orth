@@ -1,5 +1,9 @@
 import std
-@declclass("Fraction", [["top", "int"], ["bottom", "int"]])@
+
+type Fraction is
+	int top
+	int bottom
+endtype
 
 function(int top, int bottom) Fraction::create -> Fraction does
 	ptr mem = malloc(50)

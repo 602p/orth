@@ -44,12 +44,13 @@ class Tokens(metaclass=TokenHolder):
 	#Block of stuff for function declaration headers.
 	#General format is "function(" <args of format <type> <name>, comma seperated>
 	# ")" <function name> "->" <return type> "does\n"
-	T_FUNCTIONDECL=TokenType("function")
+	T_FUNCTIONDECL=TokenType("(function)|(extern)", capture=True)
 	T_ARGLIST_START = TokenType(r"\(", ["T_FUNCTIONDECL"])
 	T_ARGLIST_SEPERATOR = TokenType(",", ["T_ARGLIST_ELEMENT", "T_ARGLIST_TYPEELEMENT"])
+	T_ARGLIST_VARARGS = TokenType("\.\.\.", ["T_ARGLIST_START"])
 	T_ARGLIST_ELEMENT = TokenType(R_IDENTIFIER+" +"+R_IDENTIFIER, ["T_ARGLIST_START", "T_ARGLIST_SEPERATOR"], capture=True)
 	T_ARGLIST_TYPEELEMENT = TokenType(R_IDENTIFIER, ["T_ARGLIST_START", "T_ARGLIST_SEPERATOR"], capture=True)
-	T_ARGLIST_END = TokenType(r"\)", ["T_ARGLIST_START", "T_ARGLIST_ELEMENT"])
+	T_ARGLIST_END = TokenType(r"\)", ["T_ARGLIST_START", "T_ARGLIST_ELEMENT", "T_ARGLIST_VARARGS"])
 	T_FUNCTIONDECL_NAME = TokenType("[a-zA-Z_][\w:]*", ["T_ARGLIST_END"], capture=True)
 	#Function names can include colons (:) for member functions (e.g. cstr:len) and
 	#class/namespace functions (e.g. MyClass::new)
@@ -702,3 +703,28 @@ class ImportExpr(ASTNode):
 		else:
 			self.absolute=False
 			self.identifier=elements[0].value.split("import ")[1].strip()
+
+class ExternFunc(ASTNode):
+	pattern=T_FUNCTIONDECL+ArgList+T_FUNCTIONDECL_NAME+T_FUNCTIONDECL_RETURNS+T_FUNCTIONDECL_RETURN_TYPE
+
+	@classmethod
+	def aux_match(cls, view):
+		if view.get_forward_slice()[0].value=="extern":
+			return True
+
+	def __init__(self, elements):
+		self.name=elements[2].value
+		self.returntype=elements[4].value
+		self.args=elements[1].args
+
+class VAExternFunc(ExternFunc):
+	pattern=T_FUNCTIONDECL+T_ARGLIST_START+T_ARGLIST_VARARGS+T_ARGLIST_END+T_FUNCTIONDECL_NAME+T_FUNCTIONDECL_RETURNS+T_FUNCTIONDECL_RETURN_TYPE
+
+	@classmethod
+	def aux_match(cls, view):
+		if view.get_forward_slice()[0].value=="extern":
+			return True
+
+	def __init__(self, elements):
+		self.name=elements[4].value
+		self.returntype=elements[6].value

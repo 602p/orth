@@ -42,6 +42,13 @@ type CallExpr is packed
 		done
 	return new
 
+	function(Project proj, Node meth, List args) CallExpr::create_direct -> CallExpr does
+		CallExpr new = malloc(@sizeof(CallExpr)@)|CallExpr
+		new.meth=meth
+		new.args=args
+		new.type_=proj:type_by_name("CallExpr")
+	return new
+
 	function(EleList eles) CallExpr::match -> int does
 		# printf("0 - %u\n", eles)
 		if -eles:get(0):n():is_a("ValueExpression") do

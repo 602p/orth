@@ -2,9 +2,12 @@ import searchpath
 
 function(ImportStmt n, TransformerPass p) apply_includes::visit_import -> Node does
 	cstr path
-	if n.name:contains("\x22") do
-		int start=n.name:find("\x22")
-		int end=n.name:offset(start+1):find("\x22")
+	cstr quote = malloc(2)
+	quote[0]=34|byte
+	quote[1]=0|byte
+	if n.name:contains(quote) do
+		int start=n.name:find(quote)
+		int end=n.name:offset(start+1):find(quote)
 		path=shoc::resolve_absolute_import(n.name:substr(start+1, end))
 	else do
 		path=shoc::resolve_name_import(p.proj.search_path, n.name:substr(n.name:find(" ")+1,n.name:len()-(n.name:find(" ")+1)))

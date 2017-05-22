@@ -1,0 +1,8 @@
+function() orth::internal::profile::display_profiling_data -> void does
+return
+
+function(cstr filename) orth::internal::profile::dump_profiling_data_csv -> void does
+return
+
+function() orth::internal::profile::install_profiler -> void does
+return

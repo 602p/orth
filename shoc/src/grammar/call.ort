@@ -10,7 +10,7 @@ type CallExpr is packed
 		node.meth:print(depth+1)
 
 		parse::indent(depth)
-		printf("\- Arguments: (Len=%i)\n", node.args.len)
+		printf("\\- Arguments: (Len=%i)\n", node.args.len)
 		int i=0
 		while i<node.args.len do
 			parse::indent(depth+1)

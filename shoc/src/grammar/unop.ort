@@ -6,7 +6,7 @@ type UnOpExpr is packed
 	function(UnOpExpr node, int depth) UnOpExpr::print -> void does
 		printf("UnOpExpr (Operator='%s')\n", node.op)
 		parse::indent(depth)
-		printf("\- Value: ")
+		printf("\\- Value: ")
 		node.value:print(depth+1)
 	return
 

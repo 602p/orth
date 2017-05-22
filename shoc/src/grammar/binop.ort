@@ -46,7 +46,7 @@ type BinOpExpr is packed
 		node.lhs:print(depth+1)
 
 		parse::indent(depth)
-		printf("\- RHS: ")
+		printf("\\- RHS: ")
 		node.rhs:print(depth+1)
 	return
 

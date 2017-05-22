@@ -23,7 +23,7 @@ function(NameExpr n, TransformerPass p) get_type::for_name -> OType does
 return p.proj:get_Method(n.name).ptr_type
 
 function(BinOpExpr n, TransformerPass p) get_type::for_binop -> OType does
-	if n.op:contains("=") do
+	if n.op:contains("="):or(n.op==">"):or(n.op=="<"):or(n.op=="&" & p.proj:get_node_type(n.lhs).name=="bool") do
 		return p.proj:get_type("bool")
 	done
 return p.proj:get_node_type(n.lhs)

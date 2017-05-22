@@ -11,7 +11,7 @@ type AccessorExpr is packed
 		node.object:print(depth+1)
 
 		parse::indent(depth)
-		printf("\- Field: %s\n", node.field)
+		printf("\\- Field: %s\n", node.field)
 	return
 
 	function(EleList eles) AccessorExpr::create -> AccessorExpr does

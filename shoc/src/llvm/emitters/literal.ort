@@ -33,6 +33,10 @@ function(GIRLiteral i, LLVMEmitter e) llvm::emit_literal -> void does
 		cstr int_name="%nulL_"+e:get_next_ssa():str()
 		e:emitl(int_name+"=add i32 0,0")
 		e:emitl(e:get_ssa_var(i.out_var)+" = inttoptr i32 "+int_name+" to i8* ")
+	elif i.type_.variety==FLOAT do
+		cstr temp_name="%flt_"+e:get_next_ssa():str()
+		e:emitl(temp_name+" = load double* @_the_zero_double")
+		e:emitl(e:get_ssa_var(i.out_var)+" = fadd double 0.0, "+temp_name)
 	else do
 		shoc::bail_out("Unknown literal type "+i.type_.name)
 	done

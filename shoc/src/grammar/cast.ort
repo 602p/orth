@@ -7,7 +7,7 @@ type CastExpr is packed
 		printf("CastExpr (Target='%s')\n", node.target)
 
 		parse::indent(depth)
-		printf("\- Value: ")
+		printf("\\- Value: ")
 		node.value:print(depth+1)
 	return
 

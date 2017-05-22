@@ -443,6 +443,8 @@ function(cstr literal) shoc::parse_string_literal -> cstr does
 				parsed[o]=bord("\t")
 			elif literal[i]==bord("\\") do
 				parsed[o]=bord("\\")
+			elif literal[i]==bord("0") do
+				parsed[o]=bord("\0")
 			else do
 				shoc::bail_out("Unknown escape: "+(parsed[o]|int):str())
 			done

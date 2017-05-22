@@ -1,6 +1,5 @@
 
 function(IfExpr n, TransformerPass p) emit_value::for_if -> ptr does
-	(n|Node):print_root()
 	cstr true_branch = "lblT_"+p.proj:get_next_ssa_id():str()
 	cstr false_branch = "lblF_"+p.proj:get_next_ssa_id():str()
 	cstr done_branch = "lblD_"+p.proj:get_next_ssa_id():str()

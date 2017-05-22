@@ -63,9 +63,13 @@ return i
 
 function(cstr text) lex::match_bool_literal -> int does
 	if text:startswith("true") do
-		return 4
+		if text[4]:in(" \t\n") do
+			return 4
+		done
 	elif text:startswith("false") do
-		return 5
+		if text[5]:in(" \t\n") do
+			return 5
+		done
 	done
 return 0
 

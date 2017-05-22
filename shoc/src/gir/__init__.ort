@@ -11,6 +11,7 @@ import "gir/label.ort"
 import "gir/jump.ort"
 import "gir/cast_ptr.ort"
 import "gir/not.ort"
+import "gir/get_global.ort"
 
 function(Project p) gir::init -> void does
 	p:add_GIRInstType(GIRLiteral::impl())
@@ -26,4 +27,5 @@ function(Project p) gir::init -> void does
 	p:add_GIRInstType(GIRJump::impl())
 	p:add_GIRInstType(GIRPointerCast::impl())
 	p:add_GIRInstType(GIRNot::impl())
+	p:add_GIRInstType(GIRGetGlobal::impl())
 return

@@ -3,8 +3,7 @@ import "llvm/type_impls.ort"
 import "llvm/emitters/method.ort"
 import "llvm/emitters/literal.ort"
 import "llvm/emitters/return.ort"
-import "llvm/emitters/get_local.ort"
-import "llvm/emitters/get_method.ort"
+import "llvm/emitters/get.ort"
 import "llvm/emitters/load.ort"
 import "llvm/emitters/store.ort"
 import "llvm/emitters/binop.ort"
@@ -23,7 +22,8 @@ function(Project p, cstr filename) Project:emit_as_llvm -> Project does
 	                                  :register_emitter("literal",    llvm::emit_literal     |LLVMGIREmitter)\
 	                                  :register_emitter("return",     llvm::emit_return      |LLVMGIREmitter)\
 	                                  :register_emitter("get_local",  llvm::emit_get_local   |LLVMGIREmitter)\
-	                                  :register_emitter("get_method", llvm::emit_get_method |LLVMGIREmitter)\
+	                                  :register_emitter("get_method", llvm::emit_get_method  |LLVMGIREmitter)\
+	                                  :register_emitter("get_global", llvm::emit_get_global  |LLVMGIREmitter)\
 	                                  :register_emitter("load",       llvm::emit_load        |LLVMGIREmitter)\
 	                                  :register_emitter("store",      llvm::emit_store       |LLVMGIREmitter)\
 	                                  :register_emitter("binop",      llvm::emit_binop       |LLVMGIREmitter)\
@@ -46,6 +46,19 @@ function(Project p, cstr filename) Project:emit_as_llvm -> Project does
 	j=0
 	while j<p.types:num_keys() do
 		llvm::register_type(context, p.types:get_by_num(j)|OType)
+		j+=1
+	done
+
+	j=0
+	TypedVar t
+	while j<p.globals:num_keys() do
+		t=p.globals:get_by_num(j)|TypedVar
+		context:emit("@global_"+t.name+" = global "+context:get_ty(t.type_)+" ")
+		if (t.type_.variety==S_INT)+(t.type_.variety==U_INT) do
+			context:emitl("0")
+		else do
+			context:emitl("null")
+		done
 		j+=1
 	done
 

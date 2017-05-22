@@ -20,6 +20,25 @@
 # @declare_c_func("exit", "int", "(i32)")@
 # @declare_c_func("clock", "long", "()")@
 
+# @declare_c_func("fopen", "ptr", "(i8*, i8*)")@
+# @declare_c_func("fprintf", "void", "(...)")@
+# @declare_c_func("fclose", "void", "(i8*)")@
+# @declare_c_func("fflush", "void", "(i8*)")@
+# @declare_c_func("fgets", "ptr", "(i8*, i32, i8*)")@
+
+# @declare_c_func("fdopen", "ptr", "(i32, i8*)")@
+# @declare_c_func("fflush", "void", "(i8*)")@
+
+# @declare_c_func("signal", "ptr", "(...)")@
+
+extern(cstr p, cstr m) fopen -> ptr
+extern(...) fprintf->void
+extern(ptr fd) fclose->void
+extern(ptr fd) fflush->void
+extern(cstr a, int i, cstr b) fgets->ptr
+extern(int a, cstr b) fdopen->ptr
+extern(...) signal->ptr
+
 extern(...) printf -> int
 extern(cstr str) puts -> int
 extern(cstr str) system -> int

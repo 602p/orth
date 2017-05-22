@@ -1,0 +1,22 @@
+
+type GIRGetGlobal is packed
+	GIRInstType _gir_ty
+	OType  var_type
+	cstr   var_name
+	GIRVar out_var
+
+	function(GIRGetGlobal self) GIRGetGlobal::print -> void does
+		printf("get_global \t%s \t%s => %s\n", self.var_type.name, self.var_name, self.out_var:str())
+	return
+
+	function(Project p, OType type_, cstr name) GIRGetGlobal::emit -> GIRVar does
+		GIRGetGlobal new = GIRInst::create(p, "get_global", @sizeof(GIRGetGlobal)@)|GIRGetGlobal
+		new.var_type=type_
+		new.var_name=name
+		new.out_var=GIRVar::new(p, new.var_type):ref():set_memo("Address of global:"+name)
+		p:emit_gir(new|GIRInst)
+	return new.out_var|GIRVar
+
+	function() GIRGetGlobal::impl -> GIRInstType does
+	return GIRInstType::new("get_global"):set_printer(GIRGetGlobal::print|GIRInstPrinter)
+endtype

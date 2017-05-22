@@ -26,6 +26,8 @@ function(cstr operator) shoc::get_magic-> cstr does
 		return "__shl__"
 	elif operator==">>" do
 		return "__shr__"
+	elif operator=="&" do
+		return "__band__"
 	done
 	shoc::bail_out("Unimplemented magic: "+operator)
 return "?"
@@ -34,6 +36,10 @@ function(CallExpr n, TransformerPass p) rewrite_calls::visit_call -> CallExpr do
 	if n.meth:is_a("AccessorExpr") do
 		AccessorExpr acc = n.meth|AccessorExpr
 		if acc.mode==":" do
+			# printf("\n\n")
+			# acc.object:print_root()
+			# printf("callrw - %u - %u\n", p.proj:get_node_type(acc.object).name, acc.field)
+			# printf("callrw - %s - %s\n", p.proj:get_node_type(acc.object).name, acc.field)
 			n.meth=NameExpr::create_direct(p.proj, p.proj:get_node_type(acc.object).name+"$"+acc.field)|Node
 			n.args:insert(0, acc.object|ptr)
 		done

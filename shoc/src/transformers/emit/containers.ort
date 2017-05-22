@@ -2,7 +2,9 @@
 function(FileNode n, TransformerPass p) emit_value::for_file -> FileNode does
 	int i=0
 	while i<n.statements.len do
-		p:emit_value(n.statements:get_Node(i))
+		if -n.statements:get_Node(i):is_a("DeclExpr") do
+			p:emit_value(n.statements:get_Node(i))
+		done
 		i+=1
 	done
 return n

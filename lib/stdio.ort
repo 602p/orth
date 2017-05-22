@@ -1,5 +1,3 @@
-@declare_c_func("fdopen", "ptr", "(i32, i8*)")@
-@declare_c_func("fflush", "void", "(i8*)")@
 
 ptr stdout
 ptr stderr

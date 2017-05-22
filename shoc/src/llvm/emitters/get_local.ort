@@ -1,4 +1,0 @@
-
-function(GIRGetLocal i, LLVMEmitter e) llvm::emit_get_local -> void does
-	e:set_ssa_var(i.out_var, e:get_local_addr_var(i.var_name))
-return

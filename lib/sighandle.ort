@@ -1,4 +1,4 @@
-@declare_c_func("signal", "ptr", "(...)")@
+
 
 type SignalHandler is a function->void
 

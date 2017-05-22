@@ -1,0 +1,14 @@
+
+function(GIRGetLocal i, LLVMEmitter e) llvm::emit_get_local -> void does
+	e:set_ssa_var(i.out_var, e:get_local_addr_var(i.var_name))
+return
+
+
+function(GIRGetMethod i, LLVMEmitter e) llvm::emit_get_method -> void does
+	e:set_ssa_var(i.out_var, "@"+i.meth_name)
+return
+
+
+function(GIRGetGlobal i, LLVMEmitter e) llvm::emit_get_global -> void does
+	e:set_ssa_var(i.out_var, "@global_"+i.var_name)
+return

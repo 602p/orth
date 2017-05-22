@@ -31,6 +31,9 @@
 
 @declare_c_func("signal", "ptr", "(...)")@
 
+@declare_c_func("get_current_dir_name", "cstr", "()")@
+@declare_c_func("getenv", "cstr", "(i8*)")@
+
 # extern(...) printf -> int
 # extern(cstr str) puts -> int
 # extern(cstr str) system -> int

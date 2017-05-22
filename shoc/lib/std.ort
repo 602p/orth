@@ -31,6 +31,12 @@
 
 # @declare_c_func("signal", "ptr", "(...)")@
 
+# @declare_c_func("get_current_dir_name", "cstr", "()")@
+# @declare_c_func("getenv", "cstr", "(i8*)")@
+
+extern()get_current_dir_name->cstr
+extern(cstr var)getenv->cstr
+
 extern(cstr p, cstr m) fopen -> ptr
 extern(...) fprintf->void
 extern(ptr fd) fclose->void

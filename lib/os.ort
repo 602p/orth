@@ -1,6 +1,5 @@
 
-@declare_c_func("get_current_dir_name", "cstr", "()")@
-@declare_c_func("getenv", "cstr", "(i8*)")@
+
 
 function() os::get_cwd -> cstr does
 	cstr raw_cwd=get_current_dir_name()

@@ -18,6 +18,9 @@ function(BlockBody n, TransformerPass p) emit_value::for_blockbody -> BlockBody 
 return n
 
 function(FunctionDecl n, TransformerPass p) emit_value::for_func -> FunctionDecl does
+	if p.proj.options:contains("debug_emit_meth") do
+		printf("Emitting method %s\n", n.head.name)
+	done
 	if -n.head.is_extern do
 		int i=0
 		p.proj:enter_method_named(n.head.name)

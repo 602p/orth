@@ -14,10 +14,18 @@ type AddtlEnterExitCallback is a function->void #func(cstr name)
 AddtlEnterExitCallback __fex_addtl_callback_enter
 AddtlEnterExitCallback __fex_addtl_callback_exit
 bool __in_err
+bool __err_initing
 
 function(cstr name) orth::internal::hooks::function_enter_hook -> void does
-	if __stack|ptr|int == 0 do
+	if __err_initing do
 		return
+	done
+	if __stack|ptr|int == 0 do
+		if -__err_initing do
+			__err_initing=true
+			orth::internal::hooks::setup_pstack()
+			__err_initing=false
+		done
 	done
 	if __in_err do
 		return
@@ -71,10 +79,11 @@ function() orth::internal::hooks::setup_pstack -> void does
 	__stack_tail=new
 return
 
-@register_startup("orth::internal::hooks::setup_pstack", 0)@
-
 function(cstr err) orth::fail -> void does
-	printf("\x1B[41m==================== orth::fail bailout report ====================\x1B[0m\n")
+	cstr esc=malloc(2)
+	esc[0]=27|byte
+	esc[1]=0|byte
+	printf(esc+"[41m==================== orth::fail bailout report ===================="+esc+"[0m\n")
 	printf("Bailout message: '%s'\n", err)
 	if __stack|ptr == null do
 		printf("Cannot print traceback, __stack is null. Did you compile with the 'funchooks' flag?\n")

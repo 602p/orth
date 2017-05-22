@@ -1,0 +1,12 @@
+extern(...)printf->int
+extern(int a)malloc->ptr
+extern(cstr p, cstr m) fopen -> ptr
+extern(cstr a, int i, ptr b) fgets->ptr
+
+function()main->int does
+	ptr fd=fopen("build", "r")
+	printf("fd=%u\n", fd)
+	cstr buf = malloc(200)
+	fgets(buf, 200, fd)
+	printf("buf=%s\n", buf)
+return 0

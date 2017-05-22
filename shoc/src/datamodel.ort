@@ -290,7 +290,7 @@ function(Project p) shoc::datamodel::init_base -> void does
 
 	p:add_Type(PrimitiveOType::new("float", FLOAT, 8*8))
 
-	p:add_Type(PrimitiveOType::new("bool", U_INT, 1))
+	p:add_Type(PrimitiveOType::new("bool", U_INT, 8))
 
 	p:add_Type(PrimitiveOType::new("ptr", POINTER, p.pointer_size))
 	p:add_Type(PrimitiveOType::new("cstr", POINTER, p.pointer_size))

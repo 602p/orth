@@ -41,7 +41,7 @@ extern(cstr p, cstr m) fopen -> ptr
 extern(...) fprintf->void
 extern(ptr fd) fclose->void
 extern(ptr fd) fflush->void
-extern(cstr a, int i, cstr b) fgets->ptr
+extern(cstr a, int i, ptr b) fgets->ptr
 extern(int a, cstr b) fdopen->ptr
 extern(...) signal->ptr
 

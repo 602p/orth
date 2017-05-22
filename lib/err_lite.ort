@@ -1,5 +1,0 @@
-
-function(cstr msg) orth::fail -> void does
-	printf("Orth::fail from err_lite called: %s\n", msg)
-	exit(1)
-return

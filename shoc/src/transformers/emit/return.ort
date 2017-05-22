@@ -1,8 +1,19 @@
 
 function(ReturnExpr n, TransformerPass p) emit_value::for_return -> GIRVar does
+	GIRVar v
+	if -n.is_void do
+		v=p:emit_value(n.value)
+	done
+
+	if p.proj.options:contains("funchooks") & -p.proj.curr_method.name:startswith("orth$$internal$$hooks") do
+		List hook_args=List::new()
+		hook_args:append_GIRVar(GIRLiteral::emit_cstr(p.proj, p.proj.curr_method.name))
+		GIRCall::emit(p.proj, GIRGetMethod::emit(p.proj, p.proj:get_Method("orth$$internal$$hooks$$function_exit_hook")), hook_args)
+	done
+
 	if n.is_void do
 		GIRReturn::emit_void(p.proj)
 	else do
-		GIRReturn::emit(p.proj, p:emit_value(n.value))
+		GIRReturn::emit(p.proj, v)
 	done
 return null|GIRVar

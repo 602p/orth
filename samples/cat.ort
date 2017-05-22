@@ -1,0 +1,28 @@
+import std
+import fileio
+import args
+import err
+
+function(int argc, ArgList args) main -> int does
+	orth::install_sigsev_handler()
+	if argc!=2 do
+		printf("ERROR: Incorrect invocation. Use as ./out <src>\n")
+		return 1
+	done
+
+	if -File::exists(args:get(1)) do
+		printf("Nonexistant\n")
+	done
+	File f = File::open(args:get(1), "r")
+
+	cstr line
+	int lineno=0
+
+	while f:ready() do
+		line=f:readline()
+		printf("Line %03i: %s", lineno, line)
+		lineno+=1
+	done
+
+	f:free()
+return 0

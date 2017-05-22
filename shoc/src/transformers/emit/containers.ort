@@ -24,6 +24,13 @@ function(FunctionDecl n, TransformerPass p) emit_value::for_func -> FunctionDecl
 	if -n.head.is_extern do
 		int i=0
 		p.proj:enter_method_named(n.head.name)
+
+		if p.proj.options:contains("funchooks") & -n.head.name:startswith("orth$$internal$$hooks") do
+			List hook_args=List::new()
+			hook_args:append_GIRVar(GIRLiteral::emit_cstr(p.proj, n.head.name))
+			GIRCall::emit(p.proj, GIRGetMethod::emit(p.proj, p.proj:get_Method("orth$$internal$$hooks$$function_enter_hook")), hook_args)
+		done
+
 		while i<n.body.len do
 			p:emit_value(n.body:get_Node(i))
 			i+=1

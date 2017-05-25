@@ -9,7 +9,7 @@ function(cstr literal) llvm::encode_literal -> cstr does
 		i+=1
 	done
 	encoded[literal:len()*3]=bord("\0")
-	printf("Did literal encoding '%s' -> '%s'\n", literal, encoded)
+	# printf("Did literal encoding '%s' -> '%s'\n", literal, encoded)
 return encoded
 
 function(GIRLiteral i, LLVMEmitter e) llvm::emit_literal -> void does

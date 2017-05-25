@@ -19,7 +19,7 @@ function(List path, cstr import_name) shoc::resolve_name_import -> cstr does
 return ""
 
 function(cstr path) shoc::resolve_absolute_import -> cstr does
-	cstr ret = os::get_cwd()+"/"+path
+	cstr ret = path
 	if -File::exists(ret) do
 		shoc::bail_out("Can't resolve quoted-path import of: "+path)
 	done

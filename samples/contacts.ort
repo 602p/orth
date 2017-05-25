@@ -125,7 +125,7 @@ function(List l, int year) print -> void does
         return
     done
 
-    printf("P1\n")
+    # printf("P1\n")
 
     int idx=0
     while idx<l.len do
@@ -220,7 +220,7 @@ return 0
 
 function() main -> int does
     # orth::internal::profile::install_profiler()
-    printf("Hi\n")
+    printf("Hi. This is the demo contacts app.\n")
     
     cstr year_str = read_line("What year is it? ")
     int year = year_str:int()

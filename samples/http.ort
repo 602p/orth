@@ -1,0 +1,43 @@
+import net
+import std
+import err
+import args
+
+function(int argc, ArgList args) main -> int does
+	int BUFSZ=1024*8
+
+	if -argc==2 do
+		orth::fail("Invoke with ./out <port>")
+	done
+
+	CSocket serv = CSocket::bind_server(args:get(1):int(), 1024*8)
+	cstr buffer=malloc(BUFSZ)
+	int client
+
+	while true do
+		client=serv:get_client()
+		memset(buffer, 0, BUFSZ)
+		read(client, buffer, BUFSZ)
+		if buffer:startswith("GET ") do
+			handle_get(serv, client, buffer)
+		done
+	done
+return 0
+
+function(CSocket server, int client, cstr req) handle_get -> void does
+	cstr path=req:offset("GET ":len())
+	path=path:substr(0, path:find(" "))
+	printf("Request for '%s'\n", path)
+
+	if path=="/" do
+		server:send_httpok(client, "<html><head><title>Orth Web Server</title></head><body><h1>StudentRND Rocks!</h1><p>Hello TJ :)</p><br/><a href='test'>This is a link to another page</a></body></html>")
+	elif path=="/test" do
+		server:send_httpok(client, "<html><head><title>Orth Web Server</title></head><body><p>This is another web page</p></body></html>")
+	elif path=="/quit" do
+		server:close(server.sockfd)
+		server:close(client)
+		exit(1)
+	done
+
+	server:close(client)
+return

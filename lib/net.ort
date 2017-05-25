@@ -1,0 +1,89 @@
+# sz sockaddr= 16
+# sz in_addr = 4
+# oo family   : 0
+# oo port     : 2
+# oo addr     : 4
+# oo addr.addr: 0
+# sz family   : 2
+# sz port     : 2
+# sz addr     : 4
+# sz addr.addr: 4
+
+import std
+import err
+import boxes
+
+extern(int domain, int type_, int protocol) socket -> int
+extern(int fd, CSockAddr addr, int len) bind -> int
+extern(int fd, int backlog) listen -> int
+extern(int fd, CSockAddr sockaddr, ptr addrlen) accept -> int
+extern(int fd, ptr buf, int buf_sz) read -> int
+extern(int fd, ptr buf, int buf_sz) write -> int
+extern(short in) htons -> short
+extern(int fd, int how) shutdown -> int
+
+type CSockAddr is packed #NOTE: Works on my machine. probably not portable!
+	short family
+	short port
+	int   addr
+
+	function() CSockAddr::new_empty -> CSockAddr does
+		CSockAddr new = malloc(16)|CSockAddr
+		memset(new|ptr, 0, 16)
+	return new
+
+	function(int port) CSockAddr::new_server_saddr -> CSockAddr does
+		CSockAddr new = CSockAddr::new_empty()
+		new.family=2|short
+		new.addr=0
+		new.port=htons(port|short)
+	return new
+endtype
+
+type CSocketServerHandler is a function->void #(CSocket, sockfd)
+
+type CSocket is
+	int sockfd
+	CSockAddr _addr
+	ptr addrsz
+
+	function(int port, int bufsz) CSocket::bind_server -> CSocket does
+		CSocket new = malloc(@sizeof(CSocket)@)|CSocket
+		new.sockfd=socket(2, 1, 0)
+		new._addr=CSockAddr::new_server_saddr(port)
+
+		new.addrsz = malloc(@sizeof(int)@)
+		Box_int addrsz_box = (new.addrsz|Box_int)
+		addrsz_box.val=16
+
+		if new.sockfd<0 do
+			orth::fail("Error opening socket: sockfd<0")
+		done
+
+		if bind(new.sockfd, new._addr, 16)<0 do
+			orth::fail("Error opening socket: bind() returns <0")
+		done
+	return new
+
+	function(CSocket server) CSocket:get_client -> int does
+		listen(server.sockfd, 5)
+		CSockAddr client_addr=CSockAddr::new_empty()
+		int newfd = accept(server.sockfd, client_addr, server.addrsz)
+		if newfd<0 do
+			orth::fail("Error in accept(): newfd<0")
+		done
+	return newfd
+
+	function(CSocket server, int client, cstr message) CSocket:send -> void does
+		write(client, message, message:len())
+	return
+
+	function(CSocket server, int client, cstr message) CSocket:send_httpok -> void does
+		server:send(client, "HTTP/1.0 200 OK\r\nContent-Type: text/html\r\n\r\n")
+		server:send(client, message)
+	return
+
+	function(CSocket server, int client) CSocket:close -> void does
+		shutdown(client, 2)
+	return
+endtype

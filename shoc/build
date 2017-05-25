@@ -4,6 +4,6 @@ export PATH=$PATH:../../compiler
 
 cd src
 
-orthc main.ort funchooks $@
+orthc main.ort $@
 
 mv main ../shoc

@@ -1,2 +1,8 @@
+import std
 
-1
+function(int i) square -> int does
+return i*i
+
+function() main -> int does
+	printf("7*7=%i\n", square(7))
+return 0

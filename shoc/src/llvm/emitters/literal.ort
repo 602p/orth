@@ -8,7 +8,8 @@ function(cstr literal) llvm::encode_literal -> cstr does
 		encoded[(i*3)+2]=("0123456789ABCDEF")[(literal[i]|int)&15]
 		i+=1
 	done
-	encoded[encoded:len()]=bord("\0")
+	encoded[literal:len()*3]=bord("\0")
+	printf("Did literal encoding '%s' -> '%s'\n", literal, encoded)
 return encoded
 
 function(GIRLiteral i, LLVMEmitter e) llvm::emit_literal -> void does

@@ -74,11 +74,13 @@ type LLVMEmitter is
 
 	function(LLVMEmitter self, cstr text) LLVMEmitter:emit -> void does
 		self.fd:write(text)
+		printf("LLVM Emit :%s\n", text)
 	return
 
 	function(LLVMEmitter self, cstr text) LLVMEmitter:emitl -> void does
 		self.fd:write(text)
 		self.fd:write("\n")
+		printf("LLVM Emitl:%s\n", text)
 	return
 
 	function(LLVMEmitter self, cstr name) LLVMEmitter:enter_method -> LLVMEmitter does

@@ -67,7 +67,7 @@ function(Project p, cstr filename) Project:emit_as_llvm -> Project does
 	j=0
 	Method meth
 	while j<p.methods:num_keys() do
-		printf("Emitting %04i/%04i - %s\n", j, p.methods:num_keys(), (p.methods:get_by_num(j)|Method).name)
+		printf("Emitting %03i/%03i - %s\n", j+1, p.methods:num_keys(), (p.methods:get_by_num(j)|Method).name)
 		llvm::emit_method(p.methods:get_by_num(j)|Method, context)
 		j+=1
 	done

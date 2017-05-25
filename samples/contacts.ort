@@ -1,6 +1,6 @@
 import std
 import linkedlist
-import err_lite
+import err
 # import profile
 
 type Record is
@@ -66,32 +66,32 @@ type Record is
     return res
 
     function(Record r, int year) Record:get_report -> cstr does
-    printf("R1\n")
+    # printf("R1\n")
         cstr name = r:get_full_name()
-        printf("R2\n")
+        # printf("R2\n")
         cstr next
         if r.has_email do
-            printf("R3.yes\n")
+            # printf("R3.yes\n")
             cstr interim = name+" <"
             cstr with_email = interim+r.email
             next=with_email+">"
             with_email:free()
             interim:free()
         else do
-            printf("R2.no\n")
+            # printf("R2.no\n")
             next=name+" <no email>"
         done
-        printf("R3\n")
+        # printf("R3\n")
         name:free()
-        printf("R4\n")
+        # printf("R4\n")
 
         cstr age_rep = r:get_age_rep(year)
-        printf("R5\n")
+        # printf("R5\n")
 
         cstr full = next+age_rep
-        printf("R6\n")
+        # printf("R6\n")
         age_rep:free()
-        printf("R7\n")
+        # printf("R7\n")
     return full
 
     function(Record r, cstr email) Record:set_email -> void does
@@ -129,7 +129,7 @@ function(List l, int year) print -> void does
 
     int idx=0
     while idx<l.len do
-        printf("P2.%i\n", idx)
+        # printf("P2.%i\n", idx)
         cstr s = (l:get(idx)|Record):get_report(year)
         printf("%i) %s\n", idx, s)
         s:free()
@@ -232,19 +232,19 @@ function() main -> int does
     cstr req
     
     while run==1 do
-        printf("A\n")
+        # printf("A\n")
         print(l, year)
-        printf("B\n")
+        # printf("B\n")
         printf("\nType Q to quit, A to append, C to clear, M to move, E to edit, I to insert or D to delete\n")
         req=read_line(">")
-        printf("C\n")
+        # printf("C\n")
         int res = do_cmd(l, req, year)
         printf(clear)
         if res==1 do
             printf("Cya, nerd!\n")
             run=0
         done
-        printf("D\n")
+        # printf("D\n")
         req:free()
     done
 

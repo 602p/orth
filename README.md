@@ -48,3 +48,9 @@ Orth is still a low-level language, meaning you still need to watch your memory 
 4. Install GCC (basically any modern version, should provide a `gcc`)
 5. Run `orthc <your_file_name>`
 6. Observe and run your new ELF executable with `./out`
+
+### Running the Self-Hosting compiler
+1. Once you have orthc up and running, head into the shoc directory and run `./py_build` This will probably take ~30 seconds
+2. This should produce a `shoc` executable with a similar-but-not-the-same command line interface (flags - undocumented anyway :( - are different)
+3. Run `./build_self` and shoc will rebuild itself
+4. Now you got a bona-fide orth-in-orth compiler in shoc. Should be compatible with samples stuff, provided you use the `-s<path>` argument to specify the module search path of (in order) shoc/lib and lib (e.g. `shoc myfile.ort -slib -s../lib`) 

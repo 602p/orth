@@ -29,12 +29,16 @@ endtype
 type StrMap is
 	int size
 	int filled_slots
+	int max_load_pct
+	int load_max
 	ptr table
 	StrMap fallback
 
-	function(int size) StrMap::new_sized -> StrMap does
+	function(int size, int load_pct) StrMap::new_ex -> StrMap does
 		StrMap new = malloc(@sizeof(StrMap)@)|StrMap
 		new.size=size
+		new.max_load_pct=load_pct
+		new:recalc_load_max()
 		new.table=malloc(size*@sizeof(StrMapEntry)@)
 		new.fallback=null|StrMap
 		new.filled_slots=0
@@ -45,14 +49,24 @@ type StrMap is
 		done
 	return new
 
+	function(StrMap self) StrMap:recalc_load_max -> void does
+		self.load_max=(((self.max_load_pct|float)/(100|float))*(self.size|float))|int
+	return
+
+	function(int size) StrMap::new_sized -> StrMap does
+	return StrMap::new_ex(size, 75)
+
 	function() StrMap::new -> StrMap does
-	return StrMap::new_sized(128)
+	return StrMap::new_sized(64)
 
 	function(StrMap self, int slot) StrMap:get_slot -> StrMapEntry does
 	return self.table:offset(slot*@sizeof(StrMapEntry)@)|StrMapEntry
 
+	function(StrMap self) StrMap:get_load_pct -> int does
+	return (((self.filled_slots|float)/(self.size|float))*(100|float))|int
+
 	function(StrMap self) StrMap:_expand -> void does
-		if self.size<=4096 do #If we have a relativley small number of keys, expand the table and copy
+		if self.size<=1024 do #If we have a relativley small number of keys, expand the table and copy
 			StrMap temp_new = StrMap::new_sized(self.size*2)
 			int i=0
 			int numkeys=self:num_keys()
@@ -63,11 +77,12 @@ type StrMap is
 			   i+=1
 			done
 			self.size=temp_new.size
+			self:recalc_load_max()
 			free(self.table)
 			self.table=temp_new.table
 			free(temp_new)
 		else do #If we have a _lot_ of keys (looking at you SSA mappings) add a new chained fallback map
-			StrMap new_map=StrMap::new_sized(self.size*2)
+			StrMap new_map=StrMap::new_ex(self.size*2, self.max_load_pct)
 			ptr this_table=self.table
 			int this_size=self.size
 			int this_filled=self.filled_slots
@@ -86,7 +101,10 @@ type StrMap is
 	return
 
 	function(StrMap self, cstr key, ptr value) StrMap:set -> void does
-		# printf("Setting %s=%s\n", key, value)
+		if self.filled_slots>=self.load_max do
+			self:_expand()
+		done
+
 		int slot_id=key:elf_hash()%self.size
 		int initial_id=slot_id
 		StrMapEntry slot = self:get_slot(slot_id)
@@ -114,8 +132,7 @@ type StrMap is
 			slot=self:get_slot(slot_id)
 		done
 
-		self:_expand()
-		self:set(key, value)
+		orth::fail("Encountered what should be an impossible situation in StrMap:set")
 	return
 
 	function(StrMap self, cstr key) StrMap:get_entry -> StrMapEntry does
@@ -194,6 +211,7 @@ type StrMap is
 
 	function(StrMap self) StrMap:_debug_print -> void does
 		int i=0
+		printf("%i keys/%i slots/%i max, %i%% load factor\n", self.filled_slots, self.size, self.load_max, self:get_load_pct())
 		while i<self.size do
 			if self:get_slot(i).key|ptr==null do
 				printf("%03i\t-\n", i)

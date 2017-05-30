@@ -17,15 +17,8 @@ function(GIRVar var) llvm::make_local_handle -> cstr does
 return "%t_"+var.ssa_id:str()
 
 function(Project p, cstr filename, bool verbose) Project:emit_as_llvm -> Project does
-	int ssa_guess=0
-	int j=0
-	while j<p.methods:num_keys() do
-		ssa_guess+=(p.methods:get_by_num(j)|Method).gir_code.len
-		j+=1
-	done
-
 	File out = File::open(filename, "w")
-	LLVMEmitter context = LLVMEmitter::new(out, ssa_guess)\
+	LLVMEmitter context = LLVMEmitter::new(out, p)\
 	                                  :register_emitter("literal",    llvm::emit_literal     |LLVMGIREmitter)\
 	                                  :register_emitter("return",     llvm::emit_return      |LLVMGIREmitter)\
 	                                  :register_emitter("get_local",  llvm::emit_get_local   |LLVMGIREmitter)\
@@ -41,7 +34,7 @@ function(Project p, cstr filename, bool verbose) Project:emit_as_llvm -> Project
 	                                  :register_emitter("jump",       llvm::emit_jump        |LLVMGIREmitter)\
 	                                  :register_emitter("not",        llvm::emit_not         |LLVMGIREmitter)
 
-	j=0
+	int j=0
 	OType typ
 
 	context:emitl("@_the_zero_double = global double 0.0")

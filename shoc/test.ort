@@ -5,23 +5,23 @@ function() main -> int does
 	#UMz and SpJ
 
 	StrMap a = StrMap::new_sized(4)
-	int i=0
-	while i<4 do
-		a:set("key_"+i:str(), "value_"+i:str())
-		i+=1
-	done
-
+	a:set("1", "1")
+	a:set("2", "2")
+	a:set("3", "3")
 	a:_debug_print()
 	printf("\n")
 
-	a:set("foo", "bar")
-
+	a:set("4", "4")
 	a:_debug_print()
+
+	
+
+	a:set("foo", "bar")
 
 	printf("\n")
 	int c=a:num_keys()
 	printf("Num Keys=%i\n", c)
-	i=0
+	int i=0
 	while i<c do
 		printf("%i - %s:%s\n", i, a:get_key_by_num(i), a:get_by_num(i))
 		i+=1

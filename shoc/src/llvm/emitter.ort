@@ -28,13 +28,23 @@ type LLVMEmitter is
 	int    ssa_count
 	List   cached_globals
 	cstr   quote
+	Project p
 
-	function(File fd, int ssa_guess) LLVMEmitter::new -> LLVMEmitter does
+	function(File fd, Project p) LLVMEmitter::new -> LLVMEmitter does
 		LLVMEmitter new = malloc(@sizeof(LLVMEmitter)@)|LLVMEmitter
+		new.p=p
+
+		int ssa_guess=0
+		int j=0
+		while j<p.methods:num_keys() do
+			ssa_guess+=(p.methods:get_by_num(j)|Method).gir_code.len
+			j+=1
+		done
+
 		new.gir_emitters=StrMap::new()
-		new.locals_maps=StrMap::new()
-		new.ssa_map=StrMap::new_sized(ssa_guess)
-		new.types_map=StrMap::new()
+		new.locals_maps=StrMap::new_sized(p.methods:num_keys()*2)
+		new.ssa_map=StrMap::new_sized(ssa_guess*2)
+		new.types_map=StrMap::new_sized(p.types:num_keys()*2)
 		new.cached_globals=List::new()
 		new.string_literals=StrMap::new()
 
@@ -119,7 +129,7 @@ type LLVMEmitter is
 
 	function(LLVMEmitter self, cstr name) LLVMEmitter:enter_method -> LLVMEmitter does
 		self.current_method=name
-		self.locals_maps:set(name, StrMap::new()|ptr)
+		self.locals_maps:set(name, StrMap::new_sized(self.p:get_Method(name).gir_code.len*2)|ptr)
 	return self
 
 	function(LLVMEmitter self, cstr name) LLVMEmitter:get_local_addr_var -> cstr does

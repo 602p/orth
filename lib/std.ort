@@ -1,38 +1,4 @@
-@declare_c_func("printf", "int", "(...)")@
-@declare_c_func("puts", "int", "(i8*)")@
-@declare_c_func("system", "int", "(i8*)")@
-@declare_c_func("sprintf", "int", "(...)")@
-@declare_c_func("scanf", "int", "(...)")@
-@declare_c_func("malloc", "ptr", "(i32)")@
-@declare_c_func("usleep", "void", "(i32)")@
-@declare_c_func("realloc", "ptr", "(i8*, i32)")@
-@declare_c_func("strcat", "cstr", "(i8*, i8*)")@
-@declare_c_func("memcpy", "void", "(i8*, i8*, i32)")@
-@declare_c_func("memset", "void", "(i8*, i32, i32)")@
-@declare_c_func("strcpy", "cstr", "(i8*, i8*)")@
-@declare_c_func("strncpy", "void", "(i8*, i8*, i32)")@
-@declare_c_func("strlen", "int", "(i8*)")@
-@declare_c_func("atoi", "int", "(i8*)")@
-@declare_c_func("strtod", "float", "(i8*, i8*)")@
-@declare_c_func("strcmp", "int", "(i8*, i8*)")@
-@declare_c_func("strncmp", "int", "(i8*, i8*, i32)")@
-@declare_c_func("free", "void", "(i8*)")@
-@declare_c_func("exit", "int", "(i32)")@
-@declare_c_func("clock", "long", "()")@
-
-@declare_c_func("fopen", "ptr", "(i8*, i8*)")@
-@declare_c_func("fprintf", "void", "(...)")@
-@declare_c_func("fclose", "void", "(i8*)")@
-@declare_c_func("fflush", "void", "(i8*)")@
-@declare_c_func("fgets", "ptr", "(i8*, i32, i8*)")@
-
-@declare_c_func("fdopen", "ptr", "(i32, i8*)")@
-@declare_c_func("fflush", "void", "(i8*)")@
-
-@declare_c_func("signal", "ptr", "(...)")@
-
-@declare_c_func("get_current_dir_name", "cstr", "()")@
-@declare_c_func("getenv", "cstr", "(i8*)")@
+import std_extern
 
 # extern(...) printf -> int
 # extern(cstr str) puts -> int
@@ -85,6 +51,9 @@ function(cstr a, int b) cstr:offset -> cstr does
 return (a|ptr):offset(b)|cstr
 
 function(cstr a, cstr b) cstr:__eq__ -> bool does
+	if a|ptr==b|ptr do
+		return true
+	done
 return strcmp(a,b)==0
 
 function(cstr a, cstr b) cstr:__ne__ -> bool does

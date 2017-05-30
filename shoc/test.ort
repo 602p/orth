@@ -1,8 +1,22 @@
 import std
-
-function(int i) square -> int does
-return i*i
+import strmap_new
 
 function() main -> int does
-	printf("7*7=%i\n", square(7))
+	#UMz and SpJ
+
+	StrMap a = StrMap::new()
+	int i=0
+	while i<4 do
+		a:set("key_"+i:str(), "value_"+i:str())
+		i+=1
+	done
+
+	a:_debug_print()
+
+	i=0
+	while i<4 do
+		printf("%i\t-> %s\n", i, a:get("key_"+i:str()))
+		i+=1
+	done
+	
 return 0

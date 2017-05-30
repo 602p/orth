@@ -1,0 +1,56 @@
+import list
+
+type MapEntry is
+	cstr key
+	ptr  value
+
+	function(cstr key, ptr value) MapEntry::new -> MapEntry does
+		MapEntry new = malloc(@sizeof(MapEntry)@)|MapEntry
+		new.key=key
+		new.value=value
+	return new
+endtype
+
+type StrMap is #...actually just a List!
+	function() StrMap::new -> StrMap does
+	return List::new()|StrMap
+
+	function(StrMap self) StrMap:_al -> List does
+	return self|List
+
+	function(StrMap self, cstr key) StrMap:get_entry -> MapEntry does
+		int i=0
+		while i<self:_al().len do
+			if (self:_al():get(i)|MapEntry).key==key do
+				return self:_al():get(i)|MapEntry
+			done
+			i+=1
+		done
+	return null|MapEntry
+
+	function(StrMap self, cstr key) StrMap:contains -> bool does
+	return self:get_entry(key)|ptr!=null
+
+	function(StrMap self, cstr key, ptr value) StrMap:set -> void does
+		if -self:contains(key) do
+			self:_al():append(MapEntry::new(key, value)|ptr)
+		else do
+			self:get_entry(key).value=value
+		done
+	return
+
+	function(StrMap self, cstr key) StrMap:get -> ptr does
+		if -self:contains(key) do
+			orth::fail("KeyError in StrMap: "+key)
+		done
+	return self:get_entry(key).value
+
+	function(StrMap self) StrMap:num_keys -> int does
+	return self:_al().len
+
+	function(StrMap self, int req) StrMap:get_by_num -> ptr does
+	return (self:_al():get(req)|MapEntry).value
+
+	function(StrMap self, int req) StrMap:get_key_by_num -> cstr does
+	return (self:_al():get(req)|MapEntry).key
+endtype

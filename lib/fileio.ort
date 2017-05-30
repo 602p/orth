@@ -7,6 +7,9 @@ type File is
 	bool reached_eof
 	bool closed
 	ptr  fd
+	ptr  write_buffer
+	int  write_buffer_size
+	int  write_buffer_pos
 
 	function(cstr path, cstr mode) File::open -> File does
 		File f = malloc(@sizeof(File)@)|File
@@ -21,6 +24,12 @@ type File is
 		f.path=path
 		f.reached_eof=0|bool
 		f.closed=0|bool
+
+		if f.writable do
+			f.write_buffer_size=1024*1024
+			f.write_buffer_pos=0
+			f.write_buffer=malloc(f.write_buffer_size)
+		done
 	return f
 
 	function(cstr path) File::exists -> bool does
@@ -83,15 +92,34 @@ type File is
 		done
 	return contents
 
+	function(File f) File:flush_buffer -> void does
+		fwrite(f.write_buffer, f.write_buffer_pos, 1, f.fd)
+		f.write_buffer_pos=0
+	return
+
 	function(File f, cstr s) File:write -> void does
-		fprintf(f.fd, "%s", s)
+		# fprintf(f.fd, "%s", s)
+
+		int len = s:len()
+		if len+f.write_buffer_pos>f.write_buffer_size-1 do
+			f:flush_buffer()
+		done
+
+		if len>f.write_buffer_size-1 do
+			fwrite(s, len, 1, f.fd)
+		else do
+			memcpy(f.write_buffer:offset(f.write_buffer_pos), s, len+1)
+			f.write_buffer_pos+=len
+		done
 	return
 
 	function(File f, cstr s) File:writeln -> void does
-		fprintf(f.fd, "%s\n", s)
+		f:write(s)
+		f:write("\n")
 	return
 
 	function(File f) File:close -> void does
+		f:flush_buffer()
 		if f.writable do
 			fflush(f.fd|ptr)
 		done

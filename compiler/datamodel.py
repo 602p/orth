@@ -22,7 +22,8 @@ magicmethods={
 	"shr":"__shr__",  #Shift left
 	"shl":"__shl__",  #Shift right
 	"band":"__band__",#Binary and (& operator)
-	"mod":"__mod__"   #Modulo (% operator)
+	"mod":"__mod__",  #Modulo (% operator)
+	"xor":"__xor__"   #XOR (^ operator)
 }
 
 class OType:
@@ -165,6 +166,11 @@ class IntegerPrimitiveOType(PrimitiveOType):
 		#Implement logical (bitwise) and (& operator)
 		#Same for signed/unsigned, just operates on them as bits. 
 		return "and {} {}, {}".format(self.get_llvm_representation(), lhs, rhs)
+
+	def implement_xor(self, lhs, rhs, out):
+		#Implement xor (^ operator)
+		#Same for signed/unsigned, just operates on them as bits. 
+		return "xor {} {}, {}".format(self.get_llvm_representation(), lhs, rhs)
 
 	#Implement all the comparison operations. The `s` prefix on the comparisons indicates signed logic
 	def implement_gt(self, lhs, rhs, out):

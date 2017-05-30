@@ -19,6 +19,8 @@ function(GIRVar lhs_v, GIRVar rhs_v, cstr op, cstr dest, LLVMEmitter e) llvm::s_
 		e:emitl(dest+" = lshr "+ty+" "+lhs+", "+rhs)
 	elif op=="&" do
 		e:emitl(dest+" = and "+ty+" "+lhs+", "+rhs)
+	elif op=="^" do
+		e:emitl(dest+" = xor "+ty+" "+lhs+", "+rhs)
 	elif op=="==" do
 		e:emitl(dest+" = icmp eq "+ty+" "+lhs+", "+rhs)
 	elif op=="!=" do
@@ -57,6 +59,8 @@ function(GIRVar lhs_v, GIRVar rhs_v, cstr op, cstr dest, LLVMEmitter e) llvm::u_
 		e:emitl(dest+" = lshr "+ty+" "+lhs+", "+rhs)
 	elif op=="&" do
 		e:emitl(dest+" = and "+ty+" "+lhs+", "+rhs)
+	elif op=="^" do
+		e:emitl(dest+" = xor "+ty+" "+lhs+", "+rhs)
 	elif op=="==" do
 		e:emitl(dest+" = icmp eq "+ty+" "+lhs+", "+rhs)
 	elif op=="!=" do

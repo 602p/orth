@@ -31,10 +31,50 @@ function(GIRVar value, OType target, cstr dest, LLVMEmitter e) llvm::impl_cast -
 	done
 return
 
-function(LLVMEmitter ctx, OType t) llvm::define_type -> void does
+function(LLVMEmitter ctx, OType t) llvm::define_pass1 -> void does
 	if t:is_struct() do
 		ctx.types_map:set(t.name, "%ty_"+t.name+"_struct*")
-	elif t:is_fptr() do
+	done
+return
+
+function(LLVMEmitter ctx, OType t) llvm::define_pass2 -> void does
+	bool ok
+	int i
+	if t:is_fptr() do
+		if -t:as_fptr().return_value:is_fptr() do
+			i=0
+			ok=true
+			if -(t:as_fptr().args|ptr==null) do
+				while i<t:as_fptr().args.len do
+					if t:as_fptr().args:get_OType(i):is_fptr() do
+						ok=false
+					done
+					i+=1
+				done
+			done
+			if ok do
+				cstr rep = ctx:get_ty(t:as_fptr().return_value)+" ("
+				if t:as_fptr().args|ptr==null do
+					rep+="..."
+				else do
+					i=0
+					while i<t:as_fptr().args.len do
+						rep+=ctx:get_ty(t:as_fptr().args:get_OType(i))
+						if i!=t:as_fptr().args.len-1 do
+							rep+=", "
+						done
+						i+=1
+					done
+				done
+				rep+=")*"
+				ctx.types_map:set(t.name, rep)
+			done
+		done
+	done
+return
+
+function(LLVMEmitter ctx, OType t) llvm::define_pass2_point_5 -> void does
+	if t:is_fptr() do
 		cstr rep = ctx:get_ty(t:as_fptr().return_value)+" ("
 		if t:as_fptr().args|ptr==null do
 			rep+="..."
@@ -53,7 +93,7 @@ function(LLVMEmitter ctx, OType t) llvm::define_type -> void does
 	done
 return
 
-function(LLVMEmitter ctx, OType t) llvm::register_type -> void does
+function(LLVMEmitter ctx, OType t) llvm::define_pass3 -> void does
 	if t:is_struct() do
 		cstr rep = "<{"
 		int j=0

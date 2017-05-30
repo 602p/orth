@@ -28,6 +28,8 @@ function(cstr operator) shoc::get_magic-> cstr does
 		return "__shr__"
 	elif operator=="&" do
 		return "__band__"
+	elif operator=="^" do
+		return "__xor__"
 	done
 	shoc::bail_out("Unimplemented magic: "+operator)
 return "?"

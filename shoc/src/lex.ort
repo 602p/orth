@@ -37,7 +37,7 @@ function(cstr text) lex::match_binop -> int does
 	   text:startswith("<<") do
 	   	return 2
 	done
-return text[0]:in("&*/-+%<>")|int
+return text[0]:in("&*/-+%<>^")|int
 
 function(cstr text) lex::match_augassign -> int does
 	if text:startswith("+=") +\

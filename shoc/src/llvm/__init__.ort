@@ -17,8 +17,15 @@ function(GIRVar var) llvm::make_local_handle -> cstr does
 return "%t_"+var.ssa_id:str()
 
 function(Project p, cstr filename) Project:emit_as_llvm -> Project does
+	int ssa_guess=0
+	int j=0
+	while j<p.methods:num_keys() do
+		ssa_guess+=(p.methods:get_by_num(j)|Method).gir_code.len
+		j+=1
+	done
+
 	File out = File::open(filename, "w")
-	LLVMEmitter context = LLVMEmitter::new(out)\
+	LLVMEmitter context = LLVMEmitter::new(out, ssa_guess)\
 	                                  :register_emitter("literal",    llvm::emit_literal     |LLVMGIREmitter)\
 	                                  :register_emitter("return",     llvm::emit_return      |LLVMGIREmitter)\
 	                                  :register_emitter("get_local",  llvm::emit_get_local   |LLVMGIREmitter)\
@@ -34,20 +41,31 @@ function(Project p, cstr filename) Project:emit_as_llvm -> Project does
 	                                  :register_emitter("jump",       llvm::emit_jump        |LLVMGIREmitter)\
 	                                  :register_emitter("not",        llvm::emit_not         |LLVMGIREmitter)
 
-	printf("\nLLVM Emitter Running..\n")
-	int j=0
+	j=0
 	OType typ
 
 	context:emitl("@_the_zero_double = global double 0.0")
 
 	while j<p.types:num_keys() do
-		llvm::define_type(context, p.types:get_by_num(j)|OType)
+		llvm::define_pass1(context, p.types:get_by_num(j)|OType)
 		j+=1
 	done
 
 	j=0
 	while j<p.types:num_keys() do
-		llvm::register_type(context, p.types:get_by_num(j)|OType)
+		llvm::define_pass2(context, p.types:get_by_num(j)|OType)
+		j+=1
+	done
+
+	j=0
+	while j<p.types:num_keys() do
+		llvm::define_pass2_point_5(context, p.types:get_by_num(j)|OType)
+		j+=1
+	done
+
+	j=0
+	while j<p.types:num_keys() do
+		llvm::define_pass3(context, p.types:get_by_num(j)|OType)
 		j+=1
 	done
 
@@ -64,10 +82,12 @@ function(Project p, cstr filename) Project:emit_as_llvm -> Project does
 		j+=1
 	done
 
+	ProgressBar bar = ProgressBar::new(p.methods:num_keys(), 40, "Emitting.....")
+
 	j=0
 	Method meth
 	while j<p.methods:num_keys() do
-		printf("Emitting %03i/%03i - %s\n", j+1, p.methods:num_keys(), (p.methods:get_by_num(j)|Method).name)
+		bar:update(j+1)
 		llvm::emit_method(p.methods:get_by_num(j)|Method, context)
 		j+=1
 	done

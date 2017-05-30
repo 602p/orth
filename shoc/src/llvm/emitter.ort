@@ -1,23 +1,47 @@
 
 type LLVMGIREmitter is a function->cstr #(GIRInst, LLVMEmitter)
 
+function(cstr literal) llvm::encode_literal -> cstr does
+	cstr encoded = malloc((literal:len()*3)+1)
+	int i=0
+	while i<literal:len() do
+		encoded[i*3]=bord("\\")
+		encoded[(i*3)+1]=("0123456789ABCDEF")[(literal[i]|int)>>4]
+		encoded[(i*3)+2]=("0123456789ABCDEF")[(literal[i]|int)&15]
+		i+=1
+	done
+	encoded[literal:len()*3]=bord("\0")
+	# printf("Did literal encoding '%s' -> '%s'\n", literal, encoded)
+return encoded
+
+function(cstr text) llvm::make_string_type -> cstr does
+return "["+(text:len()+1):str()+" x i8]"
+
 type LLVMEmitter is
 	StrMap gir_emitters
 	StrMap locals_maps
 	StrMap ssa_map
 	StrMap types_map
+	StrMap string_literals
 	File   fd
 	cstr   current_method
 	int    ssa_count
 	List   cached_globals
+	cstr   quote
 
-	function(File fd) LLVMEmitter::new -> LLVMEmitter does
+	function(File fd, int ssa_guess) LLVMEmitter::new -> LLVMEmitter does
 		LLVMEmitter new = malloc(@sizeof(LLVMEmitter)@)|LLVMEmitter
 		new.gir_emitters=StrMap::new()
 		new.locals_maps=StrMap::new()
-		new.ssa_map=StrMap::new()
+		new.ssa_map=StrMap::new_sized(ssa_guess*4)
 		new.types_map=StrMap::new()
 		new.cached_globals=List::new()
+		new.string_literals=StrMap::new()
+
+		new.quote=malloc(2)
+		new.quote[0]=34|byte
+		new.quote[1]=0|byte
+
 		new.ssa_count=0
 
 		new.types_map:set("int", "i32")
@@ -49,6 +73,16 @@ type LLVMEmitter is
 		self.cached_globals:append(text)
 	return
 
+	function(LLVMEmitter self, cstr text) LLVMEmitter:make_string_global -> cstr does
+		if -self.string_literals:contains(text) do
+			self.string_literals:set(text, "@strG_"+self:get_next_ssa():str())
+			cstr str_type=llvm::make_string_type(text)
+
+			self:cache_global_stmt(self.string_literals:get(text)|cstr+" = private unnamed_addr constant "+str_type+" c"+self.quote\
+			+llvm::encode_literal(text)+"\\00"+self.quote)
+		done
+	return self.string_literals:get(text)
+		
 	function(LLVMEmitter self) LLVMEmitter:emit_cached_globals -> void does
 		int i=0
 		while i<self.cached_globals.len do

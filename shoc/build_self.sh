@@ -1,3 +1,4 @@
+set -e
 cd src
 ../shoc main.ort -s../lib -s../../lib -fno_strict_dup -fdo_llvm_out $@
 llc-3.5 llvm_out.ir

@@ -400,9 +400,12 @@ function(Project p, cstr name) Project:tokty_by_name -> TokenType does
 	done
 return null|TokenType
 
-function(Project p, cstr text) Project:tokenize -> List does
+function(Project p, cstr text, bool verbose) Project:tokenize -> List does
 	#text=text+"\n;;;"
-	ProgressBar bar = ProgressBar::new(text:len(), 40, "Tokenizing...")
+	ProgressBar bar
+	if verbose do
+		bar= ProgressBar::new(text:len(), 40, "Tokenizing...")
+	done
 	int text_pos=0
 	int current_matcher_idx
 	TokenType current_matcher
@@ -439,8 +442,8 @@ function(Project p, cstr text) Project:tokenize -> List does
 			shoc::bail_out("Can't match input string")
 			ok=false
 		done
-		bar:update(text_pos)
+		if verbose do
+			bar:update(text_pos)
+		done
 	done
-	#text:free()
-	bar:free()
 return tokens

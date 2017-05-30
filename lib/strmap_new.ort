@@ -2,161 +2,209 @@ import boxes
 import err
 
 function(cstr string) cstr:elf_hash -> int does
-   #Orth version of ELF hash (32-bit PJW hash from dragon book)
-   int len = string:len()
-   int x=0
-   int i=0
-   int hash=0
-   while i<len do
-      hash = (hash<<4) + string[i]|int
+	#Orth version of ELF hash (32-bit PJW hash from dragon book)
+	int len = string:len()
+	int x=0
+	int i=0
+	int hash=0
+	while i<len do
+		hash = (hash<<4) + string[i]|int
 
-      x=hash&4026531840
+		x=hash&4026531840
 
-      if x!=0 do
-         hash = hash ^ (x>>24)
-      done
+		if x!=0 do
+			hash = hash ^ (x>>24)
+		done
 
-      hash = hash & ((-x)-1)
-      i+=1
-   done
+		hash = hash & ((-x)-1)
+		i+=1
+	done
 return hash
 
 type StrMapEntry is
-   cstr key
-   ptr  value
+	cstr key
+	ptr  value
 endtype
 
 type StrMap is
-   int size
-   ptr table
+	int size
+	int filled_slots
+	ptr table
+	StrMap fallback
 
-   function(int size) StrMap::new_sized -> StrMap does
-      StrMap new = malloc(@sizeof(StrMap)@)|StrMap
-      new.size=size
-      new.table=malloc(size*@sizeof(StrMapEntry)@)
-      int i=0
-      while i<size do
-         new:get_slot(i).key=null
-         i+=1
-      done
-   return new
+	function(int size) StrMap::new_sized -> StrMap does
+		StrMap new = malloc(@sizeof(StrMap)@)|StrMap
+		new.size=size
+		new.table=malloc(size*@sizeof(StrMapEntry)@)
+		new.fallback=null|StrMap
+		new.filled_slots=0
+		int i=0
+		while i<size do
+			new:get_slot(i).key=null
+			i+=1
+		done
+	return new
 
-   function() StrMap::new -> StrMap does
-   return StrMap::new_sized(128)
+	function() StrMap::new -> StrMap does
+	return StrMap::new_sized(128)
 
-   function(StrMap self, int slot) StrMap:get_slot -> StrMapEntry does
-   return self.table:offset(slot*@sizeof(StrMapEntry)@)|StrMapEntry
+	function(StrMap self, int slot) StrMap:get_slot -> StrMapEntry does
+	return self.table:offset(slot*@sizeof(StrMapEntry)@)|StrMapEntry
 
-   function(StrMap self, cstr key, ptr value) StrMap:set -> void does
-      # printf("Setting %s=%s\n", key, value)
-      int slot_id=key:elf_hash()%self.size
-      StrMapEntry slot = self:get_slot(slot_id)
-      while slot_id<self.size do
-         if slot.key|ptr==null do
-            slot.key=key
-            slot.value=value
-            return
-         elif slot.key|int==-1 do
-            0 #TODO: Allow new values to be placed here. Not implemented currently, as this could lead to duplication of entries for the same key
-         elif slot.key==key do
-            slot.value=value
-            return
-         done
-         slot_id+=1
-         slot=self:get_slot(slot_id)
-      done
-      
-      #Resize:
-      StrMap temp_new = StrMap::new_sized(self.size*2)
-      int i=0
-      int numkeys=self:num_keys()
-      StrMapEntry e
-      while i<numkeys do
-         e=self:get_slot_by_num(i)
-         temp_new:set(e.key, e.value)
-         i+=1
-      done
-      self.size=temp_new.size
-      free(self.table)
-      self.table=temp_new.table
-      free(temp_new)
-      self:set(key, value)
-   return
+	function(StrMap self) StrMap:_expand -> void does
+		if self.size<=4096 do #If we have a relativley small number of keys, expand the table and copy
+			StrMap temp_new = StrMap::new_sized(self.size*2)
+			int i=0
+			int numkeys=self:num_keys()
+			StrMapEntry e
+			while i<numkeys do
+			   e=self:get_slot_by_num(i)
+			   temp_new:set(e.key, e.value)
+			   i+=1
+			done
+			self.size=temp_new.size
+			free(self.table)
+			self.table=temp_new.table
+			free(temp_new)
+		else do #If we have a _lot_ of keys (looking at you SSA mappings) add a new chained fallback map
+			StrMap new_map=StrMap::new_sized(self.size*2)
+			ptr this_table=self.table
+			int this_size=self.size
+			int this_filled=self.filled_slots
+			StrMap this_fallback=self.fallback
 
-   function(StrMap self, cstr key) StrMap:get_entry -> StrMapEntry does
-      int slot_id=key:elf_hash()%self.size
-      StrMapEntry slot = self:get_slot(slot_id)
-      while slot_id<self.size do
-         if slot.key|ptr==null do
-            return null|StrMapEntry
-         elif slot.key==key do
-            return slot
-         else do
-            slot_id+=1
-            slot=self:get_slot(slot_id)
-         done
-      done
-   return null|StrMapEntry
+			self.table=new_map.table
+			self.size=new_map.size
+			self.filled_slots=new_map.filled_slots
+			self.fallback=new_map
 
-   function(StrMap self, cstr key) StrMap:get -> ptr does
-      StrMapEntry e = self:get_entry(key)
-      if e|ptr==null do
-         self:_debug_print()
-         orth::fail("Key not found in StrMap: "+key)
-      done
-   return e.value
+			new_map.table=this_table
+			new_map.size=this_size
+			new_map.fallback=this_fallback
+			new_map.filled_slots=this_filled
+		done
+	return
 
-   function(StrMap self, cstr key) StrMap:contains -> bool does
-   return self:get_entry(key)|ptr!=null
+	function(StrMap self, cstr key, ptr value) StrMap:set -> void does
+		# printf("Setting %s=%s\n", key, value)
+		int slot_id=key:elf_hash()%self.size
+		int initial_id=slot_id
+		StrMapEntry slot = self:get_slot(slot_id)
+		bool ok=true
+		while ok do
+			if slot.key|ptr==null do
+				slot.key=key
+				slot.value=value
+				self.filled_slots+=1
+				return
+			elif slot.key|int==-1 do
+				0 #TODO: Allow new values to be placed here. Not implemented currently, as this could lead to duplication of entries for the same key
+			elif slot.key==key do
+				slot.value=value
+				return
+			done
+			slot_id+=1
+			if slot_id==self.size do
+				slot_id=0
+			done
 
-   function(StrMap self) StrMap:num_keys -> int does
-      int i=0
-      int keys=0
-      while i<self.size do
-         if (self:get_slot(i).key|ptr!=null) & (self:get_slot(i).key|int!=-1) do
-            keys+=1
-         done
-         i+=1
-      done
-   return keys
+			if slot_id==initial_id do
+				ok=false
+			done
+			slot=self:get_slot(slot_id)
+		done
 
-   function(StrMap self, int idx) StrMap:get_slot_by_num -> StrMapEntry does
-      int i=0
-      int key=0
-      while i<self.size do
-         if (self:get_slot(i).key|ptr!=null) & (self:get_slot(i).key|int!=-1) do
-            if key==idx do
-               return self:get_slot(i)
-            done
-            key+=1
-         done
-         i+=1
-      done
-   return null|StrMapEntry
+		self:_expand()
+		self:set(key, value)
+	return
 
-   function(StrMap self, int idx) StrMap:get_key_by_num -> cstr does
-      StrMapEntry e = self:get_slot_by_num(idx)
-      if e|ptr==null do
-         orth::fail("Idx not found in StrMap: "+idx:str())
-      done
-   return e.key
+	function(StrMap self, cstr key) StrMap:get_entry -> StrMapEntry does
+		int slot_id=key:elf_hash()%self.size
+		int initial_id=slot_id
+		StrMapEntry slot = self:get_slot(slot_id)
+		bool ok=true
+		while ok do
+			if slot.key|ptr==null do
+				if self.fallback|ptr==null do
+					return null|StrMapEntry
+				done
+				return self.fallback:get_entry(key)
+			elif slot.key==key do
+				return slot
+			else do
+				slot_id+=1
+				if slot_id==self.size do
+					slot_id=0
+				done
+				if slot_id==initial_id do
+					ok=false
+				done
+				slot=self:get_slot(slot_id)
+			done
+		done
+		if self.fallback|ptr==null do
+			return null|StrMapEntry
+		done
+	return self.fallback:get_entry(key)
 
-   function(StrMap self, int idx) StrMap:get_by_num -> ptr does
-      StrMapEntry e = self:get_slot_by_num(idx)
-      if e|ptr==null do
-         orth::fail("Idx not found in StrMap: "+idx:str())
-      done
-   return e.value
+	function(StrMap self, cstr key) StrMap:get -> ptr does
+		StrMapEntry e = self:get_entry(key)
+		if e|ptr==null do
+			self:_debug_print()
+			orth::fail("Key not found in StrMap: "+key)
+		done
+	return e.value
 
-   function(StrMap self) StrMap:_debug_print -> void does
-      int i=0
-      while i<self.size do
-         if self:get_slot(i).key|ptr==null do
-            printf("%03i\t-\n", i)
-         else do
-            printf("%03i\t%s\t%s\n", i, self:get_slot(i).key, self:get_slot(i).value)
-         done
-         i+=1
-      done
-   return
+	function(StrMap self, cstr key) StrMap:contains -> bool does
+	return self:get_entry(key)|ptr!=null
+
+	function(StrMap self) StrMap:num_keys -> int does
+	return self.filled_slots
+
+	function(StrMap self, int idx) StrMap:get_slot_by_num -> StrMapEntry does
+		int i=0
+		int key=0
+		while i<self.size do
+			if (self:get_slot(i).key|ptr!=null) & (self:get_slot(i).key|int!=-1) do
+				if key==idx do
+					return self:get_slot(i)
+				done
+				key+=1
+			done
+			i+=1
+		done
+		if self.fallback|ptr!=null do
+			return self.fallback:get_slot_by_num(idx-key)
+		done
+	return null|StrMapEntry
+
+	function(StrMap self, int idx) StrMap:get_key_by_num -> cstr does
+		StrMapEntry e = self:get_slot_by_num(idx)
+		if e|ptr==null do
+			orth::fail("Idx not found in StrMap: "+idx:str())
+		done
+	return e.key
+
+	function(StrMap self, int idx) StrMap:get_by_num -> ptr does
+		StrMapEntry e = self:get_slot_by_num(idx)
+		if e|ptr==null do
+			orth::fail("Idx not found in StrMap: "+idx:str())
+		done
+	return e.value
+
+	function(StrMap self) StrMap:_debug_print -> void does
+		int i=0
+		while i<self.size do
+			if self:get_slot(i).key|ptr==null do
+				printf("%03i\t-\n", i)
+			else do
+				printf("%03i\t%s\t%s\n", i, self:get_slot(i).key, self:get_slot(i).value)
+			done
+			i+=1
+		done
+		if self.fallback|ptr!=null do
+			printf("Fallback Map:\n")
+			self.fallback:_debug_print()
+		done
+	return
 endtype

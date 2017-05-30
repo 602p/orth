@@ -16,7 +16,7 @@ import "llvm/emitters/not.ort"
 function(GIRVar var) llvm::make_local_handle -> cstr does
 return "%t_"+var.ssa_id:str()
 
-function(Project p, cstr filename) Project:emit_as_llvm -> Project does
+function(Project p, cstr filename, bool verbose) Project:emit_as_llvm -> Project does
 	int ssa_guess=0
 	int j=0
 	while j<p.methods:num_keys() do
@@ -82,12 +82,17 @@ function(Project p, cstr filename) Project:emit_as_llvm -> Project does
 		j+=1
 	done
 
-	ProgressBar bar = ProgressBar::new(p.methods:num_keys(), 40, "Emitting.....")
+	ProgressBar bar
+	if verbose do
+		bar = ProgressBar::new(p.methods:num_keys(), 40, "Emitting.....")
+	done
 
 	j=0
 	Method meth
 	while j<p.methods:num_keys() do
-		bar:update(j+1)
+		if verbose do
+			bar:update(j+1)
+		done
 		llvm::emit_method(p.methods:get_by_num(j)|Method, context)
 		j+=1
 	done

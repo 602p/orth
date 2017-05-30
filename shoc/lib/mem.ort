@@ -16,6 +16,5 @@ function(int size) mem::init_arena_allocator -> void does
 return
 
 function() mem::clean_up -> void does
-	printf("WARNING: This application built using mem_lite shim, and mem::clean_up called\n")
-	printf("WARNING: Application will not be memory safe\n")
+	printf("WARNING: This application built using mem_lite shim, and mem::clean_up called - this is a noop\n")
 return

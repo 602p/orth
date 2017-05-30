@@ -29,7 +29,9 @@ function(ImportStmt n, TransformerPass p) apply_includes::visit_import -> Node d
 
 	fd:close()
 
-	printf("Processing include of path '%s'\n", path)
+	if p.proj.options:contains("verbose") do
+		printf("Processing include of path '%s'\n", path)
+	done
 return p.proj:process_text(text)
 
 function() apply_includes::init -> TransformerPass does

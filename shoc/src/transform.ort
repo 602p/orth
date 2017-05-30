@@ -63,15 +63,21 @@ endtype
 
 function(Project p, Node n) Project:run_transformers -> Node does
 	int i=0
-	fprintf(stderr, "Running transformer passes... ")
-	fflush(stderr)
+	if p.options:contains("verbose") do
+		fprintf(stderr, "Running transformer passes... ")
+		fflush(stderr)
+	done
 	while i<p.transformer_passes.len do
 		if (p.transformer_passes:get(i)|TransformerPass).default_run do
-			fprintf(stderr, "%s ", (p.transformer_passes:get(i)|TransformerPass).name)
-			fflush(stderr)
+			if p.options:contains("verbose") do
+				fprintf(stderr, "%s ", (p.transformer_passes:get(i)|TransformerPass).name)
+				fflush(stderr)
+			done
 			n=(p.transformer_passes:get(i)|TransformerPass):visit(n)
 		done
 		i+=1
 	done
-	fprintf(stderr, "\n")
+	if p.options:contains("verbose") do
+		fprintf(stderr, "\n")
+	done
 return n

@@ -33,7 +33,7 @@ type LLVMEmitter is
 		LLVMEmitter new = malloc(@sizeof(LLVMEmitter)@)|LLVMEmitter
 		new.gir_emitters=StrMap::new()
 		new.locals_maps=StrMap::new()
-		new.ssa_map=StrMap::new_sized(ssa_guess*3)
+		new.ssa_map=StrMap::new_sized(ssa_guess)
 		new.types_map=StrMap::new()
 		new.cached_globals=List::new()
 		new.string_literals=StrMap::new()

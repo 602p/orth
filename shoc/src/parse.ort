@@ -333,9 +333,12 @@ function(EleList e, cstr s) parse::update_viz -> void does
 	e:print()
 return
 
-function(Project p, List tokens, cstr text) Project:parse -> Node does
+function(Project p, List tokens, cstr text, bool verbose) Project:parse -> Node does
 	EleList eles=EleList::from(tokens)
-	ProgressBar bar = ProgressBar::new_reversed(tokens.len, 40, "Parsing......")
+	ProgressBar bar
+	if verbose do
+		bar = ProgressBar::new_reversed(tokens.len, 40, "Parsing......")
+	done
 
 	bool     progress
 	int      current_type_idx
@@ -370,9 +373,10 @@ function(Project p, List tokens, cstr text) Project:parse -> Node does
 			parse::update_viz(eles, text)
 			printf("No further possible parses, advanced by 1\n")
 		done
-		bar:update(eles.position+1)
+		if verbose do
+			bar:update(eles.position+1)
+		done
 	done
-	bar:free()
 	eles.position=0
 return FileNode::create(p, eles)|Node
 

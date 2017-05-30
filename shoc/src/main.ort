@@ -47,6 +47,10 @@ function(int nargs, ArgList args) main -> int does
 			options:set("output_path", arg:offset(2))
 		done
 
+		if arg=="-v" do
+			options:set("verbose", "1")
+		done
+
 		i+=1
 	done
 
@@ -69,8 +73,8 @@ function(int nargs, ArgList args) main -> int does
 	                    :with_search_path(search_path)
 	                   
 
-	List tokens = proj:tokenize(contents)
-	Node node   = proj:parse(tokens, contents)
+	List tokens = proj:tokenize(contents, options:contains("verbose"))
+	Node node   = proj:parse(tokens, contents, options:contains("verbose"))
 
 	if options:contains("dump_pre_ast") do
 		node:print_root()
@@ -130,7 +134,7 @@ function(int nargs, ArgList args) main -> int does
 
 	if -options:contains("no_llvm_out") do
 		cstr outpath = options:get("output_path")|cstr
-		proj:emit_as_llvm(outpath+".ir")
+		proj:emit_as_llvm(outpath+".ir", options:contains("verbose"))
 
 		if -options:contains("no_finish_build") do
 			os::run("llc-3.5 "+outpath+".ir")

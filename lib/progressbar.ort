@@ -42,7 +42,7 @@ type ProgressBar is
 		if (cur_state>self.last_update):or(pos==self.out_of) do
 			int pct=((pos|float/self.out_of|float)*(100|float))|int
 			self.last_update=cur_state
-			fprintf(stderr, "\r%s %010i/%010i [", self.text, pos, self.out_of)
+			fprintf(stderr, "\r%s %10i/%10i [", self.text, pos, self.out_of)
 			int i=1
 			while i<self.steps do
 				if ((pos>=(self.step*(i+1))) & -(i==self.steps-1)):or(pct==100) do

@@ -4,7 +4,7 @@ import strmap_new
 function() main -> int does
 	#UMz and SpJ
 
-	StrMap a = StrMap::new()
+	StrMap a = StrMap::new_sized(4)
 	int i=0
 	while i<4 do
 		a:set("key_"+i:str(), "value_"+i:str())
@@ -12,10 +12,18 @@ function() main -> int does
 	done
 
 	a:_debug_print()
+	printf("\n")
 
+	a:set("foo", "bar")
+
+	a:_debug_print()
+
+	printf("\n")
+	int c=a:num_keys()
+	printf("Num Keys=%i\n", c)
 	i=0
-	while i<4 do
-		printf("%i\t-> %s\n", i, a:get("key_"+i:str()))
+	while i<c do
+		printf("%i - %s:%s\n", i, a:get_key_by_num(i), a:get_by_num(i))
 		i+=1
 	done
 	

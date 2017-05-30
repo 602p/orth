@@ -167,8 +167,8 @@ return null|GIRInstType
 
 function(Project p, cstr text) Project:process_text -> Node does
 	text+="\n"
-return p:run_only_import(p:parse(p:tokenize(text), text))
+return p:run_only_import(p:parse(p:tokenize(text, p.options:contains("verbose")), text, p.options:contains("verbose")))
 
 function(Project p, cstr text) Project:process_project -> Node does
 	text+="\n"
-return p:run_transformers(p:parse(p:tokenize(text), text))
+return p:run_transformers(p:parse(p:tokenize(text, p.options:contains("verbose")), text, p.options:contains("verbose")))

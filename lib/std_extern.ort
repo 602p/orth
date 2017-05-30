@@ -34,3 +34,9 @@
 
 @declare_c_func("get_current_dir_name", "cstr", "()")@
 @declare_c_func("getenv", "cstr", "(i8*)")@
+
+function(ptr a, ptr b) ptr:__eq__ -> bool does
+return (a|long)==(b|long)
+
+function(ptr a, ptr b) ptr:__ne__ -> bool does
+return (a|long)!=(b|long)

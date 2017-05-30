@@ -6,12 +6,12 @@ function(GIRVar lhs, GIRVar rhs, cstr op, cstr dest, LLVMEmitter e) llvm::impl_b
 
 	if lhs.type_.variety==S_INT do
 		llvm::s_int::impl_binop(lhs, rhs, op, dest, e)
-	elif lhs.type_.variety==U_INT do
+	elif (lhs.type_.variety==U_INT):or(lhs.type_.variety==POINTER) do
 		llvm::u_int::impl_binop(lhs, rhs, op, dest, e)
 	elif lhs.type_.variety==FLOAT do
 		llvm::float::impl_binop(lhs, rhs, op, dest, e)
 	else do
-		shoc::bail_out("Invalid type "+lhs.type_.name+" for binop :"+op)
+		shoc::bail_out("llvm::impl_binop: Invalid type "+lhs.type_.name+" for binop :"+op)
 	done
 return
 

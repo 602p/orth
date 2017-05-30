@@ -65,16 +65,15 @@ type StrMap is
          slot_id+=1
          slot=self:get_slot(slot_id)
       done
-
-      # printf("Resizing\n")
       
       #Resize:
       StrMap temp_new = StrMap::new_sized(self.size*2)
-      # printf("New alloced\n")
       int i=0
-      while i<self:num_keys() do
-         # printf("Copying key %i\n", i)
-         temp_new:set(self:get_key_by_num(i), self:get_by_num(i))
+      int numkeys=self:num_keys()
+      StrMapEntry e
+      while i<numkeys do
+         e=self:get_slot_by_num(i)
+         temp_new:set(e.key, e.value)
          i+=1
       done
       self.size=temp_new.size
@@ -82,8 +81,6 @@ type StrMap is
       self.table=temp_new.table
       free(temp_new)
       self:set(key, value)
-
-      # printf("Done Resizing\n")
    return
 
    function(StrMap self, cstr key) StrMap:get_entry -> StrMapEntry does

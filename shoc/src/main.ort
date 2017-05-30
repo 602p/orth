@@ -23,8 +23,12 @@ function(int nargs, ArgList args) main -> int does
 
 	List search_path=List::new()
 	search_path:append(".")
+	search_path:append("lib")
+	search_path:append("../lib")
+	search_path:append("../../lib")
 
 	StrMap options = StrMap::new()
+	options:set("output_path", "out")
 
 	int i=1
 	cstr arg
@@ -37,6 +41,10 @@ function(int nargs, ArgList args) main -> int does
 
 		if arg:startswith("-f") do
 			options:set(arg:offset(2), "1")
+		done
+
+		if arg:startswith("-o") do
+			options:set("output_path", arg:offset(2))
 		done
 
 		i+=1
@@ -120,8 +128,18 @@ function(int nargs, ArgList args) main -> int does
 		proj:show_types()
 	done
 
-	if options:contains("do_llvm_out") do
-		proj:emit_as_llvm("llvm_out.ir")
+	if -options:contains("no_llvm_out") do
+		cstr outpath = options:get("output_path")|cstr
+		proj:emit_as_llvm(outpath+".ir")
+
+		if -options:contains("no_finish_build") do
+			os::run("llc-3.5 "+outpath+".ir")
+			os::run("gcc "+outpath+".ir.s -o "+outpath)
+
+			if -options:contains("no_clean") do
+				os::run("rm "+outpath+".ir "+outpath+".ir.s")
+			done
+		done
 	done
 
 	if options:contains("profile_dump_csv") do

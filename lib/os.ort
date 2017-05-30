@@ -1,5 +1,7 @@
 
-
+function(cstr cmd) os::run -> void does
+	system(cmd)
+return
 
 function() os::get_cwd -> cstr does
 	cstr raw_cwd=get_current_dir_name()

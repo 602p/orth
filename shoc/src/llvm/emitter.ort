@@ -43,7 +43,7 @@ type LLVMEmitter is
 
 		new.gir_emitters=StrMap::new()
 		new.locals_maps=StrMap::new_sized(p.methods:num_keys()*2)
-		new.ssa_map=StrMap::new_sized(ssa_guess*2)
+		new.ssa_map=StrMap::new_sized(ssa_guess*3)
 		new.types_map=StrMap::new_sized(p.types:num_keys()*2)
 		new.cached_globals=List::new()
 		new.string_literals=StrMap::new()

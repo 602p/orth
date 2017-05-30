@@ -5,6 +5,7 @@ type GIRVar is
 	int   ssa_id
 	bool  is_ref
 	cstr  memoname
+	cstr  idname
 
 	function(Project p, OType t) GIRVar::new -> GIRVar does
 		GIRVar new = malloc(@sizeof(GIRVar)@)|GIRVar
@@ -12,6 +13,7 @@ type GIRVar is
 		new.memoname=""
 		new.is_ref=false
 		new.ssa_id=p:get_next_ssa_id()
+		new.idname=new.ssa_id:str()
 	return new
 
 	function(GIRVar v) GIRVar:ref -> GIRVar does

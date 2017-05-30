@@ -140,10 +140,10 @@ type LLVMEmitter is
 	return
 
 	function(LLVMEmitter self, GIRVar name) LLVMEmitter:get_ssa_var -> cstr does
-	return self.ssa_map:get(name:str()) #TODO:Horrible!
+	return self.ssa_map:get(name.idname) #TODO:Horrible!
 
 	function(LLVMEmitter self, GIRVar name, cstr llvm_name) LLVMEmitter:set_ssa_var -> void does
-		self.ssa_map:set(name:str(), llvm_name)
+		self.ssa_map:set(name.idname, llvm_name)
 	return
 
 	function(LLVMEmitter self, GIRVar var) LLVMEmitter:get_vty -> cstr does

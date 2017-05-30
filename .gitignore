@@ -103,7 +103,7 @@ louos.bin
 out.s
 *.exe
 shoc.o
-shoc/shoc
+shoc/shoc*
 profile.csv
 a.out
 llvm_out*

@@ -1,0 +1,1 @@
+alias cfm="mv shoc shoc_good"

@@ -162,9 +162,5 @@ function(cstr s) prints -> void does
 return
 
 function(cstr s, int sz) prints_tab -> void does
-	if s:len()>sz do
-		prints(s)
-		return
-	done
-	printf("%s%s", s, " "*(sz-s:len()))
+	printf("%-*s", sz, s)
 return

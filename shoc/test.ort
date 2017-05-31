@@ -1,9 +1,12 @@
-function() foo->void does
-return
+type FooT is packed
+	int a
+	int b
+	bool c
+endtype
 
-function() bar->void does
-return
+extern(...) printf -> int
 
 function() main -> int does
-	foo()
+	printf("@sizeof(FooT) =%i\n", @sizeof(FooT))
+	printf("@sizeof(FooT)@=%i\n", @sizeof(FooT)@)
 return 0

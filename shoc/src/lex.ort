@@ -167,23 +167,6 @@ function(cstr text) lex::match_import -> int does
 	done
 return i
 
-function(cstr text) lex::match_intrinsic -> int does
-	if -text[0]:in("@") do
-		return 0
-	done
-
-	bool in_quotes=false
-
-	int i=1
-	while -(text[i]:in("@") & -in_quotes) do
-		if text[i]==34|byte do
-			in_quotes=-in_quotes
-		done
-		i+=1
-	done
-	i+=1
-return i
-
 type TokenMatcher is a function->int
 type TokenType is
 	cstr name
@@ -322,7 +305,7 @@ function(List t) lex::init_default -> void does
 	t:append_TT(TokenType::new_fn("T_BLOCK_COMMENT", lex::match_block_comment|TokenMatcher):notoken())
 
 	t:append_TT(TokenType::new_fn("T_IMPORT", lex::match_import|TokenMatcher))
-	t:append_TT(TokenType::new_fn("T_INTRINSIC", lex::match_intrinsic|TokenMatcher))
+	t:append_TT(TokenType::new_eq("T_INTRINSIC", "@"))
 
 	t:append_TT(TokenType::new_kw("T_IF", "if"))
 	t:append_TT(TokenType::new_kw("T_DONE", "done"))

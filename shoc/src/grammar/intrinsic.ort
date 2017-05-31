@@ -1,23 +1,40 @@
 type IntrinsicExpr is packed
 	NodeType type_
-	cstr text
+	Node value
 
 	function(IntrinsicExpr node, int depth) IntrinsicExpr::print -> void does
-		printf("IntrinsicExpr: '%s'\n", node.text)
+		printf("IntrinsicExpr: ")
+		node.value:print(depth)
 	return
 
 	function(EleList eles) IntrinsicExpr::create -> IntrinsicExpr does
 		IntrinsicExpr new = malloc(@sizeof(IntrinsicExpr)@)|IntrinsicExpr
-		new.text=eles:get(0):t().text
+		new.value=eles:get(1):n()
 	return new
 
 	function(EleList eles) IntrinsicExpr::match -> int does
-	return (eles:get(0):t().type_.name=="T_INTRINSIC")|int
+		if eles:get(1).is_token do
+			return 0
+		done
+
+		if -(eles:get(1):n():is_a("CallExpr"):or(eles:get(1):n():is_a("NameExpr"))) do
+			return 0
+		done
+
+		if eles:get(0):t().type_.name=="T_INTRINSIC" do
+			if eles:get(2).is_token do
+				if eles:get(2):t().type_.name=="T_INTRINSIC" do
+					return 3
+				done
+			done
+			return 2
+		done
+	return 0
 
 	function() IntrinsicExpr::impl -> NodeType does
 	return NodeType::new("IntrinsicExpr")\
 					:set_printer(IntrinsicExpr::print |NodePrinter)\
 					:set_creator(IntrinsicExpr::create|NodeCreator)\
 					:set_matcher(IntrinsicExpr::match |NodeMatcher)\
-					:matches(1):matches_only_tokens():addtype("ValueExpression")
+					:matches(2):addtype("ValueExpression")
 endtype

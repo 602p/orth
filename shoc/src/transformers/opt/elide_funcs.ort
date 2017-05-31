@@ -1,0 +1,29 @@
+
+function(NameExpr n, TransformerPass p) count_calls::visit_name -> NameExpr does
+	if p.proj.methods:contains(n.name) do
+		p.proj:get_Method(n.name).references+=1
+	done
+return n
+
+function() count_calls::init -> TransformerPass does
+return TransformerPass::new("count_calls")\
+       :add_specialization("NameExpr", count_calls::visit_name|NodeTransformer)
+
+
+function(FunctionDecl n, TransformerPass p) elide_funcs::visit_decl -> FunctionDecl does
+	if n.head.name=="main" do
+		p.proj:get_Method(n.head.name).references+=1
+	done
+
+	if p.proj:get_Method(n.head.name).references==0 & -p.proj.options:contains("no_elide_func") do
+		p.proj.methods:remove(n.head.name)
+		if p.proj.options:contains("warn_unused") do
+			printf("Warning: Unused function: %s\n", n.head.name)
+		done
+		return null|FunctionDecl
+	done
+return n
+
+function() elide_funcs::init -> TransformerPass does
+return TransformerPass::new("elide_funcs")\
+       :add_specialization("FunctionDecl", elide_funcs::visit_decl|NodeTransformer)

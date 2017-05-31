@@ -1,0 +1,40 @@
+
+cstr __curr_meth_name
+
+function(cstr name) orth::internal::hooks::function_enter_hook -> void does
+	# printf("Enter: %s\n", name)
+	if strcmp(name, "__orth_sig_h")==0 do
+		return
+	done
+	__curr_meth_name=name
+return
+
+function(cstr name) orth::internal::hooks::function_exit_hook -> void does
+return
+
+function(cstr name) orth::internal::hooks::function_reenter_hook -> void does
+	__curr_meth_name=name
+return
+
+function(cstr message) orth::fail -> void does
+	printf("%s from %s\n", message, __curr_meth_name)
+	exit(1)
+return
+
+function(int code) __orth_sig_h -> void does
+	printf("SIGNAL FROM: %s\n", __curr_meth_name)
+	if code==11 do
+		orth::fail("Segmentation Fault Caught")
+	elif code==6 do
+		orth::fail("Abort (malloc) Fault Caught")
+	else do
+		orth::fail("??? Fault Caught - "+code:str())
+	done
+return
+
+import sighandle
+function() orth::install_sigsev_handler -> void does
+	system::set_interrupt_handler(11, __orth_sig_h|SignalHandler)
+	system::set_interrupt_handler(6, __orth_sig_h|SignalHandler)
+	system::set_interrupt_handler(8, __orth_sig_h|SignalHandler)
+return

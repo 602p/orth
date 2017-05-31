@@ -1,0 +1,12 @@
+function() orth::internal::profile::install_profiler -> void does
+	printf("WARNING: Called orth::internal::profile::install_profiler using the err_lite profile shim - what do you expect to happen?\n")
+return
+
+function() orth::internal::profile::display_profiling_data -> void does
+	printf("WARNING: Called orth::internal::profile::display_profiling_data using the err_lite profile shim - what do you expect to happen?\n")
+return
+
+function(cstr path) orth::internal::profile::dump_profiling_data_csv -> void does
+	printf("WARNING: Called orth::internal::profile::dump_profiling_data_csv using the err_lite profile shim - what do you expect to happen?\n")
+return
+

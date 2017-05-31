@@ -146,23 +146,36 @@ type StrMap is
 					return null|StrMapEntry
 				done
 				return self.fallback:get_entry(key)
+			elif slot.key|ptr==(-1)|ptr do
+				slot_id+=1
 			elif slot.key==key do
 				return slot
 			else do
 				slot_id+=1
-				if slot_id==self.size do
-					slot_id=0
-				done
-				if slot_id==initial_id do
-					ok=false
-				done
-				slot=self:get_slot(slot_id)
 			done
+			if slot_id==self.size do
+				slot_id=0
+			done
+			if slot_id==initial_id do
+				ok=false
+			done
+			slot=self:get_slot(slot_id)
 		done
 		if self.fallback|ptr==null do
 			return null|StrMapEntry
 		done
 	return self.fallback:get_entry(key)
+
+	function(StrMap self, cstr key) StrMap:remove -> void does
+		StrMapEntry slot = self:get_entry(key)
+		# printf("Removing key %s, slot=%u\n", key, slot)
+		if slot|ptr!=null do
+			slot.key=(-1)|ptr
+			self.filled_slots-=1
+		else do
+			self.fallback:remove(key)
+		done
+	return
 
 	function(StrMap self, cstr key) StrMap:get -> ptr does
 		StrMapEntry e = self:get_entry(key)
@@ -198,6 +211,7 @@ type StrMap is
 	function(StrMap self, int idx) StrMap:get_key_by_num -> cstr does
 		StrMapEntry e = self:get_slot_by_num(idx)
 		if e|ptr==null do
+			self:_debug_print()
 			orth::fail("Idx not found in StrMap: "+idx:str())
 		done
 	return e.key
@@ -205,6 +219,7 @@ type StrMap is
 	function(StrMap self, int idx) StrMap:get_by_num -> ptr does
 		StrMapEntry e = self:get_slot_by_num(idx)
 		if e|ptr==null do
+			self:_debug_print()
 			orth::fail("Idx not found in StrMap: "+idx:str())
 		done
 	return e.value
@@ -215,8 +230,10 @@ type StrMap is
 		while i<self.size do
 			if self:get_slot(i).key|ptr==null do
 				printf("%03i\t-\n", i)
+			elif self:get_slot(i).key|ptr==(-1)|ptr do
+				printf("%03i\t--\n", i)
 			else do
-				printf("%03i\t%s\t%s\n", i, self:get_slot(i).key, self:get_slot(i).value)
+				printf("%03i\t%s\t%u\n", i, self:get_slot(i).key, self:get_slot(i).value)
 			done
 			i+=1
 		done

@@ -311,6 +311,7 @@ type Method is
 	StrMap locals
 	List gir_code
 	bool is_extern
+	int  references
 
 	function(Project proj, cstr name, List args, bool varargs, cstr return_value, bool is_extern) Method::new -> Method does
 		Method new = malloc(@sizeof(Method)@)|Method
@@ -322,6 +323,7 @@ type Method is
 
 		new.args=List::new()
 		new.gir_code=List::new()
+		new.references=0
 
 		List fptr_type_args=List::new()
 
@@ -369,7 +371,7 @@ type Method is
 			done
 			i+=1
 		done
-		printf(")\n")
+		printf(") - %i uses\n", func.references)
 	return
 
 	function(Method func) Method:print_locals -> void does

@@ -36,11 +36,15 @@ function(int nargs, ArgList args) main -> int does
 		arg=args:get(i)
 
 		if arg:startswith("-s") do
-			search_path:append(arg:offset(2))
+			search_path:insert(0, arg:offset(2))
 		done
 
 		if arg:startswith("-f") do
 			options:set(arg:offset(2), "1")
+		done
+
+		if arg:startswith("-w") do
+			options:set("warn_"+arg:offset(2), "1")
 		done
 
 		if arg:startswith("-o") do

@@ -1,0 +1,29 @@
+./shoc <main_project_filename.ort> [args]
+
+Use -f<flag> to set a flag. Flags include:
+	-fdump_ast			: Dump AST after transformatiosn
+	-fdump_pre_ast		: Dump AST before transofmations
+	-fdump_methods		: Dump method Metadata
+	-fdump_locals		: Dump local metadata (sets dump_methods)
+	-fdump_gir			: Dump GIR code (sets dump_methods)
+	-fdump_globals		: Dump global variable metadata
+	-fdump_types		: Dump type metadata
+	-fdump_node_types	: Dump internal parser grammar node types
+	-fno_clean			: Don't remove intermediate compilation files (.ir and .s)
+	-fno_finish_build	: Don't go further than IR emission
+	-fno_llvm_out		: Don't go further than GIR generation
+	-fprofile_dump_csv	: Run profiler (if installed) and dump data as 'profile.csv'
+	-ffunchooks			: Build with funchooks debugging support enabled (will build slow as balls executables when using standard lib/err!)
+	-fxfunchooks		: Build with extended funchooks debugging support enabled (reenter_function callback)
+	-fverbose			: Print status info while building (fancy progress bars)
+
+Use -s<path> to add stuff to the search path (insert before default path), e.g. -s../lib/err_lite to use err_lite shimming in your app
+Default search path is (in order): [., ./lib, ../lib, ../../lib]
+
+Use -o<path> to specify output path. Executable will built to this path, and intermediate files will be named <path>.ir and <path>.s
+
+Passing -v sets the flag `verbose`, and is equivilent to passing -fverbose
+
+Use -w<flag> to enable warnings. This sets the flag `warn_<flag>`, and is equivilent to passing -fwarn_<flag>. Warnings include:
+	-wunused			: Print warnings about unused methods. These will be optimized away as well
+	-wduplicate			: Print warnings about duplicate or ambiguous locals

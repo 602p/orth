@@ -81,3 +81,15 @@ function(Project p, Node n) Project:run_transformers -> Node does
 		fprintf(stderr, "\n")
 	done
 return n
+
+function(TransformerPass p, cstr flag, cstr msg) TransformerPass:cond_warn -> void does
+	if p.proj.options:contains(flag) do
+		printf("%-20s: %s\n", flag, msg)
+	done
+return
+
+function(TransformerPass p, cstr flag, cstr msg) TransformerPass:inv_cond_warn -> void does
+	if -p.proj.options:contains(flag) do
+		printf("%-20s: %s\n", flag, msg)
+	done
+return

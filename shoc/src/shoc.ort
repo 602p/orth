@@ -172,3 +172,15 @@ return p:run_only_import(p:parse(p:tokenize(text, p.options:contains("verbose"))
 function(Project p, cstr text) Project:process_project -> Node does
 	text+="\n"
 return p:run_transformers(p:parse(p:tokenize(text, p.options:contains("verbose")), text, p.options:contains("verbose")))
+
+function(Project p, cstr flag, cstr msg) Project:cond_warn -> void does
+	if p.options:contains(flag) do
+		printf("%-20s: %s\n", flag, msg)
+	done
+return
+
+function(Project p, cstr flag, cstr msg) Project:inv_cond_warn -> void does
+	if -p.options:contains(flag) do
+		printf("%-20s: %s\n", flag, msg)
+	done
+return

@@ -1,12 +1,12 @@
-type FooT is packed
-	int a
-	int b
-	bool c
+extern(...) printf -> int
+type Box_int is packed
+	int val
 endtype
 
-extern(...) printf -> int
-
 function() main -> int does
-	printf("@sizeof(FooT) =%i\n", @sizeof(FooT))
-	printf("@sizeof(FooT)@=%i\n", @sizeof(FooT)@)
+	int i=3
+	printf("i=%i\n", i)
+	ptr a = @addressof(i)
+	(a|Box_int).val=7
+	printf("i=%i\n", i)
 return 0

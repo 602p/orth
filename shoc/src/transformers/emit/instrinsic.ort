@@ -4,12 +4,12 @@ function(IntrinsicExpr n, TransformerPass p) emit_value::for_intrinsic -> GIRVar
 		CallExpr call = n.value|CallExpr
 		shoc::assert(call.meth:is_a("NameExpr"), "Can only call intrinsic with direct name")
 		cstr meth_name = (call.meth|NameExpr).name
-		if meth_name=="sizeof" do
-			shoc::assert(call.args.len==1, "Invalid arg count for sizeof")
-			shoc::assert(call.args:get_Node(0):is_a("NameExpr"), "Arg 0 for sizeof must be name")
-			return GIRLiteral::emit_int(p.proj, (p.proj:get_type((call.args:get_Node(0)|NameExpr).name):get_size()/8)|long)
+		if meth_name=="addressof" do
+			shoc::assert(call.args.len==1, "Invalid arg count for addressof")
+			shoc::assert(call.args:get_Node(0):is_a("NameExpr"), "Arg 0 for addressof must be name")
+			return GIRCast::emit(p.proj, p:emit_addr(call.args:get_Node(0)), p.proj:get_type("ptr"))
 		done
 	done
 	(n|Node):print(0)
-	shoc::bail_out("Unimplemented intrinsic^")
+	shoc::bail_out("Unimplemented intrinsic (emit)^")
 return null|GIRVar

@@ -16,7 +16,9 @@ function(GIRVar lhs, GIRVar rhs, cstr op, cstr dest, LLVMEmitter e) llvm::impl_b
 return
 
 function(GIRVar value, OType target, cstr dest, LLVMEmitter e) llvm::impl_cast -> void does
-	if value.type_.variety==S_INT do
+	if (value.type_.variety==POINTER)+(value.type_.variety==F_PTR)+(value.is_ref) do
+		llvm::pointer::impl_cast(value, target, dest, e)
+	elif value.type_.variety==S_INT do
 		llvm::s_int::impl_cast(value, target, dest, e)
 	elif value.type_.variety==U_INT do
 		llvm::u_int::impl_cast(value, target, dest, e)
@@ -24,8 +26,6 @@ function(GIRVar value, OType target, cstr dest, LLVMEmitter e) llvm::impl_cast -
 		llvm::float::impl_cast(value, target, dest, e)
 	elif value.type_.variety==STRUCT do
 		llvm::struct::impl_cast(value, target, dest, e)
-	elif (value.type_.variety==POINTER)+(value.type_.variety==F_PTR) do
-		llvm::pointer::impl_cast(value, target, dest, e)
 	else do
 		shoc::bail_out("Invalid type "+value.type_.name+" for cast")
 	done

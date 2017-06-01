@@ -14,6 +14,7 @@ import "transformers/def/predefine_types.ort"
 import "transformers/def/define_types.ort"
 import "transformers/def/define_syms.ort"
 import "transformers/def/catch_duplicates.ort"
+import "transformers/lower/apply_intrinsics.ort"
 
 import "transformers/pregir/define_locals.ort"
 import "transformers/pregir/rw_calls.ort"
@@ -28,22 +29,22 @@ function(Project p) shoc::transformers::init -> void does
 	p:add_Transformer(rewrite_namespaces::init())
 	p:add_Transformer(expand_augassign::init())
 
-	p:add_Transformer(elide_groupings::init())
-	p:add_Transformer(fold_constants::init())
-	p:add_Transformer(elide_branches::init())
-	p:add_Transformer(strip_seps::init())
-
 	p:add_Transformer(predefine_types::init())
 	p:add_Transformer(define_types::init())
 	p:add_Transformer(define_syms::init())
 	p:add_Transformer(catch_duplicates::init())
+
+	p:add_Transformer(apply_intrinsics::init())
+	p:add_Transformer(elide_groupings::init())
+	p:add_Transformer(fold_constants::init())
+	p:add_Transformer(elide_branches::init())
+	p:add_Transformer(strip_seps::init())
 	
 	p:add_Transformer(define_locals::init())
 	p:add_Transformer(rw_calls::init())
 
 	p:add_Transformer(count_calls::init())
 	p:add_Transformer(elide_funcs::init())
-	# a
 
 	p:add_Transformer(get_type::init())
 

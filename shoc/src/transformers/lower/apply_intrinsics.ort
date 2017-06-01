@@ -1,0 +1,17 @@
+
+function(IntrinsicExpr n, TransformerPass p) apply_intrinsics::visit_instrinsic -> Node does
+	if n.value:is_a("CallExpr") do
+		CallExpr call = n.value|CallExpr
+		shoc::assert(call.meth:is_a("NameExpr"), "Can only call intrinsic with direct name")
+		cstr meth_name = (call.meth|NameExpr).name
+		if meth_name=="sizeof" do
+			shoc::assert(call.args.len==1, "Invalid arg count for sizeof")
+			shoc::assert(call.args:get_Node(0):is_a("NameExpr"), "Arg 0 for sizeof must be name")
+			return LiteralExpr::create_direct_int(p.proj, p.proj:get_type((call.args:get_Node(0)|NameExpr).name):get_size()/8)
+		done
+	done
+return n|Node #May be implemented in GIR emission, too
+
+function() apply_intrinsics::init -> TransformerPass does
+return TransformerPass::new("apply_intrinsics")\
+       :add_specialization("IntrinsicExpr", apply_intrinsics::visit_instrinsic|NodeTransformer)

@@ -1,5 +1,6 @@
 type GroupingExpr is packed
 	NodeType type_
+	Token anchor
 	Node contents
 
 	function(GroupingExpr node, int depth) GroupingExpr::print -> void does
@@ -10,6 +11,7 @@ type GroupingExpr is packed
 	function(EleList eles) GroupingExpr::create -> GroupingExpr does
 		GroupingExpr new = malloc(@sizeof(GroupingExpr)@)|GroupingExpr
 		new.contents=eles:get(1):n()
+		new.anchor=eles:get(0):t()
 	return new
 
 	function(EleList eles) GroupingExpr::match -> int does

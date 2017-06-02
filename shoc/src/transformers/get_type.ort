@@ -35,6 +35,7 @@ function(CallExpr n, TransformerPass p) get_type::for_call -> OType does
 return p.proj:get_node_type(n.meth):as_fptr().return_value
 
 function(AccessorExpr n, TransformerPass p) get_type::for_accessor -> OType does
+	p.proj:fail_in_if(-p.proj:get_node_type(n.object):as_struct():has_field(n.field), "No such field '"+n.field+"' in type "+p.proj:get_node_type(n.object).name, n|Node)
 return p.proj:get_node_type(n.object):as_struct():get_field_type(n.field)
 
 function(CastExpr n, TransformerPass p) get_type::for_cast -> OType does

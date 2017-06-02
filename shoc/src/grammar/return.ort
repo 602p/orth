@@ -1,5 +1,6 @@
 type ReturnExpr is packed
 	NodeType type_
+	Token anchor
 	bool is_void
 	Node value
 
@@ -24,6 +25,8 @@ type ReturnExpr is packed
 		if -new.is_void do
 			new.value=eles:get(1):n()
 		done
+
+		new.anchor=eles:get(0):t()
 	return new
 
 	function(EleList eles) ReturnExpr::match -> int does

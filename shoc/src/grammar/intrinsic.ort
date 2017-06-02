@@ -1,5 +1,6 @@
 type IntrinsicExpr is packed
 	NodeType type_
+	Token anchor
 	Node value
 
 	function(IntrinsicExpr node, int depth) IntrinsicExpr::print -> void does
@@ -10,6 +11,7 @@ type IntrinsicExpr is packed
 	function(EleList eles) IntrinsicExpr::create -> IntrinsicExpr does
 		IntrinsicExpr new = malloc(@sizeof(IntrinsicExpr)@)|IntrinsicExpr
 		new.value=eles:get(1):n()
+		new.anchor=eles:get(0):t()
 	return new
 
 	function(EleList eles) IntrinsicExpr::match -> int does

@@ -1,5 +1,6 @@
 type CastExpr is packed
 	NodeType type_
+	Token anchor
 	Node value
 	cstr target
 
@@ -15,6 +16,7 @@ type CastExpr is packed
 		CastExpr new = malloc(@sizeof(CastExpr)@)|CastExpr
 		new.value=eles:get(0):n()
 		new.target=(eles:get(2):n()|NameExpr).name
+		new.anchor=eles:get(1):t()
 	return new
 
 	function(EleList eles) CastExpr::match -> int does

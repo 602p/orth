@@ -2,6 +2,7 @@ type WhileExpr is packed
 	NodeType type_
 	Node condition
 	BlockBody body
+	Token anchor
 
 	function(WhileExpr node, int depth) WhileExpr::print -> void does
 		printf("WhileExpr:\n")
@@ -17,6 +18,7 @@ type WhileExpr is packed
 		WhileExpr new = malloc(@sizeof(WhileExpr)@)|WhileExpr
 		new.condition=eles:get(1):n()
 		new.body=eles:get(3):n()|BlockBody
+		new.anchor=eles:get(0):t()
 	return new
 
 	function(EleList eles) WhileExpr::match -> int does

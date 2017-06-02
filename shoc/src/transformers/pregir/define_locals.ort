@@ -6,12 +6,8 @@ function(DeclExpr n, TransformerPass p) define_locals::visit_decl -> DeclExpr do
 
 	TypedVar v = TypedVar::from_decl(n.name, p.proj)
 
-	if p.proj.globals:contains(v.name) do
-		p:cond_warn("warn_duplicate", "Global-shadowing declaration of variable "+v.name+" in method "+p.proj.curr_method.name)
-	done
-	if p.proj.curr_method:has_local(v.name) do
-		p:cond_warn("warn_duplicate", "Duplicate declaration of local "+v.name+" in method "+p.proj.curr_method.name)
-	done
+	p.proj:cond_warn_in_if("warn_duplicate", p.proj.globals:contains(v.name), "Global-shadowing declaration of variable "+v.name, n|Node)
+	p.proj:cond_warn_in_if("warn_duplicate", p.proj.curr_method:has_local(v.name), "Duplicate declaration of local "+v.name, n|Node)
 
 	p.proj.curr_method:add_local(v.name, v.type_)
 return n

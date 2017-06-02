@@ -1,5 +1,6 @@
 type ZeroArgList is packed
 	NodeType type_
+	Token anchor
 
 	function(ZeroArgList node, int depth) ZeroArgList::print -> void does
 		printf("ZeroArgList: (Size=0)\n")
@@ -7,6 +8,7 @@ type ZeroArgList is packed
 
 	function(EleList eles) ZeroArgList::create -> ZeroArgList does
 		ZeroArgList new = malloc(@sizeof(ZeroArgList)@)|ZeroArgList
+		new.anchor=eles:get(0):t()
 	return new
 
 	function(EleList eles) ZeroArgList::match -> int does
@@ -26,6 +28,7 @@ endtype
 
 type VarArgsList is packed
 	NodeType type_
+	Token anchor
 
 	function(VarArgsList node, int depth) VarArgsList::print -> void does
 		printf("VarArgsList\n")
@@ -33,6 +36,7 @@ type VarArgsList is packed
 
 	function(EleList eles) VarArgsList::create -> VarArgsList does
 		VarArgsList new = malloc(@sizeof(VarArgsList)@)|VarArgsList
+		new.anchor=eles:get(1):t()
 	return new
 
 	function(EleList eles) VarArgsList::match -> int does
@@ -54,6 +58,7 @@ endtype
 type OneArgList is packed
 	NodeType type_
 	cstr text
+	Token anchor
 
 	function(OneArgList node, int depth) OneArgList::print -> void does
 		printf("OneArgList: (Size=1)\n")
@@ -64,6 +69,7 @@ type OneArgList is packed
 	function(EleList eles) OneArgList::create -> OneArgList does
 		OneArgList new = malloc(@sizeof(OneArgList)@)|OneArgList
 		new.text=eles:get(1):t().text
+		new.anchor=eles:get(0):t()
 	return new
 
 	function(EleList eles) OneArgList::match -> int does
@@ -85,6 +91,7 @@ endtype
 type MultiArgListStart is packed
 	NodeType type_
 	cstr text
+	Token anchor
 
 	function(MultiArgListStart node, int depth) MultiArgListStart::print -> void does
 		printf("MultiArgListStart: (Size=1)\n")
@@ -95,6 +102,7 @@ type MultiArgListStart is packed
 	function(EleList eles) MultiArgListStart::create -> MultiArgListStart does
 		MultiArgListStart new = malloc(@sizeof(MultiArgListStart)@)|MultiArgListStart
 		new.text=eles:get(1):t().text
+		new.anchor=eles:get(0):t()
 	return new
 
 	function(EleList eles) MultiArgListStart::match -> int does
@@ -116,6 +124,7 @@ endtype
 type MultiArgListExt is packed
 	NodeType type_
 	List args
+	Token anchor
 
 	function(MultiArgListExt node, int depth) MultiArgListExt::print -> void does
 		printf("MultiArgListExt: (Size=%i)\n", node.args.len)
@@ -142,6 +151,7 @@ type MultiArgListExt is packed
 			new.args=(ele|MultiArgListExt).args
 			new.args:insert(0, eles:get(1):t().text)
 		done
+		new.anchor=eles:get(0):t()
 	return new
 
 	function(EleList eles) MultiArgListExt::match -> int does
@@ -169,6 +179,7 @@ endtype
 type MultiArgList is packed
 	NodeType type_
 	List args
+	Token anchor
 
 	function(MultiArgList node, int depth) MultiArgList::print -> void does
 		printf("MultiArgList: (Size=%i)\n", node.args.len)
@@ -195,6 +206,7 @@ type MultiArgList is packed
 			new.args=(ele|MultiArgList).args
 			new.args:insert(0, eles:get(1):t().text)
 		done
+		new.anchor=eles:get(0):t()
 	return new
 
 	function(EleList eles) MultiArgList::match -> int does

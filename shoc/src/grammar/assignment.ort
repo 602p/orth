@@ -1,5 +1,6 @@
 type AssignmentExpr is packed
 	NodeType type_
+	Token anchor
 	cstr op
 	Node lhs
 	Node rhs
@@ -20,6 +21,7 @@ type AssignmentExpr is packed
 		new.lhs=eles:get(0):n()
 		new.op=eles:get(1):t().text
 		new.rhs=eles:get(2):n()
+		new.anchor=eles:get(1):t()
 	return new
 
 	function(EleList eles) AssignmentExpr::match -> int does

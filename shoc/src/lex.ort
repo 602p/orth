@@ -265,8 +265,8 @@ type TokenType is
 		self.produce_token=false
 	return self
 
-	function(TokenType self, cstr text, cstr file_ctx, int line_ctx, int col_ctx) TokenType:make_token -> Token does
-	return Token::_new(text:substr(0, self:match_internal(text)), self, file_ctx, line_ctx, col_ctx)
+	function(TokenType self, cstr text, cstr file_ctx, int line_ctx, int col_ctx, cstr meth_ctx) TokenType:make_token -> Token does
+	return Token::_new(text:substr(0, self:match_internal(text)), self, file_ctx, line_ctx, col_ctx, meth_ctx)
 endtype
 
 type Token is
@@ -275,14 +275,16 @@ type Token is
 	cstr origin_file
 	int origin_line
 	int origin_col
+	cstr origin_meth
 
-	function(cstr text, TokenType type_, cstr file_ctx, int line_ctx, int col_ctx) Token::_new -> Token does
+	function(cstr text, TokenType type_, cstr file_ctx, int line_ctx, int col_ctx, cstr origin_meth) Token::_new -> Token does
 		Token new = malloc(@sizeof(Token)@)|Token
 		new.text=text
 		new.type_=type_
 		new.origin_line=line_ctx
 		new.origin_file=file_ctx
 		new.origin_col=col_ctx
+		new.origin_meth=origin_meth
 	return new
 
 	function(Token self) Token:free -> void does
@@ -304,7 +306,7 @@ type Token is
 		if self.type_.name=="T_ENDOFSTATEMENT" do
 			text="..."
 		done
-		printf("%30s(%-20s)%40s:%i:%i\n", self.type_.name, text, self.origin_file, self.origin_line, self.origin_col)
+		printf("%30s(%-20s)%40s:%i:%i @ %s\n", self.type_.name, text, self.origin_file, self.origin_line, self.origin_col, self.origin_meth)
 	return
 endtype
 
@@ -397,6 +399,7 @@ return null|TokenType
 
 function(Project p, cstr text, cstr file_ctx, bool verbose) Project:tokenize -> List does
 	#text=text+"\n;;;"
+	p.sources:set(file_ctx, text)
 	ProgressBar bar
 	if verbose do
 		bar= ProgressBar::new(text:len(), 40, "Tokenizing...")
@@ -407,11 +410,13 @@ function(Project p, cstr text, cstr file_ctx, bool verbose) Project:tokenize -> 
 	int match_len
 	bool matched
 	List tokens = List::new()
-	tokens:append(p:tokty_by_name("T_ENDOFSTATEMENT"):make_token(";", "<dummy>", 0, 0)|ptr)
+	tokens:append(p:tokty_by_name("T_ENDOFSTATEMENT"):make_token(";", "<dummy>", 0, 0, "<none>")|ptr)
 	int line_ctx = 0
 	int col_ctx = 0
 	bool ok = true
 	bool skipping_ws_ok
+	cstr meth_guess = "<none>"
+	Token made
 	int consume_scan_pos
 	while (text_pos<text:len()) & ok do
 		current_matcher_idx=0
@@ -422,7 +427,11 @@ function(Project p, cstr text, cstr file_ctx, bool verbose) Project:tokenize -> 
 			if match_len>0 do
 				matched=true
 				if current_matcher.produce_token do
-					tokens:append(current_matcher:make_token(text:offset(text_pos), file_ctx, line_ctx, col_ctx)|ptr)
+					made=current_matcher:make_token(text:offset(text_pos), file_ctx, line_ctx, col_ctx, meth_guess)
+					if made.type_.name=="T_FUNCTIONDECL_NAME" do
+						meth_guess=made.text
+					done
+					tokens:append(made|ptr)
 				done
 				consume_scan_pos=0
 				while consume_scan_pos<match_len do
@@ -466,3 +475,46 @@ function(Project p, cstr text, cstr file_ctx, bool verbose) Project:tokenize -> 
 		done
 	done
 return tokens
+
+function(cstr source_text, int lineno, int colno) lex::print_highlight -> void does
+	int i=0
+	int curline=0
+	int curcol=0
+	int sourcelen=source_text:len()
+	int line_start=0
+	int line_tabs=0
+	int out_tabs
+	bool found=false
+	while i<sourcelen do
+		if source_text[i]:in("\n") do
+			if found do
+				printf("%3i: %.*s\n", lineno, i-line_start, source_text:offset(line_start))
+				out_tabs=0
+				printf("    ")
+				while out_tabs<line_tabs do
+					printf("\t")
+					out_tabs+=1
+				done
+				printf("%*s^\n", colno-line_tabs, "")
+				return
+			done
+			curline+=1
+			curcol=0
+			line_start=i+1
+			line_tabs=0
+		else do
+			curcol+=1
+		done
+
+		if source_text[i]:in("\t") do
+			line_tabs+=1
+		done
+
+		if curline==lineno & curcol==colno do
+			found=true
+		done
+
+		i+=1
+	done
+	printf("ERR: Can't find position %i:%i in source to print hilight\n", lineno, colno)
+return

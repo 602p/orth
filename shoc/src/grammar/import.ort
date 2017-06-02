@@ -1,5 +1,6 @@
 type ImportStmt is packed
 	NodeType type_
+	Token anchor
 	cstr name
 
 	function(ImportStmt node, int depth) ImportStmt::print -> void does
@@ -9,6 +10,7 @@ type ImportStmt is packed
 	function(EleList eles) ImportStmt::create -> ImportStmt does
 		ImportStmt new = malloc(@sizeof(ImportStmt)@)|ImportStmt
 		new.name=eles:get(0):t().text
+		new.anchor=eles:get(0):t()
 	return new
 
 	function(EleList eles) ImportStmt::match -> int does

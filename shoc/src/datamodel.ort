@@ -216,6 +216,16 @@ type StructOType is packed
 		done
 	return -1
 
+	function(StructOType self, cstr field_name) StructOType:has_field -> bool does
+		int i=0
+		while i<self.fields.len do
+			if self.fields:get_TypedVar(i).name==field_name do
+				return true
+			done
+			i+=1
+		done
+	return false
+
 	function(StructOType self, cstr field_name) StructOType:get_field_index -> int does
 		int i=0
 		while i<self.fields.len do
@@ -224,7 +234,7 @@ type StructOType is packed
 			done
 			i+=1
 		done
-		shoc::bail_out("No filed "+field_name+" in type "+self.name)
+		shoc::bail_out("(idx) No filed "+field_name+" in type "+self.name)
 	return -1
 
 	function(StructOType self, cstr field_name) StructOType:get_field_type -> OType does
@@ -235,7 +245,7 @@ type StructOType is packed
 			done
 			i+=1
 		done
-		shoc::bail_out("No field "+field_name+" in type "+self.name)
+		shoc::bail_out("(type) No field "+field_name+" in type "+self.name)
 	return null|OType
 
 	function(StructOType self) StructOType:get_size -> int does

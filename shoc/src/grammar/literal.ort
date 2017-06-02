@@ -1,5 +1,6 @@
 type LiteralExpr is packed
 	NodeType type_
+	Token anchor
 	cstr value
 	cstr value_type
 
@@ -24,6 +25,7 @@ type LiteralExpr is packed
 			new.value_type="cstr"
 			new.value=new.value:substr(1, new.value:len()-2)
 		done
+		new.anchor=eles:get(0):t()
 	return new
 
 	function(Project p, cstr value_type, cstr value) LiteralExpr::create_direct -> Node does

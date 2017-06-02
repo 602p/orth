@@ -1,5 +1,6 @@
 type IfExprHead is packed
 	NodeType type_
+	Token anchor
 	Node condition
 	bool is_elif
 
@@ -12,6 +13,7 @@ type IfExprHead is packed
 		IfExprHead new = malloc(@sizeof(IfExprHead)@)|IfExprHead
 		new.condition=eles:get(1):n()
 		new.is_elif=eles:get(0):t():is_a("T_ELIF")
+		new.anchor=eles:get(0):t()
 	return new
 
 	function(EleList eles) IfExprHead::match -> int does
@@ -38,6 +40,7 @@ endtype
 
 type IfExpr is packed
 	NodeType type_
+	Token anchor
 	Node condition
 	bool is_elif
 	BlockBody body
@@ -57,6 +60,7 @@ type IfExpr is packed
 		new.condition=(eles:get(0):n()|IfExprHead).condition
 		new.is_elif=(eles:get(0):n()|IfExprHead).is_elif
 		new.body=eles:get(1):n()|BlockBody
+		new.anchor=(eles:get(0):n()|IfExprHead).anchor
 	return new
 
 	function(EleList eles) IfExpr::match -> int does

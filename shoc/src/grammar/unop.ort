@@ -1,5 +1,6 @@
 type UnOpExpr is packed
 	NodeType type_
+	Token anchor
 	cstr op
 	Node value
 
@@ -14,6 +15,7 @@ type UnOpExpr is packed
 		UnOpExpr new = malloc(@sizeof(UnOpExpr)@)|UnOpExpr
 		new.value=eles:get(1):n()
 		new.op=eles:get(0):t().text
+		new.anchor=eles:get(0):t()
 	return new
 
 	function(EleList eles) UnOpExpr::match -> int does

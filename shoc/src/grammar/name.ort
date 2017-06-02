@@ -1,5 +1,6 @@
 type NameExpr is packed
 	NodeType type_
+	Token anchor
 	cstr name
 
 	function(NameExpr node, int depth) NameExpr::print -> void does
@@ -9,6 +10,7 @@ type NameExpr is packed
 	function(EleList eles) NameExpr::create -> NameExpr does
 		NameExpr new = malloc(@sizeof(NameExpr)@)|NameExpr
 		new.name=eles:get(0):t().text
+		new.anchor=eles:get(0):t()
 	return new
 
 	function(Project p, cstr name) NameExpr::create_direct -> NameExpr does
@@ -35,6 +37,7 @@ endtype
 
 type DeclExpr is packed
 	NodeType type_
+	Token anchor
 	cstr name
 
 	function(DeclExpr node, int depth) DeclExpr::print -> void does
@@ -44,6 +47,7 @@ type DeclExpr is packed
 	function(EleList eles) DeclExpr::create -> DeclExpr does
 		DeclExpr new = malloc(@sizeof(DeclExpr)@)|DeclExpr
 		new.name=eles:get(0):t().text
+		new.anchor=eles:get(0):t()
 	return new
 
 	function(EleList eles) DeclExpr::match -> int does

@@ -1,5 +1,6 @@
 type TupleEndFragment is packed
 	NodeType type_
+	Token anchor
 	Node element
 
 	function(TupleEndFragment node, int depth) TupleEndFragment::print -> void does

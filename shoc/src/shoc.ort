@@ -29,6 +29,7 @@ type Project is
 	List transformer_passes
 	List gir_types
 	StrMap options
+	StrMap sources
 
 	int pointer_size
 
@@ -52,6 +53,7 @@ function() shoc::get_empty_project -> Project does
 	p.transformer_passes = List::new()
 	p.gir_types = List::new()
 	p.options = StrMap::new()
+	p.sources=StrMap::new()
 	p.pointer_size=0
 
 	p.ssa_count=0
@@ -173,6 +175,35 @@ function(Project p, cstr flag, cstr msg) Project:cond_warn -> void does
 	if p.options:contains(flag) do
 		printf("%-20s: %s\n", flag, msg)
 	done
+return
+
+function(Project p, cstr flag, cstr msg, Node n) Project:cond_warn_in -> void does
+	Token anchor = p:get_node_anchor(n)
+	if p.options:contains(flag) do
+		printf("%-20s: %s. From file '%s', line %i, col %i, (likely) in '%s':\n", flag, msg, anchor.origin_file, anchor.origin_line, anchor.origin_col, anchor.origin_meth)
+		lex::print_highlight(p.sources:get(anchor.origin_file), anchor.origin_line, anchor.origin_col)
+	done
+return
+
+function(Project p, cstr flag, bool do_warn, cstr msg, Node n) Project:cond_warn_in_if -> void does
+	if -do_warn do
+		return
+	done
+	p:cond_warn_in(flag, msg, n)
+return
+
+function(Project p, cstr msg, Node n) Project:fail_in -> void does
+	Token anchor = p:get_node_anchor(n)
+	printf("Compilation Failure : %s. From file '%s', line %i, col %i, (likely) in '%s':\n", msg, anchor.origin_file, anchor.origin_line, anchor.origin_col, anchor.origin_meth)
+	lex::print_highlight(p.sources:get(anchor.origin_file), anchor.origin_line, anchor.origin_col)
+	exit(3)
+return
+
+function(Project p, bool do_fail, cstr msg, Node n) Project:fail_in_if -> void does
+	if -do_fail do
+		return
+	done
+	p:fail_in(msg, n)
 return
 
 function(Project p, cstr flag, cstr msg) Project:inv_cond_warn -> void does

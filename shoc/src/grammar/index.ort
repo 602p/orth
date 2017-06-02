@@ -1,5 +1,6 @@
 type IndexExpr is packed
 	NodeType type_
+	Token anchor
 	Node value
 	Node array
 
@@ -17,6 +18,7 @@ type IndexExpr is packed
 		IndexExpr new = malloc(@sizeof(IndexExpr)@)|IndexExpr
 		new.array=eles:get(0):n()
 		new.value=eles:get(2):n()
+		new.anchor=eles:get(1):t()
 	return new
 
 	function(EleList eles) IndexExpr::match -> int does

@@ -35,6 +35,7 @@ return -1
 
 type BinOpExpr is packed
 	NodeType type_
+	Token anchor
 	cstr op
 	Node lhs
 	Node rhs
@@ -55,6 +56,7 @@ type BinOpExpr is packed
 		new.lhs=eles:get(0):n()
 		new.op=eles:get(1):t().text
 		new.rhs=eles:get(2):n()
+		new.anchor=eles:get(1):t()
 	return new
 
 	function(Project p, Node lhs, Node rhs, cstr op) BinOpExpr::create_direct -> BinOpExpr does

@@ -1,5 +1,6 @@
 type AccessorExpr is packed
 	NodeType type_
+	Token anchor
 	cstr mode
 	Node object
 	cstr field
@@ -19,6 +20,7 @@ type AccessorExpr is packed
 		new.object=eles:get(0):n()
 		new.mode=eles:get(1):t().text
 		new.field=(eles:get(2):n()|NameExpr).name
+		new.anchor=eles:get(1):t()
 	return new
 
 	function(EleList eles) AccessorExpr::match -> int does
@@ -28,10 +30,9 @@ type AccessorExpr is packed
 			return 0
 		done
 
-		if (-(\
-				(eles:get(1):t().type_.name=="T_DOT"):or(\
-		 		eles:get(1):t().type_.name=="T_COLON"):or(\
-		 		eles:get(1):t().type_.name=="T_DOUBLECOLON"))):or(\
+		if (-((eles:get(1):t().type_.name=="T_DOT"):or(\
+		 	   eles:get(1):t().type_.name=="T_COLON"):or(\
+		 	   eles:get(1):t().type_.name=="T_DOUBLECOLON"))):or(\
 		   -eles:get(0):n():is_a("ValueExpression")):or(\
 		   -eles:get(2):n():is_a("NameExpr")) do
 			return 0

@@ -1,0 +1,26 @@
+
+function() get_anchor::init -> TransformerPass does
+return TransformerPass::new("get_anchor"):no_auto_visit():no_default_run()\
+					   :add_specialization("NameExpr", get_anchor::for_name|NodeTransformer)\
+					   :add_specialization("DeclExpr", get_anchor::for_decl|NodeTransformer)\
+					   :add_specialization("AccessorExpr", get_anchor::for_accesor|NodeTransformer)
+
+function(NameExpr n, TransformerPass p) get_anchor::for_name -> Token does
+return n.anchor
+
+function(DeclExpr n, TransformerPass p) get_anchor::for_decl -> Token does
+return n.anchor
+
+function(AccessorExpr n, TransformerPass p) get_anchor::for_accesor -> Token does
+return n.anchor
+
+function(TransformerPass p, Node n) TransformerPass:visit_Token -> Token does
+return p:visit(n)|Token
+
+function(Project p, Node n) Project:get_node_anchor -> Token does
+	Token o = p:get_transformer_pass("get_anchor"):visit_Token(n)
+	if (o|ptr)==(n|ptr) do
+		n:print_root()
+		shoc::bail_out("Invalid result from get_anchor for node")
+	done
+return o

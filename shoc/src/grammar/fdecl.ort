@@ -5,6 +5,7 @@ type FunctionDeclHead is packed
 	bool is_extern
 	cstr name
 	cstr ret_type
+	Token anchor
 
 	function(FunctionDeclHead node, int depth) FunctionDeclHead::print -> void does
 		printf("FunctionDeclHead: Name='%s' Type='%s' Nargs=%i", node.name, node.ret_type, node.args.len)
@@ -45,6 +46,7 @@ type FunctionDeclHead is packed
 		else do #it's a MultiArgList
 			new.args=(eles:get(1):n()|MultiArgList).args
 		done
+		new.anchor=eles:get(0):t()
 	return new
 
 	function(EleList eles) FunctionDeclHead::match -> int does

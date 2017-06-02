@@ -22,6 +22,7 @@ import "transformers/pregir/rw_calls.ort"
 import "transformers/emit/__init__.ort"
 
 import "transformers/get_type.ort"
+import "transformers/get_anchor.ort"
 
 function(Project p) shoc::transformers::init -> void does
 	p:add_Transformer(apply_includes::init())
@@ -47,6 +48,7 @@ function(Project p) shoc::transformers::init -> void does
 	p:add_Transformer(elide_funcs::init())
 
 	p:add_Transformer(get_type::init())
+	p:add_Transformer(get_anchor::init())
 
 	if p.options:contains("no_gir") do
 		return

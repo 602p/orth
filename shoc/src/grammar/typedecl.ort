@@ -5,6 +5,7 @@ type TypeDeclHead is packed
 	bool is_func_alias
 	bool packed
 	cstr alias_type #type for normal alias, RT for func alias
+	Token anchor
 
 	function(TypeDeclHead node, int depth) TypeDeclHead::print -> void does
 		printf("TypeDeclHead: `%s` (Is_Func_Alias=%i, Is_Type_Alias:%i, Is_Packed=%i)",\
@@ -33,6 +34,7 @@ type TypeDeclHead is packed
 			new.is_func_alias=true
 			new.alias_type=eles:get(5):t().text
 		done
+		new.anchor=eles:get(0):t()
 	return new
 
 	function(EleList eles) TypeDeclHead::match -> int does

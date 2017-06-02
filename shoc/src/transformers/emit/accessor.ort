@@ -1,5 +1,6 @@
 
 function(AccessorExpr n, TransformerPass p) emit_addr::for_accessor -> GIRVar does
+	p.proj:fail_in_if(-p.proj:get_node_type(n.object):as_struct():has_field(n.field), "No such field '"+n.field+"' in type "+p.proj:get_node_type(n.object).name, n|Node)
 	GIRVar addr_int = GIRCast::emit(p.proj, p:emit_value(n.object), p.proj:get_type("long"))
 	GIRVar valu_int = GIRLiteral::emit_long(p.proj, (p.proj:get_node_type(n.object):as_struct():get_field_offset(n.field)/8)|long)
 	GIRVar offs_int = GIRBinOp::emit(p.proj, addr_int, valu_int, p.proj:get_type("long"), "+")

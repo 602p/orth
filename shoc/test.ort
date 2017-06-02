@@ -1,9 +1,17 @@
-function() main -> int does
-	<#Multi-
-	line
-	comment#>
+type FooT is
+	int b
+endtype
 
-	ABC()#def
-	GH  (LMN)\
-(1)
-return PQS
+function(FooT a) nutshack -> void does
+	if 1==(2-1) do
+		int foobar = (a.a*2)+3
+	done
+return
+
+function() main -> int does
+	int bar = 3
+	int bar = 7
+
+	FooT a
+	nutsack(a)
+return 0

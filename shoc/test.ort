@@ -2,16 +2,11 @@ type FooT is
 	int b
 endtype
 
-function(FooT a) nutshack -> void does
-	if 1==(2-1) do
-		int foobar = (a.a*2)+3
-	done
-return
-
 function() main -> int does
 	int bar = 3
 	int bar = 7
 
+	bar.baz=72
+
 	FooT a
-	nutsack(a)
 return 0

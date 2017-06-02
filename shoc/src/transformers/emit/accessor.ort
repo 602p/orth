@@ -1,10 +1,12 @@
 
 function(AccessorExpr n, TransformerPass p) emit_addr::for_accessor -> GIRVar does
-	p.proj:fail_in_if(-p.proj:get_node_type(n.object):as_struct():has_field(n.field), "No such field '"+n.field+"' in type "+p.proj:get_node_type(n.object).name, n|Node)
+	OType obj_typ=p.proj:get_node_type(n.object)
+	p.proj:fail_in_if(-obj_typ:is_struct(), "Type "+obj_typ.name+" is not a struct - cannot use accessor off of it", n|Node)
+	p.proj:fail_in_if(-obj_typ:as_struct():has_field(n.field), "No such field '"+n.field+"' in type "+obj_typ.name, n|Node)
 	GIRVar addr_int = GIRCast::emit(p.proj, p:emit_value(n.object), p.proj:get_type("long"))
-	GIRVar valu_int = GIRLiteral::emit_long(p.proj, (p.proj:get_node_type(n.object):as_struct():get_field_offset(n.field)/8)|long)
+	GIRVar valu_int = GIRLiteral::emit_long(p.proj, (obj_typ:as_struct():get_field_offset(n.field)/8)|long)
 	GIRVar offs_int = GIRBinOp::emit(p.proj, addr_int, valu_int, p.proj:get_type("long"), "+")
-return GIRPointerCast::emit(p.proj, offs_int, p.proj:get_node_type(n.object):as_struct():get_field_type(n.field))
+return GIRPointerCast::emit(p.proj, offs_int, obj_typ:as_struct():get_field_type(n.field))
 
 function(AccessorExpr n, TransformerPass p) emit_value::for_accessor -> GIRVar does
 return GIRLoad::emit(p.proj, p:emit_addr(n|Node))

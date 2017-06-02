@@ -265,20 +265,24 @@ type TokenType is
 		self.produce_token=false
 	return self
 
-	function(TokenType self, cstr text) TokenType:make_token -> Token does
-	return Token::_new(text:substr(0, self:match_internal(text)), self)
+	function(TokenType self, cstr text, cstr file_ctx, int line_ctx, int col_ctx) TokenType:make_token -> Token does
+	return Token::_new(text:substr(0, self:match_internal(text)), self, file_ctx, line_ctx, col_ctx)
 endtype
 
 type Token is
 	cstr text
 	TokenType type_
-	cstr origin_file #TODO
-	int origin_line #TODO
+	cstr origin_file
+	int origin_line
+	int origin_col
 
-	function(cstr text, TokenType type_) Token::_new -> Token does
+	function(cstr text, TokenType type_, cstr file_ctx, int line_ctx, int col_ctx) Token::_new -> Token does
 		Token new = malloc(@sizeof(Token)@)|Token
 		new.text=text
 		new.type_=type_
+		new.origin_line=line_ctx
+		new.origin_file=file_ctx
+		new.origin_col=col_ctx
 	return new
 
 	function(Token self) Token:free -> void does
@@ -293,6 +297,14 @@ type Token is
 		done
 		l:clear()
 		l:free()
+	return
+
+	function(Token self) Token:print -> void does
+		cstr text = self.text
+		if self.type_.name=="T_ENDOFSTATEMENT" do
+			text="..."
+		done
+		printf("%30s(%-20s)%40s:%i:%i\n", self.type_.name, text, self.origin_file, self.origin_line, self.origin_col)
 	return
 endtype
 
@@ -383,7 +395,7 @@ function(Project p, cstr name) Project:tokty_by_name -> TokenType does
 	done
 return null|TokenType
 
-function(Project p, cstr text, bool verbose) Project:tokenize -> List does
+function(Project p, cstr text, cstr file_ctx, bool verbose) Project:tokenize -> List does
 	#text=text+"\n;;;"
 	ProgressBar bar
 	if verbose do
@@ -392,12 +404,15 @@ function(Project p, cstr text, bool verbose) Project:tokenize -> List does
 	int text_pos=0
 	int current_matcher_idx
 	TokenType current_matcher
-	int dbg_print_token_pos
 	int match_len
 	bool matched
 	List tokens = List::new()
-	tokens:append(p:tokty_by_name("T_ENDOFSTATEMENT"):make_token(";")|ptr)
+	tokens:append(p:tokty_by_name("T_ENDOFSTATEMENT"):make_token(";", "<dummy>", 0, 0)|ptr)
+	int line_ctx = 0
+	int col_ctx = 0
 	bool ok = true
+	bool skipping_ws_ok
+	int consume_scan_pos
 	while (text_pos<text:len()) & ok do
 		current_matcher_idx=0
 		matched=false
@@ -407,7 +422,17 @@ function(Project p, cstr text, bool verbose) Project:tokenize -> List does
 			if match_len>0 do
 				matched=true
 				if current_matcher.produce_token do
-					tokens:append(current_matcher:make_token(text:offset(text_pos))|ptr)
+					tokens:append(current_matcher:make_token(text:offset(text_pos), file_ctx, line_ctx, col_ctx)|ptr)
+				done
+				consume_scan_pos=0
+				while consume_scan_pos<match_len do
+					if text[text_pos+consume_scan_pos]:in("\n") do
+						line_ctx+=1
+						col_ctx=0
+					else do
+						col_ctx+=1
+					done
+					consume_scan_pos+=1
 				done
 				text_pos+=match_len
 			done
@@ -415,10 +440,21 @@ function(Project p, cstr text, bool verbose) Project:tokenize -> List does
 		done
 		if text[text_pos]:in(" \t") do
 			text_pos+=1
+			col_ctx+=1
 		elif text[text_pos]:in("\\") do
 			text_pos+=1
-			while text[text_pos]:in(" \t\r\n") do
+			col_ctx+=1
+			skipping_ws_ok=true
+			while skipping_ws_ok do
+				if text[text_pos]:in("\n") do
+					line_ctx+=1
+					col_ctx=0
+				else do
+					col_ctx+=1
+				done
+				
 				text_pos+=1
+				skipping_ws_ok=text[text_pos]:in(" \t\n\r")
 			done
 		elif -matched do
 			printf("E: can't match any furter after %i:`%s`\n", text_pos, text:offset(text_pos))

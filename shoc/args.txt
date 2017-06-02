@@ -27,3 +27,4 @@ Passing -v sets the flag `verbose`, and is equivilent to passing -fverbose
 Use -w<flag> to enable warnings. This sets the flag `warn_<flag>`, and is equivilent to passing -fwarn_<flag>. Warnings include:
 	-wunused			: Print warnings about unused methods. These will be optimized away as well
 	-wduplicate			: Print warnings about duplicate or ambiguous locals
+	-wstyle				: Print warnings on old-style syntax

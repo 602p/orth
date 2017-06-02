@@ -32,7 +32,7 @@ function(ImportStmt n, TransformerPass p) apply_includes::visit_import -> Node d
 	if p.proj.options:contains("verbose") do
 		printf("Processing include of path '%s'\n", path)
 	done
-return p.proj:process_text(text)
+return p.proj:process_text(text, path)
 
 function() apply_includes::init -> TransformerPass does
 return TransformerPass::new("apply_includes")\

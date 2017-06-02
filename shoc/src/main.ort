@@ -77,7 +77,18 @@ function(int nargs, ArgList args) main -> int does
 	                    :with_search_path(search_path)
 	                   
 
-	List tokens = proj:tokenize(contents, options:contains("verbose"))
+	List tokens = proj:tokenize(contents, args:get(1), options:contains("verbose"))
+
+	if options:contains("dump_tokens") do
+		int tok_pos=0
+		
+		while tok_pos<tokens.len do
+			printf("%3i:", tok_pos)
+			(tokens:get(tok_pos)|Token):print()
+			tok_pos+=1
+		done
+	done
+
 	Node node   = proj:parse(tokens, contents, options:contains("verbose"))
 
 	if options:contains("dump_pre_ast") do

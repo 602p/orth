@@ -1,12 +1,9 @@
-extern(...) printf -> int
-type Box_int is packed
-	int val
-endtype
-
 function() main -> int does
-	int i=3
-	printf("i=%i\n", i)
-	ptr a = @addressof(i)
-	(a|Box_int).val=7
-	printf("i=%i\n", i)
-return 0
+	<#Multi-
+	line
+	comment#>
+
+	ABC()#def
+	GH  (LMN)\
+(1)
+return PQS

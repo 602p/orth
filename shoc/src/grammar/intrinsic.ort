@@ -17,6 +17,10 @@ type IntrinsicExpr is packed
 			return 0
 		done
 
+		if -eles:get(0).is_token do
+			return 0
+		done
+
 		if -(eles:get(1):n():is_a("CallExpr"):or(eles:get(1):n():is_a("NameExpr"))) do
 			return 0
 		done
@@ -24,6 +28,7 @@ type IntrinsicExpr is packed
 		if eles:get(0):t().type_.name=="T_INTRINSIC" do
 			if eles:get(2).is_token do
 				if eles:get(2):t().type_.name=="T_INTRINSIC" do
+					eles.proj:cond_warn("warn_style", "Unnececary 2nd @ in intrinsic")
 					return 3
 				done
 			done

@@ -74,7 +74,7 @@ type Element is
 
 	function(Element self) Element:print -> void does
 		if self.is_token do
-			printf("%s(%s)\n", self:t().type_.name, self:t().text)
+			self:t():print()
 		else do
 			self:n():print(1)
 		done
@@ -93,10 +93,12 @@ endtype
 type EleList is
 	int position
 	List list
+	Project proj
 
-	function(List l) EleList::from -> EleList does
+	function(Project p, List l) EleList::from -> EleList does
 		EleList new = malloc(@sizeof(EleList)@)|EleList
 		new.list=List::new()
+		new.proj=p
 		int i=0
 		while i<l.len do
 			new.list:append(Element::from_token(l:get(i)|Token)|ptr)
@@ -334,7 +336,7 @@ function(EleList e, cstr s) parse::update_viz -> void does
 return
 
 function(Project p, List tokens, cstr text, bool verbose) Project:parse -> Node does
-	EleList eles=EleList::from(tokens)
+	EleList eles=EleList::from(p, tokens)
 	ProgressBar bar
 	if verbose do
 		bar = ProgressBar::new_reversed(tokens.len, 40, "Parsing......")

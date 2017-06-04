@@ -20,8 +20,7 @@ type FileNode is packed
 		int i=0
 		while i<eles:in_slice() do
 			if eles:get(i).is_token do
-				eles:get(i):print()
-				shoc::bail_out("Got a token in the input to FileNode::create!")
+				p:fail_in_token("Invalid Syntax", eles:get(i):t())
 			done
 			new.statements:append_Node(eles:get(i):n())
 			i+=1

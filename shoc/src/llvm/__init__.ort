@@ -68,7 +68,11 @@ function(Project p, cstr filename, bool verbose) Project:emit_as_llvm -> Project
 		t=p.globals:get_by_num(j)|TypedVar
 		context:emit("@global_"+t.name+" = global "+context:get_ty(t.type_)+" ")
 		if (t.type_.variety==S_INT)+(t.type_.variety==U_INT) do
-			context:emitl("0")
+			if t.name=="shoc_heritage" do
+				context:emitl((shoc_heritage+1):str())
+			else do
+				context:emitl("0")
+			done
 		else do
 			context:emitl("null")
 		done

@@ -11,6 +11,8 @@ import os
 import shoc
 import llvm
 
+int shoc_heritage
+
 function(int nargs, ArgList args) main -> int does
 	mem::init_arena_allocator(1024*1024)
 
@@ -53,6 +55,10 @@ function(int nargs, ArgList args) main -> int does
 
 		if arg=="-v" do
 			options:set("verbose", "1")
+		done
+
+		if arg=="--heritage" do
+			printf("This shoc is the product of %i self-builds\n", shoc_heritage)
 		done
 
 		i+=1

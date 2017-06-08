@@ -331,6 +331,10 @@ function(List t) lex::init_default -> void does
 
 	t:append_TT(TokenType::new_kw("T_WHILE", "while"):after("T_ENDOFSTATEMENT"))
 
+	t:append_TT(TokenType::new_kw("T_FOR", "for"):after("T_ENDOFSTATEMENT"))
+	t:append_TT(TokenType::new_fn("T_FOR_NAME", lex::match_identifier|TokenMatcher):after("T_FOR"))
+	t:append_TT(TokenType::new_kw("T_FOR_IN", "in"):after("T_FOR_NAME"))
+
 	t:append_TT(TokenType::new_kw("T_TYPEDECL", "type"))
 	t:append_TT(TokenType::new_kw("T_TYPEDECL_IS", "is"))
 	t:append_TT(TokenType::new_fn("T_TYPEDECL_NAME", lex::match_identifier|TokenMatcher):after("T_TYPEDECL"))
@@ -466,8 +470,7 @@ function(Project p, cstr text, cstr file_ctx, bool verbose) Project:tokenize -> 
 				skipping_ws_ok=text[text_pos]:in(" \t\n\r")
 			done
 		elif -matched do
-			printf("E: can't match any furter after %i:`%s`\n", text_pos, text:offset(text_pos))
-			shoc::bail_out("Can't match input string")
+			p:fail_in_token("Can't match input string. Invalid Syntax", tokens:get(tokens.len-1)|Token)
 			ok=false
 		done
 		if verbose do

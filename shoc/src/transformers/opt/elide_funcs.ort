@@ -17,7 +17,7 @@ function(FunctionDecl n, TransformerPass p) elide_funcs::visit_decl -> FunctionD
 
 	if p.proj:get_Method(n.head.name).references==0 & -p.proj.options:contains("no_elide_func") do
 		p.proj.methods:remove(n.head.name)
-		p:cond_warn("warn_unused", "Unused function (0 references in elide_funcs pass): "+n.head.name)
+		p.proj:cond_warn_in("warn_unused", "Unused function (0 references in elide_funcs pass): "+n.head.name, n|Node)
 		return null|FunctionDecl
 	done
 return n

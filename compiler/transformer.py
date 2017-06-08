@@ -475,8 +475,8 @@ class FileTransformer(Transformer):
 
 	def define(self, out):
 		for func in self.node.funcs:
-			if isinstance(func, TypeDecl):
-				print("Saw type: "+func.name)
+			# if isinstance(func, TypeDecl):
+			# 	# print("Saw type: "+func.name)
 			if isinstance(func, ImportExpr) or (isinstance(func, TypeDecl) and not isinstance(func, AliasTypeDecl))\
 			   or isinstance(func, IntrinsicExpr) or isinstance(func, ExternFunc):
 				transform.get_transformer(func, self).define(out)
@@ -506,7 +506,7 @@ class FileTransformer(Transformer):
 				transform.emit(out, func, self)
 
 	def transform(self, out):
-		print("Transforming "+out.context_map['file'])
+		# print("Transforming "+out.context_map['file'])
 		for func in self.node.funcs:
 			if isinstance(func, FunctionDecl) or isinstance(func, ImportExpr) or isinstance(func, TypeDecl):
 				transform.emit(out, func, self)
@@ -551,7 +551,7 @@ class TypeTransformer(Transformer):
 	transforms=TypeDecl
 
 	def define(self, out):
-		print("-> Defining type "+self.node.name)
+		# print("-> Defining type "+self.node.name)
 		out.types[self.node.name]=datamodel.StructOType(self.node.name, self.node.fields, out, packed=self.node.packed)
 
 	def prepare(self, out):
@@ -606,7 +606,7 @@ class ImportTransformer(Transformer):
 			# print("SKIP")
 			# out.emitl(";;;OMITTING INCLUDE `"+filename+"`, PREVIOUSLY INCLUDED")
 			return
-		print("Defining "+filename+" (inv. parse)")
+		# print("Defining "+filename+" (inv. parse)")
 		out.defined_files.append(filename)
 		with out.context(file=filename, path=path):
 			self.get_file_transformer(out).define(out)
@@ -636,7 +636,7 @@ class ExternFuncTransformer(Transformer):
 	transforms=ExternFunc
 
 	def define(self, out):
-		print("AAA")
+		# print("AAA")
 		rt=datamodel.builtin_types[self.node.returntype]
 		extrep=""
 		if isinstance(self.node, VAExternFunc):

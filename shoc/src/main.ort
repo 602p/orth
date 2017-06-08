@@ -57,6 +57,10 @@ function(int nargs, ArgList args) main -> int does
 			options:set("verbose", "1")
 		done
 
+		if arg:startswith("-O") do
+			options:set("opt", arg:offset(2))
+		done
+
 		if arg=="--heritage" do
 			printf("This shoc is the product of %i self-builds\n", shoc_heritage)
 		done
@@ -158,8 +162,13 @@ function(int nargs, ArgList args) main -> int does
 		proj:emit_as_llvm(outpath+".ir", options:contains("verbose"))
 
 		if -options:contains("no_finish_build") do
-			os::run("llc-3.5 "+outpath+".ir")
-			os::run("gcc "+outpath+".ir.s -o "+outpath)
+			if options:contains("opt") do
+				os::run("llc-3.5 "+outpath+".ir -O="+(options:get("opt")|cstr))
+				os::run("gcc "+outpath+".ir.s -o "+outpath+" -O"+(options:get("opt")|cstr))
+			else do
+				os::run("llc-3.5 "+outpath+".ir ")
+				os::run("gcc "+outpath+".ir.s -o "+outpath)
+			done
 
 			if -options:contains("no_clean") do
 				os::run("rm "+outpath+".ir "+outpath+".ir.s")
@@ -173,3 +182,5 @@ function(int nargs, ArgList args) main -> int does
 
 	mem::clean_up()
 return 0
+
+# fnuction

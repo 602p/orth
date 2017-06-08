@@ -24,6 +24,14 @@ type AssignmentExpr is packed
 		new.anchor=eles:get(1):t()
 	return new
 
+	function(Project p, Node lhs, Node rhs) AssignmentExpr::create_direct -> AssignmentExpr does
+		AssignmentExpr new = malloc(@sizeof(AssignmentExpr)@)|AssignmentExpr
+		new.lhs=lhs
+		new.rhs=rhs
+		new.op="="
+		new.type_=p:type_by_name("AssignmentExpr")
+	return new
+
 	function(EleList eles) AssignmentExpr::match -> int does
 		if eles:get(0).is_token:or(\
 		  -eles:get(1).is_token):or(\

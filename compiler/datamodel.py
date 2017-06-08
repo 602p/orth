@@ -438,8 +438,8 @@ class StructOType(OType):
 		# we would get a infininite loop here recursivley calling get_size() in in.
 		#Also, that would be wrong even if it worked because we are holding a pointer to it, not 
 		# embedding it
-		print([e.get_size() if not isinstance(e, StructOType) else builtin_types['ptr'].get_size() for e in self.fields.values()])
-		print(self.fields.values())
+		# print([e.get_size() if not isinstance(e, StructOType) else builtin_types['ptr'].get_size() for e in self.fields.values()])
+		# print(self.fields.values())
 		return sum(e.get_size() if not isinstance(e, StructOType) else builtin_types['ptr'].get_size() for e in self.fields.values())
 
 

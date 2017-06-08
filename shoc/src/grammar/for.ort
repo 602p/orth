@@ -1,0 +1,58 @@
+type ForExpr is packed
+	NodeType type_
+	cstr iter_name
+	Node iterable
+	BlockBody body
+	Token anchor
+
+	function(ForExpr node, int depth) ForExpr::print -> void does
+		printf("ForExpr: Iterator=%s\n", node.iter_name)
+		parse::indent(depth+1)
+		printf("|- Iterable: ")
+		(node.iterable):print(depth+2)
+		parse::indent(depth+1)
+		printf("|- Body: ")
+		(node.body|Node):print(depth+2)
+	return
+
+	function(EleList eles) ForExpr::create -> ForExpr does
+		ForExpr new = malloc(@sizeof(ForExpr)@)|ForExpr
+		new.iterable=eles:get(3):n()
+		new.iter_name=eles:get(1):t().text
+		new.body=eles:get(5):n()|BlockBody
+		new.anchor=eles:get(0):t()
+	return new
+
+	function(EleList eles) ForExpr::match -> int does
+		if (-eles:get(0).is_token):or(\
+		    -eles:get(1).is_token):or(\
+		    -eles:get(2).is_token):or(\
+		     eles:get(3).is_token):or(\
+		    -eles:get(4).is_token):or(\
+		     eles:get(5).is_token) do
+			return 0
+		done
+
+		if (-eles:get(0):t():is_a("T_FOR")):or(\
+			-eles:get(1):t():is_a("T_FOR_NAME")):or(\
+			-eles:get(2):t():is_a("T_FOR_IN")):or(\
+			-eles:get(3):n():is_a("ValueExpression")):or(\
+			-eles:get(4):t():is_a("T_DO")):or(\
+			-eles:get(5):n():is_a("BlockBody")) do
+			return 0
+		done
+	return 6
+
+	function(ForExpr n, TransformerPass p) ForExpr::visit -> void does
+		n.iterable=p:visit(n.iterable)
+		n.body=p:visit(n.body|Node)|BlockBody
+	return
+
+	function() ForExpr::impl -> NodeType does
+	return NodeType::new("ForExpr")\
+					:set_printer(ForExpr::print |NodePrinter)\
+					:set_creator(ForExpr::create|NodeCreator)\
+					:set_matcher(ForExpr::match |NodeMatcher)\
+					:set_visitor(ForExpr::visit |NodeVisitor)\
+					:matches(6):addtype("Expression")
+endtype

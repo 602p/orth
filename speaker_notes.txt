@@ -1,0 +1,8 @@
+gcc -S
+clang -S -emit-llvm
+blockdiag
+google-chrome
+
+all i can tell you for pointers is: coming from python, it will take time
+
+shoc -fno_fold -fdump_ast -fdump_tokens

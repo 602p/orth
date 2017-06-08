@@ -1,0 +1,35 @@
+
+function(ForExpr n, TransformerPass p) rewrite_fors::visit_for -> Node does
+	List nodes = List::new()
+
+	cstr for_name="$for_"+p.proj:get_temp_name():str()
+
+	cstr iter_var=for_name+"_iter"
+	cstr len_var=for_name+"_len"
+	cstr pos_var=for_name+"_pos"
+
+	Node object = n.iterable
+	# printf("Bulding iter\n")
+	Node iterator = CallExpr::create_direct(p.proj, AccessorExpr::create_direct(p.proj, object, ":", "__iter__")|Node, List::new())|Node
+	# printf("get ty\n")
+	iterator:print_root()
+	OType iter_type = p.proj:get_node_type(iterator)
+	#TODO: Move things around, do direct call to <type>$__iter__
+	#at this point it's not gonna have rewritten the : accessor so can't do a lookup and fails
+	#alternativley, implement : accessor in get_type
+
+	# printf("append1\n")
+	nodes:append_Node(object)
+	# printf("append2\n")
+	nodes:append_Node(AssignmentExpr::create_direct(p.proj, NameExpr::create_direct(p.proj, iter_var)|Node, iterator)|Node)
+
+	# printf("setuplocal\n")
+	p.proj.curr_method:add_local(iter_var, iter_type)
+	p.proj.curr_method:add_local(iter_var, p.proj:get_type("int"))
+	p.proj.curr_method:add_local(iter_var, p.proj:get_type("int"))
+	# printf("ret\n")
+return BlockBody::create_direct(p.proj, nodes)
+
+function() rw_fors::init -> TransformerPass does
+return TransformerPass::new("rewrite_fors")\
+       :add_specialization("ForExpr", rewrite_fors::visit_for|NodeTransformer)

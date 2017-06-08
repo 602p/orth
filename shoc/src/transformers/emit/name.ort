@@ -1,14 +1,16 @@
 
 function(NameExpr n, TransformerPass p) emit_addr::for_name -> GIRVar does
+	p.proj:fail_in_if(p.proj.curr_method|ptr==null, "Can't resolve name "+n.name+" (outside of func)", n|Node)
 	if p.proj.curr_method:has_local(n.name) do
 		return GIRGetLocal::emit(p.proj, p.proj.curr_method:get_local(n.name), n.name)
 	elif p.proj.globals:contains(n.name) do
 		return GIRGetGlobal::emit(p.proj, (p.proj.globals:get(n.name)|TypedVar).type_, n.name)
 	done
-	shoc::bail_out("Can't resolve name "+n.name)
+	p.proj:fail_in("Can't resolve name "+n.name, n|Node)
 return null|GIRVar
 
 function(NameExpr n, TransformerPass p) emit_value::for_name -> GIRVar does
+	p.proj:fail_in_if(p.proj.curr_method|ptr==null, "Can't resolve name "+n.name+" (outside of func)", n|Node)
 	if p.proj.curr_method.locals:contains(n.name):or(p.proj.globals:contains(n.name)) do
 		return GIRLoad::emit(p.proj, p:emit_addr(n|Node))
 	done

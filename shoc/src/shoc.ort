@@ -36,6 +36,7 @@ type Project is
 	Method curr_method
 	cstr   curr_file
 	int    ssa_count
+	int    temp_name_count
 
 	StrMap types
 	StrMap methods
@@ -57,6 +58,7 @@ function() shoc::get_empty_project -> Project does
 	p.pointer_size=0
 
 	p.ssa_count=0
+	p.temp_name_count=0
 	p.curr_method=null|Method
 	p.curr_file="?"
 
@@ -66,6 +68,10 @@ function() shoc::get_empty_project -> Project does
 	p.included_files = List::new()
 	p.search_path=List::new()
 return p
+
+function(Project p) Project:get_temp_name -> int does
+	p.temp_name_count+=1
+return p.temp_name_count
 
 function(Project p) Project:in_method -> bool does
 return p.curr_method|ptr!=null
@@ -177,12 +183,18 @@ function(Project p, cstr flag, cstr msg) Project:cond_warn -> void does
 	done
 return
 
-function(Project p, cstr flag, cstr msg, Node n) Project:cond_warn_in -> void does
-	Token anchor = p:get_node_anchor(n)
+function(Project p, cstr flag, cstr msg, Token anchor) Project:cond_warn_in_token -> void does
 	if p.options:contains(flag) do
-		printf("%-20s: %s. From file '%s', line %i, col %i, (likely) in '%s':\n", flag, msg, anchor.origin_file, anchor.origin_line, anchor.origin_col, anchor.origin_meth)
+		cstr esc=malloc(2)
+		esc[0]=27|byte
+		esc[1]=0|byte
+		printf("%s[33m%-20s: %s. From file '%s', line %i, col %i, (likely) in '%s':%s[0m\n", esc, flag, msg, anchor.origin_file, anchor.origin_line, anchor.origin_col, anchor.origin_meth, esc)
 		lex::print_highlight(p.sources:get(anchor.origin_file), anchor.origin_line, anchor.origin_col)
 	done
+return
+
+function(Project p, cstr flag, cstr msg, Node n) Project:cond_warn_in -> void does
+	p:cond_warn_in_token(flag, msg, p:get_node_anchor(n))
 return
 
 function(Project p, cstr flag, bool do_warn, cstr msg, Node n) Project:cond_warn_in_if -> void does
@@ -193,7 +205,10 @@ function(Project p, cstr flag, bool do_warn, cstr msg, Node n) Project:cond_warn
 return
 
 function(Project p, cstr msg, Token anchor) Project:fail_in_token -> void does
-	printf("Compilation Failure : %s. From file '%s', line %i, col %i, (likely) in '%s':\n", msg, anchor.origin_file, anchor.origin_line, anchor.origin_col, anchor.origin_meth)
+	cstr esc=malloc(2)
+	esc[0]=27|byte
+	esc[1]=0|byte
+	printf("%s[41mCompilation Failure%s[0m : %s[31m%s. From file '%s', line %i, col %i, (likely) in '%s':%s[0m\n", esc, esc, esc, msg, anchor.origin_file, anchor.origin_line, anchor.origin_col, anchor.origin_meth, esc)
 	lex::print_highlight(p.sources:get(anchor.origin_file), anchor.origin_line, anchor.origin_col)
 	exit(3)
 return

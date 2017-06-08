@@ -23,6 +23,14 @@ type AccessorExpr is packed
 		new.anchor=eles:get(1):t()
 	return new
 
+	function(Project p, Node obj, cstr mode, cstr field) AccessorExpr::create_direct -> AccessorExpr does
+		AccessorExpr new = malloc(@sizeof(AccessorExpr)@)|AccessorExpr
+		new.type_=p:type_by_name("AccessorExpr")
+		new.object=obj
+		new.mode=mode
+		new.field=field
+	return new
+
 	function(EleList eles) AccessorExpr::match -> int does
 		if eles:get(0).is_token:or(\
 		  -eles:get(1).is_token):or(\

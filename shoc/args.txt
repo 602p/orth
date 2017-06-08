@@ -16,11 +16,14 @@ Use -f<flag> to set a flag. Flags include:
 	-ffunchooks			: Build with funchooks debugging support enabled (will build slow as balls executables when using standard lib/err!)
 	-fxfunchooks		: Build with extended funchooks debugging support enabled (reenter_function callback)
 	-fverbose			: Print status info while building (fancy progress bars)
+	-fno_opt			: Skip optimization transformer passes
 
 Use -s<path> to add stuff to the search path (insert before default path), e.g. -s../lib/err_lite to use err_lite shimming in your app
 Default search path is (in order): [., ./lib, ../lib, ../../lib]
 
 Use -o<path> to specify output path. Executable will built to this path, and intermediate files will be named <path>.ir and <path>.s
+
+Use -O<num> to pass optimization flags to llc and gcc
 
 Passing -v sets the flag `verbose`, and is equivilent to passing -fverbose
 

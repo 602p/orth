@@ -30,7 +30,7 @@ type IntrinsicExpr is packed
 		if eles:get(0):t().type_.name=="T_INTRINSIC" do
 			if eles:get(2).is_token do
 				if eles:get(2):t().type_.name=="T_INTRINSIC" do
-					eles.proj:cond_warn("warn_style", "Unnececary 2nd @ in intrinsic")
+					eles.proj:cond_warn_in_token("warn_style", "Unnececary 2nd @ in intrinsic", eles:get(2):t())
 					return 3
 				done
 			done

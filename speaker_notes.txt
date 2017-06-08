@@ -3,6 +3,11 @@ clang -S -emit-llvm
 blockdiag
 google-chrome
 
+python -i animals.py
+
 all i can tell you for pointers is: coming from python, it will take time
+think of it as a index into a _huge_ list
 
 shoc -fno_fold -fdump_ast -fdump_tokens
+
+0-2017 - 0-1940 NADA

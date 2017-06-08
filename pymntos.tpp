@@ -368,6 +368,40 @@ These are connected by branches - ifs, whiles, calls
 
 
 
+--newpage
+--title Building a C-like compiler using Python: Parsing
+
+52*3+9 ~=     +
+             / \
+            *   9
+           / \
+         52   3 
+
+
+Via tree traversal, we can implement code emission
+Each type of node implements it's own transformer using inheritance
+Node context informs wether we transform as value or address
+
+Transformations here:
+ * Equivilent expressions (e.g. x = x + 2 and x+=2) become the same
+ * Optimizations can occour
+ * Expressions can be "lowered" into simpler steps (e.g. removing grouping parens, rewriting function calls)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -557,6 +591,101 @@ n.b.: it's not that simple
 
 
 
+--newpage
+--title Building a C-like compiler using Python: The types and machine architecture interlude
+
+Python's mental model: Aggregate Types
+Aggregate type = object = record = fixed-size typed tuple
+--beginoutput
+class Person:
+    def __init__(self, age:int, height:float, name:str):
+        self.age=age
+        self.height=height
+        self.name=name
+--endoutput
+---
+
+ fred=PersonT(72, 1.5, "Freddy")
+
+ +---------------------+
+ | {                   |
+ |    "age":72,        |
+ |    "height":1.5,    |     <- fred
+ |    "name":"Freddy"  |
+ | }                   |
+ +---------------------+
+
+---
+
+bob=fred
+
+ +---------------------+
+ | {                   |
+ |    "age":72,        |
+ |    "height":1.5,    |     <- fred, bob
+ |    "name":"Freddy"  |    
+ | }                   |
+ +---------------------+
+
+---
+
+bob.age+=1
+
+ +---------------------+
+ | {                   |
+ |    "age":73,        |      *poof, new object _inside_ bob*
+ |    "height":1.5,    |     <- fred, bob
+ |    "name":"Freddy"  |    
+ | }                   |
+ +---------------------+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+--newpage
+--title Building a C-like compiler using Python: The types and machine architecture interlude
+
+C's mental model: Aggregate Types
+Aggregate type = object = record = fixed-size typed tuple
+--beginoutput
+type Person is
+  int age
+  float height
+  cstr name
+endtype
+--endoutput
+---
+
+fred=Person::create(72, 1.5, "Freddy")
+
+fred------+             /-----> +--------------------+
+| address |            /        | int age: 72        |
+|   of    | ----------/         +--------------------+
+|  data   |                     | float height: 1.5  |
++---------+                     |                    |
+                                +--------------------+
+                                | cstr name: "Freddy"|
+                                |                    |
+                                +--------------------+
+
+This actually is what's going on behind the scenes, but the semantics of python don't make it obvious
+
+
+
 
 
 
@@ -708,7 +837,7 @@ builtin_types = {e.name:e for e in [
 ]}
 --endoutput
 
-
+Need to provide ability to get offset of fields from pointer structure, and "dereference" them
 
 
 
@@ -790,8 +919,13 @@ Orth is a fully functional C-level languge for all sorts of cool stuff.
 It's got some simple OOP concepts, and can be used to implement real software :)
 And it's a big boy language - It now has a orth compiler written in orth
 
+---
 
-
+Python Compiler --->  SHOC Compiler 
+                     ^             \
+                    /               \
+                   /                 V
+              SHOC Compiler <------- SHOC Compiler
 
 
 
@@ -802,13 +936,14 @@ And it's a big boy language - It now has a orth compiler written in orth
 --newpage
 --title Building a C-like compiler using Python: The End!
 
-Things I skipped, if you want to do this yourself:
- * LLVM IR SSA Form and Typing, Flow Control
- * Strict Aliasing and type punning limitations
- * Linking and function prototypes
- * Scoping and variables
- * Optimization
- * lol no generics
+There's many things I've skipped, if you want to do this yourself you'll have to learn about them.
+Many future things to work on for orth
+                                        lol no generics
+
+Some interesting python takeaways:
+ * Python's complex type structure can make it easy to jump into writing code - good!
+ * Python's complex type structure can be really slow (as in spending minuites in)
+ * Build error reporting tools in your compiler before you need them
 
 
 louis@goessling.com

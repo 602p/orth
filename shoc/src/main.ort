@@ -20,7 +20,7 @@ function(int nargs, ArgList args) main -> int does
 
 	stdio::init()
 	if nargs<2 do
-		orth::fail("E: Bad args\n")
+		orth::fail("E: Bad args")
 	done
 
 	List search_path=List::new()
@@ -61,8 +61,13 @@ function(int nargs, ArgList args) main -> int does
 			options:set("opt", arg:offset(2))
 		done
 
-		if arg=="--heritage" do
+		if arg=="--help" do
+			printf("Usage: shoc <filename>\n\n")
+			printf("Flags and other options documented in args.txt\n\n")
+			printf("Louis Goessling | louis.goessling.com | louis@goessling.com\n")
+			printf("http://github.com/602p/orth\n")
 			printf("This shoc is the product of %i self-builds\n", shoc_heritage)
+			exit(0)
 		done
 
 		i+=1

@@ -9,5 +9,6 @@ function(int i, int v) int:__get__ -> int does
 return v-1
 
 function() main -> int does
-	func()
+	int i=0
+	cstr i = "foo"
 return 0

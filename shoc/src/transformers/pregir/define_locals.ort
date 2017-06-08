@@ -7,7 +7,12 @@ function(DeclExpr n, TransformerPass p) define_locals::visit_decl -> DeclExpr do
 	TypedVar v = TypedVar::from_decl(n.name, p.proj)
 
 	p.proj:cond_warn_in_if("warn_duplicate", p.proj.globals:contains(v.name), "Global-shadowing declaration of variable "+v.name, n|Node)
-	p.proj:cond_warn_in_if("warn_duplicate", p.proj.curr_method:has_local(v.name), "Duplicate declaration of local "+v.name, n|Node)
+	
+	if p.proj.curr_method:has_local(v.name) do
+		p.proj:fail_in_if((p.proj.curr_method.locals:get(v.name)|OType).name!=v.type_.name, "Duplicate type-incompatible declaration of local "+v.name, n|Node)
+		p.proj:cond_warn_in("warn_duplicate", "Duplicate declaration of local "+v.name, n|Node)
+	done
+	
 
 	p.proj.curr_method:add_local(v.name, v.type_)
 return n

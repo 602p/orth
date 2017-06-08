@@ -17,7 +17,7 @@ type File is
 		f.fd=fopen(path, mode)
 
 		if f.fd|ptr|int==0 do
-			orth::fail("***FATAL fileio/File::open error, fopen->0***\n")
+			orth::fail("fileio/File::open error, fopen->0 trying to open "+path)
 		done
 
 		f.mode=mode

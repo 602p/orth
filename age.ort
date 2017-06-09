@@ -1,7 +1,0 @@
-import std
-
-function() main -> int does
-	int birthyear = read_int("What is your birthyear? ")
-	int age = 2017-birthyear
-	printf("You are %i years old now\n", age)
-return 0

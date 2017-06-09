@@ -19,6 +19,7 @@ function(TypeDeclHead n, TransformerPass p) define_types::visit_alias -> TypeDec
 		done
 		p.proj:add_Type(FPtrOType::new_varargs(n.name, p.proj:get_type(n.alias_type)))
 	done
+	#TODO: Implement
 return n
 
 function() define_types::init -> TransformerPass does

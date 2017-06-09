@@ -21,6 +21,14 @@ type WhileExpr is packed
 		new.anchor=eles:get(0):t()
 	return new
 
+	function(Project p, Node cond, BlockBody body, Token anchor) WhileExpr::create_direct -> WhileExpr does
+		WhileExpr new = malloc(@sizeof(WhileExpr)@)|WhileExpr
+		new.type_=p:type_by_name("WhileExpr")
+		new.condition=cond
+		new.body=body
+		new.anchor=anchor
+	return new
+
 	function(EleList eles) WhileExpr::match -> int does
 		if (-eles:get(0).is_token):or(\
 		    -eles:get(2).is_token):or(\

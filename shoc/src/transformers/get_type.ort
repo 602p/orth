@@ -36,9 +36,17 @@ return p.proj:get_node_type(n.meth):as_fptr().return_value
 
 function(AccessorExpr n, TransformerPass p) get_type::for_accessor -> OType does
 	OType obj_typ=p.proj:get_node_type(n.object)
-	p.proj:fail_in_if(-obj_typ:is_struct(), "Type "+obj_typ.name+" is not a struct - cannot use accessor off of it", n|Node)
-	p.proj:fail_in_if(-obj_typ:as_struct():has_field(n.field), "No such field '"+n.field+"' in type "+obj_typ.name, n|Node)
-return obj_typ:as_struct():get_field_type(n.field)
+	if n.mode=="." do
+		p.proj:fail_in_if(-obj_typ:is_struct(), "Type "+obj_typ.name+" is not a struct - cannot use accessor off of it", n|Node)
+		p.proj:fail_in_if(-obj_typ:as_struct():has_field(n.field), "No such field '"+n.field+"' in type "+obj_typ.name, n|Node)
+		return obj_typ:as_struct():get_field_type(n.field)
+	elif n.mode==":" do
+		cstr name=obj_typ.name+"$"+n.field
+		p.proj:fail_in_if(-p.proj.methods:contains(name), "Can't resolve name "+name, n|Node)
+		return p.proj:get_Method(name).ptr_type
+	done
+	shoc::bail_out("Should be impossible, but got a :: accessor in get_type::for_accessor")
+return null|OType
 
 function(CastExpr n, TransformerPass p) get_type::for_cast -> OType does
 return p.proj:get_type(n.target)

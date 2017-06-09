@@ -13,10 +13,11 @@ type NameExpr is packed
 		new.anchor=eles:get(0):t()
 	return new
 
-	function(Project p, cstr name) NameExpr::create_direct -> NameExpr does
+	function(Project p, cstr name, Token anchor) NameExpr::create_direct -> NameExpr does
 		NameExpr new = malloc(@sizeof(NameExpr)@)|NameExpr
 		new.type_=p:type_by_name("NameExpr")
 		new.name=name
+		new.anchor=anchor
 		int i=0
 		while new.name[i]==bord(" ") do
 			i+=1

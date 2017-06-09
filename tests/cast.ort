@@ -1,0 +1,9 @@
+type Box_int is
+	int val
+endtype
+
+function() main -> int does
+	int a = 0
+
+	@addressof(a)|Box_int.val=3
+return a

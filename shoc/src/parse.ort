@@ -403,7 +403,8 @@ function(EleList eles) parse::lookahead_is_possibly_function -> bool does
 		if eles:get_lookahead().is_token do
 			if eles:get_lookahead():t():is_a("T_NAME"):or(\
 			   eles:get_lookahead():t():is_a("T_PAREN_CLOSE")):or(\
-			   eles:get_lookahead():t():is_a("T_BRACKET_CLOSE")) do
+			   eles:get_lookahead():t():is_a("T_BRACKET_CLOSE")):or(\
+			   eles:get_lookahead():t():is_a("T_INTRINSIC")) do
 			   return true #Cases where it may be a function invocation
 			done
 		done

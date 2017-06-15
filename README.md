@@ -55,3 +55,11 @@ Orth is still a low-level language, meaning you still need to watch your memory 
 3. Run `./experimental_build.sh` and shoc will rebuild itself
 4. If this worked, copy `shoc` to `shoc_good` to use `./build_self.sh` for further development without breaking the working compiler
 5. Now you got a bona-fide orth-in-orth compiler in shoc. Should be compatible with samples stuff - e.g. `./shoc ../samples/http.ort && ./out 5001` to serve a demo web server on localhost:5001
+
+### Running the OS
+ * If you want to run the OS, you'll need a i386 cross-compiler GCC toolchain (gcc/as/ld,) and my build scripts will probably need some PATH tweaking, but with that set up in the path you should be able to run the `build.sh` script in the os folder
+ 
+ The OS should run on QEMU/VirtualBox/etc _and_ on REAL x86 HARDWARE! Should run just fine on modern computers too (but may misbehave at high resolutions with computers with dGPUs.) If you wanna play around with it, `snake` and `rc` are cool toys on the kernel shell.
+ Some cool screenshots of the OS in action:
+ ![Image of VESA framebuffer terminal](https://raw.githubusercontent.com/602p/orth/master/docs/emu2.png)
+ ![Image of Raycaster](https://raw.githubusercontent.com/602p/orth/master/docs/raycast.png)

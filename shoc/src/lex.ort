@@ -1,23 +1,34 @@
 import linkedlist
 
+#Tokenizer for SHOC.
+#This is implemented as a series of functions that, operating over a forward view of unlexed text return the number of
+# characters that match a token of their type (or 0 if it does not match). These are encapsulated as TokenTypes that 
+# control the lexing. There are a couple helpers that allow really simple TokenTypes (ones that match a literal string)
+# to be implemented. TokenTypes can match conditionally on the previous token belonging to a set of types they hold
+# (e.g. a T_ARGLIST_ELE is only legal after a T_ARGLIST_START or a T_ARGLIST_SEP)
+
+#Base legal alphabet (that is, legal first-characters)
 function() lex::get_alphabet -> cstr does
 return "qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM_"
 
+#Extended legal alphabet (that is, legal 2nd+ characters)
 function() lex::get_ext_identifier -> cstr does
 return "qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM_1234567890"
 
 function(cstr text) lex::match_identifier -> int does
+	#Match a base identifier. This is used for e.g. variables, arguments, types, members etc
 	if -((text[0]):in(lex::get_alphabet())) do
-		return 0
+		return 0 #First character must be in the restricted identifier set (can't start with a numeral)
 	done
 
 	int i=1
 	while text[i]:in(lex::get_ext_identifier()) & (i<text:len()) do
-		i+=1
+		i+=1 #Greedily match up to the first character not in the legal identifier set
 	done
 return i
 
 function(cstr text) lex::match_function_identifier -> int does
+	#Same as lex::match_identifier, but allows the : in names as well
 	if -((text[0]):in(lex::get_alphabet())) do
 		return 0
 	done
@@ -29,6 +40,7 @@ function(cstr text) lex::match_function_identifier -> int does
 return i
 
 function(cstr text) lex::match_binop -> int does
+	#Match a binary operator (an infix operator between two values)
 	if text:startswith("==") +\
 	   text:startswith("!=") +\
 	   text:startswith(">=") +\
@@ -37,9 +49,10 @@ function(cstr text) lex::match_binop -> int does
 	   text:startswith("<<") do
 	   	return 2
 	done
-return text[0]:in("&*/-+%<>^")|int
+return text[0]:in("&*/-+%<>^")|int #Will be 1 if it is
 
 function(cstr text) lex::match_augassign -> int does
+	#Match a augmented assignment operator (replaces =)
 	if text:startswith("+=") +\
 	   text:startswith("-=") +\
 	   text:startswith("*=") +\
@@ -49,19 +62,22 @@ function(cstr text) lex::match_augassign -> int does
 return 0
 
 function(cstr text) lex::match_int_literal -> int does
+	#Match an integer literal
 	if -text[0]:in("1234567890") do
-		return 0
+		return 0 #First character must be a decimal
 	done
 	int i=0
 	while text[i]:in("1234567890xbXBabcdefABCDEF") do
-		i+=1
+		i+=1 #Further characters may include the b or x in 0b or 0x literals (binary and hex, respectivley) as well as hex characters
+			 # Illegal combinations (e.g. 0b123A4) should be handled at parse-time
 	done
 	if text[i]:in(".") do
-		return 0
+		return 0 #If it contains a period before a space or otherwise terminating character, abort as it is actually a floating-point literal in that case
 	done
 return i
 
 function(cstr text) lex::match_bool_literal -> int does
+	#Match `true` and `false` as boolean literals, excluding cases where they are not their own word (e.g. a variable named `true_blue` (don't do this))
 	if text:startswith("true") do
 		if -text[4]:in(lex::get_ext_identifier()) do
 			return 4
@@ -74,6 +90,8 @@ function(cstr text) lex::match_bool_literal -> int does
 return 0
 
 function(cstr text) lex::match_float_literal -> int does
+	#Match a floating-point number literal (decimal characters and . only)
+	#Invalid literals (e.g. 1.2.3.4) should be handled later
 	int i=0
 	while text[i]:in("1234567890.") do
 		i+=1
@@ -85,6 +103,9 @@ function(cstr text) lex::match_float_literal -> int does
 return i
 
 function(cstr text) lex::match_var_decl -> int does
+	#Match a variable declatation (e.g. `int foo`) into a single token holding both the variable's type and name.
+	#TypedVar::from_decl can be used to parse a peice of text like this into the type (as an OType) and name.
+	#Also used inside type declarations as the syntax element for member variables
 	int i = lex::match_identifier(text)
 
 	if i==0 do
@@ -105,25 +126,27 @@ function(cstr text) lex::match_var_decl -> int does
 return i
 
 function(cstr text) lex::match_string_literal -> int does
+	#Parse a string literal (e.g. `"\"Deez Nuts!\" said Louis"`)
+
 	#I've got a bug in my first-gen compiler actaully, where "\"" isn't a valid string...
 	#hahahaha... that's actually not a problem in this compiler (SHOC) but i have to do
 	#this hack to get SHOC to compile in orthc
 	if -(text[0]==34|byte) do
-		return 0
+		return 0 #First character must be a quote
 	done
 
-	int i=1
-	bool escape=false
+	int i=1 #From the first character forward...
+	bool escape=false #Is this an escaped character (i.e. is it immediatley followind a backslash?)
 	bool continue=true
 	while continue do
 		if ((text[i]==34|byte) & -escape) do
-			continue=false
+			continue=false #Terminate matching when a non-escaped quote is found
 		done
 
 		if text[i]:in("\\") & -escape do
-			escape=true
+			escape=true #When not already escaped, a backslash begins an escape
 		else do
-			escape=false
+			escape=false #When already escaped, the second character (including a backlash, when doing `\\`) ends the escape
 		done
 
 		i+=1
@@ -131,6 +154,7 @@ function(cstr text) lex::match_string_literal -> int does
 return i
 
 function(cstr text) lex::match_line_comment -> int does
+	#Match a line comment - hey, this is a line comment! Line comments start with a # and terminate on any newline character
 	if -text[0]:in("#") do
 		return 0
 	done
@@ -142,6 +166,8 @@ function(cstr text) lex::match_line_comment -> int does
 return i
 
 function(cstr text) lex::match_block_comment -> int does
+	<#Match a block comment - hey, this is a block
+	                                              comment! Block comments can include anything but the terminator: #>
 	if -text:startswith("<#") do
 		return 0
 	done
@@ -153,34 +179,38 @@ function(cstr text) lex::match_block_comment -> int does
 return i
 
 function(cstr text) lex::match_import -> int does
-	if -text:startswith("import ") do
-		return 0
+	#Match an entire import statement as a single token
+	if -text:startswith("import ") do #Space is neccecary to prevent matching vars named e.g. `import_name`
+		return 0 #Must start with import
 	done
 
 	int i="import":len()
 	while text[i]:in(" \t") do
-		i+=1
+		i+=1 #Then have some whitespace
 	done
 
 	while -text[i]:in(" \r\n\t") do
-		i+=1
+		i+=1 #Then it cntinues to the end of the line or next peice of whitespace. TODO: Rework this to be better
 	done
 return i
 
-type TokenMatcher is a function->int
+type TokenMatcher is a function->int #(cstr). Functions taking a string and returning the length of the token they match
+									 # This is all the lex::match_* functions above
 type TokenType is
+	#Represents a class of tokens
 	cstr name
 	int simple_type
 	# 0 = Matcher Function
-	# 1 = text[0] in simple_text
+	# 1 = text[0]:in(simple_text)
 	# 2 = test:startswith(simple_text)
 	# 3 = test:startswith(simple_text) and followed by whitespace (keyword)
 	cstr simple_text
 	TokenMatcher func
-	List preceeded_opts
-	bool produce_token
+	List preceeded_opts #List of classes that the preceeding token is allowed to be (or null if it dosen't matter)
+	bool produce_token  #Actually produce a token when matched? (i.e. false for comments)
 
 	function(cstr name, TokenMatcher func) TokenType::new_fn -> TokenType does
+		#Base initilizer for a TokenType. Used for tokentypes that use one of the lex::match_* functions as their logic
 		TokenType new = malloc(@sizeof(TokenType)@)|TokenType
 		new.name=name
 		new.simple_type=0
@@ -190,57 +220,62 @@ type TokenType is
 	return new
 
 	function(cstr name, cstr text) TokenType::new_in -> TokenType does
+		#Used for tokentypes that use a class 1 simple matcher. Matches strings where the first character is contained in `text`
 		TokenType new = TokenType::new_fn(name, null|TokenMatcher)
 		new.simple_type=1
 		new.simple_text=text
 	return new
 
 	function(cstr name, cstr text) TokenType::new_eq -> TokenType does
+		#Used for tokentypes that use a class 2 matcher. Matches literal fixed-length strings equal to `text`
 		TokenType new = TokenType::new_in(name, text)
 		new.simple_type=2
 	return new
 
 	function(cstr name, cstr text) TokenType::new_kw -> TokenType does
+		#Used for tokentypes that use a class 3 matcher. Matches literal fixed-length strings equal to `text` that are followed by whitespace
 		TokenType new = TokenType::new_in(name, text)
 		new.simple_type=3
 	return new
 
 	function(TokenType self, cstr text) TokenType:match_internal -> int does
+		#Given that we are _allowed_ to match here, actually do the match
+
 		if self.simple_type==1 do
-			return text[0]:in(self.simple_text)|int
+			return text[0]:in(self.simple_text)|int #For class 1 simple matchers, just check membership for the first character
 		elif self.simple_type==2 do
 			if text:startswith(self.simple_text) do
-				return self.simple_text:len()
+				return self.simple_text:len() #For class 2 simple matchers, just check :startswith
 			done
 			return 0
 		elif self.simple_type==3 do
 			if text:startswith(self.simple_text) do
 				if text[self.simple_text:len()]:in(" \t\r\n") do
-					return self.simple_text:len()
+					return self.simple_text:len() #For class 3 simple matchers, check both :startswith and that it is followed by a whitespace character
 				done
-				return 0
 			done
 			return 0
 		done
-	return self.func(text)
+	return self.func(text) #Otherwise, it's a class 0 (function pointer): Just run that
 
 	function(TokenType self, List token_context, cstr text) TokenType:match -> int does
-		int count = self:match_internal(text)
-		if self.preceeded_opts|ptr!=null do
-			TokenType last_type = (token_context:get(token_context.len-1)|Token).type_
+		#Given the preceeding tokens, if allowed to (either don't have constraints or contraints are satasfied), run the matcher and return result
+		if self.preceeded_opts|ptr!=null do #If we have a list of allowed previous types...
+			TokenType last_type = (token_context:get(token_context.len-1)|Token).type_ #Get the last token...
 			int opts_pos=0
 			while opts_pos<self.preceeded_opts.len do
-				if last_type.name==self.preceeded_opts:get(opts_pos)|cstr do
-					return count
+				if last_type.name==self.preceeded_opts:get(opts_pos)|cstr do #If it's type is in the allowed list, return
+					return self:match_internal(text) #Doing this lazy matcher evaluation actually saves ~.15 seconds on a self-build
 				done
 				opts_pos+=1
 			done
 		else do
-			return count
+			return self:match_internal(text)
 		done
 	return 0
 
 	function(TokenType self, cstr prev_req) TokenType:after -> TokenType does
+		#Sugar for initilizing the list
 		if self.preceeded_opts|ptr == null do
 			self.preceeded_opts=List::new()
 		done
@@ -248,6 +283,7 @@ type TokenType is
 	return self
 
 	function(TokenType self, cstr prev_req) TokenType:or -> TokenType does
+		#Same thing as TokenType:after, but gramatically better
 	return self:after(prev_req)
 
 	function(TokenType self) TokenType:free -> void does
@@ -266,18 +302,21 @@ type TokenType is
 	return self
 
 	function(TokenType self, cstr text, cstr file_ctx, int line_ctx, int col_ctx, cstr meth_ctx) TokenType:make_token -> Token does
+		#Does actual construction of a Token object - allocates a new chunk of string for the token value and includes context and reference to this type
 	return Token::_new(text:substr(0, self:match_internal(text)), self, file_ctx, line_ctx, col_ctx, meth_ctx)
 endtype
 
 type Token is
+	#Type representing an actual token - stores the text of the token, a pointer to it's typeclass, and context information about it's source
 	cstr text
 	TokenType type_
-	cstr origin_file
+	cstr origin_file #Normaized origin filename
 	int origin_line
 	int origin_col
-	cstr origin_meth
+	cstr origin_meth #Best guess about origin method (actually last method seen, may be wrong in cases of errors outside methods)
 
 	function(cstr text, TokenType type_, cstr file_ctx, int line_ctx, int col_ctx, cstr origin_meth) Token::_new -> Token does
+		#Create a new token. Should only be invoked via TokenType:make_token
 		Token new = malloc(@sizeof(Token)@)|Token
 		new.text=text
 		new.type_=type_
@@ -302,9 +341,10 @@ type Token is
 	return
 
 	function(Token self) Token:print -> void does
+		#Prettyprint the token
 		cstr text = self.text
 		if self.type_.name=="T_ENDOFSTATEMENT" do
-			text="..."
+			text="..." #If it's a T_ENDOFSTATEMENT (and therefore usually contains newlines) just print dots instead
 		done
 		printf("%30s(%-20s)%40s:%i:%i @ %s\n", self.type_.name, text, self.origin_file, self.origin_line, self.origin_col, self.origin_meth)
 	return
@@ -315,26 +355,31 @@ function(List l, TokenType t) List:append_TT -> void does
 return
 
 function(List t) lex::init_default -> void does
+	#Initilize the minimum token set required for tokenizing orth source code
+
+	#Line and block comments: Top priority since they can contain code
 	t:append_TT(TokenType::new_fn("T_LINE_COMMENT", lex::match_line_comment|TokenMatcher):notoken())
 	t:append_TT(TokenType::new_fn("T_BLOCK_COMMENT", lex::match_block_comment|TokenMatcher):notoken())
 
+	#Imports and intrinsics, since otherwise imports parse as vardecls in some cases
 	t:append_TT(TokenType::new_fn("T_IMPORT", lex::match_import|TokenMatcher))
 	t:append_TT(TokenType::new_eq("T_INTRINSIC", "@"))
 
+	#Flow control
 	t:append_TT(TokenType::new_kw("T_IF", "if"))
 	t:append_TT(TokenType::new_kw("T_DONE", "done"))
 	t:append_TT(TokenType::new_kw("T_DO", "do"))
 	t:append_TT(TokenType::new_kw("T_ELIF", "elif"):after("T_ENDOFSTATEMENT"))
 	t:append_TT(TokenType::new_kw("T_ELSE", "else"):after("T_ENDOFSTATEMENT"))
-
 	t:append_TT(TokenType::new_kw("T_RETURN", "return"):after("T_ENDOFSTATEMENT"))
-
 	t:append_TT(TokenType::new_kw("T_WHILE", "while"):after("T_ENDOFSTATEMENT"))
 
+	#Extended flow control (rightfully this belongs somewhere behind a flag, but it's not)
 	t:append_TT(TokenType::new_kw("T_FOR", "for"):after("T_ENDOFSTATEMENT"))
 	t:append_TT(TokenType::new_fn("T_FOR_NAME", lex::match_identifier|TokenMatcher):after("T_FOR"))
 	t:append_TT(TokenType::new_kw("T_FOR_IN", "in"):after("T_FOR_NAME"))
 
+	#Type declaration syntax
 	t:append_TT(TokenType::new_kw("T_TYPEDECL", "type"))
 	t:append_TT(TokenType::new_kw("T_TYPEDECL_IS", "is"))
 	t:append_TT(TokenType::new_fn("T_TYPEDECL_NAME", lex::match_identifier|TokenMatcher):after("T_TYPEDECL"))
@@ -345,6 +390,7 @@ function(List t) lex::init_default -> void does
 	t:append_TT(TokenType::new_fn("T_TYPEDECL_ALIAS_FUNC_RT", lex::match_identifier|TokenMatcher):after("T_TYPEDECL_ALIAS_FUNC"))
 	t:append_TT(TokenType::new_fn("T_TYPEDECL_ALIAS_NAME", lex::match_identifier|TokenMatcher):after("T_TYPEDECL_ALIAS"))
 	
+	#Fucntion decl syntax
 	t:append_TT(TokenType::new_eq("T_FUNCTIONDECL", "function"):after("T_ENDOFSTATEMENT"))
 	t:append_TT(TokenType::new_eq("T_FUNCTIONDECL_EXTERN", "extern"):after("T_ENDOFSTATEMENT"))
 	t:append_TT(TokenType::new_eq("T_ARGLIST_START", "("):after("T_FUNCTIONDECL"):or("T_FUNCTIONDECL_EXTERN"))
@@ -357,23 +403,26 @@ function(List t) lex::init_default -> void does
 	t:append_TT(TokenType::new_fn("T_FUNCTIONDECL_RETURN_TY", lex::match_identifier|TokenMatcher):after("T_FUNCTIONDECL_RETURN"))
 	t:append_TT(TokenType::new_kw("T_FUNCTIONDECL_DOES", "does"):after("T_FUNCTIONDECL_RETURN_TY"))
 
+	#Literals
 	t:append_TT(TokenType::new_fn("T_INT_LITERAL", lex::match_int_literal|TokenMatcher))
 	t:append_TT(TokenType::new_fn("T_BOOL_LITERAL", lex::match_bool_literal|TokenMatcher))
 	t:append_TT(TokenType::new_eq("T_NULL_LITERAL", "null"))
 	t:append_TT(TokenType::new_fn("T_FLOAT_LITERAL", lex::match_float_literal|TokenMatcher))
 	t:append_TT(TokenType::new_fn("T_STRING_LITERAL", lex::match_string_literal|TokenMatcher))
 
+	#Variables (decls and names)
 	t:append_TT(TokenType::new_fn("T_VAR_DECL", lex::match_var_decl|TokenMatcher):after("T_ENDOFSTATEMENT"))
 	t:append_TT(TokenType::new_fn("T_NAME", lex::match_identifier|TokenMatcher))
 
-	t:append_TT(TokenType::new_fn("T_AUGASSIGN", lex::match_augassign|TokenMatcher))
+	#Assignment, binops, augassign
+	t:append_TT(TokenType::new_fn("T_AUGASSIGN", lex::match_augassign|TokenMatcher)) #Comes before, otherwise += is parsed as + then =
 	t:append_TT(TokenType::new_fn("T_BINOP", lex::match_binop|TokenMatcher)\
 		:after("T_NAME"):or("T_BRACKET_CLOSE"):or("T_PAREN_CLOSE"):or("T_INT_LITERAL")\
 		:or("T_STRING_LITERAL"):or("T_FLOAT_LITERAL")) #Only match after things that could be value (removes
 															#confustion with unary -)
 	t:append_TT(TokenType::new_eq("T_ASSIGN", "="))
 	
-
+	#Misc punctuation
 	t:append_TT(TokenType::new_eq("T_PAREN_OPEN", "("))
 	t:append_TT(TokenType::new_eq("T_PAREN_CLOSE", ")"))
 	t:append_TT(TokenType::new_eq("T_CAST", "|"))
@@ -385,13 +434,15 @@ function(List t) lex::init_default -> void does
 	t:append_TT(TokenType::new_eq("T_DOUBLECOLON", "::"))
 	t:append_TT(TokenType::new_eq("T_COLON", ":"))
 	
-	
+	#Low priority, otherwise confusing
 	t:append_TT(TokenType::new_in("T_UNOP", "-!"))
 	
+	#Comes last, so multi-line stuff (i.e. block comments) take precedence. ; also allowed as seperator, just not used much
 	t:append_TT(TokenType::new_in("T_ENDOFSTATEMENT", "\r\n;"))
 return
 
 function(Project p, cstr name) Project:tokty_by_name -> TokenType does
+	#Return the TokenType with a given name. pretty much used only to create the initial T_ENDOFSTATEMENT
 	int i=0
 	while i<p.token_types.len do
 		if (p.token_types:get(i)|TokenType).name==name do
@@ -402,27 +453,31 @@ function(Project p, cstr name) Project:tokty_by_name -> TokenType does
 return null|TokenType
 
 function(Project p, cstr text, cstr file_ctx, bool verbose) Project:tokenize -> List does
-	#text=text+"\n;;;"
-	p.sources:set(file_ctx, text)
-	ProgressBar bar
+	#Do the actual parsing of a source file into a List of Tokens
+
+	p.sources:set(file_ctx, text) #Keep the source for error reporting
+
+	# ProgressBar bar
+	int text_pos=0 #Offset from the start of the text that is the current search head
+	int current_matcher_idx #Index of the TokenType currently trying to be matched
+	TokenType current_matcher #Current TokenType trying to be matched
+	int match_len #Length of the match
+	bool matched #Did we succeed in matching a token this time round?
+	List tokens = List::new() #Tokens produced so far
+	tokens:append(p:tokty_by_name("T_ENDOFSTATEMENT"):make_token(";", "<dummy>", 0, 0, "<none>")|ptr)
+	      #Initilize with a T_ENDOFSTATEMENT (required for some stuff to match)
+	int line_ctx = 0 #Current line
+	int col_ctx = 0  #Current column
+	bool skipping_ws_ok #If we are skipping indentation after a line continuation (\ at end of line), is it OK to continue?
+	cstr meth_guess = "<none>" #Last method encountered (as determined b last T_FUNCTIONDECL_NAME encountered)
+	Token made #Created token (if applicable)
+	int consume_scan_pos #Position inside created token. Used to update context information
+
 	if verbose do
 		bar= ProgressBar::new(text:len(), 40, "Tokenizing...")
 	done
-	int text_pos=0
-	int current_matcher_idx
-	TokenType current_matcher
-	int match_len
-	bool matched
-	List tokens = List::new()
-	tokens:append(p:tokty_by_name("T_ENDOFSTATEMENT"):make_token(";", "<dummy>", 0, 0, "<none>")|ptr)
-	int line_ctx = 0
-	int col_ctx = 0
-	bool ok = true
-	bool skipping_ws_ok
-	cstr meth_guess = "<none>"
-	Token made
-	int consume_scan_pos
-	while (text_pos<text:len()) & ok do
+
+	while (text_pos<text:len()) do
 		current_matcher_idx=0
 		matched=false
 		while (current_matcher_idx<p.token_types.len) & (-matched) do
@@ -471,7 +526,6 @@ function(Project p, cstr text, cstr file_ctx, bool verbose) Project:tokenize -> 
 			done
 		elif -matched do
 			p:fail_in_token("Can't match input string. Invalid Syntax", tokens:get(tokens.len-1)|Token)
-			ok=false
 		done
 		if verbose do
 			bar:update(text_pos)

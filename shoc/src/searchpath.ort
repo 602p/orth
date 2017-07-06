@@ -1,6 +1,11 @@
 import fileio
 
 function(List path, cstr import_name) shoc::resolve_name_import -> cstr does
+	#Algorith to resolve a unquoted import (e.g. `import fileio`):
+	# - for each entry in the path:
+	#   - if it contains a file matching the name requested (with a .ort extension): return it
+	#   - if it contains a directory with the name requested, and that director contains a file named `__init__.ort`: return that path
+	# - raise an error
 	int i=0
 	cstr path_attempt
 	while i<path.len do
@@ -19,8 +24,9 @@ function(List path, cstr import_name) shoc::resolve_name_import -> cstr does
 return ""
 
 function(cstr path) shoc::resolve_absolute_import -> cstr does
-	cstr ret = path
-	if -File::exists(ret) do
+	#Resolve an absolute import (e.g. `import "transformers/lower/apply_includes.ort"`). Simply check if it exists.
+	#TODO: Handle source-position-relative imports (those using $)
+	if -File::exists(path) do
 		shoc::bail_out("Can't resolve quoted-path import of: "+path)
 	done
-return ret
+return path

@@ -10,7 +10,7 @@ function(int argc, ArgList args) main -> int does
 		orth::fail("Invoke with ./out <port>")
 	done
 
-	CSocket serv = CSocket::bind_server(args:get(1):int(), 1024*8)
+	CSocket serv = CSocket::bind_server(args:get(1):int(), BUFSZ)
 	cstr buffer=malloc(BUFSZ)
 	int client
 

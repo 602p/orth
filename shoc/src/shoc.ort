@@ -6,8 +6,11 @@ import datamodel
 import generic_ir
 
 Project _project
+#TODO: Refactor out. Onl used for bad old error handling. New error handling should be done via Project:fail_in*
 
 function(cstr err) shoc::bail_out -> void does
+	#Older method for aborting SHOC. Dumps some little information about the offending method where applicable.
+	#Do not use this for future error handling, use the Project:fail_in* family
 	if _project|ptr!=null do
 		if _project.curr_method|ptr !=null do
 			printf("Last method: %s\n", _project.curr_method.name)
@@ -18,34 +21,42 @@ function(cstr err) shoc::bail_out -> void does
 return
 
 function(bool cond, cstr err) shoc::assert -> void does
+	#Also bad, old-style error handling. Use Project:fail_in_if instead
 	if -cond do
 		shoc::bail_out(err)
 	done
 return
 
 type Project is
-	List token_types
-	List node_types
-	List transformer_passes
-	List gir_types
-	StrMap options
-	StrMap sources
+	#This represents a session of using SHOC to compile a codebase
 
-	int pointer_size
+	List token_types			#List of TokenType instances used in tokenization
+	List node_types				#List of NodeType instances used in parsing
+	List transformer_passes		#List of TransformerPass instances used in the mutation phase (includes GIR emission where applicable)
+	List gir_types				#List of GIRInstTypes used
 
-	Method curr_method
-	cstr   curr_file
-	int    ssa_count
-	int    temp_name_count
+	StrMap options 				#Map of options controlling SHOC's behavior
+	StrMap sources				#Map of normalized filename -> file textual source used in error reporting
 
-	StrMap types
-	StrMap methods
-	StrMap globals
-	List search_path
-	List included_files
+	int pointer_size			#Architecture size in bits (e.g. 32, 64)
+
+	Method curr_method			#Current method being operated upon (for error reporting, etc) - set to null when not in a method
+	cstr   curr_file			#Current file being operated upon (for error reporting, etc)
+	int    ssa_count			#Number of SSA variable names used so far (used for GIR variables)
+	int    temp_name_count		#Number of temporary names used so far (used for lowering, e.g. internal for variables)
+
+	StrMap types 				#Map of typename -> OType for user-defined types in the project
+	StrMap methods				#Map of identifier -> Method for methods in the project
+								#Note that identifier is not always the same as the Method.name, e.g. for renamed linked libc functions
+	StrMap globals 				#Map of identifier -> TypedVar for globals in the project
+
+	List search_path 			#List of directories to search for non-quoted includes
+	List included_files 		#List of normalized paths of included files to avoid double-including libs
 endtype
 
 function() shoc::get_empty_project -> Project does
+	#Initialize an empty SHOC project
+
 	Project p = malloc(@sizeof(Project)@)|Project
 	_project=p
 
@@ -70,26 +81,32 @@ function() shoc::get_empty_project -> Project does
 return p
 
 function(Project p) Project:get_temp_name -> int does
+	#Allocate a new temp name ID (for use in e.g. lowering)
 	p.temp_name_count+=1
 return p.temp_name_count
 
 function(Project p) Project:in_method -> bool does
+	#Are we currently inside of a method (during mutation passes)
 return p.curr_method|ptr!=null
 
 function(Project p, Method m) Project:enter_method -> void does
+	#Used in NodeType ::visit implementations to manage the current_method context
 	p.curr_method=m
 return
 
 function(Project p) Project:exit_method -> void does
+	#Used in NodeType ::visit implementations to manage the current_method context
 	p.curr_method=null|Method
 return
 
 function(Project p, cstr s) Project:enter_method_named -> void does
+	#Wrapper around Project:enter_method
 	if p.methods:contains(s) do
 		p:enter_method(p:get_Method(s))
 	done #Fail silently for early passes
 return
 
+#Following methods initialize the internal data structures for parsing, tokenizing, mutating, GIR emission and typing
 function(Project p) Project:with_base_tokens -> Project does
 	lex::init_default(p.token_types)
 return p
@@ -111,6 +128,7 @@ function(Project p) Project:with_base_types -> Project does
 	shoc::datamodel::init_base(p)
 return p
 
+#The following should be used to set up the project's search paths, options, target architecture size
 function(Project p, List l) Project:with_search_path -> Project does
 	p.search_path=l
 return p
@@ -123,6 +141,7 @@ function(Project p, int bits) Project:with_arch_bits -> Project does
 	p.pointer_size=bits
 return p
 
+#The following are used internally in the initilization of the projects data structures
 function(Project p, TransformerPass t) Project:add_Transformer -> void does
 	p.transformer_passes:append(t|ptr)
 	t:set_project(p)
@@ -133,25 +152,32 @@ function(Project p, GIRInstType t) Project:add_GIRInstType -> void does
 return
 
 function(Project p, OType t) Project:add_Type -> void does
+	#Register a new type in the project
 	p.types:set(t.name, t|ptr)
 	t:set_project(p)
 return
 
 function(Project p, Method m) Project:add_Method -> void does
+	#Register a new method
 	p.methods:set(m.name, m|ptr)
 return
 
 function(Project p, TypedVar v) Project:add_Global -> void does
+	#Register a new global
 	p.globals:set(v.name, v|ptr)
 return
 
 function(Project p, cstr s) Project:get_Method -> Method does
+	#Return the Method object representing the method with the identifier `s`
 return p.methods:get(s)|Method
 
 function(Project p, Node n) Project:run_only_import -> Node does
+	#Return the transformed version of an AST tree after it has been mutated ONLY via the `apply_includes` pass
+	#used to manage imports within imported files.
 return (p.transformer_passes:get(0)|TransformerPass):visit(n)
 
 function(Project p, cstr n) Project:get_transformer_pass -> TransformerPass does
+	#Get a TransformerPass with a given name. Only used in special circumstances (e.g. `emit_value` and `emit_addr`)
 	int i=0
 	while i<p.transformer_passes.len do
 		if (p.transformer_passes:get(i)|TransformerPass).name==n do
@@ -163,6 +189,7 @@ function(Project p, cstr n) Project:get_transformer_pass -> TransformerPass does
 return null|TransformerPass
 
 function(Project p, cstr n) Project:get_GIRInstType -> GIRInstType does
+	#Get a GIRInstType with a given name
 	int i=0
 	while i<p.gir_types.len do
 		if (p.gir_types:get(i)|GIRInstType).name==n do
@@ -174,16 +201,19 @@ function(Project p, cstr n) Project:get_GIRInstType -> GIRInstType does
 return null|GIRInstType
 
 function(Project p, cstr text, cstr context) Project:process_text -> Node does
+	#Given a block of text (and it's source file), process it into an AST tree (including the subtrees of other files it imports)
 	text+="\n"
 return p:run_only_import(p:parse(p:tokenize(text, context, p.options:contains("verbose")), text, p.options:contains("verbose")))
 
 function(Project p, cstr flag, cstr msg) Project:cond_warn -> void does
+	#Conditionally produce a warning (old-style)
 	if p.options:contains(flag) do
 		printf("%-20s: %s\n", flag, msg)
 	done
 return
 
 function(Project p, cstr flag, cstr msg, Token anchor) Project:cond_warn_in_token -> void does
+	#Conditionally produce a warning (new-style with source location hilighting)
 	if p.options:contains(flag) do
 		cstr esc=malloc(2)
 		esc[0]=27|byte
@@ -194,16 +224,19 @@ function(Project p, cstr flag, cstr msg, Token anchor) Project:cond_warn_in_toke
 return
 
 function(Project p, cstr flag, cstr msg, Node n) Project:cond_warn_in -> void does
+	#Wrapper around Project:cond_warn_in_token that finds the token for a AST node
 	p:cond_warn_in_token(flag, msg, p:get_node_anchor(n))
 return
 
 function(Project p, cstr flag, bool do_warn, cstr msg, Node n) Project:cond_warn_in_if -> void does
+	#Conditionally forward to Project:cond_warn_in if `do_warn` is true
 	if -do_warn do
 		return
 	done
 	p:cond_warn_in(flag, msg, n)
 return
 
+#The following are the same as the *warn* family, but abort the process when/if the error is printed
 function(Project p, cstr msg, Token anchor) Project:fail_in_token -> void does
 	cstr esc=malloc(2)
 	esc[0]=27|byte
@@ -225,6 +258,7 @@ function(Project p, bool do_fail, cstr msg, Node n) Project:fail_in_if -> void d
 return
 
 function(Project p, cstr flag, cstr msg) Project:inv_cond_warn -> void does
+	#Warn _unless_ given flag has been passed
 	if -p.options:contains(flag) do
 		printf("%-20s: %s\n", flag, msg)
 	done

@@ -1,7 +1,32 @@
 import stdio
 
+# O_RDONLY|O_NONBLOCK=2048
+# ~ICANON=-3
+# ~ECHO=-9
+# VMIN=6
+# VTIME=5
+# TCSANOW=0
+
+type TermiosData is packed
+	int input_flags
+	int output_flags
+	int control_flags
+	int local_flags
+	byte line_mode
+	#32 bytes follow of control characters
+
+	function() TermiosData::alloc -> TermiosData does
+	return malloc(256)|TermiosData
+
+	function(TermiosData self, int idx, int value) TermiosData:set_control_char -> void does
+		self|ptr:offset(idx+@sizeof(TermiosData))[0]=value|byte
+	return
+endtype
+
 extern(int fd, ptr buf, int sz) read -> int
 extern(cstr pathname, int flags) open -> int
+extern(int fd, TermiosData data) tcgetattr -> int
+extern(int fd, int mode, TermiosData data) tcsetattr -> int
 
 int raw_input
 
@@ -9,7 +34,14 @@ function() backend::init -> void does
 	stdio::init()
 	stdio::set_fully_buffered(stdout, 1024*1024)
 
-	raw_input=open("/dev/tty", 2048) #O_NONBLOCK
+	raw_input=open("/dev/tty", 2048) #O_NONBLOCK|O_RDONLY
+	TermiosData config = TermiosData::alloc()
+	tcgetattr(raw_input, config)
+	config.local_flags=config.local_flags & -3 #unset ICANON
+	config.local_flags=config.local_flags & -9 #unset IECHO
+	config:set_control_char(6, 0) #set VMIN=0
+	config:set_control_char(5, 0) #set VTIME=0
+	tcsetattr(raw_input, 0, config) #mode=TCSANOW
 return
 
 function(TextScreen screen) backend::draw_screen -> void does

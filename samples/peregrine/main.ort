@@ -24,16 +24,22 @@ function(int nargs, ArgList args) main -> int does
 	TextScreen screen = TextScreen::new(180,50)
 	screen:fill(bord("."))
 
-	# int i=0
-	# while true do
-	# 	backend::draw_screen(screen)
-	# 	i+=1
-	# 	screen.buffer[i]=bord("!")
-	# 	usleep(200000)
-	# done
+	int px=0
+	int py=0
 
 	while true do
-		printf("%i\n", backend::getch())
+		backend::draw_screen(screen)
+		int key=backend::getch()
+		screen:print(px, py, ",")
+		if key==ord("w") do
+			py-=1
+		elif key==ord("a") do
+			px-=1
+		elif key==ord("d") do
+			px+=1
+		elif key==ord("s") do
+			py+=1
+		done
+		screen:print(px, py, "@")
 	done
-
 return 0

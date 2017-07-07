@@ -1,0 +1,35 @@
+import stdio
+
+extern(int fd, ptr buf, int sz) read -> int
+extern(cstr pathname, int flags) open -> int
+
+int raw_input
+
+function() backend::init -> void does
+	stdio::init()
+	stdio::set_fully_buffered(stdout, 1024*1024)
+
+	raw_input=open("/dev/tty", 2048) #O_NONBLOCK
+return
+
+function(TextScreen screen) backend::draw_screen -> void does
+	system("clear")
+	int row=0
+	while row<screen.height do
+		int col=0
+		while col<screen.width do
+			fprintf(stdout, "%c", screen.buffer[(row*screen.width)+col])
+			col+=1
+		done
+		fprintf(stdout, "\n")
+		row+=1
+	done
+	stdio::flush(stdout)
+return
+
+function() backend::getch -> int does
+	byte output
+	while read(raw_input, @addressof(output), 1)!=1 do
+		0
+	done
+return output|int

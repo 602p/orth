@@ -455,9 +455,11 @@ return null|TokenType
 function(Project p, cstr text, cstr file_ctx, bool verbose) Project:tokenize -> List does
 	#Do the actual parsing of a source file into a List of Tokens
 
+	# Foo bar
+
 	p.sources:set(file_ctx, text) #Keep the source for error reporting
 
-	# ProgressBar bar
+	ProgressBar bar
 	int text_pos=0 #Offset from the start of the text that is the current search head
 	int current_matcher_idx #Index of the TokenType currently trying to be matched
 	TokenType current_matcher #Current TokenType trying to be matched

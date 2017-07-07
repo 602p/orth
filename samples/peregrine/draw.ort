@@ -1,0 +1,25 @@
+
+type TextScreen is
+	cstr buffer
+	int width
+	int height
+
+	function(int w, int h) TextScreen::new -> TextScreen does
+		TextScreen new = malloc(@sizeof(TextScreen))|TextScreen
+		new.width=w
+		new.height=h
+		new.buffer=malloc(w*h)
+	return new
+
+	function(TextScreen self, int x, int y, byte c) TextScreen:setc -> void does
+		self.buffer[(self.width*y)+x]=c
+	return
+
+	function(TextScreen self, int x, int y, cstr s) TextScreen:print -> void does
+		memcpy(self.buffer:offset((self.width*y)+x), s, s:len())
+	return
+
+	function(TextScreen self, byte c) TextScreen:fill -> void does
+		memset(self.buffer, c|int, self.width*self.height)
+	return
+endtype

@@ -1,0 +1,17 @@
+
+type Entity is
+	cstr id
+	cstr name
+	int  x
+	int  y
+	byte icon
+
+	function(cstr id, cstr name, int x, int y, byte icon) Entity::new -> Entity does
+		Entity new = malloc(@sizeof(Entity))|Entity
+		new.id=id
+		new.name=name
+		new.x=x
+		new.y=y
+		new.icon=icon
+	return new
+endtype

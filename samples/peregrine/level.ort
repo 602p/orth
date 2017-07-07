@@ -1,0 +1,81 @@
+import entity
+import boxes
+import list
+import err
+
+type BlockAction is a function->bool #(Block, Entity)
+type BlockGetter is a function->ptr  #(Block, Entity)
+
+function(Block b, Entity c) DefaultBlock::act_move -> bool does
+return true
+
+function(Block b, Entity c) DefaultBlock::get_name -> cstr does
+return b.template.name
+
+type BlockTemplate is
+	cstr id
+	cstr name
+	BlockAction p_act_move
+	BlockGetter p_get_name
+
+	function(cstr id, cstr name) BlockTemplate::new -> BlockTemplate does
+		BlockTemplate new = malloc(@sizeof(BlockTemplate))|BlockTemplate
+		new.id=id
+		new.name=name
+		new.p_act_move=DefaultBlock::act_move|BlockAction
+		new.p_get_name=DefaultBlock::get_name|BlockGetter
+	return new
+endtype
+
+type Block is
+	BlockTemplate template
+	int level_x
+	int level_y
+
+	function(BlockTemplate template, int x, int y) Block::new -> Block does
+		Block new = malloc(@sizeof(Block))|Block
+		new.template=template
+		new.level_x=x
+		new.level_y=y
+	return new
+
+	function(Block self, Entity c) Block:can_move -> bool does
+	return self.template.p_act_move(self, c)
+
+	function(Block self, Entity c) Block:get_name -> cstr does
+	return self.template.p_get_name(self, c)
+endtype
+
+type Level is
+	cstr id
+	cstr name
+	ptr  blocks
+	int  size_x
+	int  size_y
+	List entities
+
+	function(cstr id, cstr name, int size_x, int size_y) Level::new -> Level does
+		Level new = malloc(@sizeof(Level)@)|Level
+		new.id=id
+		new.name=name
+		new.size_x=size_x
+		new.size_y=size_y
+
+		new.entities=List::new()
+
+		int blocks_size=size_x*size_y*@sizeof(ptr)
+		new.blocks=malloc(blocks_size)
+		memset(new.blocks, 0, blocks_size)
+	return new
+
+	function(Level self, int x, int y) Level:get_block -> Block does
+	return unbox::ptr(self.blocks:offset(y*self.size_y*@sizeof(ptr)):offset(x*@sizeof(ptr)))|Block
+
+	function(Level self, int x, int y, Block block) Level:set_block -> void does
+		(self.blocks:offset(y*self.size_y*@sizeof(ptr)):offset(x*@sizeof(ptr))|Box_ptr).val=block|ptr
+	return
+
+	function(Level self, Block block) Level:add_block -> void does
+		self:set_block(block.level_x, block.level_y, block)
+	return
+endtype

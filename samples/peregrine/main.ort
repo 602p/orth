@@ -1,0 +1,39 @@
+import std
+import args
+import level
+import draw
+
+import backend_linux
+
+function(int nargs, ArgList args) main -> int does
+
+	backend::init()
+	BlockTemplate grass = BlockTemplate::new("grass", "Grass")
+	Level level = Level::new("test", "Test", 10, 10)
+
+	int y=0
+	while y<level.size_y do
+		int x=0
+		while x<level.size_x do
+			level:add_block(Block::new(grass, x, y))
+			x+=1
+		done
+		y+=1
+	done
+
+	TextScreen screen = TextScreen::new(180,50)
+	screen:fill(bord("."))
+
+	# int i=0
+	# while true do
+	# 	backend::draw_screen(screen)
+	# 	i+=1
+	# 	screen.buffer[i]=bord("!")
+	# 	usleep(200000)
+	# done
+
+	while true do
+		printf("%i\n", backend::getch())
+	done
+
+return 0

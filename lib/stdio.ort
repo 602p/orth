@@ -3,8 +3,26 @@ ptr stdout
 ptr stderr
 ptr stdin
 
+extern(ptr stream, ptr buf, int mode, int size) setvbuf -> int
+
+function(ptr stream, int size) stdio::set_fully_buffered -> void does
+	if setvbuf(stream, null, 0, size)!=0 do
+		orth::fail("setvbuf failed")
+	done
+return
+
+function(ptr stream) stdio::set_unbuffered -> void does
+	if setvbuf(stream, null, 2, 0)!=0 do
+		orth::fail("setvbuf failed")
+	done
+return
+
+function(ptr stream) stdio::flush -> void does
+	fflush(stream)
+return
+
 function() stdio::init -> void does
 	stdout = fdopen(1, "w")
 	stderr = fdopen(2, "w")
-	stdin = fdopen(0, "r")
+	stdin  = fdopen(0, "r")
 return

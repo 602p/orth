@@ -39,6 +39,9 @@ function(int nargs, ArgList args) main -> int does
 			px+=1
 		elif key==ord("s") do
 			py+=1
+		elif key==ord("q") do
+			backend::deinit()
+			exit(0)
 		done
 		screen:print(px, py, "@")
 	done

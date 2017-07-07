@@ -31,9 +31,6 @@ extern(int fd, int mode, TermiosData data) tcsetattr -> int
 int raw_input
 
 function() backend::init -> void does
-	stdio::init()
-	stdio::set_fully_buffered(stdout, 1024*1024)
-
 	raw_input=open("/dev/tty", 2048) #O_NONBLOCK|O_RDONLY
 	TermiosData config = TermiosData::alloc()
 	tcgetattr(raw_input, config)
@@ -42,21 +39,27 @@ function() backend::init -> void does
 	config:set_control_char(6, 0) #set VMIN=0
 	config:set_control_char(5, 0) #set VTIME=0
 	tcsetattr(raw_input, 0, config) #mode=TCSANOW
+
+	printf("%c[?25l", 27|byte)
+return
+
+function() backend::deinit -> void does
+	printf("%c[?25h", 27|byte)
+	#TODO: Finish
 return
 
 function(TextScreen screen) backend::draw_screen -> void does
-	system("clear")
+	printf("%c[H", 27|byte)
 	int row=0
 	while row<screen.height do
 		int col=0
 		while col<screen.width do
-			fprintf(stdout, "%c", screen.buffer[(row*screen.width)+col])
+			printf("%c", screen.buffer[(row*screen.width)+col])
 			col+=1
 		done
-		fprintf(stdout, "\n")
+		printf("\n")
 		row+=1
 	done
-	stdio::flush(stdout)
 return
 
 function() backend::getch -> int does

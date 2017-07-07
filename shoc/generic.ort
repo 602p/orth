@@ -1,3 +1,0 @@
-
-function(T a, T b) add{T} -> T does
-return a+b

@@ -14,4 +14,14 @@ type Entity is
 		new.y=y
 		new.icon=icon
 	return new
+
+	function(Entity self, int x, int y) Entity:move_by -> void does
+		int newx=self.x+x
+		int newy=self.y+y
+
+		if game.curr_level:get_block(newx, newy):can_move(self) do
+			self.x=newx
+			self.y=newy
+		done
+	return
 endtype

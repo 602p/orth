@@ -68,3 +68,5 @@ function() backend::getch -> int does
 		0
 	done
 return output|int
+
+#manpages console_codes, termios, 2 write, 2 open

@@ -2,6 +2,7 @@ import entity
 import boxes
 import list
 import err
+import strmap
 
 type BlockAction is a function->bool #(Block, Entity)
 type BlockGetter is a function->ptr  #(Block, Entity)
@@ -17,13 +18,15 @@ type BlockTemplate is
 	cstr name
 	BlockAction p_act_move
 	BlockGetter p_get_name
+	byte icon
 
-	function(cstr id, cstr name) BlockTemplate::new -> BlockTemplate does
+	function(cstr id, cstr name, byte icon) BlockTemplate::new -> BlockTemplate does
 		BlockTemplate new = malloc(@sizeof(BlockTemplate))|BlockTemplate
 		new.id=id
 		new.name=name
 		new.p_act_move=DefaultBlock::act_move|BlockAction
 		new.p_get_name=DefaultBlock::get_name|BlockGetter
+		new.icon=icon
 	return new
 endtype
 
@@ -78,4 +81,100 @@ type Level is
 	function(Level self, Block block) Level:add_block -> void does
 		self:set_block(block.level_x, block.level_y, block)
 	return
+
+	function(Level self, TextScreen screen) Level:draw -> void does
+		printf("Drawing\n")
+		int y=0
+		while y<self.size_y do
+			int x=0
+			while x<self.size_x do
+				screen:setc(x, y, self:get_block(x, y).template.icon)
+				x+=1
+			done
+			y+=1
+		done
+
+		printf("DrawE\n")
+		int i=0
+		Entity e
+		while i<self.entities.len do
+			printf("Getting %i/%i\n", i, self.entities.len)
+			e=self.entities:get(i)|Entity
+			printf("Setting\n")
+			screen:setc(e.x, e.y, e.icon)
+			i+=1
+		done
+		printf("Done\n")
+	return
+
+	function(Level self, Entity e) Level:add_entity -> void does
+		self.entities:append(e|ptr)
+	return
+endtype
+
+type LevelBuilder is
+	cstr map
+	cstr id
+	cstr name
+	StrMap char_mappings
+
+	function(cstr id, cstr name, cstr map) Level::makenew -> LevelBuilder does
+		LevelBuilder new = malloc(@sizeof(LevelBuilder))|LevelBuilder
+		new.map=map
+		new.id=id
+		new.name=name
+		new.char_mappings=StrMap::new()
+	return new
+
+	function(LevelBuilder self, cstr block, BlockTemplate template) LevelBuilder:using -> LevelBuilder does
+		self.char_mappings:set(block, template|ptr)
+	return self
+
+	function(LevelBuilder self) LevelBuilder:make -> Level does
+		int start=0
+
+		printf("Seek Start\n")
+		while self.map[start]:in(" \t\r\n") do
+			start+=1
+		done
+
+		cstr map=self.map:offset(start)
+
+		printf("Seek Width\n")
+		int map_width=0
+		while -map[map_width]:in("\n") do
+			map_width+=1
+		done
+
+		printf("Width=%i\nSeek Heigh\n", map_width)
+		int map_height=1 #Include last line
+		int i=0
+		while i<map:len() do
+			if map[i]:in("\n") do
+				map_height+=1
+			done
+			i+=1
+		done
+
+		printf("Height=%i\nConstruct\n", map_height)
+
+		Level level = Level::new(self.id, self.name, map_width, map_height)
+
+		int curr_x=0
+		int curr_y=0
+		i=0
+		while i<map:len() do
+			if map[i]:in("\n") do
+				curr_x=0
+				curr_y+=1
+			else do
+				# printf("Set %i,%i=%s\n", curr_x, curr_y, self.char_mappings:get(map:substr(i,1))|BlockTemplate.id)
+				level:set_block(curr_x, curr_y, Block::new(self.char_mappings:get(map:substr(i,1))|BlockTemplate, curr_x, curr_y))
+				curr_x+=1
+			done
+			i+=1
+			
+		done
+		# exit(0)
+	return level
 endtype

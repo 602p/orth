@@ -2,47 +2,56 @@ import std
 import args
 import level
 import draw
+# import err
+
+function(cstr name) orth::internal::hooks::function_enter_hook -> void does
+	printf("ENTER: %s\n", name)
+return
+
+function(cstr name) orth::internal::hooks::function_exit_hook -> void does
+	printf("EXIT: %s\n", name)
+return
 
 import backend_linux
 
+import "maps/test.ort"
+
+type Game is
+	Level curr_level
+	Entity player
+endtype
+
+Game game
+
 function(int nargs, ArgList args) main -> int does
-
+	orth::install_sigsev_handler()
 	backend::init()
-	BlockTemplate grass = BlockTemplate::new("grass", "Grass")
-	Level level = Level::new("test", "Test", 10, 10)
 
-	int y=0
-	while y<level.size_y do
-		int x=0
-		while x<level.size_x do
-			level:add_block(Block::new(grass, x, y))
-			x+=1
-		done
-		y+=1
-	done
 
-	TextScreen screen = TextScreen::new(180,50)
+	game=malloc(@sizeof(Game))|Game
+	game.player=Entity::new("player", "You", 1, 1, bord("@"))
+	game.curr_level = getmap::test()
+	game.curr_level:add_entity(game.player)
+
+	TextScreen screen = TextScreen::new(10,10)
 	screen:fill(bord("."))
 
-	int px=0
-	int py=0
-
 	while true do
+		game.curr_level:draw(screen)
 		backend::draw_screen(screen)
+
 		int key=backend::getch()
-		screen:print(px, py, ",")
 		if key==ord("w") do
-			py-=1
+			game.player:move_by(0, -1)
 		elif key==ord("a") do
-			px-=1
-		elif key==ord("d") do
-			px+=1
+			game.player:move_by(-1, 0)
 		elif key==ord("s") do
-			py+=1
+			game.player:move_by(0, 1)
+		elif key==ord("d") do
+			game.player:move_by(1, 0)
 		elif key==ord("q") do
 			backend::deinit()
 			exit(0)
 		done
-		screen:print(px, py, "@")
 	done
 return 0

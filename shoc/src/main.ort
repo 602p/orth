@@ -170,15 +170,15 @@ function(int nargs, ArgList args) main -> int does
 
 		if -options:contains("no_finish_build") do
 			if options:contains("opt") do
-				os::run("llc-3.5 "+outpath+".ir -O="+(options:get("opt")|cstr))
-				os::run("gcc "+outpath+".ir.s -o "+outpath+" -O"+(options:get("opt")|cstr))
+				os::run_checked("llc-3.5 "+outpath+".ir -O="+(options:get("opt")|cstr))
+				os::run_checked("gcc "+outpath+".ir.s -o "+outpath+" -O"+(options:get("opt")|cstr))
 			else do
-				os::run("llc-3.5 "+outpath+".ir ")
-				os::run("gcc "+outpath+".ir.s -o "+outpath)
+				os::run_checked("llc-3.5 "+outpath+".ir ")
+				os::run_checked("gcc "+outpath+".ir.s -o "+outpath)
 			done
 
 			if -options:contains("no_clean") do
-				os::run("rm "+outpath+".ir "+outpath+".ir.s")
+				os::run_checked("rm "+outpath+".ir "+outpath+".ir.s")
 			done
 		done
 	done

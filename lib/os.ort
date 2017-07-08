@@ -17,3 +17,9 @@ return getenv(key)
 
 function(cstr key) os::env::has -> bool does
 return getenv(key)|ptr!=null
+
+function(cstr cmd) os::run_checked -> void does
+	if system(cmd)!=0 do
+		orth::fail("os::run_checked call failed: "+cmd)
+	done
+return

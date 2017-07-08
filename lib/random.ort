@@ -1,0 +1,23 @@
+extern(ptr _) time -> int
+extern(int s) srand -> void
+extern() rand -> int
+
+function() random::raw_rand -> int does
+return rand()
+
+function(int seed) random::seed -> void does
+	srand(seed)
+return
+
+function() random::seed_time -> void does
+	random::seed(time(null))
+return
+
+function() random::uniform01 -> float does
+return random::raw_rand()|float / 2147483647|float
+
+function(int low, int high) random::range -> int does
+return (low|float+(random::uniform01()*(high-low)|float))|int
+
+function() random::bool -> bool does
+return random::range(0,10)>5

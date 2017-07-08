@@ -1,23 +1,162 @@
 
+function(Block b, Entity c) Block::never_accessible -> bool does
+return false
+
+function(Block b, Entity c) Block::exiter -> bool does
+	exit(0)
+return false
+
+function(Level level, BlockTemplate mat, BlockTemplate wmat, int sx, int sy, int ex, int ey) draw_v_path -> void does
+	if sy>ey do
+		ey-=1
+	else do
+		ey+=1
+	done
+
+	while sy!=ey do
+		level:add_block(Block::new(mat, sx, sy))
+		if -level:has_block(sx+1, sy) do
+			level:add_block(Block::new(wmat, sx+1, sy))
+		done
+
+		if -level:has_block(sx-1, sy) do
+			level:add_block(Block::new(wmat, sx-1, sy))
+		done
+		if sy>ey do
+			sy-=1
+		else do
+			sy+=1
+		done
+	done
+return
+
+function(Level level, BlockTemplate mat, BlockTemplate wmat, int sx, int sy, int ex, int ey) draw_h_path -> void does
+	if sx>ex do
+		ex-=1
+	else do
+		ex+=1
+	done
+
+	while sx!=ex do
+		level:add_block(Block::new(mat, sx, sy))
+		if -level:has_block(sx, sy+1) do
+			level:add_block(Block::new(wmat, sx, sy+1))
+		done
+
+		if -level:has_block(sx, sy-1) do
+			level:add_block(Block::new(wmat, sx, sy-1))
+		done
+		if sx>ex do
+			sx-=1
+		else do
+			sx+=1
+		done
+	done
+return
+
 function(int w, int h) generate_level -> Level does
 	Level level = Level::new("random", "Level", w, h)
-	BlockTemplate air = BlockTemplate::new("air", "Empty Space", bord("."))
+	BlockTemplate emptywall = BlockTemplate::new("emptywall", "Should not be able to access", bord(" "))
+	emptywall.p_act_move=Block::never_accessible|BlockAction
+	BlockTemplate wall = BlockTemplate::new("wall", "Wall", bord("#"))
+	wall.p_act_move=Block::never_accessible|BlockAction
+	BlockTemplate floor = BlockTemplate::new("floor", "Empty Space", bord("."))
+	BlockTemplate path_mat = BlockTemplate::new("path", "Empty Space", bord("."))
 
-	int fill_y=0
+	BlockTemplate door_up = BlockTemplate::new("door_up", "", bord("^"))
+	BlockTemplate door_dn = BlockTemplate::new("door_dn", "", bord("v"))
+	door_dn.p_act_move=Block::exiter|BlockAction
+
+	int fill_x
+	int fill_y
+
+	int path_start_x=-1
+	int path_start_y=-1
+	int path_end_x
+	int path_end_y
+
+	int room_x
+	int room_y
+
+	int nr_rooms=8
+	int curr_room=0
+	while curr_room<nr_rooms do
+		bool ok=false
+		while -ok do
+			if curr_room==nr_rooms-1 do
+				room_y=random::range(h-10,h)
+				room_x=random::range(w-10,w)
+			elif curr_room==0 do
+				room_y=random::range(0,2)
+				room_x=random::range(0,2)
+			else do
+				room_y=random::range(0,h)
+				room_x=random::range(0,w)
+			done
+			int room_w=random::range(5,30)
+			int room_h=random::range(5,30)
+			ok=true
+			if (room_x+room_w)>w do
+				ok=false
+			elif (room_y+room_h)>h do
+				ok=false
+			done
+		done
+		fill_y=0
+		while fill_y<room_h do
+			fill_x=0
+			while fill_x<room_w do
+				bool do_wall = (fill_x==0):or(fill_y==0):or(fill_x==room_w-1):or(fill_y==room_h-1)
+				if level:has_block(fill_x+room_x, fill_y+room_y) do
+					if level:get_block(fill_x+room_x, fill_y+room_y).template.id!="wall" do
+						do_wall=false
+					done
+				done
+
+				if  do_wall do
+					level:add_block(Block::new(wall, fill_x+room_x, fill_y+room_y))
+				else do
+					level:add_block(Block::new(floor, fill_x+room_x, fill_y+room_y))
+				done
+				fill_x+=1
+			done
+			fill_y+=1
+		done
+
+		path_end_x=random::range(room_x+1, room_x+room_w-1)
+		path_end_y=random::range(room_y+1, room_y+room_h-1)
+
+		if path_start_x!=-1 do
+			if random::bool() do
+				draw_v_path(level, path_mat, wall, path_start_x, path_start_y, path_start_x, path_end_y)
+				draw_h_path(level, path_mat, wall, path_start_x, path_end_y, path_end_x, path_end_y)
+			else do
+				draw_h_path(level, path_mat, wall, path_start_x, path_start_y, path_end_x, path_start_y)
+				draw_v_path(level, path_mat, wall, path_end_x, path_start_y, path_end_x, path_end_y)
+			done
+		done
+
+		path_start_x=random::range(room_x+1, room_x+room_w-1)
+		path_start_y=random::range(room_y+1, room_y+room_h-1)
+
+		if curr_room==nr_rooms-1 do
+			level:add_block(Block::new(door_dn, random::range(room_x+1, room_x+room_w-1), random::range(room_y+1, room_y+room_h-1)))
+		done
+
+		curr_room+=1
+	done
+
+	fill_y=0
 	while fill_y<h do
-		int fill_x=0
+		fill_x=0
 		while fill_x<w do
-			level:add_block(Block::new(air, fill_x, fill_y))
+			if -level:has_block(fill_x, fill_y) do
+				level:add_block(Block::new(emptywall, fill_x, fill_y))
+			done
 			fill_x+=1
 		done
 		fill_y+=1
 	done
 
-	int nr_rooms=3
-	int curr_room=0
-	while curr_room<nr_rooms do
-		# int room_top=random::range(0,h)
-		# int room_left=random::range(0,w)
-		curr_room+=1
-	done
+	level:add_block(Block::new(door_up, 3, 3))
 return level

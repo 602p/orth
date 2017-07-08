@@ -4,6 +4,7 @@ import level
 import draw
 import err
 import mapgen
+import random
 
 import backend_linux
 
@@ -17,14 +18,20 @@ Game game
 function(int nargs, ArgList args) main -> int does
 	orth::install_sigsev_handler()
 	backend::init()
+	random::seed_time()
+	stdio::init()
+
+	# while true do
+	# 	printf("%i\n", random::range(3, 10))
+	# done
 
 	game=malloc(@sizeof(Game))|Game
-	game.player=Entity::new("player", "You", 1, 1, bord("@"))
-	game.curr_level = generate_level(80,20)
+	game.player=Entity::new("player", "You", 3, 3, bord("@"))
+	game.curr_level = generate_level(150,40)
 	game.curr_level:add_entity(game.player)
 
 	TextScreen screen = TextScreen::new_root(game.curr_level.size_x+10, game.curr_level.size_y+10)
-	screen:fill(bord("#"))
+	screen:fill(bord("="))
 	TextScreen world_screen = TextScreen::new_child(screen, 5, 5, game.curr_level.size_x, game.curr_level.size_y)
 
 	while true do

@@ -72,10 +72,13 @@ type Level is
 	return new
 
 	function(Level self, int x, int y) Level:get_block -> Block does
-	return unbox::ptr(self.blocks:offset(y*self.size_y*@sizeof(ptr)):offset(x*@sizeof(ptr)))|Block
+	return unbox::ptr(self.blocks:offset(y*self.size_x*@sizeof(ptr)):offset(x*@sizeof(ptr)))|Block
+
+	function(Level self, int x, int y) Level:has_block -> bool does
+	return unbox::ptr(self.blocks:offset(y*self.size_x*@sizeof(ptr)):offset(x*@sizeof(ptr)))!=null
 
 	function(Level self, int x, int y, Block block) Level:set_block -> void does
-		(self.blocks:offset(y*self.size_y*@sizeof(ptr)):offset(x*@sizeof(ptr))|Box_ptr).val=block|ptr
+		(self.blocks:offset(y*self.size_x*@sizeof(ptr)):offset(x*@sizeof(ptr))|Box_ptr).val=block|ptr
 	return
 
 	function(Level self, Block block) Level:add_block -> void does
@@ -84,10 +87,12 @@ type Level is
 
 	function(Level self, TextScreen screen) Level:draw -> void does
 		int y=0
+		Block b
 		while y<self.size_y do
 			int x=0
 			while x<self.size_x do
-				screen:setc(x, y, self:get_block(x, y).template.icon)
+				b=self:get_block(x, y)
+				screen:setc(x, y, b.template.icon)
 				x+=1
 			done
 			y+=1

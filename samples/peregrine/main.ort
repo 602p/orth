@@ -2,19 +2,10 @@ import std
 import args
 import level
 import draw
-# import err
-
-function(cstr name) orth::internal::hooks::function_enter_hook -> void does
-	printf("ENTER: %s\n", name)
-return
-
-function(cstr name) orth::internal::hooks::function_exit_hook -> void does
-	printf("EXIT: %s\n", name)
-return
+import err
+import mapgen
 
 import backend_linux
-
-import "maps/test.ort"
 
 type Game is
 	Level curr_level
@@ -27,17 +18,17 @@ function(int nargs, ArgList args) main -> int does
 	orth::install_sigsev_handler()
 	backend::init()
 
-
 	game=malloc(@sizeof(Game))|Game
 	game.player=Entity::new("player", "You", 1, 1, bord("@"))
-	game.curr_level = getmap::test()
+	game.curr_level = generate_level(80,20)
 	game.curr_level:add_entity(game.player)
 
-	TextScreen screen = TextScreen::new(10,10)
-	screen:fill(bord("."))
+	TextScreen screen = TextScreen::new_root(game.curr_level.size_x+10, game.curr_level.size_y+10)
+	screen:fill(bord("#"))
+	TextScreen world_screen = TextScreen::new_child(screen, 5, 5, game.curr_level.size_x, game.curr_level.size_y)
 
 	while true do
-		game.curr_level:draw(screen)
+		game.curr_level:draw(world_screen)
 		backend::draw_screen(screen)
 
 		int key=backend::getch()

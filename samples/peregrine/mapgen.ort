@@ -1,0 +1,23 @@
+
+function(int w, int h) generate_level -> Level does
+	Level level = Level::new("random", "Level", w, h)
+	BlockTemplate air = BlockTemplate::new("air", "Empty Space", bord("."))
+
+	int fill_y=0
+	while fill_y<h do
+		int fill_x=0
+		while fill_x<w do
+			level:add_block(Block::new(air, fill_x, fill_y))
+			fill_x+=1
+		done
+		fill_y+=1
+	done
+
+	int nr_rooms=3
+	int curr_room=0
+	while curr_room<nr_rooms do
+		# int room_top=random::range(0,h)
+		# int room_left=random::range(0,w)
+		curr_room+=1
+	done
+return level

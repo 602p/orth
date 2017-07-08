@@ -1,25 +1,64 @@
 
 type TextScreen is
-	cstr buffer
+	ptr buffer #is TextScreen this one is on if is_view, else is actual backing buffer
+	bool is_view
 	int width
 	int height
+	int off_x #(when is_view) offsets from parent
+	int off_y
 
-	function(int w, int h) TextScreen::new -> TextScreen does
+	function(int w, int h) TextScreen::new_root -> TextScreen does
 		TextScreen new = malloc(@sizeof(TextScreen))|TextScreen
 		new.width=w
 		new.height=h
 		new.buffer=malloc(w*h)
+		new.is_view=false
+		new.off_x=0
+		new.off_y=0
 	return new
 
+	function(TextScreen parent, int off_x, int off_y, int w, int h) TextScreen::new_child -> TextScreen does
+		TextScreen new = malloc(@sizeof(TextScreen))|TextScreen
+		new.width=w
+		new.height=h
+		new.buffer=parent|ptr
+		new.is_view=true
+		new.off_x=off_x
+		new.off_y=off_y
+	return new
+
+	function(TextScreen self) TextScreen:_parent -> TextScreen does
+	return self.buffer|TextScreen
+
 	function(TextScreen self, int x, int y, byte c) TextScreen:setc -> void does
-		self.buffer[(self.width*y)+x]=c
+		if self.is_view do
+			self:_parent():setc(x+self.off_x, y+self.off_y, c)
+		else do
+			self.buffer[(self.width*y)+x]=c
+		done
 	return
 
 	function(TextScreen self, int x, int y, cstr s) TextScreen:print -> void does
-		memcpy(self.buffer:offset((self.width*y)+x), s, s:len())
+		if self.is_view do
+			self:_parent():setc(x+self.off_x, y+self.off_y, s)
+		else do
+			memcpy(self.buffer:offset((self.width*y)+x), s, s:len())
+		done
 	return
 
 	function(TextScreen self, byte c) TextScreen:fill -> void does
-		memset(self.buffer, c|int, self.width*self.height)
+		self:fillrect(c, 0, 0, self.width, self.height)
+	return
+
+	function(TextScreen self, byte c, int x, int y, int w, int h) TextScreen:fillrect -> void does
+		if self.is_view do
+			self:_parent():fillrect(c, x+self.off_x, y+self.off_y, w, h)
+		else do
+			int row=0
+			while row<h do
+				memset(self.buffer:offset(((y+row)*self.width)+x), c|int, w)
+				row+=1
+			done
+		done
 	return
 endtype

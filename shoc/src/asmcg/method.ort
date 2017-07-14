@@ -89,6 +89,13 @@ type Lifetime is
 	return
 endtype
 
+function(List l, Lifetime t) List:append_Lifetime -> void does
+	l:append(t|ptr)
+return
+
+function(List l, int i) List:get_Lifetime -> Lifetime does
+return l:get(i)|Lifetime
+
 type LifetimeManager is
 	int first_ssa_var
 	int last_ssa_var
@@ -121,29 +128,12 @@ type LifetimeManager is
 	function(LifetimeManager self, int ssa_id) LifetimeManager:contains -> bool does
 	return self:get_lifetime_list(ssa_id)|ptr!=null
 
-	function(LifetimeManager self, int ssa_id) LifetimeManager:set_new_lifetime -> void does
+	function(LifetimeManager self, int ssa_id, Lifetime l) LifetimeManager:set_new_lifetime -> void does
+		List newlist = List::new()
+		newlist:append_Lifetime(l)
+		self:set_lifetime_list(ssa_id, newlist)
 	return
 endtype
-
-function(List l, Lifetime t) List:append_Lifetime -> void does
-	l:append(t|ptr)
-return
-
-function(List l, int i) List:get_Lifetime -> Lifetime does
-return l:get(i)|Lifetime
-
-function(List l) List:get_last_lifetime -> Lifetime does
-return l:get(l.len-1)|Lifetime
-
-function(StrMap m, GIRVar v) StrMap:get_last_lifetime -> Lifetime does
-return m:get_List(v:str()):get_last_lifetime()
-
-function(StrMap s, cstr k) StrMap:get_List -> List does
-return s:get(k)|List
-
-function(StrMap s, cstr k, List v) StrMap:set_List -> void does
-	s:set(k, v|ptr)
-return
 
 function(StrMap s, GIRVar v, int pos) StrMap:get_lifetime_at -> Lifetime does
 	List l = s:get_List(v:str())

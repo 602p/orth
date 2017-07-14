@@ -38,13 +38,13 @@ type GIRCall is packed
 
 	function(GIRCall self) GIRCall::get_used -> List does
 		List used = List::new():with_GIRVar(self.method)
-		if self.ret_type.variety!=VOID do
-			used:append_GIRVar(self.out_var)
-		done
 		int i=0
 		while i<self.args.len do
 			used:append_GIRVar(self.args:get_GIRVar(i))
 			i+=1
+		done
+		if self.ret_type.variety!=VOID do
+			used:append_GIRVar(self.out_var)
 		done
 	return used
 

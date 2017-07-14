@@ -75,6 +75,54 @@ type Lifetime is
 
 	function(Lifetime t) Lifetime:has_pos -> bool does
 	return t.pos!=-1
+
+	function(Lifetime curr_lifetime) Lifetime:print -> void does
+	if curr_lifetime:has_pos() do
+			if curr_lifetime.has_reg do
+				printf("r%i", curr_lifetime.pos)
+			else do
+				printf("s[%i]", curr_lifetime.pos)
+			done
+		else do
+			printf("?")
+		done
+	return
+endtype
+
+type LifetimeManager is
+	int first_ssa_var
+	int last_ssa_var
+	ptr array
+
+	function(int first_ssa_var, int last_ssa_var) LifetimeManager::new -> LifetimeManager does
+		LifetimeManager new = malloc(@sizeof(LifetimeManager)@)|LifetimeManager
+		new.first_ssa_var=first_ssa_var
+		new.last_ssa_var=last_ssa_var
+
+		int sz=(last_ssa_var-first_ssa_var)*@sizeof(ptr)@
+		new.array=malloc(sz)
+		memset(new.array, 0, sz)
+	return new
+
+	function(LifetimeManager self, int i) LifetimeManager:_get_list -> List does
+	return unbox::ptr(self.array:offset(i*@sizeof(ptr)@))|List
+
+	function(LifetimeManager self, int i, List l) LifetimeManager:_set_list -> void does
+		self.array:offset(i*@sizeof(ptr)@)|Box_ptr.val=l|ptr
+	return
+
+	function(LifetimeManager self, int ssa_id) LifetimeManager:get_lifetime_list -> List does
+	return self:_get_list(ssa_id-self.first_ssa_var)
+
+	function(LifetimeManager self, int ssa_id, List l) LifetimeManager:set_lifetime_list -> void does
+		self:_set_list(ssa_id-self.first_ssa_var, l)
+	return
+
+	function(LifetimeManager self, int ssa_id) LifetimeManager:contains -> bool does
+	return self:get_lifetime_list(ssa_id)|ptr!=null
+
+	function(LifetimeManager self, int ssa_id) LifetimeManager:set_new_lifetime -> void does
+	return
 endtype
 
 function(List l, Lifetime t) List:append_Lifetime -> void does
@@ -96,6 +144,20 @@ return s:get(k)|List
 function(StrMap s, cstr k, List v) StrMap:set_List -> void does
 	s:set(k, v|ptr)
 return
+
+function(StrMap s, GIRVar v, int pos) StrMap:get_lifetime_at -> Lifetime does
+	List l = s:get_List(v:str())
+	int i=0
+	Lifetime o
+	while i<l.len do
+		o=l:get_Lifetime(i)
+		if o.start<=pos & o.final>=pos do
+			return o
+		done
+		i+=1
+	done
+	shoc::bail_out("No lifetime for "+v:str()+" at "+pos:str())
+return null|Lifetime
 
 function(Method meth) asmcg::emit_method -> void does
 	printf("Emitting method %s\n", meth.name)
@@ -136,18 +198,48 @@ function(Method meth) asmcg::emit_method -> void does
 		int curr_used=0
 		while curr_used<curr_used_list.len do
 			curr_lifetime=lifetimes:get_last_lifetime(curr_used_list:get_GIRVar(curr_used))
+			if curr_lifetime.final==curr_inst_id do #TODO: Enforce that regs are freed before allocating new ones? is this in order?
+				if curr_lifetime.has_reg do
+					sched:set_unused(curr_lifetime.pos)
+				else do
+					#TODO: Reload now?
+				done
+			done
 			if curr_lifetime.start==curr_inst_id do
 				int reg = sched:get_unused_reg()
 				if reg!=-1 do
 					curr_lifetime:set_reg(sched:get_unused_reg())
 					sched:set(curr_lifetime.pos, curr_used_list:get_GIRVar(curr_used))
 				else do
-					curr_lifetime:set_stack(sched:get_next_stack_slot(curr_used_list:get_GIRVar(curr_used).type_:get_size()))
-				done
-			done
-			if curr_lifetime.final==curr_inst_id do
-				if curr_lifetime.has_reg do
-					sched:set_unused(curr_lifetime.pos)
+
+					int spill_search=0
+					List curr_search_lifetime
+					List best_search_lifetime=null|List
+					printf("Searching for lifetime to spill...\n")
+					while spill_search<lifetimes:num_keys() do
+						curr_search_lifetime=lifetimes:get_List(lifetimes:get_key_by_num(spill_search))
+						if curr_search_lifetime:get_last_lifetime().has_reg do
+							if best_search_lifetime|ptr==null do
+								best_search_lifetime=curr_search_lifetime
+							elif curr_search_lifetime:get_last_lifetime().final>best_search_lifetime:get_last_lifetime().final do
+								best_search_lifetime=curr_search_lifetime
+							done
+						done
+						spill_search+=1
+					done
+
+					int orig_end=best_search_lifetime:get_last_lifetime().final
+
+					best_search_lifetime:get_last_lifetime().final=curr_inst_id
+					sched:set_unused(best_search_lifetime:get_last_lifetime().pos)
+
+					best_search_lifetime:append_Lifetime(Lifetime::new(curr_inst_id))
+					best_search_lifetime:get_last_lifetime().final=orig_end
+
+					best_search_lifetime:get_last_lifetime():set_stack(sched:get_next_stack_slot(1))
+					curr_lifetime:set_reg(sched:get_unused_reg())
+					sched:set(curr_lifetime.pos, curr_used_list:get_GIRVar(curr_used))
+
 				done
 			done
 			curr_used+=1
@@ -171,20 +263,11 @@ function(Method meth, StrMap lifetimes, List var_uses) asmcg::print_alloc_state 
 		int i=0
 		printf("GIR %02i - ", curr_inst_id)
 		inst:print()
-		printf("\t Uses:")
+		printf(" Uses:")
 		while i<curr_used_list.len do
-			curr_lifetime=lifetimes:get_last_lifetime(curr_used_list:get_GIRVar(i))
+			curr_lifetime=lifetimes:get_lifetime_at(curr_used_list:get_GIRVar(i), curr_inst_id)
 			printf("%i ", curr_used_list:get_GIRVar(i).ssa_id)
-			if curr_lifetime:has_pos() do
-				if curr_lifetime.has_reg do
-					printf("r")
-				else do
-					printf("s")
-				done
-				printf("%i", curr_lifetime.pos)
-			else do
-				printf("?")
-			done
+			curr_lifetime:print()
 			printf(" ")
 			if curr_lifetime.start==curr_inst_id do
 				printf("<start> ")
@@ -196,6 +279,26 @@ function(Method meth, StrMap lifetimes, List var_uses) asmcg::print_alloc_state 
 			i+=1
 		done
 		printf("\n")
+
+		int curr_lifetime_id=0
+		while curr_lifetime_id<lifetimes:num_keys() do
+			List curr_ll = lifetimes:get_List(lifetimes:get_key_by_num(curr_lifetime_id))
+			int curr_ll_pos=0
+			while curr_ll_pos<curr_ll.len-1 do
+				Lifetime cur_l = curr_ll:get_Lifetime(curr_ll_pos)
+				Lifetime next_l = curr_ll:get_Lifetime(curr_ll_pos+1)
+				if cur_l.final==curr_inst_id do
+					printf(" Store/load: %s: ", lifetimes:get_key_by_num(curr_lifetime_id))
+					cur_l:print()
+					printf(" -> ")
+					next_l:print()
+					printf("\n")
+				done
+				curr_ll_pos+=1
+			done
+			curr_lifetime_id+=1
+		done
+
 		curr_inst_id+=1
 	done
 return

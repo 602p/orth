@@ -1,6 +1,6 @@
+function(int a, int b, int c, int d, int e, int f) foo -> void does
+return
 
 function() main -> int does
-	int a=1
-	int b=1
-	b+=(a+b)*(a*b)
-return b
+	foo(1,2,3,4,5,6)
+return 0

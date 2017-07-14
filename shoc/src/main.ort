@@ -195,5 +195,3 @@ function(int nargs, ArgList args) main -> int does
 
 	mem::clean_up()
 return 0
-
-# fnuction

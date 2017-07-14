@@ -1,6 +1,5 @@
-function(int a, int b, int c, int d, int e, int f) foo -> void does
+function(int a, int b, int c, int d) foo -> void does
 return
-
 function() main -> int does
-	foo(1,2,3,4,5,6)
+	foo(1,2,3,4)
 return 0

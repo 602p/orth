@@ -166,8 +166,6 @@ function(cstr text) lex::match_line_comment -> int does
 return i
 
 function(cstr text) lex::match_block_comment -> int does
-	<#Match a block comment - hey, this is a block
-	                                              comment! Block comments can include anything but the terminator: #>
 	if -text:startswith("<#") do
 		return 0
 	done

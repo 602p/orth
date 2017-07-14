@@ -19,6 +19,9 @@ type GIRLoad is packed
 		p:emit_gir(new|GIRInst)
 	return new.out_var
 
+	function(GIRLoad self) GIRLoad::get_used -> List does
+	return List::new():with_GIRVar(self.location):with_GIRVar(self.out_var)
+
 	function() GIRLoad::impl -> GIRInstType does
-	return GIRInstType::new("load"):set_printer(GIRLoad::print|GIRInstPrinter)
+	return GIRInstType::new("load"):set_printer(GIRLoad::print|GIRInstPrinter):set_getter(GIRLoad::get_used|GIRUseGetter)
 endtype

@@ -32,7 +32,14 @@ type GIRJump is packed
 		p:emit_gir(new|GIRInst)
 	return
 
+	function(GIRJump self) GIRJump::get_used -> List does
+		List used = List::new()
+		if self.is_cond do
+			used:append_GIRVar(self.cond)
+		done
+	return used
+
 	function() GIRJump::impl -> GIRInstType does
-	return GIRInstType::new("jump"):set_printer(GIRJump::print|GIRInstPrinter)
+	return GIRInstType::new("jump"):set_printer(GIRJump::print|GIRInstPrinter):set_getter(GIRJump::get_used|GIRUseGetter)
 endtype
 

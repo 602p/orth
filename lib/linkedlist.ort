@@ -166,4 +166,11 @@ type List is
     function(List l) List:free -> void does
         free(l)
     return
+
+    function(List l, List i) List:append_List -> void does
+        l:append(i|ptr)
+    return
+
+    function(List l, int i) List:get_List -> List does
+    return l:get(i)|List
 endtype

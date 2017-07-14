@@ -13,6 +13,10 @@ import "gir/cast_ptr.ort"
 import "gir/not.ort"
 import "gir/get_global.ort"
 
+function(List l, GIRVar v) List:with_GIRVar -> List does
+	l:append(v|ptr)
+return l
+
 function(Project p) gir::init -> void does
 	p:add_GIRInstType(GIRLiteral::impl())
 	p:add_GIRInstType(GIRStore::impl())

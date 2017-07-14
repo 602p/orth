@@ -15,6 +15,9 @@ type GIRNot is packed
 		p:emit_gir(new|GIRInst)
 	return new.out_var
 
+	function(GIRNot self) GIRNot::get_used -> List does
+	return List::new():with_GIRVar(self.source):with_GIRVar(self.out_var)
+
 	function() GIRNot::impl -> GIRInstType does
-	return GIRInstType::new("not"):set_printer(GIRNot::print|GIRInstPrinter)
+	return GIRInstType::new("not"):set_printer(GIRNot::print|GIRInstPrinter):set_getter(GIRNot::get_used|GIRUseGetter)
 endtype

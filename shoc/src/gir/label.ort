@@ -13,6 +13,9 @@ type GIRLabel is packed
 		p:emit_gir(new|GIRInst)
 	return
 
+	function(GIRLabel self) GIRLabel::get_used -> List does
+	return List::new()
+
 	function() GIRLabel::impl -> GIRInstType does
-	return GIRInstType::new("label"):set_printer(GIRLabel::print|GIRInstPrinter)
+	return GIRInstType::new("label"):set_printer(GIRLabel::print|GIRInstPrinter):set_getter(GIRLabel::get_used|GIRUseGetter)
 endtype

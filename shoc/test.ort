@@ -1,0 +1,6 @@
+
+function() main -> int does
+	int a=1
+	int b=1
+	b+=(a+b)*(a*b)
+return b

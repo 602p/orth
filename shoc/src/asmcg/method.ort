@@ -1,0 +1,201 @@
+
+#Compute uses + lifetimes
+#Run scheduler, assign each to 1st available
+#When needing to spill, add new "lifetime" starting at spill with different storage location (stack)
+#When reloading, add new "lifetime" starting at load with different storage location (register)
+#Generate code
+#Emit loads/stores at lifetime boundaries for the same variable
+
+type RegSched is
+	int num_regs
+	int required_spill_sz
+	ptr array
+
+	function(int reg_count) RegSched::new -> RegSched does
+		RegSched new = malloc(@sizeof(RegSched)@)|RegSched
+		new.num_regs=reg_count
+		new.required_spill_sz=0
+		new.array=malloc(reg_count*@sizeof(ptr)@)
+		int i=0
+		while i<reg_count do
+			new:set_unused(i)
+			i+=1
+		done
+	return new
+
+	function(RegSched self, int reg) RegSched:is_used -> bool does
+	return unbox::int(self.array:offset(reg*@sizeof(ptr)@))!=0
+
+	function(RegSched self, int reg) RegSched:set_unused -> void does
+		self.array:offset(reg*@sizeof(ptr)@)|Box_int.val=0
+	return
+
+	function(RegSched self, int reg, GIRVar var) RegSched:set -> void does
+		self.array:offset(reg*@sizeof(ptr)@)|Box_ptr.val=var|ptr
+	return
+
+	function(RegSched self) RegSched:get_unused_reg -> int does
+		int i=0
+		while i<self.num_regs do
+			if -self:is_used(i) do
+				return i
+			done
+			i+=1
+		done
+	return -1
+
+	function(RegSched self, int var_sz) RegSched:get_next_stack_slot -> int does
+		self.required_spill_sz+=var_sz
+	return self.required_spill_sz-var_sz
+endtype
+
+type Lifetime is
+	int start
+	int final
+	bool has_reg
+	int pos #either register ID or stack ID
+
+	function(int start) Lifetime::new -> Lifetime does
+		Lifetime new = malloc(@sizeof(Lifetime)@)|Lifetime
+		new.start=start
+		new.final=start
+		new.has_reg=false
+		new.pos=-1
+	return new
+
+	function(Lifetime t, int reg) Lifetime:set_reg -> Lifetime does
+		t.has_reg=true
+		t.pos=reg
+	return t
+
+	function(Lifetime t, int pos) Lifetime:set_stack -> Lifetime does
+		t.has_reg=false
+		t.pos=pos
+	return t
+
+	function(Lifetime t) Lifetime:has_pos -> bool does
+	return t.pos!=-1
+endtype
+
+function(List l, Lifetime t) List:append_Lifetime -> void does
+	l:append(t|ptr)
+return
+
+function(List l, int i) List:get_Lifetime -> Lifetime does
+return l:get(i)|Lifetime
+
+function(List l) List:get_last_lifetime -> Lifetime does
+return l:get(l.len-1)|Lifetime
+
+function(StrMap m, GIRVar v) StrMap:get_last_lifetime -> Lifetime does
+return m:get_List(v:str()):get_last_lifetime()
+
+function(StrMap s, cstr k) StrMap:get_List -> List does
+return s:get(k)|List
+
+function(StrMap s, cstr k, List v) StrMap:set_List -> void does
+	s:set(k, v|ptr)
+return
+
+function(Method meth) asmcg::emit_method -> void does
+	printf("Emitting method %s\n", meth.name)
+
+	List var_uses = List::new()
+	StrMap lifetimes = StrMap::new()
+	GIRInst inst
+	List curr_used_list
+	int curr_inst_id=0
+	while curr_inst_id<meth.gir_code.len do
+		inst=meth.gir_code:get_GIRInst(curr_inst_id)
+		curr_used_list=meth.gir_code:get_GIRInst(curr_inst_id):get_used()
+		var_uses:append_List(curr_used_list)
+		int curr_used=0
+		while curr_used<curr_used_list.len do
+			if -lifetimes:contains(curr_used_list:get_GIRVar(curr_used):str()) do
+				List l = List::new()
+				l:append_Lifetime(Lifetime::new(curr_inst_id))
+				lifetimes:set_List(curr_used_list:get_GIRVar(curr_used):str(), l)
+			else do
+				lifetimes:get_last_lifetime(curr_used_list:get_GIRVar(curr_used)).final=curr_inst_id
+			done
+			curr_used+=1
+		done
+		curr_inst_id+=1
+	done
+
+	asmcg::print_alloc_state(meth, lifetimes, var_uses)
+
+	RegSched sched = RegSched::new(4)
+
+	Lifetime curr_lifetime
+	curr_inst_id=0
+	while curr_inst_id<meth.gir_code.len do
+		inst=meth.gir_code:get_GIRInst(curr_inst_id)
+		curr_used_list=var_uses:get_List(curr_inst_id)
+
+		int curr_used=0
+		while curr_used<curr_used_list.len do
+			curr_lifetime=lifetimes:get_last_lifetime(curr_used_list:get_GIRVar(curr_used))
+			if curr_lifetime.start==curr_inst_id do
+				int reg = sched:get_unused_reg()
+				if reg!=-1 do
+					curr_lifetime:set_reg(sched:get_unused_reg())
+					sched:set(curr_lifetime.pos, curr_used_list:get_GIRVar(curr_used))
+				else do
+					curr_lifetime:set_stack(sched:get_next_stack_slot(curr_used_list:get_GIRVar(curr_used).type_:get_size()))
+				done
+			done
+			if curr_lifetime.final==curr_inst_id do
+				if curr_lifetime.has_reg do
+					sched:set_unused(curr_lifetime.pos)
+				done
+			done
+			curr_used+=1
+		done
+
+		curr_inst_id+=1
+	done 
+
+	printf("\n\n============================\n\n")
+	asmcg::print_alloc_state(meth, lifetimes, var_uses)
+return
+
+function(Method meth, StrMap lifetimes, List var_uses) asmcg::print_alloc_state -> void does
+	int curr_inst_id=0
+	Lifetime curr_lifetime
+	List curr_used_list
+	GIRInst inst
+	while curr_inst_id<meth.gir_code.len do
+		inst=meth.gir_code:get_GIRInst(curr_inst_id)
+		curr_used_list=var_uses:get_List(curr_inst_id)
+		int i=0
+		printf("GIR %02i - ", curr_inst_id)
+		inst:print()
+		printf("\t Uses:")
+		while i<curr_used_list.len do
+			curr_lifetime=lifetimes:get_last_lifetime(curr_used_list:get_GIRVar(i))
+			printf("%i ", curr_used_list:get_GIRVar(i).ssa_id)
+			if curr_lifetime:has_pos() do
+				if curr_lifetime.has_reg do
+					printf("r")
+				else do
+					printf("s")
+				done
+				printf("%i", curr_lifetime.pos)
+			else do
+				printf("?")
+			done
+			printf(" ")
+			if curr_lifetime.start==curr_inst_id do
+				printf("<start> ")
+			done
+			if curr_lifetime.final==curr_inst_id do
+				printf("< end > ")
+			done
+			printf(", ")
+			i+=1
+		done
+		printf("\n")
+		curr_inst_id+=1
+	done
+return

@@ -17,6 +17,9 @@ type GIRGetGlobal is packed
 		p:emit_gir(new|GIRInst)
 	return new.out_var|GIRVar
 
+	function(GIRGetGlobal self) GIRGetGlobal::get_used -> List does
+	return List::new():with_GIRVar(self.out_var)
+
 	function() GIRGetGlobal::impl -> GIRInstType does
-	return GIRInstType::new("get_global"):set_printer(GIRGetGlobal::print|GIRInstPrinter)
+	return GIRInstType::new("get_global"):set_printer(GIRGetGlobal::print|GIRInstPrinter):set_getter(GIRGetGlobal::get_used|GIRUseGetter)
 endtype

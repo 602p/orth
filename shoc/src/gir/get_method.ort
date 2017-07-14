@@ -17,6 +17,9 @@ type GIRGetMethod is packed
 		p:emit_gir(new|GIRInst)
 	return new.out_var|GIRVar
 
+	function(GIRGetMethod self) GIRGetMethod::get_used -> List does
+	return List::new():with_GIRVar(self.out_var)
+
 	function() GIRGetMethod::impl -> GIRInstType does
-	return GIRInstType::new("get_method"):set_printer(GIRGetMethod::print|GIRInstPrinter)
+	return GIRInstType::new("get_method"):set_printer(GIRGetMethod::print|GIRInstPrinter):set_getter(GIRGetMethod::get_used|GIRUseGetter)
 endtype

@@ -17,6 +17,9 @@ type GIRGetLocal is packed
 		p:emit_gir(new|GIRInst)
 	return new.out_var|GIRVar
 
+	function(GIRGetLocal self) GIRGetLocal::get_used -> List does
+	return List::new():with_GIRVar(self.out_var)
+
 	function() GIRGetLocal::impl -> GIRInstType does
-	return GIRInstType::new("get_local"):set_printer(GIRGetLocal::print|GIRInstPrinter)
+	return GIRInstType::new("get_local"):set_printer(GIRGetLocal::print|GIRInstPrinter):set_getter(GIRGetLocal::get_used|GIRUseGetter)
 endtype

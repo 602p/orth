@@ -25,6 +25,13 @@ type GIRReturn is packed
 		p:emit_gir(new|GIRInst)
 	return null|GIRVar
 
+	function(GIRReturn self) GIRReturn::get_used -> List does
+		List used = List::new()
+		if -self.is_void do
+			used:append_GIRVar(self.value)
+		done
+	return used
+
 	function() GIRReturn::impl -> GIRInstType does
-	return GIRInstType::new("return"):set_printer(GIRReturn::print|GIRInstPrinter)
+	return GIRInstType::new("return"):set_printer(GIRReturn::print|GIRInstPrinter):set_getter(GIRReturn::get_used|GIRUseGetter)
 endtype

@@ -23,6 +23,9 @@ type GIRStore is packed
 		p:emit_gir(new|GIRInst)
 	return null|GIRVar
 
+	function(GIRStore self) GIRStore::get_used -> List does
+	return List::new():with_GIRVar(self.location):with_GIRVar(self.value)
+
 	function() GIRStore::impl -> GIRInstType does
-	return GIRInstType::new("store"):set_printer(GIRStore::print|GIRInstPrinter)
+	return GIRInstType::new("store"):set_printer(GIRStore::print|GIRInstPrinter):set_getter(GIRStore::get_used|GIRUseGetter)
 endtype

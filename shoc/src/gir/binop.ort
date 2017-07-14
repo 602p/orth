@@ -26,7 +26,10 @@ type GIRBinOp is packed
 		p:emit_gir(new|GIRInst)
 	return new.out_var
 
+	function(GIRBinOp self) GIRBinOp::get_used -> List does
+	return List::new():with_GIRVar(self.lhs):with_GIRVar(self.rhs):with_GIRVar(self.out_var)
+
 	function() GIRBinOp::impl -> GIRInstType does
-	return GIRInstType::new("binop"):set_printer(GIRBinOp::print|GIRInstPrinter)
+	return GIRInstType::new("binop"):set_printer(GIRBinOp::print|GIRInstPrinter):set_getter(GIRBinOp::get_used|GIRUseGetter)
 endtype
 

@@ -17,6 +17,9 @@ type GIRPointerCast is packed
 		p:emit_gir(new|GIRInst)
 	return new.out_var
 
+	function(GIRPointerCast self) GIRPointerCast::get_used -> List does
+	return List::new():with_GIRVar(self.source):with_GIRVar(self.out_var)
+
 	function() GIRPointerCast::impl -> GIRInstType does
-	return GIRInstType::new("cast_ptr"):set_printer(GIRPointerCast::print|GIRInstPrinter)
+	return GIRInstType::new("cast_ptr"):set_printer(GIRPointerCast::print|GIRInstPrinter):set_getter(GIRPointerCast::get_used|GIRUseGetter)
 endtype

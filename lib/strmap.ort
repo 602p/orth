@@ -1,1 +1,11 @@
 import strmap_new
+
+function(StrMap self, cstr key, int val) StrMap:set_int -> void does
+	self:set(key, val|ptr)
+return
+
+function(StrMap self, cstr key) StrMap:get_int -> int does
+return self:get(key)|int
+
+function(StrMap self, int key) StrMap:get_int_by_num -> int does
+return self:get_by_num(key)|int

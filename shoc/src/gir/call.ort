@@ -36,7 +36,19 @@ type GIRCall is packed
 		p:emit_gir(new|GIRInst)
 	return new.out_var
 
+	function(GIRCall self) GIRCall::get_used -> List does
+		List used = List::new():with_GIRVar(self.method)
+		if self.ret_type.variety!=VOID do
+			used:append_GIRVar(self.out_var)
+		done
+		int i=0
+		while i<self.args.len do
+			used:append_GIRVar(self.args:get_GIRVar(i))
+			i+=1
+		done
+	return used
+
 	function() GIRCall::impl -> GIRInstType does
-	return GIRInstType::new("call"):set_printer(GIRCall::print|GIRInstPrinter)
+	return GIRInstType::new("call"):set_printer(GIRCall::print|GIRInstPrinter):set_getter(GIRCall::get_used|GIRUseGetter)
 endtype
 

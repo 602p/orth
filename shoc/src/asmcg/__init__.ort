@@ -1,0 +1,12 @@
+import "asmcg/method.ort"
+
+function(Project p, cstr path, bool verbose) Project:emit_as_asm -> void does
+	printf("\n\nProject:emit_as_asm...\n")
+
+	int curr_meth=0
+	Method meth
+	while curr_meth<p.methods:num_keys() do
+		asmcg::emit_method(p.methods:get_by_num(curr_meth)|Method)
+		curr_meth+=1
+	done
+return

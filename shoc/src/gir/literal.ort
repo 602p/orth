@@ -76,6 +76,9 @@ type GIRLiteral is packed
 		p:emit_gir(new|GIRInst)
 	return new.out_var
 
+	function(GIRLiteral self) GIRLiteral::get_used -> List does
+	return List::new():with_GIRVar(self.out_var)
+
 	function() GIRLiteral::impl -> GIRInstType does
-	return GIRInstType::new("literal"):set_printer(GIRLiteral::print|GIRInstPrinter)
+	return GIRInstType::new("literal"):set_printer(GIRLiteral::print|GIRInstPrinter):set_getter(GIRLiteral::get_used|GIRUseGetter)
 endtype

@@ -36,10 +36,12 @@ function(Project p) Project:get_next_ssa_id -> int does
 return p.ssa_count
 
 type GIRInstPrinter is a function->void #(GIRInst)
+type GIRUseGetter   is a function->List #(GIRInst)
 
 type GIRInstType is
 	cstr name
 	GIRInstPrinter printer
+	GIRUseGetter   use_getter
 
 	function(cstr name) GIRInstType::new -> GIRInstType does
 		GIRInstType new = malloc(@sizeof(GIRInstType)@)|GIRInstType
@@ -48,6 +50,10 @@ type GIRInstType is
 
 	function(GIRInstType self, GIRInstPrinter p) GIRInstType:set_printer -> GIRInstType does
 		self.printer=p
+	return self
+
+	function(GIRInstType self, GIRUseGetter p) GIRInstType:set_getter -> GIRInstType does
+		self.use_getter=p
 	return self
 endtype
 
@@ -66,6 +72,9 @@ type GIRInst is packed
 		GIRInst new = malloc(size)|GIRInst
 		proj:bind_gir_type(new, typename)
 	return new
+
+	function(GIRInst inst) GIRInst:get_used -> List does
+	return inst._gir_ty.use_getter(inst)
 endtype
 
 function(List l, GIRInst i) List:append_GIRInst -> void does

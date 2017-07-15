@@ -10,3 +10,5 @@ function(Project p, cstr path, bool verbose) Project:emit_as_asm -> void does
 		curr_meth+=1
 	done
 return
+
+

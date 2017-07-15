@@ -1,2 +1,2 @@
 function() main -> int does
-return 0
+return 3+2

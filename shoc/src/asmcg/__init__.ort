@@ -1,14 +1,36 @@
 import "asmcg/method.ort"
+import "asmcg/emitter.ort"
+import "asmcg/instructions.ort"
 
 function(Project p, cstr path, bool verbose) Project:emit_as_asm -> void does
 	printf("\n\nProject:emit_as_asm...\n")
 
+	ASMProject proj = ASMProject::new()
+
 	int curr_meth=0
-	Method meth
 	while curr_meth<p.methods:num_keys() do
-		asmcg::emit_method(p.methods:get_by_num(curr_meth)|Method)
+		asmcg::emit_method(proj, p.methods:get_by_num(curr_meth)|Method)
 		curr_meth+=1
 	done
+
+	File output = File::open("assembly_out.s", "w")
+
+	curr_meth=0
+	ASMMethod meth
+	while curr_meth<proj:num_methods() do
+		meth=proj:get_meth_idx(curr_meth)|ASMMethod
+		output:write("\n.globl ")
+		output:write(meth.symbol_name)
+		output:write("\n")
+		output:write(meth.symbol_name)
+		output:write(":\n")
+		int curr_code=0
+		while curr_code<meth.instructions.len do
+			output:writeln(meth.instructions:get(curr_code))
+			curr_code+=1
+		done
+		curr_meth+=1
+	done
+
+	output:close()
 return
-
-

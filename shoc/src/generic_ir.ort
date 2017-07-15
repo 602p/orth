@@ -75,6 +75,9 @@ type GIRInst is packed
 
 	function(GIRInst inst) GIRInst:get_used -> List does
 	return inst._gir_ty.use_getter(inst)
+
+	function(GIRInst inst, cstr name) GIRInst:is_a -> bool does
+	return inst._gir_ty.name==name
 endtype
 
 function(List l, GIRInst i) List:append_GIRInst -> void does

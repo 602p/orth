@@ -169,7 +169,7 @@ type LifetimeManager is
 	return null|Lifetime
 endtype
 
-function(Method meth) asmcg::emit_method -> void does
+function(ASMProject proj, Method meth) asmcg::emit_method -> void does
 	printf("\n\n##############################\nEmitting method %s\n", meth.name)
 
 	List var_uses = List::new()
@@ -287,6 +287,18 @@ function(Method meth) asmcg::emit_method -> void does
 
 	printf("\n\n============================\n\n")
 	asmcg::print_alloc_state(meth, lifetimes, var_uses)
+
+	printf("\nEmitting assembly...\n")
+
+	ASMMethod out = ASMMethod::new(proj, meth.name)
+
+	int i=0
+	while i<meth.gir_code.len do
+		asmcg::emit_inst(i, meth.gir_code:get_GIRInst(i), meth, out, lifetimes)
+		i+=1
+	done
+
+	proj:add_meth(out)
 return
 
 function(Method meth, LifetimeManager lifetimes, List var_uses) asmcg::print_alloc_state -> void does

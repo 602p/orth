@@ -1,0 +1,59 @@
+
+type ASMMethod is
+	cstr symbol_name
+	List instructions
+
+	function(ASMProject proj, cstr name) ASMMethod::new -> ASMMethod does
+		ASMMethod new = malloc(@sizeof(ASMMethod)@)|ASMMethod
+		new.instructions=List::new()
+		new.symbol_name=name
+	return new
+
+	function(ASMMethod self, cstr string) ASMMethod:_wr -> void does
+		self.instructions:append(string)
+	return
+endtype
+
+type ASMProject is
+	StrMap methods #str:ASMMethod
+
+	function() ASMProject::new -> ASMProject does
+		ASMProject new = malloc(@sizeof(ASMProject)@)|ASMProject
+		new.methods=StrMap::new()
+	return new
+
+	function(ASMProject self, ASMMethod meth) ASMProject:add_meth -> void does
+		self.methods:set(meth.symbol_name, meth|ptr)
+	return
+
+	function(ASMProject self, cstr symname) ASMProject:get_meth -> ASMMethod does
+	return self.methods:get(symname)|ASMMethod
+
+	function(ASMProject self) ASMProject:num_methods -> int does
+	return self.methods:num_keys()
+
+	function(ASMProject self, int id) ASMProject:get_meth_idx -> ASMMethod does
+	return self.methods:get_by_num(id)|ASMMethod
+endtype
+
+function(ASMMethod _, int i) ASMMethod:i2reg -> cstr does
+	if i==0 do
+		return "eax"
+	elif i==1 do
+		return "ebx"
+	elif i==2 do
+		return "ecx"
+	done
+return "edx"
+
+function(ASMMethod m, int reg, int value) ASMMethod:e_set_immediate -> void does
+	m:_wr("movl $"+value:str()+", %"+m:i2reg(reg))
+return
+
+function(ASMMethod m) ASMMethod:e_return -> void does
+	m:_wr("ret")
+return
+
+function(ASMMethod m, int base, int mod) ASMMethod:e_add_ip -> void does
+	m:_wr("addl %"+m:i2reg(mod)+", %"+m:i2reg(base))
+return

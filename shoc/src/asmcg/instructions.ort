@@ -1,0 +1,29 @@
+
+function(int inst_idx, GIRInst inst, Method meth, ASMMethod out, LifetimeManager lifetimes) asmcg::emit_inst -> void does
+	if inst:is_a("literal") do
+		GIRLiteral literal = inst|GIRLiteral
+		out:e_set_immediate(lifetimes:get_lifetime_at(literal.out_var, inst_idx).pos, literal.integer_value|int)
+	elif inst:is_a("return") do
+		GIRReturn return_ = inst|GIRReturn
+		out:e_return()
+	elif inst:is_a("binop") do
+		GIRBinOp binop = inst|GIRBinOp
+		int bo_lhs=lifetimes:get_lifetime_at(binop.lhs, inst_idx).pos
+		int bo_rhs=lifetimes:get_lifetime_at(binop.rhs, inst_idx).pos
+		int bo_out=lifetimes:get_lifetime_at(binop.out_var, inst_idx).pos
+
+		if binop.operator=="+" do
+			if bo_out==bo_lhs do
+				out:e_add_ip(bo_lhs, bo_rhs)
+			elif bo_out==bo_rhs do
+				out:e_add_ip(bo_rhs, bo_lhs)
+			else do
+				shoc::bail_out("no lea yet")
+			done
+		else do
+			shoc::bail_out("no other ops")
+		done
+	else do
+		shoc::bail_out("no other gir")
+	done
+return

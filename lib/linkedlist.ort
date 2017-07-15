@@ -67,11 +67,14 @@ type List is
     return
 
     function(List l, int want) List:get_node -> LinkedListNode does
-        if -l.cache_ready do
-            l:gen_cache()
-        done
         if want>=l.len do
             orth::fail("Requested List pos > than exists, "+want:str()+">"+l.len:str())
+        done
+        if want==l.len-1 do
+            return l.tail
+        done
+        if -l.cache_ready do
+            l:gen_cache()
         done
     return ((l.cache|long+((@sizeof(ListCacheBox)@)*want)|long)|ptr|ListCacheBox).node
 

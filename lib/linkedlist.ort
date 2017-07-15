@@ -22,6 +22,7 @@ endtype
 type List is
     int len
     LinkedListNode head
+    LinkedListNode tail
     ptr cache
     bool cache_ready
     bool cache_alloced
@@ -32,6 +33,7 @@ type List is
         new.cache_ready=false
         new.cache_alloced=false
         new.head=null|LinkedListNode
+        new.tail=new.head
     return new
 
     function(List o) List::copy -> List does
@@ -80,10 +82,11 @@ type List is
         LinkedListNode new = LinkedListNode::new(item)
         # printf("new v=%u\n", new.value)
         if l.len>0 do
-            LinkedListNode last = l:get_node(l.len-1)
-            last.next=new
+            l.tail.next=new
+            l.tail=new
         else do
             l.head=new
+            l.tail=new
             # printf("head v=%u\n", l.head.value)
             # printf("new v=%u\n", new.value)
             # printf("new=%u, l.head=%u\n", new, l.head)
@@ -148,6 +151,8 @@ type List is
         prev.next:free()
         if i!=l.len-1 do
             prev.next=prev.next.next
+        else do
+            l.tail=prev
         done
         l.len-=1
         l.cache_ready=false

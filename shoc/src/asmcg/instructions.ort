@@ -5,6 +5,13 @@ function(int inst_idx, GIRInst inst, Method meth, ASMMethod out, LifetimeManager
 		out:e_set_immediate(lifetimes:get_lifetime_at(literal.out_var, inst_idx).pos, literal.integer_value|int)
 	elif inst:is_a("return") do
 		GIRReturn return_ = inst|GIRReturn
+		if -return_.is_void do
+			int ret_reg = lifetimes:get_lifetime_at(return_.value, inst_idx).pos
+			if ret_reg!=0 do
+				out:e_copy_reg(ret_reg, 0)
+			done
+		done
+		out:e_f_leave()
 		out:e_return()
 	elif inst:is_a("binop") do
 		GIRBinOp binop = inst|GIRBinOp
@@ -18,7 +25,35 @@ function(int inst_idx, GIRInst inst, Method meth, ASMMethod out, LifetimeManager
 			elif bo_out==bo_rhs do
 				out:e_add_ip(bo_rhs, bo_lhs)
 			else do
-				shoc::bail_out("no lea yet")
+				out:e_copy_reg(bo_rhs, bo_out)
+				out:e_add_ip(bo_out, bo_lhs)
+			done
+		elif binop.operator=="-" do
+			if bo_out==bo_lhs do
+				out:e_sub_ip(bo_lhs, bo_rhs)
+			else do
+				out:e_copy_reg(bo_lhs, bo_out)
+				out:e_sub_ip(bo_out, bo_rhs)
+			done
+		elif binop.operator=="*" do
+			#dest is edx:eax always
+			if bo_out!=0 do #if we dont want it in eax, save eax
+				out:e_push_reg(0)
+			done
+			#TODO: Don't push edx if not needed
+			out:e_push_reg(3)
+
+			if bo_lhs!=0 do
+				out:e_copy_reg(bo_lhs, 0)
+			done
+			
+			out:e_mul(bo_rhs)
+
+			out:e_pop_reg(3)
+
+			if bo_out!=0 do
+				out:e_copy_reg(0, bo_out)
+				out:e_pop_reg(0)
 			done
 		else do
 			shoc::bail_out("no other ops")

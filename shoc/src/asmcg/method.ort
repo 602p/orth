@@ -292,6 +292,8 @@ function(ASMProject proj, Method meth) asmcg::emit_method -> void does
 
 	ASMMethod out = ASMMethod::new(proj, meth.name)
 
+	out:e_f_enter()
+
 	int i=0
 	while i<meth.gir_code.len do
 		asmcg::emit_inst(i, meth.gir_code:get_GIRInst(i), meth, out, lifetimes)

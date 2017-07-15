@@ -50,10 +50,39 @@ function(ASMMethod m, int reg, int value) ASMMethod:e_set_immediate -> void does
 	m:_wr("movl $"+value:str()+", %"+m:i2reg(reg))
 return
 
+function(ASMMethod m, int src, int dest) ASMMethod:e_copy_reg -> void does
+	m:_wr("movl %"+m:i2reg(src)+", %"+m:i2reg(dest))
+return
+
+function(ASMMethod m, int reg) ASMMethod:e_push_reg -> void does
+	m:_wr("pushl %"+m:i2reg(reg))
+return
+
+function(ASMMethod m, int reg) ASMMethod:e_pop_reg -> void does
+	m:_wr("popl %"+m:i2reg(reg))
+return
+
+function(ASMMethod m, int reg) ASMMethod:e_mul -> void does
+	m:_wr("mull %"+m:i2reg(reg))
+return
+
+function(ASMMethod m) ASMMethod:e_f_enter -> void does
+	m:_wr("pushl %ebp")
+	m:_wr("movl %esp, %ebp")
+return
+
+function(ASMMethod m) ASMMethod:e_f_leave -> void does
+	m:_wr("popl %ebp")
+return
+
 function(ASMMethod m) ASMMethod:e_return -> void does
 	m:_wr("ret")
 return
 
 function(ASMMethod m, int base, int mod) ASMMethod:e_add_ip -> void does
 	m:_wr("addl %"+m:i2reg(mod)+", %"+m:i2reg(base))
+return
+
+function(ASMMethod m, int base, int mod) ASMMethod:e_sub_ip -> void does
+	m:_wr("subl %"+m:i2reg(mod)+", %"+m:i2reg(base))
 return

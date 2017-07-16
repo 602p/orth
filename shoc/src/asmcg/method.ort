@@ -50,14 +50,16 @@ type RegSched is
 endtype
 
 type Lifetime is
+	GIRVar var
 	int start
 	int final
 	bool has_reg
 	int pos #either register ID or stack ID
 
-	function(int start) Lifetime::new -> Lifetime does
+	function(GIRVar var, int start) Lifetime::new -> Lifetime does
 		Lifetime new = malloc(@sizeof(Lifetime)@)|Lifetime
 		new.start=start
+		new.var=var
 		new.final=start
 		new.has_reg=false
 		new.pos=-1
@@ -158,15 +160,19 @@ type LifetimeManager is
 		int i=0
 		List ll = self:get_lifetime_list(var)
 		Lifetime l
+
+		Lifetime got=null|Lifetime
 		while i<ll.len do
 			l=ll:get_Lifetime(i)
 			if l.start<=gir_pos & l.final>=gir_pos do
-				return l
+				got=l
 			done
 			i+=1
 		done
-		shoc::bail_out("LifetimeManager did not have assigned lifetime for requested ssa var "+var.ssa_id:str()+" at GIR location "+gir_pos:str())
-	return null|Lifetime
+		if got|ptr==null do
+			shoc::bail_out("LifetimeManager did not have assigned lifetime for requested ssa var "+var.ssa_id:str()+" at GIR location "+gir_pos:str())
+		done
+	return got
 endtype
 
 function(ASMProject proj, Method meth) asmcg::emit_method -> void does
@@ -205,7 +211,7 @@ function(ASMProject proj, Method meth) asmcg::emit_method -> void does
 		while curr_used<curr_used_list.len do
 			GIRVar curr_var = curr_used_list:get_GIRVar(curr_used)
 			if -lifetimes:contains(curr_var) do
-				lifetimes:set_new_lifetime(curr_var, Lifetime::new(curr_inst_id))
+				lifetimes:set_new_lifetime(curr_var, Lifetime::new(curr_var, curr_inst_id))
 			else do
 				lifetimes:get_last_lifetime(curr_var).final=curr_inst_id
 			done
@@ -219,6 +225,7 @@ function(ASMProject proj, Method meth) asmcg::emit_method -> void does
 	RegSched sched = RegSched::new(2)
 
 	Lifetime curr_lifetime
+	int spill_search
 	curr_inst_id=0
 	while curr_inst_id<meth.gir_code.len do
 		inst=meth.gir_code:get_GIRInst(curr_inst_id)
@@ -231,33 +238,97 @@ function(ASMProject proj, Method meth) asmcg::emit_method -> void does
 				if curr_lifetime.has_reg do
 					sched:set_unused(curr_lifetime.pos)
 				else do
-					#TODO: Reload now?
+					int reg=sched:get_unused_reg()
+					if reg==-1 do #Gotta spill something to reload this
+						printf("Spilling for reload... at idx=%i for ssa=%i\n",  curr_inst_id, curr_used_list:get_GIRVar(curr_used).ssa_id)
+						spill_search=min_id
+						Lifetime selected_rs_lifetime=null|Lifetime
+						int selected_id
+						while spill_search<max_id & selected_rs_lifetime|ptr==null do
+							if lifetimes:contains_id(spill_search) do
+								Lifetime curr_search_lifetime=lifetimes:get_last_lifetime_id(spill_search)
+								printf("Trying %i\n", curr_search_lifetime.var.ssa_id)
+								if curr_search_lifetime.start<=curr_inst_id & curr_search_lifetime.final>=curr_inst_id do
+									if curr_search_lifetime.has_reg do
+										int not_used_check=0
+										bool not_used_ok=true
+										while not_used_check<curr_used_list.len & not_used_ok do
+											#Can't spill one currently used
+											if curr_used_list:get_GIRVar(not_used_check).ssa_id==curr_search_lifetime.var.ssa_id do
+												not_used_ok=false
+												printf("Used in this inst\n")
+											done
+											not_used_check+=1
+										done
+										if not_used_ok do
+											selected_rs_lifetime=curr_search_lifetime
+											selected_id=spill_search
+										done
+									else do
+										printf("no reg\n")
+									done
+								else do
+									printf("invalidated by time check\n")
+								done
+							done
+							spill_search+=1
+						done
+
+						if selected_rs_lifetime|ptr==null do
+							printf("\n\n!!!Somehow did not have anything I could spill to reload a variable I needed\n")
+							asmcg::print_alloc_state(meth, lifetimes, var_uses)
+							shoc::bail_out(":(")
+						else do
+							printf("Spilling %i from r%i to make room for %i reloading\n", selected_rs_lifetime.var.ssa_id, selected_rs_lifetime.pos, curr_used_list:get_GIRVar(curr_used).ssa_id)
+							int orig_end=selected_rs_lifetime.final
+							selected_rs_lifetime.final=curr_inst_id
+							sched:set_unused(selected_rs_lifetime.pos)
+							Lifetime new_lifetime = Lifetime::new(selected_rs_lifetime.var, curr_inst_id)
+							new_lifetime.final=orig_end
+							new_lifetime:set_stack(sched:get_next_stack_slot(1))
+							lifetimes:append_lifetime(selected_id, new_lifetime)
+						done
+					done
+
+					int orig_end=curr_lifetime.final
+					curr_lifetime.final=curr_inst_id
+
+					curr_lifetime = Lifetime::new(curr_used_list:get_GIRVar(curr_used), curr_inst_id)
+					curr_lifetime.final=orig_end
+
+					curr_lifetime:set_reg(sched:get_unused_reg())
+					# sched:set(curr_lifetime.pos, curr_used_list:get_GIRVar(curr_used))
+
+					lifetimes:append_lifetime(curr_used_list:get_GIRVar(curr_used).ssa_id, curr_lifetime)
+					# var_uses:get_List(curr_inst_id+1):append_Li
 				done
 			done
-			if curr_lifetime.start==curr_inst_id do
+			if curr_lifetime.start==curr_inst_id & -curr_lifetime:has_pos() do
 				int reg = sched:get_unused_reg()
 				if reg!=-1 do
 					curr_lifetime:set_reg(sched:get_unused_reg())
 					sched:set(curr_lifetime.pos, curr_used_list:get_GIRVar(curr_used))
 				else do
 
-					int spill_search=min_id
+					spill_search=min_id
 					Lifetime curr_search_lifetime
 					int best_search_lifetime=-1
 					Lifetime best_search_lifetime_ob
 
-					printf("Searching for lifetime to spill... at idx=%i\n", curr_inst_id)
+					printf("Searching for lifetime to spill... at idx=%i for ssa=%i\n", curr_inst_id, curr_used_list:get_GIRVar(curr_used).ssa_id)
 
 					while spill_search<=max_id do
 						if lifetimes:contains_id(spill_search) do
 							curr_search_lifetime=lifetimes:get_last_lifetime_id(spill_search)
-							if curr_search_lifetime.has_reg do
-								if best_search_lifetime==-1 do
-									best_search_lifetime_ob=curr_search_lifetime
-									best_search_lifetime=spill_search
-								elif curr_search_lifetime.final>best_search_lifetime_ob.final do
-									best_search_lifetime=spill_search
-									best_search_lifetime_ob=curr_search_lifetime
+							if curr_search_lifetime.start<=curr_inst_id  & curr_search_lifetime.final>=curr_inst_id do
+								if curr_search_lifetime.has_reg do
+									if best_search_lifetime==-1 do
+										best_search_lifetime_ob=curr_search_lifetime
+										best_search_lifetime=spill_search
+									elif curr_search_lifetime.final>best_search_lifetime_ob.final do
+										best_search_lifetime=spill_search
+										best_search_lifetime_ob=curr_search_lifetime
+									done
 								done
 							done
 						done
@@ -269,12 +340,11 @@ function(ASMProject proj, Method meth) asmcg::emit_method -> void does
 					int orig_end=best_search_lifetime_ob.final
 
 					best_search_lifetime_ob.final=curr_inst_id
-					# printf("b_s_l_o.final=%i\n", best_search_lifetime_ob.final)
 					sched:set_unused(best_search_lifetime_ob.pos)
 
-					Lifetime new_lifetime = Lifetime::new(curr_inst_id)
+					Lifetime new_lifetime = Lifetime::new(curr_used_list:get_GIRVar(curr_used), curr_inst_id)
 					new_lifetime.final=orig_end
-					new_lifetime:set_stack(sched:get_next_stack_slot(1))
+					new_lifetime:set_stack(sched:get_next_stack_slot(8+(curr_used_list:get_GIRVar(curr_used).type_:get_size()/8)))
 					lifetimes:append_lifetime(best_search_lifetime, new_lifetime)
 
 					curr_lifetime:set_reg(sched:get_unused_reg())
@@ -295,7 +365,7 @@ function(ASMProject proj, Method meth) asmcg::emit_method -> void does
 
 	printf("\nEmitting assembly...\n")
 
-	asmcg::emit_method_code(proj, meth, lifetimes)
+	asmcg::emit_method_code(proj, meth, lifetimes, sched)
 return
 
 function(Method meth, LifetimeManager lifetimes, List var_uses) asmcg::print_alloc_state -> void does

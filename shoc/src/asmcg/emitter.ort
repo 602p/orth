@@ -107,3 +107,11 @@ return
 function(ASMMethod m, int location, int out_reg) ASMMethod:e_memreg_to_reg_32 -> void does
 	m:_wr("movl (%"+m:i2reg(location)+"), %"+m:i2reg(out_reg))
 return
+
+function(ASMMethod m, int reg, int mem) ASMMethod:e_spill -> void does
+	m:_wr("movl %"+m:i2reg(reg)+", -"+mem:str()+"(%ebp) #spill")
+return
+
+function(ASMMethod m, int mem, int reg) ASMMethod:e_reload -> void does
+	m:_wr("movl -"+mem:str()+"(%ebp), %"+m:i2reg(reg)+" #reload")
+return

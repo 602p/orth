@@ -1,5 +1,5 @@
 
-function(ASMProject proj, Method meth, LifetimeManager lifetimes) asmcg::emit_method_code -> void does
+function(ASMProject proj, Method meth, LifetimeManager lifetimes, RegSched sched) asmcg::emit_method_code -> void does
 	ASMMethod out = ASMMethod::new(proj, meth.name)
 
 	out:e_f_enter()
@@ -24,12 +24,43 @@ function(ASMProject proj, Method meth, LifetimeManager lifetimes) asmcg::emit_me
 		i+=1
 	done
 
+	printf("Locals size=%i\n", locals_sz)
+
+	int locals_offset=locals_sz+8
+
+	locals_sz+=sched.required_spill_sz
+
+	printf("Locals size with spills=%i\n", locals_sz)
+
 	out:e_move_sp(locals_sz)
 
 	printf("Emitting Code...\n")
 
 	int i=0
 	while i<meth.gir_code.len do
+		int curr_lifetime_id=lifetimes.first_ssa_var
+		while curr_lifetime_id<=lifetimes.last_ssa_var do
+			if lifetimes:contains_id(curr_lifetime_id) do
+				List curr_ll = lifetimes:get_lifetime_list_id(curr_lifetime_id)
+				int curr_ll_pos=0
+				while curr_ll_pos<curr_ll.len-1 do
+					Lifetime cur_l = curr_ll:get_Lifetime(curr_ll_pos)
+					Lifetime next_l = curr_ll:get_Lifetime(curr_ll_pos+1)
+					if cur_l.final==i do
+						if cur_l.has_reg do
+							printf("Emit spill r%i->s[%i]\n", cur_l.pos, next_l.pos)
+							out:e_spill(cur_l.pos, next_l.pos+locals_offset)
+						else do
+							printf("Emit load s[%i]->r%i\n", cur_l.pos, next_l.pos)
+							out:e_reload(cur_l.pos+locals_offset, next_l.pos)
+						done
+					done
+					curr_ll_pos+=1
+				done
+			done
+			curr_lifetime_id+=1
+		done
+
 		asmcg::emit_inst(i, meth.gir_code:get_GIRInst(i), meth, out, lifetimes, locals_addresses)
 		i+=1
 	done

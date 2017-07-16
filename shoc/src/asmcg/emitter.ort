@@ -66,6 +66,10 @@ function(ASMMethod m, int reg) ASMMethod:e_mul -> void does
 	m:_wr("mull %"+m:i2reg(reg))
 return
 
+function(ASMMethod m, int reg) ASMMethod:e_div -> void does
+	m:_wr("divl %"+m:i2reg(reg))
+return
+
 function(ASMMethod m) ASMMethod:e_f_enter -> void does
 	m:_wr("pushl %ebp")
 	m:_wr("movl %esp, %ebp")

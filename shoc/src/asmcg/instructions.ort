@@ -55,6 +55,28 @@ function(int inst_idx, GIRInst inst, Method meth, ASMMethod out, LifetimeManager
 				out:e_copy_reg(0, bo_out)
 				out:e_pop_reg(0)
 			done
+		elif binop.operator=="/" do
+			#dest is edx (remainder), eax (quotient) always
+			if bo_out!=0 do #if we dont want it in eax, save eax
+				out:e_push_reg(0)
+			done
+			#TODO: Don't push edx if not needed
+			out:e_push_reg(3)
+
+			out:e_set_immediate(3, 0) #Clear high dividend
+
+			if bo_lhs!=0 do
+				out:e_copy_reg(bo_lhs, 0)
+			done
+			
+			out:e_div(bo_rhs)
+
+			out:e_pop_reg(3)
+
+			if bo_out!=0 do
+				out:e_copy_reg(0, bo_out)
+				out:e_pop_reg(0)
+			done
 		else do
 			shoc::bail_out("no other ops")
 		done

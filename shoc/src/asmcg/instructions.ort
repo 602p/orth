@@ -80,6 +80,9 @@ function(int inst_idx, GIRInst inst, Method meth, ASMMethod out, LifetimeManager
 		else do
 			shoc::bail_out("no other ops")
 		done
+	elif inst:is_a("store") do
+		GIRStore store = inst|GIRStore
+		# if store
 	else do
 		shoc::bail_out("no other gir")
 	done

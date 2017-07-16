@@ -3,8 +3,12 @@ import args
 
 function(int argc, ArgList args) main -> int does
 	int i=0
+	printf("Hi! argc=%i, args@%u\n", argc, args)
+	cstr arg
 	while i<argc do
-		printf("Arg %i: %s\n", i, args:get(i))
+		arg=args:get(i)
+		printf("Arg %i: %u\n", i, arg)
+		printf("=>%s\n", arg)
 		i+=1
 	done
 return 0

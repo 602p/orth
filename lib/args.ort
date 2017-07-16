@@ -1,10 +1,8 @@
 import boxes
 
-type _ArgList_CStrBox is packed
-	cstr str
-endtype
-
 type ArgList is packed
 	function(ArgList l, int pos) ArgList:get -> cstr does
-	return unbox_l::cstr(l|ptr|long + (pos*@sizeof(ptr)@)|long)
+		long addr= l|ptr|long + (pos*@sizeof(ptr)@)|long
+		# printf("GET %u\n", addr|int)
+	return unbox_l::cstr(addr)
 endtype

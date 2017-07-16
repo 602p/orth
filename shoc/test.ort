@@ -1,3 +1,4 @@
 function() main -> int does
-	int a = 0
-return 3
+	int a = 1
+	a+=a
+return a

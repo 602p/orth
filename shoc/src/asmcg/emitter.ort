@@ -70,12 +70,17 @@ function(ASMMethod m, int reg) ASMMethod:e_div -> void does
 	m:_wr("divl %"+m:i2reg(reg))
 return
 
+function(ASMMethod m, int amt) ASMMethod:e_move_sp -> void does
+	m:_wr("subl $"+amt:str()+", %esp")
+return
+
 function(ASMMethod m) ASMMethod:e_f_enter -> void does
 	m:_wr("pushl %ebp")
 	m:_wr("movl %esp, %ebp")
 return
 
 function(ASMMethod m) ASMMethod:e_f_leave -> void does
+	m:_wr("movl %ebp, %esp")
 	m:_wr("popl %ebp")
 return
 
@@ -89,4 +94,16 @@ return
 
 function(ASMMethod m, int base, int mod) ASMMethod:e_sub_ip -> void does
 	m:_wr("subl %"+m:i2reg(mod)+", %"+m:i2reg(base))
+return
+
+function(ASMMethod m, int out, int offset) ASMMethod:e_lea_localaddr -> void does
+	m:_wr("leal -"+offset:str()+"(%ebp), %"+m:i2reg(out))
+return
+
+function(ASMMethod m, int value, int location) ASMMethod:e_reg_to_memreg_32 -> void does
+	m:_wr("movl %"+m:i2reg(value)+", (%"+m:i2reg(location)+")")
+return
+
+function(ASMMethod m, int location, int out_reg) ASMMethod:e_memreg_to_reg_32 -> void does
+	m:_wr("movl (%"+m:i2reg(location)+"), %"+m:i2reg(out_reg))
 return

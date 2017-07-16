@@ -272,7 +272,7 @@ function(ASMProject proj, Method meth) asmcg::emit_method -> void does
 
 					Lifetime new_lifetime = Lifetime::new(curr_inst_id)
 					new_lifetime.final=orig_end
-					new_lifetime:set_stack(sched:get_next_stack_slot(1))
+					new_lifetime:set_stack(sched:get_next_stack_slot(curr_used_list:get_GIRVar(curr_used).type_:get_size()))
 					lifetimes:append_lifetime(best_search_lifetime, new_lifetime)
 
 					curr_lifetime:set_reg(sched:get_unused_reg())
@@ -288,19 +288,12 @@ function(ASMProject proj, Method meth) asmcg::emit_method -> void does
 	printf("\n\n============================\n\n")
 	asmcg::print_alloc_state(meth, lifetimes, var_uses)
 
+	#idea - treat spills as fake physical registers, then can schedule those for minimal scratch space
+	#also turns graph-coloring algorithms into finding the smallest k for which the graph is colorable
+
 	printf("\nEmitting assembly...\n")
 
-	ASMMethod out = ASMMethod::new(proj, meth.name)
-
-	out:e_f_enter()
-
-	int i=0
-	while i<meth.gir_code.len do
-		asmcg::emit_inst(i, meth.gir_code:get_GIRInst(i), meth, out, lifetimes)
-		i+=1
-	done
-
-	proj:add_meth(out)
+	asmcg::emit_method_code(proj, meth, lifetimes)
 return
 
 function(Method meth, LifetimeManager lifetimes, List var_uses) asmcg::print_alloc_state -> void does

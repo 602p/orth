@@ -1,5 +1,43 @@
 
-function(int inst_idx, GIRInst inst, Method meth, ASMMethod out, LifetimeManager lifetimes) asmcg::emit_inst -> void does
+function(ASMProject proj, Method meth, LifetimeManager lifetimes) asmcg::emit_method_code -> void does
+	ASMMethod out = ASMMethod::new(proj, meth.name)
+
+	out:e_f_enter()
+
+	StrMap locals_addresses = StrMap::new()
+
+	printf("Calculating Frame...\n")
+
+	int locals_sz = 0
+	int i=0
+	while i<meth.locals:num_keys() do
+		
+		if meth.locals:get_by_num(i)|OType.variety==STRUCT do
+			locals_sz+=8 #Same on 32-bit, keep aligned
+		else do
+			locals_sz+=meth.locals:get_by_num(i)|OType:get_size()/8
+		done
+		if locals_sz%8 != 0 do
+			locals_sz+=8-(locals_sz%8)
+		done
+		locals_addresses:set_int(meth.locals:get_key_by_num(i), locals_sz)
+		i+=1
+	done
+
+	out:e_move_sp(locals_sz)
+
+	printf("Emitting Code...\n")
+
+	int i=0
+	while i<meth.gir_code.len do
+		asmcg::emit_inst(i, meth.gir_code:get_GIRInst(i), meth, out, lifetimes, locals_addresses)
+		i+=1
+	done
+
+	proj:add_meth(out)
+return
+
+function(int inst_idx, GIRInst inst, Method meth, ASMMethod out, LifetimeManager lifetimes, StrMap locals_addresses) asmcg::emit_inst -> void does
 	if inst:is_a("literal") do
 		GIRLiteral literal = inst|GIRLiteral
 		out:e_set_immediate(lifetimes:get_lifetime_at(literal.out_var, inst_idx).pos, literal.integer_value|int)
@@ -82,7 +120,13 @@ function(int inst_idx, GIRInst inst, Method meth, ASMMethod out, LifetimeManager
 		done
 	elif inst:is_a("store") do
 		GIRStore store = inst|GIRStore
-		# if store
+		out:e_reg_to_memreg_32(lifetimes:get_lifetime_at(store.value, inst_idx).pos, lifetimes:get_lifetime_at(store.location, inst_idx).pos)
+	elif inst:is_a("load") do
+		GIRLoad load = inst|GIRLoad
+		out:e_memreg_to_reg_32(lifetimes:get_lifetime_at(load.location, inst_idx).pos, lifetimes:get_lifetime_at(load.out_var, inst_idx).pos)
+	elif inst:is_a("get_local") do
+		GIRGetLocal getlocal = inst|GIRGetLocal
+		out:e_lea_localaddr(lifetimes:get_lifetime_at(getlocal.out_var, inst_idx).pos, locals_addresses:get_int(getlocal.var_name))
 	else do
 		shoc::bail_out("no other gir")
 	done

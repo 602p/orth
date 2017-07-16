@@ -216,7 +216,7 @@ function(ASMProject proj, Method meth) asmcg::emit_method -> void does
 
 	asmcg::print_alloc_state(meth, lifetimes, var_uses)
 
-	RegSched sched = RegSched::new(4)
+	RegSched sched = RegSched::new(2)
 
 	Lifetime curr_lifetime
 	curr_inst_id=0
@@ -246,7 +246,7 @@ function(ASMProject proj, Method meth) asmcg::emit_method -> void does
 					int best_search_lifetime=-1
 					Lifetime best_search_lifetime_ob
 
-					printf("Searching for lifetime to spill...\n")
+					printf("Searching for lifetime to spill... at idx=%i\n", curr_inst_id)
 
 					while spill_search<=max_id do
 						if lifetimes:contains_id(spill_search) do
@@ -257,6 +257,7 @@ function(ASMProject proj, Method meth) asmcg::emit_method -> void does
 									best_search_lifetime=spill_search
 								elif curr_search_lifetime.final>best_search_lifetime_ob.final do
 									best_search_lifetime=spill_search
+									best_search_lifetime_ob=curr_search_lifetime
 								done
 							done
 						done
@@ -268,11 +269,12 @@ function(ASMProject proj, Method meth) asmcg::emit_method -> void does
 					int orig_end=best_search_lifetime_ob.final
 
 					best_search_lifetime_ob.final=curr_inst_id
+					# printf("b_s_l_o.final=%i\n", best_search_lifetime_ob.final)
 					sched:set_unused(best_search_lifetime_ob.pos)
 
 					Lifetime new_lifetime = Lifetime::new(curr_inst_id)
 					new_lifetime.final=orig_end
-					new_lifetime:set_stack(sched:get_next_stack_slot(curr_used_list:get_GIRVar(curr_used).type_:get_size()))
+					new_lifetime:set_stack(sched:get_next_stack_slot(1))
 					lifetimes:append_lifetime(best_search_lifetime, new_lifetime)
 
 					curr_lifetime:set_reg(sched:get_unused_reg())
@@ -334,6 +336,9 @@ function(Method meth, LifetimeManager lifetimes, List var_uses) asmcg::print_all
 					Lifetime cur_l = curr_ll:get_Lifetime(curr_ll_pos)
 					Lifetime next_l = curr_ll:get_Lifetime(curr_ll_pos+1)
 					if cur_l.final==curr_inst_id do
+						# printf("cur.pos=r%i, next.pos=s[%i]\n", cur_l.pos, next_l.pos)
+						# printf("cur.final=%i, next.final=%i\n", cur_l.final, next_l.final)
+						# printf("cur.start=%i, next.start=%i\n", cur_l.start, next_l.start)
 						printf(" Store/load: %i: ", curr_lifetime_id)
 						cur_l:print()
 						printf(" -> ")

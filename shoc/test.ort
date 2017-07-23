@@ -1,39 +1,7 @@
 function() main -> int does
 	int a = 1
 	int b = 2
-	a+=b
+	int c = 17*2
+	a+=(a+b*c)/(c/4)
 return a
 
-# .globl main
-# main:
-# pushl %ebp
-# movl %esp, %ebp
-# subl $24, %esp
-# leal -8(%ebp), %eax
-# movl $1, %ebx
-# movl %ebx, (%eax)
-# leal -16(%ebp), %eax
-# movl $2, %ebx
-# movl %ebx, (%eax)
-
-# leal -8(%ebp), %eax #address of a
-# leal -8(%ebp), %ebx #address of a
-# movl (%ebx), %ebx   #a
-# movl %eax, -24(%ebp) #spill &a
-# leal -16(%ebp), %eax #address of b
-# movl (%eax), %eax #b
-# movl %ebx, -28(%ebp) #spill a
-# leal -8(%ebp), %ebx #&a
-# movl (%ebx), %ebx #a
-# pushl %edx
-# mull %ebx
-# popl %edx
-# movl -28(%ebp), %ebx #reload a
-# addl %ebx, %eax
-# movl -24(%ebp), %ebx #reload &a
-# movl %eax, (%ebx)
-# leal -8(%ebp), %eax
-# movl (%eax), %eax
-# movl %ebp, %esp
-# popl %ebp
-# ret

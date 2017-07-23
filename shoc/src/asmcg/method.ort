@@ -222,7 +222,7 @@ function(ASMProject proj, Method meth) asmcg::emit_method -> void does
 
 	asmcg::print_alloc_state(meth, lifetimes, var_uses)
 
-	RegSched sched = RegSched::new(2)
+	RegSched sched = RegSched::new((2))
 
 	Lifetime curr_lifetime
 	int spill_search

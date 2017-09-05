@@ -8,7 +8,7 @@ import mem
 import os
 import shoc
 import llvm
-import asmcg
+# import asmcg
 
 int shoc_heritage
 #This global is initilized to 0 when compiled via orthc

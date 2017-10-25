@@ -325,10 +325,11 @@ return l:get(n)|Node
 
 function(EleList e, cstr s) parse::update_viz -> void does
 	bool fancy = false
-	float speed= 0.0
+	# float speed= 1.
 
 	if fancy do
-		usleep((speed*1000000.)|int)
+		usleep(750000)
+		# read_line("?")
 		system("clear")
 	done
 	printf("\n\nParsing '%s'\n\n", s)

@@ -71,7 +71,7 @@ function(Project p, cstr filename, bool verbose) Project:emit_as_llvm -> Project
 			if t.name=="shoc_heritage" do
 				context:emitl((shoc_heritage+1):str())
 			else do
-				context:emitl("0")
+				context:emitl(p.global_inits:get(t.name))
 			done
 		else do
 			context:emitl("null")

@@ -13,11 +13,19 @@ function(FileNode n, TransformerPass p) define_syms::visit_file -> FileNode does
 	int i=0
 	cstr name
 	TypedVar v
+	AssignmentExpr ex
 	while i<n.statements.len do
 		if n.statements:get_Node(i):is_a("DeclExpr") do
 			v=TypedVar::from_decl((n.statements:get_Node(i)|DeclExpr).name, p.proj)
 			shoc::assert(-p.proj.globals:contains(v.name), "Duplicate definition of global "+v.name)
-			p.proj:add_Global(v)
+			p.proj:add_Global(v, "0")
+		elif n.statements:get_Node(i):is_a("AssignmentExpr") do
+			ex=n.statements:get_Node(i)|AssignmentExpr
+			v=TypedVar::from_decl(ex.lhs|DeclExpr.name, p.proj)
+			shoc::assert(-p.proj.globals:contains(v.name), "Duplicate definition of global "+v.name)
+			shoc::assert(v.type_:is_primitive(), "Global "+v.name+" must be primitive if statically initilized")
+			shoc::assert(ex.rhs:is_a("LiteralExpr"), "Global "+v.name+" must be statically initilized by a literal")
+			p.proj:add_Global(v, ex.rhs|LiteralExpr.value)
 		done
 		i+=1
 	done

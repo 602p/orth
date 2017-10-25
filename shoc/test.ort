@@ -1,7 +1,5 @@
-function() main -> int does
-	int a = 1
-	int b = 2
-	int c = 17*2
-	a+=(a+b*c)/(c/4)
-return a
 
+function() main -> int does
+	int a=2
+	a+=(1*1)+1
+return a

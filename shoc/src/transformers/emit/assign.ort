@@ -1,3 +1,6 @@
 
 function(AssignmentExpr n, TransformerPass p) emit_value::for_assignment -> GIRVar does
+	if -p.proj:in_method() do
+		return null|GIRVar
+	done
 return GIRStore::emit(p.proj, p:emit_addr(n.lhs), p:emit_value(n.rhs))

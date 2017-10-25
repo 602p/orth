@@ -133,7 +133,9 @@ function(int nargs, ArgList args) main -> int does
 		printf("\n\n===TYPES===\n\n")
 		i=0
 		while i<proj.types:num_keys() do
-			(proj.types:get_by_num(i)|OType):print()
+			if (-(proj.types:get_by_num(i)|OType).name:startswith("$")):or(options:contains("dump_auto_fp_types")) do
+				(proj.types:get_by_num(i)|OType):print()
+			done
 			i+=1
 		done
 	done
@@ -160,8 +162,10 @@ function(int nargs, ArgList args) main -> int does
 	if options:contains("dump_globals") do
 		printf("\n\n===GLOBALS===\n\n")
 		int l=0
+		TypedVar tv
 		while l<proj.globals:num_keys() do
-			printf("GLOBAL: %s - %s\n", (proj.globals:get_by_num(l)|TypedVar).name,  (proj.globals:get_by_num(l)|TypedVar).type_.name)
+			tv=(proj.globals:get_by_num(l)|TypedVar)
+			printf("GLOBAL: %s - %s = %s\n", tv.name,  tv.type_.name, proj.global_inits:get(tv.name))
 			l+=1
 		done
 	done

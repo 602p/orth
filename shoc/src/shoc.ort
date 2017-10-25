@@ -49,6 +49,7 @@ type Project is
 	StrMap methods				#Map of identifier -> Method for methods in the project
 								#Note that identifier is not always the same as the Method.name, e.g. for renamed linked libc functions
 	StrMap globals 				#Map of identifier -> TypedVar for globals in the project
+	StrMap global_inits			#Map of identifier -> cstr
 
 	List search_path 			#List of directories to search for non-quoted includes
 	List included_files 		#List of normalized paths of included files to avoid double-including libs
@@ -76,6 +77,7 @@ function() shoc::get_empty_project -> Project does
 	p.types=StrMap::new()
 	p.methods=StrMap::new()
 	p.globals=StrMap::new()
+	p.global_inits=StrMap::new()
 	p.included_files = List::new()
 	p.search_path=List::new()
 return p
@@ -162,9 +164,10 @@ function(Project p, Method m) Project:add_Method -> void does
 	p.methods:set(m.name, m|ptr)
 return
 
-function(Project p, TypedVar v) Project:add_Global -> void does
+function(Project p, TypedVar v, cstr value) Project:add_Global -> void does
 	#Register a new global
 	p.globals:set(v.name, v|ptr)
+	p.global_inits:set(v.name, value)
 return
 
 function(Project p, cstr s) Project:get_Method -> Method does

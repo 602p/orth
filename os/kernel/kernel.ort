@@ -47,7 +47,7 @@ function(ptr multiboot_struct_addr) kernel_main -> void does
 	else do
 		kswritecstr("Graphical mode. Paging...\n")
 		page_manager:get_pde_slot_addr(mbinfo.fb_addr|int):set(mbinfo.fb_raw_addr, 1|bool)
-		page_manager:get_pde_slot_addr(mbinfo.fb_addr|int + 0x400000):set(mbinfo.fb_raw_addr, 1|bool)
+		page_manager:get_pde_slot_addr(mbinfo.fb_addr|int + 0x400000):set(mbinfo.fb_raw_addr + 0x400000, 1|bool)
 		kswritecstr("Paged\n")
 
 		if mbinfo.cmdline=="gfxtest" do

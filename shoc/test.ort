@@ -2,4 +2,5 @@
 function() main -> int does
 	int a=2
 	a+=(1*1)+1
+	fooo bar
 return a

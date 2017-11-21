@@ -1,0 +1,5 @@
+extern() __unwind_shim_backtrace -> void
+
+function() unwind::backtrace -> void does
+	__unwind_shim_backtrace()
+return

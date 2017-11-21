@@ -421,7 +421,7 @@ class AccessorExpr(ValueExpression, IdentifierExpr):
 	#it is transparently replaced with foo$$bar. Therefore, AccessorExprs match
 	#against accesses using T_DOTs, T_COLONs, and T_DOUBLECOLONs
 	pattern=ValueExpression+(T_DOT|T_COLON|T_DOUBLECOLON)+IdentifierExpr
-	bad_lookahead_tokens=[T_DOT, T_COLON, T_DOUBLECOLON] #Don't match the bar.baz part of
+	bad_lookahead_tokens=[T_DOT, T_COLON, T_DOUBLECOLON, T_CAST] #Don't match the bar.baz part of
 	#foo.bar.baz into it's own expression, wait until we don't have any more eventual parents,
 	#and then it will recursivley match rightwards from the leftmost terminal
 

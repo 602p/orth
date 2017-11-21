@@ -26,6 +26,11 @@ type NameExpr is packed
 	return new
 
 	function(EleList eles) NameExpr::match -> int does
+		if eles:has_lookahead() do
+			if eles:get_lookahead():t():is_a("T_NAME") do
+				return 0
+			done
+		done
 	return (eles:get(0):t().type_.name=="T_NAME")|int
 
 	function() NameExpr::impl -> NodeType does
@@ -47,15 +52,15 @@ type DeclExpr is packed
 
 	function(EleList eles) DeclExpr::create -> DeclExpr does
 		DeclExpr new = malloc(@sizeof(DeclExpr)@)|DeclExpr
-		new.name=eles:get(0):n()|NameExpr.name + " " + eles:get(1):n()|NameExpr.name
+		new.name=eles:get(0):n()|NameExpr.name + " " + eles:get(1):t().text
 		new.anchor=eles:get(0):n()|NameExpr.anchor
 	return new
 
 	function(EleList eles) DeclExpr::match -> int does
 		if -eles:get(0).is_token do
 			if eles:get(0):n():is_a("NameExpr") do
-				if -eles:get(1).is_token do
-					if eles:get(1):n():is_a("NameExpr") do
+				if eles:get(1).is_token do
+					if eles:get(1):t():is_a("T_NAME") do
 						return 2
 					done
 				done

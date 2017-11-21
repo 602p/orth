@@ -99,7 +99,6 @@ function(cstr err) orth::fail -> void does
 		curr=curr._next
 	done
 	mem::clean_up()
-
 	exit(1)
 return
 

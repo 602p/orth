@@ -13,12 +13,13 @@ Project _project
 function(cstr err) shoc::bail_out -> void does
 	#Older method for aborting SHOC. Dumps some little information about the offending method where applicable.
 	#Do not use this for future error handling, use the Project:fail_in* family
+	printf("\n\nshoc::bail_out called...\n")
 	if _project|ptr!=null do
 		if _project.curr_method|ptr !=null do
 			printf("Last method: %s\n", _project.curr_method.name)
 		done
 	done
-	printf("\n\nshoc::bail_out called, unwind::backtrace traceback follows...\n")
+	printf("Error Message: %s\n", err)
 	unwind::backtrace()
 	exit(1)
 return

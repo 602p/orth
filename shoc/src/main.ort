@@ -48,6 +48,10 @@ function(int nargs, ArgList args) main -> int does
 			options:set(arg:offset(2), "1")
 		done
 
+		if arg:startswith("--gcc_x") do
+			options:set("gcc_x", arg:offset(7))
+		done
+
 		if arg:startswith("-w") do
 			options:set("warn_"+arg:offset(2), "1")
 		done
@@ -192,6 +196,10 @@ function(int nargs, ArgList args) main -> int does
 			if options:contains("opt") do
 				llc_command+=" -O="+(options:get("opt")|cstr)
 				gcc_command+=" -O"+(options:get("opt")|cstr)
+			done
+
+			if options:contains("gcc_x") do
+				gcc_command+=" "+options:get("gcc_x")
 			done
 
 			if arch_bits==32 do

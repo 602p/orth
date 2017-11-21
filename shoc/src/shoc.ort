@@ -5,6 +5,8 @@ import transformers
 import datamodel
 import generic_ir
 
+import unwind
+
 Project _project
 #TODO: Refactor out. Onl used for bad old error handling. New error handling should be done via Project:fail_in*
 
@@ -16,8 +18,9 @@ function(cstr err) shoc::bail_out -> void does
 			printf("Last method: %s\n", _project.curr_method.name)
 		done
 	done
-	printf("\n\nshoc::bail_out called, orth::fail traceback follows...\n")
-	orth::fail(err)
+	printf("\n\nshoc::bail_out called, unwind::backtrace traceback follows...\n")
+	unwind::backtrace()
+	exit(1)
 return
 
 function(bool cond, cstr err) shoc::assert -> void does

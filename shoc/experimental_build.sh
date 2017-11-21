@@ -1,5 +1,5 @@
 set -e
 cd src
-../shoc main.ort -fno_strict_dup -oshoc $@
+LD_LIBRARY_PATH=.. ../shoc main.ort -fno_strict_dup -oshoc "--gcc_x-L../../lib/unwind -lunwind_shim" $@
 mv shoc ../shoc
 cd ..

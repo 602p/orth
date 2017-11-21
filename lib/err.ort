@@ -85,6 +85,7 @@ function(cstr err) orth::fail -> void does
 	esc[1]=0|byte
 	printf(esc+"[41m==================== orth::fail bailout report ===================="+esc+"[0m\n")
 	printf("Bailout message: '%s'\n", err)
+	unwind::backtrace()
 	if __stack|ptr == null do
 		printf("Cannot print traceback, __stack is null. Did you compile with the 'funchooks' flag?\n")
 		exit(2)
@@ -98,6 +99,7 @@ function(cstr err) orth::fail -> void does
 		curr=curr._next
 	done
 	mem::clean_up()
+
 	exit(1)
 return
 

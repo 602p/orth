@@ -1,0 +1,7 @@
+type LinkedListNode is
+    ptr value
+endtype
+
+type ListCacheBox is packed
+    LinkedListNode node
+endtype

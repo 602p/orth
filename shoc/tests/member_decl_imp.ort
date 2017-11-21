@@ -1,0 +1,5 @@
+# import member_decl
+
+function() main -> int
+	LinkedListNode a
+return 0

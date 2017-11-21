@@ -47,17 +47,26 @@ type DeclExpr is packed
 
 	function(EleList eles) DeclExpr::create -> DeclExpr does
 		DeclExpr new = malloc(@sizeof(DeclExpr)@)|DeclExpr
-		new.name=eles:get(0):t().text
-		new.anchor=eles:get(0):t()
+		new.name=eles:get(0):n()|NameExpr.name + " " + eles:get(1):n()|NameExpr.name
+		new.anchor=eles:get(0):n()|NameExpr.anchor
 	return new
 
 	function(EleList eles) DeclExpr::match -> int does
-	return (eles:get(0):t().type_.name=="T_VAR_DECL")|int
+		if -eles:get(0).is_token do
+			if eles:get(0):n():is_a("NameExpr") do
+				if -eles:get(1).is_token do
+					if eles:get(1):n():is_a("NameExpr") do
+						return 2
+					done
+				done
+			done
+		done
+	return 0
 
 	function() DeclExpr::impl -> NodeType does
 	return NodeType::new("DeclExpr")\
 					:set_printer(DeclExpr::print |NodePrinter)\
 					:set_creator(DeclExpr::create|NodeCreator)\
 					:set_matcher(DeclExpr::match |NodeMatcher)\
-					:matches(1):matches_only_tokens():addtype("IdentifierExpression")
+					:matches(2):addtype("IdentifierExpression")
 endtype

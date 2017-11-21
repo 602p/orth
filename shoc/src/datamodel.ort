@@ -43,6 +43,8 @@ type TypedVar is
 		done
 		cstr name = decl_string:offset(i)
 		if -proj.types:contains(ty) do
+			proj.types:_debug_print()
+			printf("decl_string: '%s'\n", decl_string)
 			shoc::bail_out("Error: Trying to declare variable "+name+" of unknown type "+ty)
 		done
 	return TypedVar::new(name, proj:get_type(ty))

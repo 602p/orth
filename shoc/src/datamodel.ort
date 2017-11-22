@@ -437,23 +437,23 @@ type GenericMethod is
 	StrMap g_defaults
 endtype
 
-# function(NameExpr name) shoc::mangle_name -> cstr does
-# 	if name|Node:is_a("GenericName") do
-# 		return name|GenericName.base_type+shoc::mangle_generics(name|GenericName.args)
-# 	done
-# return name.name
+function(NameExpr name) shoc::mangle_name -> cstr does
+	if name|Node:is_a("GenericName") do
+		return name|GenericName.base_type+shoc::mangle_generics(name|GenericName.args)
+	done
+return name.name
 
-# function(List g_args) shoc::mangle_generics -> cstr does
-# 	cstr name = "$$$G_"
-# 	int i = 0
-# 	while i<g_args.len do
-# 		name+=i:str()+"A"+shoc::mangle_name(g_args:get(i)|NameExpr)+"Z_"
-# 		i+=1
-# 	done
-# return name
+function(List g_args) shoc::mangle_generics -> cstr does
+	cstr name = "$$$G_"
+	int i = 0
+	while i<g_args.len do
+		name+=i:str()+"A"+shoc::mangle_name(g_args:get(i)|NameExpr)+"Z_"
+		i+=1
+	done
+return name
 
-# function(Project p, Node n) Project:resolve_TypeName -> OType does
-# 	if n:is_a("NameExpr") do
-# 		return p:get_type(n|NameExpr.name)
-# 	done
-# return null|OType
+function(Project p, Node n) Project:resolve_TypeName -> OType does
+	if n:is_a("NameExpr") do
+		return p:get_type(n|NameExpr.name)
+	done
+return null|OType

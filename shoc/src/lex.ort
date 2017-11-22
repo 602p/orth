@@ -396,8 +396,7 @@ function(List t) lex::init_default -> void does
 	t:append_TT(TokenType::new_eq("T_ARGLIST_SEP", ","):after("T_ARGLIST_ELE"))
 	t:append_TT(TokenType::new_eq("T_ARGLIST_VARARGS", "..."):after("T_ARGLIST_START"))
 	t:append_TT(TokenType::new_eq("T_ARGLIST_END", ")"):after("T_ARGLIST_ELE"):or("T_ARGLIST_START"):or("T_ARGLIST_VARARGS"))
-	t:append_TT(TokenType::new_fn("T_FUNCTIONDECL_NAME", lex::match_function_identifier|TokenMatcher):after("T_ARGLIST_END"))
-	t:append_TT(TokenType::new_eq("T_FUNCTIONDECL_RETURN", "->"):after("T_FUNCTIONDECL_NAME"))
+	t:append_TT(TokenType::new_eq("T_FUNCTIONDECL_RETURN", "->"))
 	t:append_TT(TokenType::new_fn("T_FUNCTIONDECL_RETURN_TY", lex::match_identifier|TokenMatcher):after("T_FUNCTIONDECL_RETURN"))
 	t:append_TT(TokenType::new_kw("T_FUNCTIONDECL_DOES", "does"):after("T_FUNCTIONDECL_RETURN_TY"))
 

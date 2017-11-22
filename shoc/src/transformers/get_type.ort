@@ -38,10 +38,10 @@ function(AccessorExpr n, TransformerPass p) get_type::for_accessor -> OType does
 	OType obj_typ=p.proj:get_node_type(n.object)
 	if n.mode=="." do
 		p.proj:fail_in_if(-obj_typ:is_struct(), "Type "+obj_typ.name+" is not a struct - cannot use accessor off of it", n|Node)
-		p.proj:fail_in_if(-obj_typ:as_struct():has_field(n.field), "No such field '"+n.field+"' in type "+obj_typ.name, n|Node)
-		return obj_typ:as_struct():get_field_type(n.field)
+		p.proj:fail_in_if(-obj_typ:as_struct():has_field(n.field.name), "No such field '"+n.field.name+"' in type "+obj_typ.name, n|Node)
+		return obj_typ:as_struct():get_field_type(n.field.name)
 	elif n.mode==":" do
-		cstr name=obj_typ.name+"$"+n.field
+		cstr name=obj_typ.name+"$"+shoc::mangle_name(n.field)
 		p.proj:fail_in_if(-p.proj.methods:contains(name), "Can't resolve name "+name, n|Node)
 		return p.proj:get_Method(name).ptr_type
 	done
@@ -62,7 +62,6 @@ return p.proj:get_type(n.value_type)
 
 function(Project p, Node n) Project:get_node_type -> OType does
 	OType o = p:get_transformer_pass("get_type"):visit_OType(n)
-	# printf("o - %u\n", o.name)
 	if o|ptr==null do
 		n:print_root()
 		shoc::bail_out("Invalid result from get_type for node")

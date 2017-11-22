@@ -13,6 +13,7 @@ import "grammar/index.ort"
 import "grammar/intrinsic.ort"
 import "grammar/literal.ort"
 import "grammar/name.ort"
+import "grammar/name_generic.ort"
 import "grammar/return.ort"
 import "grammar/sep.ort"
 import "grammar/tuple.ort"
@@ -24,6 +25,9 @@ import "grammar/file.ort"
 
 function(List l) grammar::install -> void does
 	l:append_NodeType(NameExpr::impl())
+	l:append_NodeType(GenericArgListTemp::impl())
+	l:append_NodeType(GenericArgList::impl())
+	l:append_NodeType(GenericName::impl())
 	l:append_NodeType(DeclExpr::impl())
 	l:append_NodeType(AccessorExpr::impl())
 

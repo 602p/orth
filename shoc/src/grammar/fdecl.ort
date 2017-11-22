@@ -30,7 +30,7 @@ type FunctionDeclHead is packed
 
 	function(EleList eles) FunctionDeclHead::create -> FunctionDeclHead does
 		FunctionDeclHead new = malloc(@sizeof(FunctionDeclHead)@)|FunctionDeclHead
-		new.name=eles:get(2):t().text
+		new.name=shoc::mangle_name(eles:get(2):n()|NameExpr)
 		new.ret_type=eles:get(4):t().text
 		new.is_extern=eles:get(0):t():is_a("T_FUNCTIONDECL_EXTERN")
 
@@ -52,35 +52,40 @@ type FunctionDeclHead is packed
 	function(EleList eles) FunctionDeclHead::match -> int does
 		#T_FUNCTIONDECL ArgList T_FUNCTIONDECL_NAME T_FUNCTIONDECL_RETURN T_FUNCTIONDECL_RETURN_TY
 		#...T_FUNCTIONDECL_DOES
+		printf("a\n")
 		if (-eles:get(0).is_token):or(\
 			 eles:get(1).is_token):or(\
-			-eles:get(2).is_token):or(\
+			 eles:get(2).is_token):or(\
 			-eles:get(3).is_token):or(\
 			-eles:get(4).is_token) do
 			return 0
 		done
+		printf("b\n")
 
 		if eles:get(0):t():is_a("T_FUNCTIONDECL_EXTERN") do
 			if eles:get(1):n():is_a("ArgList")&(\
-		     eles:get(2):t():is_a("T_FUNCTIONDECL_NAME"))&(\
+		     eles:get(2):n():is_a("NameExpr"):or(eles:get(2):n():is_a("AccessorExpr")))&(\
 		     eles:get(3):t():is_a("T_FUNCTIONDECL_RETURN"))&(\
 		     eles:get(4):t():is_a("T_FUNCTIONDECL_RETURN_TY")) do
 		    	return 5
 		    done
 		done
+		printf("c\n")
 
 		if -eles:get(5).is_token do
 			return 0
 		done
+		printf("d\n")
 
 		if (-eles:get(0):t():is_a("T_FUNCTIONDECL")):or(\
 		    -eles:get(1):n():is_a("ArgList")):or(\
-		    -eles:get(2):t():is_a("T_FUNCTIONDECL_NAME")):or(\
+		    -(eles:get(2):n():is_a("NameExpr"):or(eles:get(2):n():is_a("AccessorExpr")))):or(\
 		    -eles:get(3):t():is_a("T_FUNCTIONDECL_RETURN")):or(\
 		    -eles:get(4):t():is_a("T_FUNCTIONDECL_RETURN_TY")):or(\
 		    -eles:get(5):t():is_a("T_FUNCTIONDECL_DOES")) do
 			return 0
 		done
+		printf("e\n")
 	return 6
 
 	function() FunctionDeclHead::impl -> NodeType does

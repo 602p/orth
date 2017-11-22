@@ -30,6 +30,9 @@ type NameExpr is packed
 			if eles:get_lookahead():t():is_a("T_NAME") do
 				return 0
 			done
+			if eles:get_lookahead():t():is_a("T_PTYPE_CLOSE") do
+				return 0
+			done
 		done
 	return (eles:get(0):t().type_.name=="T_NAME")|int
 
@@ -38,27 +41,32 @@ type NameExpr is packed
 					:set_printer(NameExpr::print |NodePrinter)\
 					:set_creator(NameExpr::create|NodeCreator)\
 					:set_matcher(NameExpr::match |NodeMatcher)\
-					:matches(1):matches_only_tokens():addtype("IdentifierExpression")
+					:matches(1):matches_only_tokens():addtype("IdentifierExpression"):addtype("TypeName")
 endtype
 
 type DeclExpr is packed
 	NodeType type_
 	Token anchor
-	cstr name
+	Node d_type
+	cstr d_name
 
 	function(DeclExpr node, int depth) DeclExpr::print -> void does
-		printf("DeclExpr: '%s'\n", node.name)
+		printf("DeclExpr: '%s'\n", node.d_name)
+		parse::indent(depth+1)
+		printf("\\-Type: ")
+		node.d_type:print(depth+1)
 	return
 
 	function(EleList eles) DeclExpr::create -> DeclExpr does
 		DeclExpr new = malloc(@sizeof(DeclExpr)@)|DeclExpr
-		new.name=eles:get(0):n()|NameExpr.name + " " + eles:get(1):t().text
+		new.d_type=eles:get(0):n()
+		new.d_name=eles:get(1):t().text
 		new.anchor=eles:get(0):n()|NameExpr.anchor
 	return new
 
 	function(EleList eles) DeclExpr::match -> int does
 		if -eles:get(0).is_token do
-			if eles:get(0):n():is_a("NameExpr") do
+			if eles:get(0):n():is_a("TypeName") do
 				if eles:get(1).is_token do
 					if eles:get(1):t():is_a("T_NAME") do
 						return 2
@@ -67,6 +75,9 @@ type DeclExpr is packed
 			done
 		done
 	return 0
+
+	function(DeclExpr self, Project p) DeclExpr:make_TypedVar -> TypedVar does
+	return TypedVar::new(self.d_name, p:resolve_TypeName(self.d_type))
 
 	function() DeclExpr::impl -> NodeType does
 	return NodeType::new("DeclExpr")\

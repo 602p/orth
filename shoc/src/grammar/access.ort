@@ -3,7 +3,7 @@ type AccessorExpr is packed
 	Token anchor
 	cstr mode
 	Node object
-	cstr field
+	NameExpr field
 
 	function(AccessorExpr node, int depth) AccessorExpr::print -> void does
 		printf("AccessorExpr (Mode='%s')\n", node.mode)
@@ -12,14 +12,15 @@ type AccessorExpr is packed
 		node.object:print(depth+1)
 
 		parse::indent(depth)
-		printf("\\- Field: %s\n", node.field)
+		printf("\\- Field: ")
+		node.field|Node:print(depth+1)
 	return
 
 	function(EleList eles) AccessorExpr::create -> AccessorExpr does
 		AccessorExpr new = malloc(@sizeof(AccessorExpr)@)|AccessorExpr
 		new.object=eles:get(0):n()
 		new.mode=eles:get(1):t().text
-		new.field=(eles:get(2):n()|NameExpr).name
+		new.field=eles:get(2):n()|NameExpr
 		new.anchor=eles:get(1):t()
 	return new
 
@@ -28,7 +29,7 @@ type AccessorExpr is packed
 		new.type_=p:type_by_name("AccessorExpr")
 		new.object=obj
 		new.mode=mode
-		new.field=field
+		new.field=NameExpr::create_direct(p, field, anchor)
 		new.anchor=anchor
 	return new
 
@@ -36,6 +37,10 @@ type AccessorExpr is packed
 		if eles:get(0).is_token:or(\
 		  -eles:get(1).is_token):or(\
 		   eles:get(2).is_token) do
+			return 0
+		done
+
+		if parse::lookahead_is_accessor(eles) do
 			return 0
 		done
 
@@ -47,9 +52,11 @@ type AccessorExpr is packed
 			return 0
 		done
 
-		if parse::lookahead_is_accessor(eles) do
+		if eles:get(1):t().type_.name=="T_DOT" & eles:get(2):n():is_a("GenericName") do
 			return 0
 		done
+
+		
 	return 3
 
 	function(AccessorExpr n, TransformerPass p) AccessorExpr::visit -> void does

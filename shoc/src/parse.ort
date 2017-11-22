@@ -320,6 +320,10 @@ function(List l, Node n) List:append_Node -> void does
 	l:append(n|ptr)
 return
 
+function(List l, int pos, Node n) List:insert_Node -> void does
+	l:insert(pos, n|ptr)
+return
+
 function(List l, int n) List:get_Node -> Node does
 return l:get(n)|Node
 

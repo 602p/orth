@@ -1,1 +1,1 @@
-TypeName{Param1, Param2} foo
+Map{K, List{V}}::new()

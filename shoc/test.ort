@@ -1,1 +1,2 @@
-int a
+function(cstr a, cstr b) cstr:__add__ -> cstr does
+return ""

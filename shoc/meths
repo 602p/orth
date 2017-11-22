@@ -1,0 +1,716 @@
+
+
+===METHODS===
+
+METH: main                                                         -> int                 (nargs:int, args:ArgList) - 1 uses
+METH: orth$$install_sigsev_handler                                 -> void                () - 1 uses
+METH: NodeType$set_creator                                         -> NodeType            (self:NodeType, d:NodeCreator) - 41 uses
+METH: stdio$$init                                                  -> void                () - 1 uses
+METH: LinkedListNode$free                                          -> void                (n:LinkedListNode) - 3 uses
+METH: lex$$init_default                                            -> void                (t:List) - 1 uses
+METH: NameExpr$$create_direct                                      -> NameExpr            (p:Project, name:cstr, anchor:Token) - 9 uses
+METH: elide_branches$$visit_if                                     -> Node                (n:IfExpr, p:TransformerPass) - 1 uses
+METH: elide_funcs$$init                                            -> TransformerPass     () - 1 uses
+METH: predefine_types$$init                                        -> TransformerPass     () - 1 uses
+METH: GIRLabel$$emit                                               -> void                (p:Project, name:cstr) - 6 uses
+METH: lex$$match_int_literal                                       -> int                 (text:cstr) - 1 uses
+METH: GIRCall$$impl                                                -> GIRInstType         () - 1 uses
+METH: TransformerPass$visit_Token                                  -> Token               (p:TransformerPass, n:Node) - 1 uses
+METH: Project$with_base_passes                                     -> Project             (p:Project) - 1 uses
+METH: llvm$$emit_ptr_cast                                          -> void                (i:GIRPointerCast, e:LLVMEmitter) - 1 uses
+METH: _default_node_child_visitor                                  -> void                (n:Node, p:TransformerPass) - 1 uses
+METH: Project$get_node_anchor                                      -> Token               (p:Project, n:Node) - 7 uses
+METH: WhileExpr$$print                                             -> void                (node:WhileExpr, depth:int) - 1 uses
+METH: TupleMidFragment$$create                                     -> TupleMidFragment    (eles:EleList) - 1 uses
+METH: MultiArgListExt$$impl                                        -> NodeType            () - 1 uses
+METH: Method$get_local                                             -> OType               (func:Method, name:cstr) - 2 uses
+METH: cstr$len                                                     -> int                 (s:cstr) - 33 uses
+METH: TokenType$make_token                                         -> Token               (self:TokenType, text:cstr, file_ctx:cstr, line_ctx:int, col_ctx:int, meth_ctx:cstr) - 2 uses
+METH: bool$str                                                     -> cstr                (b:bool) - 2 uses
+METH: shoc$$resolve_name_import                                    -> cstr                (path:List, import_name:cstr) - 1 uses
+METH: TupleEndFragment$$create                                     -> TupleEndFragment    (eles:EleList) - 1 uses
+METH: emit_value$$for_name                                         -> GIRVar              (n:NameExpr, p:TransformerPass) - 1 uses
+METH: get_type$$for_name                                           -> OType               (n:NameExpr, p:TransformerPass) - 1 uses
+METH: OneTuple$$impl                                               -> NodeType            () - 1 uses
+METH: GIRPointerCast$$impl                                         -> GIRInstType         () - 1 uses
+METH: mem$$clean_up                                                -> void                () - 2 uses
+METH: NodeType$set_visitor                                         -> NodeType            (self:NodeType, v:NodeVisitor) - 17 uses
+METH: rewrite_namespaces$$visit_accessor                           -> AccessorExpr        (n:AccessorExpr, p:TransformerPass) - 1 uses
+METH: AssignmentExpr$$print                                        -> void                (node:AssignmentExpr, depth:int) - 1 uses
+METH: IfExpr$$create                                               -> IfExpr              (eles:EleList) - 1 uses
+METH: count_calls$$visit_name                                      -> NameExpr            (n:NameExpr, p:TransformerPass) - 1 uses
+METH: emit_value$$for_file                                         -> FileNode            (n:FileNode, p:TransformerPass) - 1 uses
+METH: OType$print                                                  -> void                (t:OType) - 1 uses
+METH: parse$$update_viz                                            -> void                (e:EleList, s:cstr) - 2 uses
+METH: GIRInstType$set_getter                                       -> GIRInstType         (self:GIRInstType, p:GIRUseGetter) - 14 uses
+METH: elide_funcs$$visit_decl                                      -> FunctionDecl        (n:FunctionDecl, p:TransformerPass) - 1 uses
+METH: emit_value$$for_call                                         -> GIRVar              (n:CallExpr, p:TransformerPass) - 1 uses
+METH: get_type$$for_call                                           -> OType               (n:CallExpr, p:TransformerPass) - 1 uses
+METH: Project$with_search_path                                     -> Project             (p:Project, l:List) - 1 uses
+METH: Project$add_Transformer                                      -> void                (p:Project, t:TransformerPass) - 21 uses
+METH: llvm$$dump_debug                                             -> void                (context:LLVMEmitter) - 1 uses
+METH: OType$as_fptr                                                -> FPtrOType           (t:OType) - 19 uses
+METH: os$$env$$has                                                 -> bool                (key:cstr) - 1 uses
+METH: Element$print                                                -> void                (self:Element) - 4 uses
+METH: Project$tokty_by_name                                        -> TokenType           (p:Project, name:cstr) - 1 uses
+METH: scanf                                                        -> int                 () - 2 uses
+METH: define_syms$$init                                            -> TransformerPass     () - 1 uses
+METH: SepExpr$$match                                               -> int                 (eles:EleList) - 1 uses
+METH: GIRPointerCast$$emit                                         -> GIRVar              (p:Project, source:GIRVar, target:OType) - 2 uses
+METH: PrimitiveOType$print                                         -> void                (t:PrimitiveOType) - 1 uses
+METH: Project$get_transformer_pass                                 -> TransformerPass     (p:Project, n:cstr) - 6 uses
+METH: LLVMEmitter$make_string_global                               -> cstr                (self:LLVMEmitter, text:cstr) - 1 uses
+METH: LLVMEmitter$get_local_addr_var                               -> cstr                (self:LLVMEmitter, name:cstr) - 2 uses
+METH: LLVMEmitter$set_local_addr_var                               -> void                (self:LLVMEmitter, name:cstr, llvm_name:cstr) - 2 uses
+METH: GIRVar$set_memo                                              -> GIRVar              (v:GIRVar, s:cstr) - 15 uses
+METH: emit_value$$for_func                                         -> FunctionDecl        (n:FunctionDecl, p:TransformerPass) - 1 uses
+METH: GIRLoad$$get_used                                            -> List                (self:GIRLoad) - 1 uses
+METH: ImportStmt$$create                                           -> ImportStmt          (eles:EleList) - 1 uses
+METH: getenv                                                       -> cstr                (var:cstr) - 2 uses
+METH: orth$$internal$$profile$$dump_profiling_data_csv             -> void                (filename:cstr) - 1 uses
+METH: CallExpr$$match                                              -> int                 (eles:EleList) - 1 uses
+METH: CastExpr$$match                                              -> int                 (eles:EleList) - 1 uses
+METH: ReturnExpr$$create                                           -> ReturnExpr          (eles:EleList) - 1 uses
+METH: GIRLabel$$print                                              -> void                (self:GIRLabel) - 1 uses
+METH: OneArgList$$impl                                             -> NodeType            () - 1 uses
+METH: emit_value$$for_typedecl                                     -> TypeDecl            (n:TypeDecl, p:TransformerPass) - 1 uses
+METH: StrMap$contains                                              -> bool                (self:StrMap, key:cstr) - 73 uses
+METH: OneTuple$$print                                              -> void                (node:OneTuple, depth:int) - 1 uses
+METH: CastExpr$$create                                             -> CastExpr            (eles:EleList) - 1 uses
+METH: MultiArgListExt$$create                                      -> MultiArgListExt     (eles:EleList) - 1 uses
+METH: GroupingExpr$$create                                         -> GroupingExpr        (eles:EleList) - 1 uses
+METH: count_calls$$init                                            -> TransformerPass     () - 1 uses
+METH: GIRCall$$emit                                                -> GIRVar              (p:Project, method:GIRVar, args:List) - 4 uses
+METH: llvm$$emit_load                                              -> void                (i:GIRLoad, e:LLVMEmitter) - 1 uses
+METH: GIRLabel$$impl                                               -> GIRInstType         () - 1 uses
+METH: GIRJump$$impl                                                -> GIRInstType         () - 1 uses
+METH: orth$$internal$$hooks$$profile_enter                         -> void                (name:cstr) - 1 uses
+METH: os$$get_cwd                                                  -> cstr                () - 0 uses
+METH: GenericArgList$$print                                        -> void                (node:GenericArgList, depth:int) - 1 uses
+METH: GIRJump$$get_used                                            -> List                (self:GIRJump) - 1 uses
+METH: LinkedListNode$$new                                          -> LinkedListNode      (value:ptr) - 2 uses
+METH: StrMap$recalc_load_max                                       -> void                (self:StrMap) - 2 uses
+METH: VarArgsList$$match                                           -> int                 (eles:EleList) - 1 uses
+METH: ZeroTuple$$match                                             -> int                 (eles:EleList) - 1 uses
+METH: GIRPointerCast$$print                                        -> void                (self:GIRPointerCast) - 1 uses
+METH: signal                                                       -> ptr                 () - 1 uses
+METH: TypeDeclBody$$impl                                           -> NodeType            () - 1 uses
+METH: emit_addr$$for_decl                                          -> GIRVar              (n:DeclExpr, p:TransformerPass) - 1 uses
+METH: FPtrOType$$new                                               -> OType               (name:cstr, return_value:OType, args:List) - 1 uses
+METH: shoc$$datamodel$$init_base                                   -> void                (p:Project) - 1 uses
+METH: Method$print_locals                                          -> void                (func:Method) - 1 uses
+METH: apply_includes$$visit_import                                 -> Node                (n:ImportStmt, p:TransformerPass) - 1 uses
+METH: File$write                                                   -> void                (f:File, s:cstr) - 5 uses
+METH: GIRLiteral$$print                                            -> void                (self:GIRLiteral) - 1 uses
+METH: TokenType$$new_kw                                            -> TokenType           (name:cstr, text:cstr) - 15 uses
+METH: cstr$startswith                                              -> bool                (s:cstr, o:cstr) - 29 uses
+METH: emit_value$$for_blockbody                                    -> BlockBody           (n:BlockBody, p:TransformerPass) - 1 uses
+METH: GIRLiteral$$emit_int                                         -> GIRVar              (p:Project, value:long) - 2 uses
+METH: GIRCast$$impl                                                -> GIRInstType         () - 1 uses
+METH: Project$emit_as_llvm                                         -> Project             (p:Project, filename:cstr, verbose:bool) - 1 uses
+METH: unbox_l$$cstr                                                -> cstr                (p:long) - 1 uses
+METH: LiteralExpr$$create_direct_int                               -> Node                (p:Project, value:int) - 11 uses
+METH: GIRGetMethod$$emit                                           -> GIRVar              (p:Project, meth:Method) - 4 uses
+METH: TransformerPass$$new                                         -> TransformerPass     (name:cstr) - 21 uses
+METH: fflush                                                       -> void                (fd:ptr) - 5 uses
+METH: NodeType$$new                                                -> NodeType            (name:cstr) - 41 uses
+METH: List$get_OType                                               -> OType               (l:List, i:int) - 4 uses
+METH: OType$get_size                                               -> int                 (t:OType) - 4 uses
+METH: GenericArgListTemp$$impl                                     -> NodeType            () - 1 uses
+METH: GenericName$$impl                                            -> NodeType            () - 1 uses
+METH: TupleEndFragment$$impl                                       -> NodeType            () - 1 uses
+METH: TupleMidFragment$$impl                                       -> NodeType            () - 1 uses
+METH: Project$bind_gir_type                                        -> void                (p:Project, i:GIRInst, name:cstr) - 1 uses
+METH: GIRReturn$$emit_void                                         -> GIRVar              (p:Project) - 1 uses
+METH: fwrite                                                       -> int                 (data:ptr, sz:int, amt:int, fd:ptr) - 2 uses
+METH: TypeDeclHead$$create                                         -> TypeDeclHead        (eles:EleList) - 1 uses
+METH: get_anchor$$for_name                                         -> Token               (n:NameExpr, p:TransformerPass) - 1 uses
+METH: Project$resolve_TypeName                                     -> OType               (p:Project, n:Node) - 2 uses
+METH: llvm$$encode_literal                                         -> cstr                (literal:cstr) - 1 uses
+METH: fgets                                                        -> ptr                 (a:cstr, i:int, b:ptr) - 1 uses
+METH: free                                                         -> void                () - 16 uses
+METH: EleList$print                                                -> void                (self:EleList) - 1 uses
+METH: BlockBody$$print                                             -> void                (node:BlockBody, depth:int) - 1 uses
+METH: CallExpr$$create_direct                                      -> CallExpr            (proj:Project, meth:Node, args:List) - 6 uses
+METH: emit_value$$for_cast                                         -> GIRVar              (n:CastExpr, p:TransformerPass) - 1 uses
+METH: emit_value$$init                                             -> TransformerPass     () - 1 uses
+METH: get_type$$for_cast                                           -> OType               (n:CastExpr, p:TransformerPass) - 1 uses
+METH: get_anchor$$for_call                                         -> Token               (n:CallExpr, p:TransformerPass) - 1 uses
+METH: StructOType$has_field                                        -> bool                (self:StructOType, field_name:cstr) - 2 uses
+METH: GIRVar$str                                                   -> cstr                (v:GIRVar) - 22 uses
+METH: StrMap$get_load_pct                                          -> int                 (self:StrMap) - 1 uses
+METH: List$insert_Node                                             -> void                (l:List, pos:int, n:Node) - 1 uses
+METH: CallExpr$$visit                                              -> void                (n:CallExpr, p:TransformerPass) - 1 uses
+METH: CastExpr$$visit                                              -> void                (n:CastExpr, p:TransformerPass) - 1 uses
+METH: emit_addr$$for_index                                         -> GIRVar              (n:IndexExpr, p:TransformerPass) - 1 uses
+METH: GIRJump$$print                                               -> void                (self:GIRJump) - 1 uses
+METH: get_anchor$$init                                             -> TransformerPass     () - 1 uses
+METH: llvm$$emit_get_method                                        -> void                (i:GIRGetMethod, e:LLVMEmitter) - 1 uses
+METH: Project$fail_in                                              -> void                (p:Project, msg:cstr, n:Node) - 4 uses
+METH: llvm$$impl_binop                                             -> void                (lhs:GIRVar, rhs:GIRVar, op:cstr, dest:cstr, e:LLVMEmitter) - 1 uses
+METH: get_type$$for_accessor                                       -> OType               (n:AccessorExpr, p:TransformerPass) - 1 uses
+METH: NodeType$matches                                             -> NodeType            (self:NodeType, count:int) - 41 uses
+METH: ReturnExpr$$print                                            -> void                (node:ReturnExpr, depth:int) - 1 uses
+METH: get_anchor$$for_func                                         -> Token               (n:FunctionDecl, p:TransformerPass) - 1 uses
+METH: cstr$copy                                                    -> cstr                (s:cstr) - 1 uses
+METH: rewrite_namespaces$$visit_fdecl                              -> FunctionDecl        (n:FunctionDecl, p:TransformerPass) - 1 uses
+METH: rewrite_calls$$visit_unop                                    -> Node                (n:UnOpExpr, p:TransformerPass) - 1 uses
+METH: shoc$$mangle_generics                                        -> cstr                (g_args:List) - 1 uses
+METH: LiteralExpr$$create_direct                                   -> Node                (p:Project, value_type:cstr, value:cstr) - 5 uses
+METH: WhileExpr$$create                                            -> WhileExpr           (eles:EleList) - 1 uses
+METH: strip_seps$$init                                             -> TransformerPass     () - 1 uses
+METH: Tuple$$match                                                 -> int                 (eles:EleList) - 1 uses
+METH: GIRCast$$emit                                                -> GIRVar              (p:Project, source:GIRVar, target_type:OType) - 6 uses
+METH: BlockBody$$impl                                              -> NodeType            () - 1 uses
+METH: Element$$from_token                                          -> Element             (t:Token) - 1 uses
+METH: List$get                                                     -> ptr                 (l:List, want:int) - 50 uses
+METH: List$set                                                     -> void                (l:List, i:int, item:ptr) - 5 uses
+METH: CallExpr$$create                                             -> CallExpr            (eles:EleList) - 1 uses
+METH: LiteralExpr$$create                                          -> LiteralExpr         (eles:EleList) - 1 uses
+METH: NameExpr$$create                                             -> NameExpr            (eles:EleList) - 1 uses
+METH: emit_value$$for_if                                           -> ptr                 (n:IfExpr, p:TransformerPass) - 1 uses
+METH: LLVMEmitter$cache_global_stmt                                -> void                (self:LLVMEmitter, text:cstr) - 1 uses
+METH: GIRGetMethod$$impl                                           -> GIRInstType         () - 1 uses
+METH: llvm$$emit_return                                            -> void                (i:GIRReturn, e:LLVMEmitter) - 1 uses
+METH: fold_constants$$visit_binop                                  -> Node                (n:BinOpExpr, p:TransformerPass) - 1 uses
+METH: NodeType$is_a                                                -> bool                (self:NodeType, thing:cstr) - 1 uses
+METH: rewrite_calls$$visit_binop                                   -> Node                (n:BinOpExpr, p:TransformerPass) - 1 uses
+METH: define_types$$visit_alias                                    -> TypeDeclHead        (n:TypeDeclHead, p:TransformerPass) - 1 uses
+METH: StrMap$_expand                                               -> void                (self:StrMap) - 1 uses
+METH: SepExpr$$create                                              -> SepExpr             (eles:EleList) - 1 uses
+METH: WhileExpr$$create_direct                                     -> WhileExpr           (p:Project, cond:Node, body:BlockBody, anchor:Token) - 1 uses
+METH: Token$$_new                                                  -> Token               (text:cstr, type_:TokenType, file_ctx:cstr, line_ctx:int, col_ctx:int, origin_meth:cstr) - 1 uses
+METH: IfExprHead$$match                                            -> int                 (eles:EleList) - 1 uses
+METH: GenericArgListTemp$$match                                    -> int                 (eles:EleList) - 2 uses
+METH: ForExpr$$match                                               -> int                 (eles:EleList) - 1 uses
+METH: Method$print                                                 -> void                (func:Method) - 1 uses
+METH: GIRNot$$impl                                                 -> GIRInstType         () - 1 uses
+METH: GIRInst$is_a                                                 -> bool                (inst:GIRInst, name:cstr) - 0 uses
+METH: Project$cond_warn_in_if                                      -> void                (p:Project, flag:cstr, do_warn:bool, msg:cstr, n:Node) - 1 uses
+METH: NodeType$matches_only_tokens                                 -> NodeType            (self:NodeType) - 9 uses
+METH: MultiArgListExt$$print                                       -> void                (node:MultiArgListExt, depth:int) - 1 uses
+METH: Project$show_types                                           -> void                (proj:Project) - 1 uses
+METH: expand_augassign$$init                                       -> TransformerPass     () - 1 uses
+METH: GIRLiteral$$get_used                                         -> List                (self:GIRLiteral) - 1 uses
+METH: GIRLabel$$get_used                                           -> List                (self:GIRLabel) - 1 uses
+METH: GIRNot$$get_used                                             -> List                (self:GIRNot) - 1 uses
+METH: FileNode$$impl                                               -> NodeType            () - 1 uses
+METH: Project$in_method                                            -> bool                (p:Project) - 2 uses
+METH: mem$$init_arena_allocator                                    -> void                (size:int) - 1 uses
+METH: BinOpExpr$$print                                             -> void                (node:BinOpExpr, depth:int) - 1 uses
+METH: NodeType$isinstance                                          -> bool                (self:NodeType, thing:cstr) - 1 uses
+METH: UnOpExpr$$print                                              -> void                (node:UnOpExpr, depth:int) - 1 uses
+METH: MultiArgList$$match                                          -> int                 (eles:EleList) - 1 uses
+METH: StrMap$get_entry                                             -> StrMapEntry         (self:StrMap, key:cstr) - 5 uses
+METH: FileNode$$print                                              -> void                (node:FileNode, depth:int) - 1 uses
+METH: GIRLiteral$$emit_long                                        -> GIRVar              (p:Project, value:long) - 1 uses
+METH: GIRReturn$$print                                             -> void                (self:GIRReturn) - 1 uses
+METH: StrMap$get_key_by_num                                        -> cstr                (self:StrMap, idx:int) - 11 uses
+METH: TransformerPass$add_specialization                           -> TransformerPass     (self:TransformerPass, node_type:cstr, visitor:NodeTransformer) - 63 uses
+METH: GIRInst$$create                                              -> GIRInst             (proj:Project, typename:cstr, size:int) - 21 uses
+METH: __unwind_shim_backtrace                                      -> void                () - 1 uses
+METH: LLVMEmitter$get_ssa_var                                      -> cstr                (self:LLVMEmitter, name:GIRVar) - 37 uses
+METH: NodeType$matches_only_nodes                                  -> NodeType            (self:NodeType) - 4 uses
+METH: LLVMEmitter$set_ssa_var                                      -> void                (self:LLVMEmitter, name:GIRVar, llvm_name:cstr) - 10 uses
+METH: OType$as_primitive                                           -> PrimitiveOType      (t:OType) - 8 uses
+METH: StructOType$get_size                                         -> int                 (self:StructOType) - 2 uses
+METH: llvm$$emit_get_local                                         -> void                (i:GIRGetLocal, e:LLVMEmitter) - 1 uses
+METH: GIRLiteral$$emit_bool                                        -> GIRVar              (p:Project, value:bool) - 1 uses
+METH: LLVMEmitter$register_emitter                                 -> LLVMEmitter         (self:LLVMEmitter, gir_type:cstr, e:LLVMGIREmitter) - 14 uses
+METH: cstr$contains                                                -> bool                (s:cstr, t:cstr) - 4 uses
+METH: parse$$indent                                                -> void                (depth:int) - 41 uses
+METH: MultiArgListStart$$print                                     -> void                (node:MultiArgListStart, depth:int) - 1 uses
+METH: FPtrOType$print                                              -> void                (t:FPtrOType) - 1 uses
+METH: IntrinsicExpr$$match                                         -> int                 (eles:EleList) - 1 uses
+METH: List$append_GIRInst                                          -> void                (l:List, i:GIRInst) - 1 uses
+METH: lex$$match_import                                            -> int                 (text:cstr) - 1 uses
+METH: IfExpr$$print                                                -> void                (node:IfExpr, depth:int) - 1 uses
+METH: ImportStmt$$print                                            -> void                (node:ImportStmt, depth:int) - 1 uses
+METH: LiteralExpr$$match                                           -> int                 (eles:EleList) - 1 uses
+METH: NameExpr$$match                                              -> int                 (eles:EleList) - 1 uses
+METH: TupleEndFragment$$match                                      -> int                 (eles:EleList) - 1 uses
+METH: TupleMidFragment$$match                                      -> int                 (eles:EleList) - 1 uses
+METH: FunctionDecl$$impl                                           -> NodeType            () - 1 uses
+METH: TypeDeclBody$$visit                                          -> void                (n:TypeDeclBody, p:TransformerPass) - 1 uses
+METH: emit_value$$for_return                                       -> GIRVar              (n:ReturnExpr, p:TransformerPass) - 1 uses
+METH: GIRLoad$$impl                                                -> GIRInstType         () - 1 uses
+METH: TypedVar$$new                                                -> TypedVar            (name:cstr, type_:OType) - 3 uses
+METH: StructOType$$new                                             -> OType               (name:cstr) - 1 uses
+METH: llvm$$make_string_type                                       -> cstr                (text:cstr) - 2 uses
+METH: get_type$$for_intrinsic                                      -> OType               (n:IntrinsicExpr, p:TransformerPass) - 1 uses
+METH: LiteralExpr$$create_direct_float                             -> Node                (p:Project, value:float) - 4 uses
+METH: IntrinsicExpr$$create                                        -> IntrinsicExpr       (eles:EleList) - 1 uses
+METH: shoc$$transformers$$init                                     -> void                (p:Project) - 1 uses
+METH: Project$add_Method                                           -> void                (p:Project, m:Method) - 1 uses
+METH: GenericName$$match                                           -> int                 (eles:EleList) - 1 uses
+METH: LLVMEmitter$enter_method                                     -> LLVMEmitter         (self:LLVMEmitter, name:cstr) - 1 uses
+METH: LLVMEmitter$get_vty                                          -> cstr                (self:LLVMEmitter, var:GIRVar) - 21 uses
+METH: Project$fail_in_token                                        -> void                (p:Project, msg:cstr, anchor:Token) - 3 uses
+METH: emit_value$$for_unop                                         -> GIRVar              (n:UnOpExpr, p:TransformerPass) - 1 uses
+METH: get_type$$for_unop                                           -> OType               (n:UnOpExpr, p:TransformerPass) - 1 uses
+METH: FunctionDecl$$print                                          -> void                (node:FunctionDecl, depth:int) - 1 uses
+METH: List$gen_cache                                               -> void                (l:List) - 1 uses
+METH: parse$$init_default                                          -> void                (l:List) - 1 uses
+METH: GIRReturn$$emit                                              -> GIRVar              (p:Project, value:GIRVar) - 1 uses
+METH: OneArgList$$match                                            -> int                 (eles:EleList) - 1 uses
+METH: orth$$internal$$hooks$$make_profile_entry                    -> _ProfileEntry       (name:cstr) - 2 uses
+METH: IndexExpr$$match                                             -> int                 (eles:EleList) - 1 uses
+METH: GIRGetGlobal$$print                                          -> void                (self:GIRGetGlobal) - 1 uses
+METH: LLVMEmitter$emitl                                            -> void                (self:LLVMEmitter, text:cstr) - 82 uses
+METH: parse$$lookahead_is_possibly_function                        -> bool                (eles:EleList) - 4 uses
+METH: llvm$$emit_label                                             -> void                (i:GIRLabel, e:LLVMEmitter) - 1 uses
+METH: strcat                                                       -> cstr                (a:cstr, b:cstr) - 3 uses
+METH: File$readline                                                -> cstr                (f:File) - 2 uses
+METH: orth$$grammar$$get_op_precedence                             -> int                 (operator:cstr) - 2 uses
+METH: MultiArgListStart$$create                                    -> MultiArgListStart   (eles:EleList) - 1 uses
+METH: MultiArgListStart$$match                                     -> int                 (eles:EleList) - 1 uses
+METH: GroupingExpr$$visit                                          -> void                (n:GroupingExpr, p:TransformerPass) - 1 uses
+METH: IntrinsicExpr$$print                                         -> void                (node:IntrinsicExpr, depth:int) - 1 uses
+METH: elide_groupings$$visit_grouping                              -> Node                (n:GroupingExpr, p:TransformerPass) - 1 uses
+METH: GIRLoad$$print                                               -> void                (self:GIRLoad) - 1 uses
+METH: StrMap$get_slot_by_num                                       -> StrMapEntry         (self:StrMap, idx:int) - 4 uses
+METH: TransformerPass$no_default_run                               -> TransformerPass     (p:TransformerPass) - 3 uses
+METH: get_type$$for_literal                                        -> OType               (n:LiteralExpr, p:TransformerPass) - 1 uses
+METH: rewrite_fors$$visit_for                                      -> Node                (n:ForExpr, p:TransformerPass) - 1 uses
+METH: Project$run_transformers                                     -> Node                (p:Project, n:Node) - 1 uses
+METH: LiteralExpr$$print                                           -> void                (node:LiteralExpr, depth:int) - 1 uses
+METH: NameExpr$$print                                              -> void                (node:NameExpr, depth:int) - 1 uses
+METH: TupleEndFragment$$print                                      -> void                (node:TupleEndFragment, depth:int) - 1 uses
+METH: TupleMidFragment$$print                                      -> void                (node:TupleMidFragment, depth:int) - 1 uses
+METH: TokenType$match                                              -> int                 (self:TokenType, token_context:List, text:cstr) - 1 uses
+METH: IfExpr$$match                                                -> int                 (eles:EleList) - 1 uses
+METH: ImportStmt$$match                                            -> int                 (eles:EleList) - 1 uses
+METH: clock                                                        -> long                () - 6 uses
+METH: File$readall                                                 -> cstr                (f:File) - 2 uses
+METH: Project$get_next_ssa_id                                      -> int                 (p:Project) - 7 uses
+METH: Project$enter_method_named                                   -> void                (p:Project, s:cstr) - 2 uses
+METH: define_syms$$visit_func                                      -> FunctionDecl        (n:FunctionDecl, p:TransformerPass) - 1 uses
+METH: AccessorExpr$$create_direct                                  -> AccessorExpr        (p:Project, obj:Node, mode:cstr, field:cstr, anchor:Token) - 4 uses
+METH: AccessorExpr$$visit                                          -> void                (n:AccessorExpr, p:TransformerPass) - 1 uses
+METH: printf                                                       -> int                 () - 221 uses
+METH: BlockBody$$create_direct                                     -> Node                (p:Project, nodes:List) - 4 uses
+METH: GenericName$$print                                           -> void                (node:GenericName, depth:int) - 1 uses
+METH: TypeDeclBody$$create                                         -> TypeDeclBody        (eles:EleList) - 1 uses
+METH: ForExpr$$create                                              -> ForExpr             (eles:EleList) - 1 uses
+METH: rewrite_calls$$visit_call                                    -> CallExpr            (n:CallExpr, p:TransformerPass) - 1 uses
+METH: emit_value$$for_intrinsic                                    -> GIRVar              (n:IntrinsicExpr, p:TransformerPass) - 1 uses
+METH: GIRGetLocal$$emit                                            -> GIRVar              (p:Project, type_:OType, name:cstr) - 2 uses
+METH: GIRGetMethod$$get_used                                       -> List                (self:GIRGetMethod) - 1 uses
+METH: strip_seps$$visit_sep                                        -> Node                (n:SepExpr, p:TransformerPass) - 1 uses
+METH: OType$set_project                                            -> OType               (t:OType, p:Project) - 1 uses
+METH: parse$$lookahead_is_accessor                                 -> bool                (eles:EleList) - 6 uses
+METH: prints                                                       -> void                (s:cstr) - 3 uses
+METH: TransformerPass$visit                                        -> Node                (self:TransformerPass, n:Node) - 31 uses
+METH: OneArgList$$print                                            -> void                (node:OneArgList, depth:int) - 1 uses
+METH: IfExprHead$$create                                           -> IfExprHead          (eles:EleList) - 1 uses
+METH: FunctionDecl$$match                                          -> int                 (eles:EleList) - 1 uses
+METH: IndexExpr$$print                                             -> void                (node:IndexExpr, depth:int) - 1 uses
+METH: TransformerPass$emit_addr                                    -> GIRVar              (p:TransformerPass, n:Node) - 6 uses
+METH: Project$get_temp_name                                        -> int                 (p:Project) - 1 uses
+METH: llvm$$s_int$$impl_binop                                      -> void                (lhs_v:GIRVar, rhs_v:GIRVar, op:cstr, dest:cstr, e:LLVMEmitter) - 1 uses
+METH: EleList$$from                                                -> EleList             (p:Project, l:List) - 1 uses
+METH: llvm$$u_int$$impl_binop                                      -> void                (lhs_v:GIRVar, rhs_v:GIRVar, op:cstr, dest:cstr, e:LLVMEmitter) - 1 uses
+METH: llvm$$emit_cast                                              -> void                (i:GIRCast, e:LLVMEmitter) - 1 uses
+METH: TokenType$after                                              -> TokenType           (self:TokenType, prev_req:cstr) - 24 uses
+METH: shoc$$get_magic                                              -> cstr                (operator:cstr) - 1 uses
+METH: get_current_dir_name                                         -> cstr                () - 1 uses
+METH: fprintf                                                      -> void                () - 13 uses
+METH: setvbuf                                                      -> int                 (stream:ptr, buf:ptr, mode:int, size:int) - 2 uses
+METH: IfExprHead$$print                                            -> void                (node:IfExprHead, depth:int) - 1 uses
+METH: GenericArgListTemp$$print                                    -> void                (node:GenericArgListTemp, depth:int) - 1 uses
+METH: GenericArgListTemp$$create                                   -> GenericArgListTemp  (eles:EleList) - 1 uses
+METH: ForExpr$$print                                               -> void                (node:ForExpr, depth:int) - 1 uses
+METH: define_syms$$visit_file                                      -> FileNode            (n:FileNode, p:TransformerPass) - 1 uses
+METH: GIRStore$$print                                              -> void                (self:GIRStore) - 1 uses
+METH: GIRInstType$set_printer                                      -> GIRInstType         (self:GIRInstType, p:GIRInstPrinter) - 14 uses
+METH: emit_addr$$for_accessor                                      -> GIRVar              (n:AccessorExpr, p:TransformerPass) - 1 uses
+METH: File$$exists                                                 -> bool                (path:cstr) - 3 uses
+METH: List$append_TT                                               -> void                (l:List, t:TokenType) - 56 uses
+METH: sprintf                                                      -> int                 () - 2 uses
+METH: TransformerPass$visit_OType                                  -> OType               (self:TransformerPass, n:Node) - 1 uses
+METH: Node$print_root                                              -> void                (self:Node) - 4 uses
+METH: MultiArgListExt$$match                                       -> int                 (eles:EleList) - 1 uses
+METH: define_locals$$init                                          -> TransformerPass     () - 1 uses
+METH: emit_addr$$for_name                                          -> GIRVar              (n:NameExpr, p:TransformerPass) - 1 uses
+METH: IfExprHead$$impl                                             -> NodeType            () - 1 uses
+METH: LiteralExpr$$impl                                            -> NodeType            () - 1 uses
+METH: GIRStore$$get_used                                           -> List                (self:GIRStore) - 1 uses
+METH: GIRGetLocal$$get_used                                        -> List                (self:GIRGetLocal) - 1 uses
+METH: GIRBinOp$$emit                                               -> GIRVar              (p:Project, lhs:GIRVar, rhs:GIRVar, res_type:OType, op:cstr) - 5 uses
+METH: GIRGetGlobal$$impl                                           -> GIRInstType         () - 1 uses
+METH: OType$is_primitive                                           -> bool                (t:OType) - 4 uses
+METH: PrimitiveOType$get_size                                      -> int                 (t:PrimitiveOType) - 2 uses
+METH: Node$free                                                    -> void                (self:Node) - 1 uses
+METH: MultiArgList$$print                                          -> void                (node:MultiArgList, depth:int) - 1 uses
+METH: TypeDecl$$visit                                              -> void                (n:TypeDecl, p:TransformerPass) - 1 uses
+METH: BinOpExpr$$match                                             -> int                 (eles:EleList) - 1 uses
+METH: orth$$internal$$hooks$$get_profile_entry                     -> _ProfileEntry       (name:cstr) - 4 uses
+METH: UnOpExpr$$match                                              -> int                 (eles:EleList) - 1 uses
+METH: FileNode$$match                                              -> int                 (eles:EleList) - 1 uses
+METH: emit_value$$for_literal                                      -> GIRVar              (n:LiteralExpr, p:TransformerPass) - 1 uses
+METH: unwind$$backtrace                                            -> void                () - 2 uses
+METH: llvm$$impl_cast                                              -> void                (value:GIRVar, target:OType, dest:cstr, e:LLVMEmitter) - 1 uses
+METH: llvm$$emit_get_global                                        -> void                (i:GIRGetGlobal, e:LLVMEmitter) - 1 uses
+METH: cstr$substr                                                  -> cstr                (s:cstr, start:int, len:int) - 5 uses
+METH: ArgList$get                                                  -> cstr                (l:ArgList, pos:int) - 3 uses
+METH: BinOpExpr$$create_direct                                     -> BinOpExpr           (p:Project, lhs:Node, rhs:Node, op:cstr) - 3 uses
+METH: GIRCast$$get_used                                            -> List                (self:GIRCast) - 1 uses
+METH: GIRCall$$get_used                                            -> List                (self:GIRCall) - 1 uses
+METH: shoc$$assert                                                 -> void                (cond:bool, err:cstr) - 20 uses
+METH: FunctionDeclHead$$impl                                       -> NodeType            () - 1 uses
+METH: ZeroArgList$$impl                                            -> NodeType            () - 1 uses
+METH: Node$is_a                                                    -> bool                (self:Node, ty:cstr) - 104 uses
+METH: List$with_GIRVar                                             -> List                (l:List, v:GIRVar) - 18 uses
+METH: GIRCall$$print                                               -> void                (self:GIRCall) - 1 uses
+METH: AssignmentExpr$$create                                       -> AssignmentExpr      (eles:EleList) - 1 uses
+METH: IndexExpr$$create                                            -> IndexExpr           (eles:EleList) - 1 uses
+METH: GenericArgList$$create                                       -> GenericArgList      (eles:EleList) - 1 uses
+METH: StrMap$$new_ex                                               -> StrMap              (size:int, load_pct:int) - 2 uses
+METH: strncpy                                                      -> void                (a:cstr, b:cstr, c:int) - 1 uses
+METH: Project$get_node_type                                        -> OType               (p:Project, n:Node) - 14 uses
+METH: LLVMEmitter$emit_inst                                        -> void                (self:LLVMEmitter, i:GIRInst) - 1 uses
+METH: grammar$$install                                             -> void                (l:List) - 1 uses
+METH: StrMap$get_by_num                                            -> ptr                 (self:StrMap, idx:int) - 17 uses
+METH: cstr$__eq__                                                  -> bool                (a:cstr, b:cstr) - 189 uses
+METH: cstr$__ne__                                                  -> bool                (a:cstr, b:cstr) - 21 uses
+METH: emit_value$$for_accessor                                     -> GIRVar              (n:AccessorExpr, p:TransformerPass) - 1 uses
+METH: LLVMEmitter$emit                                             -> void                (self:LLVMEmitter, text:cstr) - 11 uses
+METH: cstr$free                                                    -> void                (s:cstr) - 1 uses
+METH: EleList$advance                                              -> EleList             (self:EleList, by:int) - 1 uses
+METH: ProgressBar$$new                                             -> ProgressBar         (out_of:int, steps:int, text:cstr) - 3 uses
+METH: ReturnExpr$$match                                            -> int                 (eles:EleList) - 1 uses
+METH: lex$$match_var_decl                                          -> int                 (text:cstr) - 1 uses
+METH: BinOpExpr$$impl                                              -> NodeType            () - 1 uses
+METH: MultiArgList$$impl                                           -> NodeType            () - 1 uses
+METH: LiteralExpr$$create_direct_bool                              -> Node                (p:Project, value:bool) - 12 uses
+METH: get_anchor$$for_accesor                                      -> Token               (n:AccessorExpr, p:TransformerPass) - 1 uses
+METH: List$append                                                  -> void                (l:List, item:ptr) - 30 uses
+METH: List$get_List                                                -> List                (l:List, i:int) - 0 uses
+METH: ZeroArgList$$create                                          -> ZeroArgList         (eles:EleList) - 1 uses
+METH: Tuple$$print                                                 -> void                (node:Tuple, depth:int) - 1 uses
+METH: fold_constants$$init                                         -> TransformerPass     () - 1 uses
+METH: Project$enter_method                                         -> void                (p:Project, m:Method) - 1 uses
+METH: Project$exit_method                                          -> void                (p:Project) - 2 uses
+METH: Project$process_text                                         -> Node                (p:Project, text:cstr, context:cstr) - 1 uses
+METH: llvm$$pointer$$impl_cast                                     -> void                (value:GIRVar, target:OType, dest:cstr, e:LLVMEmitter) - 1 uses
+METH: strncmp                                                      -> int                 (a:cstr, b:cstr, c:int) - 1 uses
+METH: get_anchor$$for_binop                                        -> Token               (n:BinOpExpr, p:TransformerPass) - 1 uses
+METH: GIRStore$$emit                                               -> GIRVar              (p:Project, location:GIRVar, value:GIRVar) - 1 uses
+METH: Method$$new                                                  -> Method              (proj:Project, name:cstr, args:List, varargs:bool, return_value:cstr, is_extern:bool) - 1 uses
+METH: TypeDecl$$impl                                               -> NodeType            () - 1 uses
+METH: strcmp                                                       -> int                 (a:cstr, b:cstr) - 2 uses
+METH: llvm$$float$$impl_binop                                      -> void                (lhs_v:GIRVar, rhs_v:GIRVar, op:cstr, dest:cstr, e:LLVMEmitter) - 1 uses
+METH: FPtrOType$$new_varargs                                       -> OType               (name:cstr, return_value:OType) - 2 uses
+METH: WhileExpr$$visit                                             -> void                (n:WhileExpr, p:TransformerPass) - 1 uses
+METH: OneArgList$$create                                           -> OneArgList          (eles:EleList) - 1 uses
+METH: apply_includes$$init                                         -> TransformerPass     () - 1 uses
+METH: define_types$$visit_type                                     -> TypeDecl            (n:TypeDecl, p:TransformerPass) - 1 uses
+METH: GIRJump$$emit_ncond                                          -> void                (p:Project, target:cstr) - 7 uses
+METH: GIRJump$$emit_cond                                           -> void                (p:Project, condition:GIRVar, target:cstr) - 2 uses
+METH: List$append_OType                                            -> void                (l:List, v:OType) - 1 uses
+METH: VarArgsList$$impl                                            -> NodeType            () - 1 uses
+METH: Project$add_Global                                           -> void                (p:Project, v:TypedVar, value:cstr) - 2 uses
+METH: Node$run_transformer_on_children                             -> void                (self:Node, p:TransformerPass) - 1 uses
+METH: apply_intrinsics$$visit_instrinsic                           -> Node                (n:IntrinsicExpr, p:TransformerPass) - 1 uses
+METH: expand_augassign$$visit_assignment                           -> AssignmentExpr      (n:AssignmentExpr, p:TransformerPass) - 1 uses
+METH: BlockBody$$create                                            -> BlockBody           (eles:EleList) - 1 uses
+METH: FunctionDecl$$create                                         -> FunctionDecl        (eles:EleList) - 1 uses
+METH: GIRGetGlobal$$get_used                                       -> List                (self:GIRGetGlobal) - 1 uses
+METH: StructOType$get_field_offset                                 -> int                 (self:StructOType, field_name:cstr) - 3 uses
+METH: Project$with_base_types                                      -> Project             (p:Project) - 1 uses
+METH: orth$$fail                                                   -> void                (err:cstr) - 14 uses
+METH: MultiArgListStart$$impl                                      -> NodeType            () - 1 uses
+METH: NameExpr$$impl                                               -> NodeType            () - 1 uses
+METH: GIRStore$$impl                                               -> GIRInstType         () - 1 uses
+METH: get_type$$for_binop                                          -> OType               (n:BinOpExpr, p:TransformerPass) - 1 uses
+METH: List$get_TypedVar                                            -> TypedVar            (l:List, i:int) - 24 uses
+METH: orth$$internal$$hooks$$profile_exit                          -> void                (name:cstr) - 1 uses
+METH: ProgressBar$update                                           -> void                (self:ProgressBar, pos:int) - 4 uses
+METH: ProgressBar$free                                             -> void                (self:ProgressBar) - 0 uses
+METH: NodeType$addtype                                             -> NodeType            (self:NodeType, thing:cstr) - 36 uses
+METH: Project$parse                                                -> Node                (p:Project, tokens:List, text:cstr, verbose:bool) - 2 uses
+METH: AssignmentExpr$$visit                                        -> void                (n:AssignmentExpr, p:TransformerPass) - 1 uses
+METH: apply_intrinsics$$init                                       -> TransformerPass     () - 1 uses
+METH: GIRBinOp$$get_used                                           -> List                (self:GIRBinOp) - 1 uses
+METH: GIRLiteral$$impl                                             -> GIRInstType         () - 1 uses
+METH: emit_value$$for_binop                                        -> GIRVar              (n:BinOpExpr, p:TransformerPass) - 1 uses
+METH: TransformerPass$set_project                                  -> TransformerPass     (p:TransformerPass, proj:Project) - 1 uses
+METH: Project$type_by_name                                         -> NodeType            (p:Project, name:cstr) - 9 uses
+METH: VarArgsList$$create                                          -> VarArgsList         (eles:EleList) - 1 uses
+METH: GIRGetLocal$$print                                           -> void                (self:GIRGetLocal) - 1 uses
+METH: cstr$elf_hash                                                -> int                 (string:cstr) - 2 uses
+METH: memcpy                                                       -> void                (a:ptr, b:ptr, amt:int) - 2 uses
+METH: strcpy                                                       -> cstr                (a:cstr, b:cstr) - 1 uses
+METH: BlockBody$$match                                             -> int                 (eles:EleList) - 2 uses
+METH: GIRNot$$print                                                -> void                (self:GIRNot) - 1 uses
+METH: Method$add_local                                             -> void                (func:Method, name:cstr, v:OType) - 5 uses
+METH: llvm$$float$$impl_cast                                       -> void                (value:GIRVar, target:OType, dest:cstr, e:LLVMEmitter) - 1 uses
+METH: List$append_TypedVar                                         -> void                (l:List, v:TypedVar) - 3 uses
+METH: ptr$offset                                                   -> ptr                 (a:ptr, b:int) - 3 uses
+METH: cstr$offset                                                  -> cstr                (a:cstr, b:int) - 17 uses
+METH: ord                                                          -> int                 (c:cstr) - 1 uses
+METH: bord                                                         -> byte                (c:cstr) - 16 uses
+METH: ReturnExpr$$visit                                            -> void                (n:ReturnExpr, p:TransformerPass) - 1 uses
+METH: SepExpr$$print                                               -> void                (node:SepExpr, depth:int) - 1 uses
+METH: ZeroTuple$$create                                            -> ZeroTuple           (eles:EleList) - 1 uses
+METH: GIRCast$$print                                               -> void                (self:GIRCast) - 1 uses
+METH: FPtrOType$get_size                                           -> int                 (self:FPtrOType) - 2 uses
+METH: Element$n                                                    -> Node                (self:Element) - 150 uses
+METH: Project$cond_warn_in                                         -> void                (p:Project, flag:cstr, msg:cstr, n:Node) - 3 uses
+METH: Element$t                                                    -> Token               (self:Element) - 148 uses
+METH: fclose                                                       -> void                (fd:ptr) - 2 uses
+METH: EleList$get_lookahead                                        -> Element             (self:EleList) - 17 uses
+METH: EleList$has_lookahead                                        -> bool                (self:EleList) - 4 uses
+METH: CallExpr$$print                                              -> void                (node:CallExpr, depth:int) - 1 uses
+METH: CastExpr$$print                                              -> void                (node:CastExpr, depth:int) - 1 uses
+METH: elide_branches$$init                                         -> TransformerPass     () - 1 uses
+METH: byte$in                                                      -> bool                (b:byte, s:cstr) - 27 uses
+METH: File$$open                                                   -> File                (path:cstr, mode:cstr) - 4 uses
+METH: llvm$$emit_binop                                             -> void                (i:GIRBinOp, e:LLVMEmitter) - 1 uses
+METH: Project$with_base_gir                                        -> Project             (p:Project) - 1 uses
+METH: shoc$$resolve_absolute_import                                -> cstr                (path:cstr) - 1 uses
+METH: Token$free                                                   -> void                (self:Token) - 2 uses
+METH: TypeDecl$$create                                             -> TypeDecl            (eles:EleList) - 1 uses
+METH: GIRPointerCast$$get_used                                     -> List                (self:GIRPointerCast) - 1 uses
+METH: OneTuple$$match                                              -> int                 (eles:EleList) - 1 uses
+METH: Project$run_only_import                                      -> Node                (p:Project, n:Node) - 1 uses
+METH: Project$fail_in_if                                           -> void                (p:Project, do_fail:bool, msg:cstr, n:Node) - 14 uses
+METH: llvm$$s_int$$impl_cast                                       -> void                (value:GIRVar, target:OType, dest:cstr, e:LLVMEmitter) - 2 uses
+METH: AssignmentExpr$$impl                                         -> NodeType            () - 1 uses
+METH: llvm$$u_int$$impl_cast                                       -> void                (value:GIRVar, target:OType, dest:cstr, e:LLVMEmitter) - 1 uses
+METH: llvm$$make_local_handle                                      -> cstr                (var:GIRVar) - 7 uses
+METH: File$close                                                   -> void                (f:File) - 5 uses
+METH: StrMap$set                                                   -> void                (self:StrMap, key:cstr, value:ptr) - 40 uses
+METH: StrMap$remove                                                -> void                (self:StrMap, key:cstr) - 2 uses
+METH: StrMap$get                                                   -> ptr                 (self:StrMap, key:cstr) - 30 uses
+METH: VarArgsList$$print                                           -> void                (node:VarArgsList, depth:int) - 1 uses
+METH: GenericArgList$$match                                        -> int                 (eles:EleList) - 1 uses
+METH: ZeroTuple$$print                                             -> void                (node:ZeroTuple, depth:int) - 1 uses
+METH: lex$$match_float_literal                                     -> int                 (text:cstr) - 1 uses
+METH: system                                                       -> int                 (str:cstr) - 3 uses
+METH: strlen                                                       -> int                 (s:cstr) - 4 uses
+METH: fopen                                                        -> ptr                 (p:cstr, m:cstr) - 2 uses
+METH: fdopen                                                       -> ptr                 (a:int, b:cstr) - 3 uses
+METH: lex$$match_string_literal                                    -> int                 (text:cstr) - 1 uses
+METH: int$str                                                      -> cstr                (i:int) - 38 uses
+METH: mem$$alloc_unmanaged                                         -> ptr                 (amt:int) - 2 uses
+METH: lex$$match_line_comment                                      -> int                 (text:cstr) - 1 uses
+METH: TypeDeclHead$$impl                                           -> NodeType            () - 1 uses
+METH: GIRVar$ref                                                   -> GIRVar              (v:GIRVar) - 3 uses
+METH: GIRInstType$$new                                             -> GIRInstType         (name:cstr) - 14 uses
+METH: List$append_GIRVar                                           -> void                (l:List, i:GIRVar) - 8 uses
+METH: llvm$$define_pass2_point_5                                   -> void                (ctx:LLVMEmitter, t:OType) - 1 uses
+METH: EleList$set_tail                                             -> EleList             (self:EleList, count:int, e:Element) - 1 uses
+METH: emit_value$$for_assignment                                   -> GIRVar              (n:AssignmentExpr, p:TransformerPass) - 1 uses
+METH: AccessorExpr$$create                                         -> AccessorExpr        (eles:EleList) - 1 uses
+METH: datamodel$$variety_to_name                                   -> cstr                (variety:int) - 3 uses
+METH: LLVMEmitter$$new                                             -> LLVMEmitter         (fd:File, p:Project) - 1 uses
+METH: WhileExpr$$match                                             -> int                 (eles:EleList) - 1 uses
+METH: UnOpExpr$$impl                                               -> NodeType            () - 1 uses
+METH: lex$$get_ext_identifier                                      -> cstr                () - 4 uses
+METH: StrMap$num_keys                                              -> int                 (self:StrMap) - 21 uses
+METH: cstr$find                                                    -> int                 (s:cstr, t:cstr) - 5 uses
+METH: BlockBody$$visit                                             -> void                (n:BlockBody, p:TransformerPass) - 1 uses
+METH: WhileExpr$$impl                                              -> NodeType            () - 1 uses
+METH: cstr$__add__                                                 -> cstr                (a:cstr, b:cstr) - 585 uses
+METH: cstr$__mul__                                                 -> cstr                (a:cstr, b:int) - 3 uses
+METH: Project$with_arch_bits                                       -> Project             (p:Project, bits:int) - 1 uses
+METH: cstr$int                                                     -> int                 (s:cstr) - 8 uses
+METH: List$insert                                                  -> void                (l:List, i:int, item:ptr) - 11 uses
+METH: llvm$$emit_not                                               -> void                (i:GIRNot, e:LLVMEmitter) - 1 uses
+METH: __orth_sig_h                                                 -> void                (code:int) - 3 uses
+METH: AssignmentExpr$$match                                        -> int                 (eles:EleList) - 1 uses
+METH: bool$or                                                      -> bool                (a:bool, b:bool) - 123 uses
+METH: TransformerPass$visit_GIRVar                                 -> GIRVar              (self:TransformerPass, n:Node) - 2 uses
+METH: exit                                                         -> int                 (c:int) - 6 uses
+METH: StrMap$get_slot                                              -> StrMapEntry         (self:StrMap, slot:int) - 12 uses
+METH: TransformerPass$no_auto_visit                                -> TransformerPass     (p:TransformerPass) - 5 uses
+METH: MultiArgList$$create                                         -> MultiArgList        (eles:EleList) - 1 uses
+METH: IfExpr$$visit                                                -> void                (n:IfExpr, p:TransformerPass) - 1 uses
+METH: TypeDeclBody$$print                                          -> void                (node:TypeDeclBody, depth:int) - 1 uses
+METH: gir$$init                                                    -> void                (p:Project) - 1 uses
+METH: get_anchor$$for_decl                                         -> Token               (n:DeclExpr, p:TransformerPass) - 1 uses
+METH: GIRVar$$new                                                  -> GIRVar              (p:Project, t:OType) - 15 uses
+METH: Project$with_options                                         -> Project             (p:Project, l:StrMap) - 1 uses
+METH: Project$add_GIRInstType                                      -> void                (p:Project, t:GIRInstType) - 14 uses
+METH: catch_duplicates$$init                                       -> TransformerPass     () - 1 uses
+METH: NodeType$create_node                                         -> Node                (self:NodeType, eles:EleList) - 1 uses
+METH: GroupingExpr$$match                                          -> int                 (eles:EleList) - 1 uses
+METH: TypeDeclHead$$match                                          -> int                 (eles:EleList) - 2 uses
+METH: IfExpr$$impl                                                 -> NodeType            () - 1 uses
+METH: IntrinsicExpr$$impl                                          -> NodeType            () - 1 uses
+METH: TransformerPass$visit_children                               -> void                (self:TransformerPass, n:Node) - 1 uses
+METH: GIRReturn$$impl                                              -> GIRInstType         () - 1 uses
+METH: List$clear                                                   -> void                (l:List) - 2 uses
+METH: lex$$match_identifier                                        -> int                 (text:cstr) - 8 uses
+METH: List$get_node                                                -> LinkedListNode      (l:List, want:int) - 5 uses
+METH: List$get_Node                                                -> Node                (l:List, n:int) - 36 uses
+METH: AssignmentExpr$$create_direct                                -> AssignmentExpr      (p:Project, lhs:Node, rhs:Node, anchor:Token) - 5 uses
+METH: FunctionDeclHead$$print                                      -> void                (node:FunctionDeclHead, depth:int) - 1 uses
+METH: FunctionBody$$print                                          -> void                (node:FunctionBody, depth:int) - 1 uses
+METH: FunctionDecl$$visit                                          -> void                (n:FunctionDecl, p:TransformerPass) - 1 uses
+METH: get_anchor$$for_intrinsic                                    -> Token               (n:IntrinsicExpr, p:TransformerPass) - 1 uses
+METH: Method$print_gir                                             -> void                (func:Method) - 1 uses
+METH: List$get_GIRVar                                              -> GIRVar              (l:List, i:int) - 4 uses
+METH: TokenType$__eq__                                             -> bool                (self:TokenType, other:TokenType) - 0 uses
+METH: Project$cond_warn_in_token                                   -> void                (p:Project, flag:cstr, msg:cstr, anchor:Token) - 2 uses
+METH: LLVMEmitter$emit_cached_globals                              -> void                (self:LLVMEmitter) - 1 uses
+METH: system$$set_interrupt_handler                                -> void                (id:int, h:SignalHandler) - 3 uses
+METH: DeclExpr$make_TypedVar                                       -> TypedVar            (self:DeclExpr, p:Project) - 4 uses
+METH: cstr$float                                                   -> float               (s:cstr) - 2 uses
+METH: emit_value$$for_while                                        -> ptr                 (n:WhileExpr, p:TransformerPass) - 1 uses
+METH: GIRLoad$$emit                                                -> GIRVar              (p:Project, location:GIRVar) - 4 uses
+METH: List$get_GIRInst                                             -> GIRInst             (l:List, i:int) - 2 uses
+METH: AccessorExpr$$match                                          -> int                 (eles:EleList) - 1 uses
+METH: LLVMEmitter$get_ty                                           -> cstr                (self:LLVMEmitter, ty:OType) - 20 uses
+METH: llvm$$emit_method                                            -> void                (m:Method, e:LLVMEmitter) - 1 uses
+METH: llvm$$emit_literal                                           -> void                (i:GIRLiteral, e:LLVMEmitter) - 1 uses
+METH: llvm$$emit_call                                              -> void                (i:GIRCall, e:LLVMEmitter) - 1 uses
+METH: Token$is_a                                                   -> bool                (self:Token, type_:cstr) - 60 uses
+METH: LLVMEmitter$get_emitter                                      -> LLVMGIREmitter      (self:LLVMEmitter, gir_type:cstr) - 1 uses
+METH: llvm$$define_pass1                                           -> void                (ctx:LLVMEmitter, t:OType) - 1 uses
+METH: mem$$free_unmanaged                                          -> void                (ob:ptr) - 1 uses
+METH: mem$$raw_free                                                -> void                (ob:ptr) - 1 uses
+METH: StrMap$$new_sized                                            -> StrMap              (size:int) - 6 uses
+METH: llvm$$define_pass2                                           -> void                (ctx:LLVMEmitter, t:OType) - 1 uses
+METH: llvm$$define_pass3                                           -> void                (ctx:LLVMEmitter, t:OType) - 1 uses
+METH: llvm$$emit_store                                             -> void                (i:GIRStore, e:LLVMEmitter) - 1 uses
+METH: SepExpr$$impl                                                -> NodeType            () - 1 uses
+METH: Tuple$$impl                                                  -> NodeType            () - 1 uses
+METH: GIRLiteral$$emit_null                                        -> GIRVar              (p:Project) - 1 uses
+METH: lex$$match_binop                                             -> int                 (text:cstr) - 1 uses
+METH: LLVMEmitter$get_next_ssa                                     -> int                 (self:LLVMEmitter) - 5 uses
+METH: TokenType$or                                                 -> TokenType           (self:TokenType, prev_req:cstr) - 9 uses
+METH: malloc                                                       -> ptr                 (amt:int) - 94 uses
+METH: strtod                                                       -> float               (a:cstr, b:cstr) - 1 uses
+METH: FunctionBody$$create                                         -> FunctionBody        (eles:EleList) - 1 uses
+METH: elide_groupings$$init                                        -> TransformerPass     () - 1 uses
+METH: llvm$$emit_jump                                              -> void                (i:GIRJump, e:LLVMEmitter) - 1 uses
+METH: atoi                                                         -> int                 (s:cstr) - 1 uses
+METH: ImportStmt$$impl                                             -> NodeType            () - 1 uses
+METH: IndexExpr$$impl                                              -> NodeType            () - 1 uses
+METH: TokenType$$new_in                                            -> TokenType           (name:cstr, text:cstr) - 4 uses
+METH: ForExpr$$impl                                                -> NodeType            () - 1 uses
+METH: catch_duplicates$$run                                        -> FileNode            (n:FileNode, p:TransformerPass) - 1 uses
+METH: TokenType$$new_eq                                            -> TokenType           (name:cstr, text:cstr) - 23 uses
+METH: Method$has_local                                             -> bool                (func:Method, name:cstr) - 2 uses
+METH: GIRNot$$emit                                                 -> GIRVar              (p:Project, source:GIRVar) - 1 uses
+METH: DeclExpr$$create                                             -> DeclExpr            (eles:EleList) - 1 uses
+METH: OneTuple$$create                                             -> OneTuple            (eles:EleList) - 1 uses
+METH: Project$get_Method                                           -> Method              (p:Project, s:cstr) - 13 uses
+METH: DeclExpr$$match                                              -> int                 (eles:EleList) - 1 uses
+METH: GenericArgList$$impl                                         -> NodeType            () - 1 uses
+METH: shoc$$parse_string_literal                                   -> cstr                (literal:cstr) - 1 uses
+METH: TokenType$$new_fn                                            -> TokenType           (name:cstr, func:TokenMatcher) - 17 uses
+METH: prints_tab                                                   -> void                (s:cstr, sz:int) - 5 uses
+METH: File$flush_buffer                                            -> void                (f:File) - 2 uses
+METH: BinOpExpr$$visit                                             -> void                (n:BinOpExpr, p:TransformerPass) - 1 uses
+METH: List$append_NodeType                                         -> void                (l:List, n:NodeType) - 41 uses
+METH: GenericName$$create                                          -> GenericName         (eles:EleList) - 1 uses
+METH: ZeroArgList$$match                                           -> int                 (eles:EleList) - 1 uses
+METH: TypeDecl$$match                                              -> int                 (eles:EleList) - 1 uses
+METH: UnOpExpr$$visit                                              -> void                (n:UnOpExpr, p:TransformerPass) - 1 uses
+METH: FileNode$$visit                                              -> void                (n:FileNode, p:TransformerPass) - 1 uses
+METH: TokenType$match_internal                                     -> int                 (self:TokenType, text:cstr) - 3 uses
+METH: FunctionBody$$impl                                           -> NodeType            () - 1 uses
+METH: GroupingExpr$$impl                                           -> NodeType            () - 1 uses
+METH: Project$add_Type                                             -> void                (p:Project, t:OType) - 18 uses
+METH: float$str                                                    -> cstr                (i:float) - 1 uses
+METH: define_types$$init                                           -> TransformerPass     () - 1 uses
+METH: List$append_Node                                             -> void                (l:List, n:Node) - 21 uses
+METH: FunctionDeclHead$$create                                     -> FunctionDeclHead    (eles:EleList) - 1 uses
+METH: GIRLiteral$$emit_float                                       -> GIRVar              (p:Project, value:float) - 1 uses
+METH: StructOType$print                                            -> void                (t:StructOType) - 1 uses
+METH: List$del                                                     -> void                (l:List, i:int) - 6 uses
+METH: CallExpr$$impl                                               -> NodeType            () - 1 uses
+METH: CastExpr$$impl                                               -> NodeType            () - 1 uses
+METH: ZeroTuple$$impl                                              -> NodeType            () - 1 uses
+METH: emit_value$$for_decl                                         -> GIRVar              (n:DeclExpr, p:TransformerPass) - 1 uses
+METH: NodeType$set_printer                                         -> NodeType            (self:NodeType, p:NodePrinter) - 41 uses
+METH: Project$with_base_tokens                                     -> Project             (p:Project) - 1 uses
+METH: Token$print                                                  -> void                (self:Token) - 2 uses
+METH: StrMap$_debug_print                                          -> void                (self:StrMap) - 4 uses
+METH: Tuple$$create                                                -> Tuple               (eles:EleList) - 1 uses
+METH: ForExpr$$visit                                               -> void                (n:ForExpr, p:TransformerPass) - 1 uses
+METH: GIRBinOp$$print                                              -> void                (self:GIRBinOp) - 1 uses
+METH: File$ready                                                   -> bool                (f:File) - 1 uses
+METH: GIRReturn$$get_used                                          -> List                (self:GIRReturn) - 1 uses
+METH: orth$$internal$$hooks$$setup_pstack                          -> void                () - 1 uses
+METH: StructOType$add_field                                        -> void                (self:StructOType, new_field:TypedVar) - 1 uses
+METH: lex$$print_highlight                                         -> void                (source_text:cstr, lineno:int, colno:int) - 2 uses
+METH: BinOpExpr$$create                                            -> BinOpExpr           (eles:EleList) - 1 uses
+METH: DeclExpr$$print                                              -> void                (node:DeclExpr, depth:int) - 1 uses
+METH: UnOpExpr$$create                                             -> UnOpExpr            (eles:EleList) - 1 uses
+METH: NodeType$match                                               -> int                 (self:NodeType, elements:EleList) - 1 uses
+METH: rw_calls$$init                                               -> TransformerPass     () - 1 uses
+METH: shoc$$mangle_name                                            -> cstr                (name:NameExpr) - 5 uses
+METH: llvm$$struct$$impl_cast                                      -> void                (value:GIRVar, target:OType, dest:cstr, e:LLVMEmitter) - 1 uses
+METH: ReturnExpr$$impl                                             -> NodeType            () - 1 uses
+METH: NodeType$set_matcher                                         -> NodeType            (self:NodeType, m:NodeMatcher) - 41 uses
+METH: OType$is_fptr                                                -> bool                (t:OType) - 8 uses
+METH: os$$run_checked                                              -> void                (cmd:cstr) - 3 uses
+METH: List$free                                                    -> void                (l:List) - 2 uses
+METH: ZeroArgList$$print                                           -> void                (node:ZeroArgList, depth:int) - 1 uses
+METH: TypeDecl$$print                                              -> void                (node:TypeDecl, depth:int) - 1 uses
+METH: GIRGetGlobal$$emit                                           -> GIRVar              (p:Project, type_:OType, name:cstr) - 1 uses
+METH: get_type$$init                                               -> TransformerPass     () - 1 uses
+METH: GIRInst$print                                                -> void                (inst:GIRInst) - 1 uses
+METH: AccessorExpr$$impl                                           -> NodeType            () - 1 uses
+METH: DeclExpr$$impl                                               -> NodeType            () - 1 uses
+METH: GIRBinOp$$impl                                               -> GIRInstType         () - 1 uses
+METH: usleep                                                       -> void                (amt:int) - 1 uses
+METH: ProgressBar$$new_reversed                                    -> ProgressBar         (out_of:int, steps:int, text:cstr) - 1 uses
+METH: predefine_types$$visit_type                                  -> TypeDecl            (n:TypeDecl, p:TransformerPass) - 1 uses
+METH: shoc$$get_empty_project                                      -> Project             () - 1 uses
+METH: List$$new                                                    -> List                () - 61 uses
+METH: TypeDeclBody$$match                                          -> int                 (eles:EleList) - 1 uses
+METH: get_type$$for_index                                          -> OType               (n:IndexExpr, p:TransformerPass) - 1 uses
+METH: PrimitiveOType$$new                                          -> OType               (name:cstr, v:int, size:int) - 15 uses
+METH: define_locals$$visit_decl                                    -> DeclExpr            (n:DeclExpr, p:TransformerPass) - 1 uses
+METH: GIRGetLocal$$impl                                            -> GIRInstType         () - 1 uses
+METH: lex$$match_augassign                                         -> int                 (text:cstr) - 1 uses
+METH: TokenType$notoken                                            -> TokenType           (self:TokenType) - 2 uses
+METH: emit_value$$noop                                             -> cstr                (n:Node, p:TransformerPass) - 2 uses
+METH: GIRLiteral$$emit_cstr                                        -> GIRVar              (p:Project, value:cstr) - 4 uses
+METH: GroupingExpr$$print                                          -> void                (node:GroupingExpr, depth:int) - 1 uses
+METH: Project$tokenize                                             -> List                (p:Project, text:cstr, file_ctx:cstr, verbose:bool) - 2 uses
+METH: TypeDeclHead$$print                                          -> void                (node:TypeDeclHead, depth:int) - 1 uses
+METH: elide_branches$$visit_while                                  -> Node                (n:WhileExpr, p:TransformerPass) - 1 uses
+METH: emit_value$$for_index                                        -> GIRVar              (n:IndexExpr, p:TransformerPass) - 1 uses
+METH: Project$get_type                                             -> OType               (p:Project, name:cstr) - 28 uses
+METH: shoc$$bail_out                                               -> void                (err:cstr) - 34 uses
+METH: lex$$match_bool_literal                                      -> int                 (text:cstr) - 1 uses
+METH: orth$$internal$$profile$$install_profiler                    -> void                () - 1 uses
+METH: Project$emit_gir                                             -> cstr                (p:Project, i:GIRInst) - 21 uses
+METH: lex$$get_alphabet                                            -> cstr                () - 2 uses
+METH: lex$$match_block_comment                                     -> int                 (text:cstr) - 1 uses
+METH: IndexExpr$$visit                                             -> void                (n:IndexExpr, p:TransformerPass) - 1 uses
+METH: FileNode$$create                                             -> FileNode            (p:Project, eles:EleList) - 2 uses
+METH: FunctionDeclHead$$match                                      -> int                 (eles:EleList) - 1 uses
+METH: FunctionBody$$match                                          -> int                 (eles:EleList) - 1 uses
+METH: rw_fors$$init                                                -> TransformerPass     () - 1 uses
+METH: GIRGetMethod$$print                                          -> void                (self:GIRGetMethod) - 1 uses
+METH: TransformerPass$emit_value                                   -> GIRVar              (p:TransformerPass, n:Node) - 22 uses
+METH: Project$with_base_grammar                                    -> Project             (p:Project) - 1 uses
+METH: Node$print                                                   -> void                (self:Node, depth:int) - 47 uses
+METH: Element$$from_node                                           -> Element             (n:Node) - 1 uses
+METH: EleList$get                                                  -> Element             (self:EleList, pos:int) - 385 uses
+METH: StrMap$$new                                                  -> StrMap              () - 11 uses
+METH: EleList$in_slice                                             -> int                 (self:EleList) - 15 uses
+METH: AccessorExpr$$print                                          -> void                (node:AccessorExpr, depth:int) - 1 uses
+METH: rewrite_namespaces$$init                                     -> TransformerPass     () - 1 uses
+METH: emit_addr$$init                                              -> TransformerPass     () - 1 uses
+METH: cstr$equals_l                                                -> bool                (s:cstr, o:cstr, l:int) - 1 uses
+METH: OType$is_struct                                              -> bool                (t:OType) - 8 uses
+METH: OType$as_struct                                              -> StructOType         (t:OType) - 10 uses
+METH: StructOType$get_field_type                                   -> OType               (self:StructOType, field_name:cstr) - 2 uses
+[41m==================== orth::fail bailout report ====================[0m
+Bailout message: 'os::run_checked call failed: llc-3.5 shoc.ir'
+====__unwind_shim_backtrace===
+0x40dbd6: (unwind$$backtrace+0x6)
+0x40fe90: (orth$$fail+0x70)
+0x417014: (os$$run_checked+0x24)
+0x401858: (main+0x958)
+0x7fbd187022e1: (__libc_start_main+0xf1)
+0x400e2a: (_start+0x2a)
+Cannot print traceback, __stack is null. Did you compile with the 'funchooks' flag?

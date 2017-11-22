@@ -1,6 +1,9 @@
+extern(...) free -> void
 
 function() main -> int does
-	int a=2
-	a+=(1*1)+1
-	fooo bar
-return a
+	"a":free()
+return 0
+
+function(cstr s) cstr:free -> void does
+	free(s)
+return

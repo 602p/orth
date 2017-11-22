@@ -50,7 +50,8 @@ type TransformerPass is
 		if self.visitor_map:contains(n.type_.name) do
 			ptr entry = self.visitor_map:get(n.type_.name)
 			NodeTransformer v = entry|NodeTransformer
-			return v(n, self)
+			Node r = v(n, self)
+			return r
 		done
 	return n
 

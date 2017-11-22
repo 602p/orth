@@ -108,6 +108,12 @@ type OType is packed
 			printf("??? %i\n", t.variety)
 		done
 	return
+
+	function(OType self, OType other) OType:__eq__ -> bool does
+	return self|ptr == other|ptr
+
+	function(OType self, OType other) OType:__ne__ -> bool does
+	return self|ptr != other|ptr
 endtype
 
 type PrimitiveOType is packed

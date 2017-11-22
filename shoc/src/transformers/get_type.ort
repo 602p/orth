@@ -9,7 +9,8 @@ return TransformerPass::new("get_type"):no_auto_visit():no_default_run()\
 					   :add_specialization("IntrinsicExpr", get_type::for_intrinsic|NodeTransformer)\
 					   :add_specialization("IndexExpr", get_type::for_index|NodeTransformer)\
 					   :add_specialization("LiteralExpr", get_type::for_literal|NodeTransformer)\
-					   :add_specialization("UnOpExpr", get_type::for_unop|NodeTransformer)
+					   :add_specialization("UnOpExpr", get_type::for_unop|NodeTransformer)\
+					   :add_specialization("DeclExpr", get_type::for_decl|NodeTransformer)
 
 function(NameExpr n, TransformerPass p) get_type::for_name -> OType does
 	if p.proj.curr_method|ptr==null do
@@ -20,7 +21,11 @@ function(NameExpr n, TransformerPass p) get_type::for_name -> OType does
 	elif p.proj.globals:contains(n.name) do
 		return (p.proj.globals:get(n.name)|TypedVar).type_
 	done
+	p.proj:fail_in_if(-p.proj.methods:contains(n.name), "No such method "+n.name+" (in type pass)", n|Node)
 return p.proj:get_Method(n.name).ptr_type
+
+function(DeclExpr n, TransformerPass p) get_type::for_decl -> OType does
+return TypedVar::from_decl(n|DeclExpr.name, p.proj).type_
 
 function(BinOpExpr n, TransformerPass p) get_type::for_binop -> OType does
 	if n.op:contains("="):or(n.op==">"):or(n.op=="<"):or(n.op=="&" & p.proj:get_node_type(n.lhs).name=="bool") do
@@ -62,8 +67,7 @@ return p.proj:get_type(n.value_type)
 
 function(Project p, Node n) Project:get_node_type -> OType does
 	OType o = p:get_transformer_pass("get_type"):visit_OType(n)
-	# printf("o - %u\n", o.name)
-	if o|ptr==null do
+	if (o|ptr==null):or(o|ptr==n|ptr) do
 		n:print_root()
 		shoc::bail_out("Invalid result from get_type for node")
 	done

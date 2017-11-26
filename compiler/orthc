@@ -34,12 +34,17 @@ if "dump_bd" in sys.argv:
 print("Preparing Transformer...                       ")
 import transform, transformer, datamodel
 
+o_path=sys.path+[".", os.path.join(os.path.join(os.path.dirname(os.path.realpath(__file__)), ".."), "lib")]
+a = [a.replace("path-0:","",1) for a in sys.argv if a.startswith("path-0:")]
+if a:
+	o_path.insert(0, a[0])
+
 print("Transforming...                       ")
 with open("out.ll", 'w') as fd:
 	e=transform.Emitter(fd,{
 		"no0double":"no0double" in sys.argv,
 		"funchooks":"funchooks" in sys.argv,
-		"path":sys.path+[".", os.path.join(os.path.join(os.path.dirname(os.path.realpath(__file__)), ".."), "lib")]
+		"path":o_path
 	})
 	with e.scope():
 		with e.context(file="in"):
@@ -81,7 +86,7 @@ if not "nobuild" in sys.argv:
 
 if not "nolink" in sys.argv:
 	print("Linking...                       ")
-	assert os.system("gcc -o "+([s[2:] for s in sys.argv if s.startswith("o:") ][0] if any(s.startswith("o:") for s in sys.argv) else sys.argv[1].split("/")[-1].split(".")[0])+" out.s ../../lib/unwind/unwind_shim.o -lunwind")==0, "Command Failed"
+	assert os.system("gcc -o "+([s[2:] for s in sys.argv if s.startswith("o:") ][0] if any(s.startswith("o:") for s in sys.argv) else sys.argv[1].split("/")[-1].split(".")[0])+" out.s "+" ".join(c.replace("gcc-x:","",1) for c in sys.argv if c.startswith("gcc-x:")))==0, "Command Failed"
 
 if not "noclean" in sys.argv:
 	os.system("rm out.ll out.s")

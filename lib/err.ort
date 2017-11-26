@@ -86,18 +86,6 @@ function(cstr err) orth::fail -> void does
 	printf(esc+"[41m==================== orth::fail bailout report ===================="+esc+"[0m\n")
 	printf("Bailout message: '%s'\n", err)
 	unwind::backtrace()
-	if __stack|ptr == null do
-		printf("Cannot print traceback, __stack is null. Did you compile with the 'funchooks' flag?\n")
-		exit(2)
-	done
-	printf("Traceback (orth calls only, most recent call last):\n")
-	_StackNode curr=__stack
-	int curr_idx=0
-	while curr|ptr!=null do
-		printf("  %04i: %s\n", curr_idx, curr.name)
-		curr_idx+=1
-		curr=curr._next
-	done
 	mem::clean_up()
 	exit(1)
 return

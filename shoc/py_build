@@ -4,6 +4,11 @@ export PATH=$PATH:../../compiler
 
 cd src
 
-orthc main.ort $@
+if [[ "${@#--no-unwind}" = "$@" ]]
+then
+    orthc main.ort "gcc-x:../../lib/unwind/unwind_shim.o -lunwind"
+else
+    orthc main.ort "path-0:../../lib/nounwind_shim"
+fi
 
 mv main ../shoc

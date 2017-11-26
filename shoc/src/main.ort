@@ -185,7 +185,7 @@ function(int nargs, ArgList args) main -> int does
 		proj:emit_as_llvm(outpath+".ir", verbose)
 
 		if -options:contains("no_finish_build") do
-			cstr llc_command = "llc-3.5"
+			cstr llc_command = "llc-5.0"
 			cstr gcc_command = "gcc"
 
 			#TODO: Let ovverides

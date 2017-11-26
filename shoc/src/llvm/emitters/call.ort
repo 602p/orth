@@ -5,7 +5,20 @@ function(GIRCall i, LLVMEmitter e) llvm::emit_call -> void does
 		e:emit(e:get_ssa_var(i.out_var)+" = ")
 	done
 
-	e:emit("call "+e:get_vty(i.method)+" "+e:get_ssa_var(i.method)+" (")
+	e:emit("call ")
+	FPtrOType fp = i.method.type_|FPtrOType
+	if fp.args|ptr==null do 
+		#Normally I quite like LLVM, but this is insane.
+		#The type that preceeds the call is the return type of the function, UNLESS
+		#the function is a varargs function, in which case it's the full signature of the function
+		#EXCEPT it's not a pointer!!! it's just function signature??? wtf?
+		cstr fp_ty = " "+e:get_ty(i.method.type_) #forces new alloc
+		fp_ty[fp_ty:len()-1]=0|byte
+		e:emit(fp_ty)
+	else do
+		e:emit(e:get_ty(fp.return_value))
+	done
+	e:emit(" "+e:get_ssa_var(i.method)+" (")
 
 	int a=0
 	while a<i.args.len do

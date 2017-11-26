@@ -6,15 +6,14 @@ function(GIRLiteral i, LLVMEmitter e) llvm::emit_literal -> void does
 	elif i.type_.name=="cstr" do
 		cstr temp_name="strA_"+e:get_next_ssa():str()
 		cstr str_type=llvm::make_string_type(i.string_value)
-		e:emitl("%"+temp_name+" = getelementptr "+str_type+"* "+e:make_string_global(i.string_value))
-		e:emitl(e:get_ssa_var(i.out_var)+" = bitcast "+str_type+"* %"+temp_name+" to i8*")
+		e:emitl(e:get_ssa_var(i.out_var)+" = bitcast "+str_type+"* "+e:make_string_global(i.string_value)+" to i8*")
 	elif (i.type_.variety==POINTER) do
 		cstr int_name="%nulL_"+e:get_next_ssa():str()
 		e:emitl(int_name+"=add i32 0,0")
 		e:emitl(e:get_ssa_var(i.out_var)+" = inttoptr i32 "+int_name+" to i8* ")
 	elif i.type_.variety==FLOAT do
 		cstr temp_name="%flt_"+e:get_next_ssa():str()
-		e:emitl(temp_name+" = load double* @_the_zero_double")
+		e:emitl(temp_name+" = load double, double* @_the_zero_double")
 		e:emitl(e:get_ssa_var(i.out_var)+" = fadd double 0.0, "+temp_name)
 	else do
 		shoc::bail_out("Unknown literal type "+i.type_.name)

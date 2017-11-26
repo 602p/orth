@@ -53,7 +53,7 @@ function(LLVMEmitter ctx, OType t) llvm::define_pass2 -> void does
 				done
 			done
 			if ok do
-				cstr rep = ctx:get_ty(t:as_fptr().return_value)+" ("
+				cstr rep = ctx:get_ty(t:as_fptr().return_value)+"("
 				if t:as_fptr().args|ptr==null do
 					rep+="..."
 				else do
@@ -75,7 +75,7 @@ return
 
 function(LLVMEmitter ctx, OType t) llvm::define_pass2_point_5 -> void does
 	if t:is_fptr() do
-		cstr rep = ctx:get_ty(t:as_fptr().return_value)+" ("
+		cstr rep = ctx:get_ty(t:as_fptr().return_value)+"("
 		if t:as_fptr().args|ptr==null do
 			rep+="..."
 		else do

@@ -33,6 +33,8 @@ function(int nargs, ArgList args) main -> int does
 	StrMap options = StrMap::new()
 	options:set("output_path", "out")
 
+	cstr llc_command = "llc-5.0"
+
 	int arch_bits=8*@sizeof(ptr)@
 
 	int i=1
@@ -50,6 +52,10 @@ function(int nargs, ArgList args) main -> int does
 
 		if arg:startswith("--gcc_x") do
 			options:set("gcc_x", arg:offset(7))
+		done
+
+		if arg:startswith("--llc_v") do
+			llc_command=arg:offset(7)
 		done
 
 		if arg:startswith("-w") do
@@ -185,7 +191,6 @@ function(int nargs, ArgList args) main -> int does
 		proj:emit_as_llvm(outpath+".ir", verbose)
 
 		if -options:contains("no_finish_build") do
-			cstr llc_command = "llc-5.0"
 			cstr gcc_command = "gcc"
 
 			#TODO: Let ovverides

@@ -15,8 +15,15 @@ function(CallExpr n, TransformerPass p) emit_value::for_call -> GIRVar does
 		arg=n.args:get_Node(i)
 		if do_checking do
 			OType arg_t = p.proj:get_node_type(arg)
-			if arg_t!=meth_type.args:get_OType(i) do
-				p.proj:cond_warn_in("warn_types", "Invalid type of arg. Is: "+arg_t.name+", should be "+meth_type.args:get_OType(i).name, arg)
+			OType req_t = meth_type.args:get_OType(i)
+			if arg_t!=req_t do
+				bool warn = true
+				if (arg_t.name=="cstr" & req_t.name=="ptr"):or(arg_t.name=="ptr" & req_t.name=="cstr") do
+					warn = p.proj.options:contains("warn_strict_types")
+				done
+				if warn do
+					p.proj:cond_warn_in("warn_types", "Invalid type of arg. Is: "+arg_t.name+", should be "+meth_type.args:get_OType(i).name, arg)
+				done
 			done
 		done
 		args:append_GIRVar(p:emit_value(arg))

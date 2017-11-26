@@ -8,6 +8,12 @@ function(AssignmentExpr n, TransformerPass p) emit_value::for_assignment -> GIRV
 	OType rhs_t = p.proj:get_node_type(n.rhs)
 
 	if lhs_t!=rhs_t do
-		p.proj:cond_warn_in("warn_types", "Mismatched types for assignment. Trying to store a "+rhs_t.name+" to a "+lhs_t.name, n|Node)
+		bool warn = true
+		if (lhs_t.name=="cstr" & rhs_t.name=="ptr"):or(lhs_t.name=="ptr" & rhs_t.name=="cstr") do
+			warn = p.proj.options:contains("warn_strict_types")
+		done
+		if warn do
+			p.proj:cond_warn_in("warn_types", "Mismatched types for assignment. Trying to store a "+rhs_t.name+" to a "+lhs_t.name, n|Node)
+		done
 	done
 return GIRStore::emit(p.proj, p:emit_addr(n.lhs), p:emit_value(n.rhs))

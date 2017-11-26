@@ -81,7 +81,7 @@ if not "nobuild" in sys.argv:
 
 if not "nolink" in sys.argv:
 	print("Linking...                       ")
-	assert os.system("gcc -o "+([s[2:] for s in sys.argv if s.startswith("o:") ][0] if any(s.startswith("o:") for s in sys.argv) else sys.argv[1].split("/")[-1].split(".")[0])+" out.s")==0, "Command Failed"
+	assert os.system("gcc -o "+([s[2:] for s in sys.argv if s.startswith("o:") ][0] if any(s.startswith("o:") for s in sys.argv) else sys.argv[1].split("/")[-1].split(".")[0])+" out.s ../../lib/unwind/unwind_shim.o -lunwind")==0, "Command Failed"
 
 if not "noclean" in sys.argv:
 	os.system("rm out.ll out.s")

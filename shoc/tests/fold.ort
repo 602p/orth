@@ -1,0 +1,7 @@
+extern(...) printf -> void
+
+function() main -> int does
+	if 5*5==25 do
+		printf("Thank god\n")
+	done
+return 0

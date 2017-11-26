@@ -44,12 +44,13 @@ Orth is still a low-level language, meaning you still need to watch your memory 
 ### Compiling Orth
 1. Write a program, feel free to crib the hello world example
 2. Install python 3 if not already done (should provide a `/usr/bin/python3`)
-3. Install LLVM 3.5 (should provide a `llc`)
+3. Install LLVM 3.5 (should provide a `llc-3.5`)
 4. Install GCC (basically any modern version, should provide a `gcc`)
 5. Run `orthc <your_file_name>`
 6. Observe and run your new ELF executable with `./out`
 
 ### Running the Self-Hosting compiler
+0. Install LLVM 5.0 (as to provide a `llv-5.0`)
 1. Once you have orthc up and running, head into the shoc directory and run `./py_build --no-unwind` This will probably take ~30 seconds
 2. This should produce a `shoc` executable with a similar-but-not-the-same command line interface (flags - documented in `args.txt` - are different)
 3. Run `./experimental_build.sh --no-unwind` and shoc will rebuild itself

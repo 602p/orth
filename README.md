@@ -60,7 +60,7 @@ Orth is still a low-level language, meaning you still need to watch your memory 
 ### Running the OS
  * If you want to run the OS, you'll need a i386 cross-compiler GCC toolchain (gcc/as/ld,) and my build scripts will probably need some PATH tweaking, but with that set up in the path you should be able to run the `build.sh` script in the os folder
  
- The OS should run on QEMU/VirtualBox/etc _and_ on REAL x86 HARDWARE! Should run just fine on modern computers too (but may misbehave at high resolutions with computers with dGPUs.) If you wanna play around with it, `snake` and `rc` are cool toys on the kernel shell.
+ The OS should run on QEMU/VirtualBox/etc _and_ on REAL x86 HARDWARE! Should run just fine on modern computers too. If you wanna play around with it, `snake` and `rc` are cool toys on the kernel shell.
  Some cool screenshots of the OS in action:
  ![Image of VESA framebuffer terminal](https://raw.githubusercontent.com/602p/orth/master/docs/image/emu2.png)
  ![Image of Raycaster](https://raw.githubusercontent.com/602p/orth/master/docs/image/raycast.png)

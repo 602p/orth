@@ -1,7 +1,0 @@
-#108
-
-import std
-
-function() main -> int does
-	printf("%i\n", 6*9/2+2*88/4+9*5*6-11-(5/5*78+66/2)*2)
-return 0

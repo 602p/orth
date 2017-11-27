@@ -1,7 +1,0 @@
-#2
-
-import std
-
-function() main -> int does
-	printf("%i\n", 1+1)
-return 0

@@ -1,7 +1,0 @@
-#9
-
-import std
-
-function() main -> int does
-	printf("%i\n", 1+2*4)
-return 0

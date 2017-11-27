@@ -433,6 +433,15 @@ class StructOType(OType):
 		#All "instances" of a user type are pointers to it
 		return "%"+self.get_name()+"*"
 
+	def implement_rem(self, *a, **k):
+		return self.implement_mod(*a, **k)
+
+	def implement_rsh(self, *a, **k):
+		return self.implement_shr(*a, **k)
+
+	def implement_lsh(self, *a, **k):
+		return self.implement_shl(*a, **k)
+
 	def get_size(self):
 		#If we have a reference to ourselves (or another StructOType that indirectly references us)
 		# we would get a infininite loop here recursivley calling get_size() in in.

@@ -445,7 +445,7 @@ function(cstr literal) shoc::parse_string_literal -> cstr does
 	int o=0
 	while i<literal:len() do
 		# printf("i=%i, o=%i\n", i, o)
-		if literal[i]|int==92 do
+		if literal[i]==bord("\\") do
 			i+=1
 			# printf("Escaped! - literal[%i]=%i\n", i, literal[i]|int)
 			if literal[i]==bord("n") do

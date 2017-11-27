@@ -23,18 +23,18 @@ def compile_orthc(path, executable_name="current_test.a"):
 	compiler_result = call("../compiler/orthc", path, "o:"+executable_name)
 	elapsed = time.time() - start
 	if compiler_result.code!=0:
-		return Result(TestResult.COMPILE_FAILED, "Compile Failed:" + compiler_result.text, elapsed, -1)
+		return Result(TestResult.COMPILE_FAILED, "Compile Failed:" + compiler_result.text, elapsed, 0)
 	else:
-		return Result(TestResult.OK, "", elapsed, -1)
+		return Result(TestResult.OK, "", elapsed, 0)
 
 def compile_shoc(path, executable_name="current_test.a", flags=[]):
 	start = time.time()
 	compiler_result = call("../shoc/shoc", path, "-o"+executable_name, *flags)
 	elapsed = time.time() - start
 	if compiler_result.code!=0:
-		return Result(TestResult.COMPILE_FAILED, "Compile Failed:" + compiler_result.text, elapsed, -1)
+		return Result(TestResult.COMPILE_FAILED, "Compile Failed:" + compiler_result.text, elapsed, 0)
 	else:
-		return Result(TestResult.OK, "", elapsed, -1)
+		return Result(TestResult.OK, "", elapsed, 0)
 
 def test_generic(source, compiler, args=[], stdout=None, code=0, **compiler_args):
 	with open("current_test.ort", 'w') as fd:

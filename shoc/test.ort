@@ -1,9 +1,0 @@
-extern(...) free -> void
-
-function() main -> int does
-	"a":free()
-return 0
-
-function(cstr s) cstr:free -> void does
-	free(s)
-return

@@ -1,9 +1,0 @@
-int GLOBAL_0
-int GLOBAL_42 = 42
-
-import std
-
-function() main -> int does
-	printf("GLOBAL_0= %i\n", GLOBAL_0)
-	printf("GLOBAL_42= %i\n", GLOBAL_42)
-return 0

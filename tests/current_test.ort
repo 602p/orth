@@ -1,0 +1,12 @@
+
+		type IntBox is packed
+			int value
+		endtype
+
+		function() main -> int does
+			int z = 72
+			ptr address = @addressof(z)@
+			IntBox box = address|IntBox
+			box.value=3
+		return z
+	

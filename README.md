@@ -50,7 +50,7 @@ Orth is still a low-level language, meaning you still need to watch your memory 
 6. Observe and run your new ELF executable with `./out`
 
 ### Running the Self-Hosting compiler
-0. Install LLVM 5.0 (as to provide a `llv-5.0`)
+0. Install LLVM 5.0 (as to provide a `llc-5.0`)
 1. Once you have orthc up and running, head into the shoc directory and run `./py_build --no-unwind` This will probably take ~30 seconds
 2. This should produce a `shoc` executable with a similar-but-not-the-same command line interface (flags - documented in `args.txt` - are different)
 3. Run `./experimental_build.sh --no-unwind` and shoc will rebuild itself

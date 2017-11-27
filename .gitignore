@@ -108,3 +108,5 @@ profile.csv
 a.out
 llvm_out*
 assembly_out*
+*.ir
+*.ir.s

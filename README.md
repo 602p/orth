@@ -51,7 +51,7 @@ Orth is still a low-level language, meaning you still need to watch your memory 
 
 ### Running the Self-Hosting compiler
 0. Install LLVM 5.0 (as to provide a `llc-5.0`)
-0.5. Install some version of clang (as to provide a `clang`)
+½. Install some version of clang (as to provide a `clang`)
 1. Once you have orthc up and running, head into the shoc directory and run `./py_build --no-unwind` This will probably take ~30 seconds
 2. This should produce a `shoc` executable with a similar-but-not-the-same command line interface (flags - documented in `args.txt` - are different)
 3. Run `./experimental_build.sh --no-unwind` and shoc will rebuild itself

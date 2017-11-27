@@ -50,14 +50,14 @@ Orth is still a low-level language, meaning you still need to watch your memory 
 6. Observe and run your new ELF executable with `./out`
 
 ### Running the Self-Hosting compiler
-0. Install LLVM 5.0 (as to provide a `llc-5.0`)
-½. Install some version of clang (as to provide a `clang`)
-1. Once you have orthc up and running, head into the shoc directory and run `./py_build --no-unwind` This will probably take ~30 seconds
-2. This should produce a `shoc` executable with a similar-but-not-the-same command line interface (flags - documented in `args.txt` - are different)
-3. Run `./experimental_build.sh --no-unwind` and shoc will rebuild itself
-4. If this worked, copy `shoc` to `shoc_good` to use `./build_self.sh --no-unwind` for further development without breaking the working compiler
-5. Now you got a bona-fide orth-in-orth compiler in shoc. Should be compatible with samples stuff - e.g. `./shoc ../samples/http.ort && ./out 5001` to serve a demo web server on localhost:5001
-6. Bonus step: install libunwind (`libunwind-dev` on debian,) build `unwind_shim.o` in the `lib/unwind` folder and build without the `--no-unwind` flag
+ - 0. Install LLVM 5.0 (as to provide a `llc-5.0`)
+ - ½. Install some version of clang (as to provide a `clang`)
+ - 1. Once you have orthc up and running, head into the shoc directory and run `./py_build --no-unwind` This will probably take ~30 seconds
+ - 2. This should produce a `shoc` executable with a similar-but-not-the-same command line interface (flags - documented in `args.txt` - are different)
+ - 3. Run `./experimental_build.sh --no-unwind` and shoc will rebuild itself
+ - 4. If this worked, copy `shoc` to `shoc_good` to use `./build_self.sh --no-unwind` for further development without breaking the working compiler
+ - 5. Now you got a bona-fide orth-in-orth compiler in shoc. Should be compatible with samples stuff - e.g. `./shoc ../samples/http.ort && ./out 5001` to serve a demo web server on localhost:5001
+ - 6. Bonus step: install libunwind (`libunwind-dev` on debian,) build `unwind_shim.o` in the `lib/unwind` folder and build without the `--no-unwind` flag
 
 ### Running the OS
  * If you want to run the OS, you'll need a i386 cross-compiler GCC toolchain (gcc/as/ld,) and my build scripts will probably need some PATH tweaking, but with that set up in the path you should be able to run the `build.sh` script in the os folder

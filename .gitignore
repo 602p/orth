@@ -110,3 +110,4 @@ llvm_out*
 assembly_out*
 *.ir
 *.ir.s
+current_test.*

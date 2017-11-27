@@ -2,7 +2,9 @@
 function(CallExpr n, TransformerPass p) emit_value::for_call -> GIRVar does
 	List args=List::new()
 	
-	FPtrOType meth_type = p.proj:get_node_type(n.meth)|FPtrOType
+	OType meth_type_raw = p.proj:get_node_type(n.meth)
+	p.proj:fail_in_if(-meth_type_raw:is_fptr(), "Must call a function or function pointer", n.meth)
+	FPtrOType meth_type = meth_type_raw|FPtrOType
 	bool do_checking = meth_type.args|ptr!=null
 
 	if do_checking do

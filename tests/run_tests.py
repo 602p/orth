@@ -1,6 +1,8 @@
 #!/usr/bin/python3
 import os, colorama, subprocess, collections, enum, time, glob, sys
 
+do_verbose="--verbose" in sys.argv
+
 CallResult = collections.namedtuple("CallResult", ["code", "text"])
 Result = collections.namedtuple("Result", ["code", "text", "compile_time", "exec_time"])
 
@@ -8,24 +10,27 @@ class TestResult(enum.Enum):
 	OK = 1
 	COMPILE_FAILED = 2
 	OUTPUT_MISMATCH = 3
+	COMPILE_FAILED_CONSTRAINT = 4
 
 def call(*args):
 	try:
-		return CallResult(0, subprocess.check_output(args).decode("ascii", "ignore"))
+		return CallResult(0, subprocess.check_output(args, stderr=subprocess.STDOUT).decode("ascii", "ignore"))
 	except subprocess.CalledProcessError as e:
 		return CallResult(e.returncode, e.output.decode("ascii", "ignore"))
+	except FileNotFoundError as e:
+		return CallResult("FILENOTFOUND", "File not found")
 
 failures=[]
 total=0
 
-def compile_orthc(path, executable_name="current_test.a"):
+def compile_orthc(path, executable_name="current_test.a", flags=[]):
 	start = time.time()
-	compiler_result = call("../compiler/orthc", path, "o:"+executable_name)
+	compiler_result = call("../compiler/orthc", path, "o:"+executable_name, *flags)
 	elapsed = time.time() - start
 	if compiler_result.code!=0:
 		return Result(TestResult.COMPILE_FAILED, "Compile Failed:" + compiler_result.text, elapsed, 0)
 	else:
-		return Result(TestResult.OK, "", elapsed, 0)
+		return Result(TestResult.OK, compiler_result.text, elapsed, 0)
 
 def compile_shoc(path, executable_name="current_test.a", flags=[]):
 	start = time.time()
@@ -34,15 +39,19 @@ def compile_shoc(path, executable_name="current_test.a", flags=[]):
 	if compiler_result.code!=0:
 		return Result(TestResult.COMPILE_FAILED, "Compile Failed:" + compiler_result.text, elapsed, 0)
 	else:
-		return Result(TestResult.OK, "", elapsed, 0)
+		return Result(TestResult.OK, compiler_result.text, elapsed, 0)
 
-def test_generic(source, compiler, args=[], stdout=None, code=0, **compiler_args):
+def test_generic(source, compiler, args=[], stdout=None, code=0, expect_msg=None, expect_fail=False, **compiler_args):
 	with open("current_test.ort", 'w') as fd:
 		fd.write(source)
 	compile_result = compiler("current_test.ort", **compiler_args)
-	if compile_result.code!=TestResult.OK:
+	if expect_msg:
+		if not expect_msg in compile_result.text:
+			return Result(TestResult.COMPILE_FAILED_CONSTRAINT, repr(expect_msg)+" missing in "+repr(compile_result.text), compile_result.compile_time, 0)
+	if not expect_fail and compile_result.code!=TestResult.OK:
 		return compile_result
-
+	if expect_fail and compile_result.code==TestResult.OK:
+		return Result(TestResult.COMPILE_FAILED_CONSTRAINT, "Should not have compiled", compile_result.compile_time, 0)
 	start = time.time()
 	call_result = call("./current_test.a", *args)
 	elapsed = time.time() - start
@@ -66,6 +75,9 @@ def process_result(name, result, verbose=False):
 	elif result.code==TestResult.OUTPUT_MISMATCH:
 		s+=colorama.Fore.RED+"FAIL"
 		failures.append(name)
+	elif result.code==TestResult.COMPILE_FAILED_CONSTRAINT:
+		s+=colorama.Fore.YELLOW+"FAIL"
+		failures.append(name)
 	s+=colorama.Style.RESET_ALL+"]: "
 	s+=name+"\t"
 	if result.code==TestResult.OK:
@@ -74,31 +86,36 @@ def process_result(name, result, verbose=False):
 		s+="failed (compile failed)"
 	elif result.code==TestResult.OUTPUT_MISMATCH:
 		s+="failed (output mismatch)"
+	elif result.code==TestResult.COMPILE_FAILED_CONSTRAINT:
+		s+="failed (constraint failed)"
 	if result.text and verbose:
 		s+="- "+result.text
 	print(s)
 
 def test_shoc(name, source, stdout=None, code=0, **k):
-	process_result(name+"-SHOC", test_generic(source, compile_shoc, code=code, stdout=stdout, **k), verbose=True)
+	if not "--no-shoc" in sys.argv: process_result(name+"-SHOC", test_generic(source, compile_shoc, code=code, stdout=stdout, **k), verbose=do_verbose)
 
 def test_orthc(name, source, stdout=None, code=0, **k):
-	process_result(name+"-GEN1", test_generic(source, compile_orthc, code=code, stdout=stdout, **k), verbose=True)
+	if not "--no-orthc" in sys.argv: process_result(name+"-GEN1", test_generic(source, compile_orthc, code=code, stdout=stdout, **k), verbose=do_verbose)
 
 def test_both(*a, **k):
-	if not "--no-orthc" in sys.argv:
-		test_orthc(*a, **k)
-	if not "--no-shoc" in sys.argv:
-		test_shoc(*a, **k)
+	test_orthc(*a, **k)
+	test_shoc(*a, **k)
 
 def print_bar(name):
 	total_len=80
 	wo_name=total_len-len(name)
 	half_bar=wo_name//2
 	print()
-	print((half_bar*"=")+name+(half_bar*"=")+("="if half_bar*2+len(name)!=total_len else ""))
+	print((half_bar*"=")+name+(half_bar*"=")+("=" if half_bar*2+len(name)!=total_len else ""))
+
+prefix=""
+for i in sys.argv:
+	if i.startswith("--run="):
+		prefix=i.replace("--run=", "", 1)+"/"
 
 start = time.time()
-for fn in glob.iglob("**", recursive=True):
+for fn in glob.iglob(prefix+"**", recursive=True):
 	if "run_tests" not in fn and fn.endswith(".py"):
 		print_bar(fn)
 		exec(open(fn, 'r').read())
@@ -106,8 +123,8 @@ total_time = time.time() - start
 
 print_bar("OVERALL")
 if len(failures)==0:
-	print(colorama.Fore.GREEN+("Success! Ran %i tests in %f seconds with no failures"%(total, total_time))+colorama.Style.RESET_ALL)
+	print(colorama.Back.GREEN+colorama.Fore.BLACK+("Success! Ran %i tests in %f seconds with no failures"%(total, total_time))+colorama.Style.RESET_ALL)
 else:
-	print(colorama.Fore.RED+("Failure! Ran %i tests in %f seconds with %i failures"%(total, total_time, len(failures)))+colorama.Style.RESET_ALL)
+	print(colorama.Back.RED+colorama.Fore.BLACK+("Failure! Ran %i tests in %f seconds with %i failures"%(total, total_time, len(failures)))+colorama.Style.RESET_ALL)
 	for i in failures:
 		print(" - "+i)

@@ -1,7 +1,7 @@
 
 function(TypeDecl n, TransformerPass p) predefine_types::visit_type -> TypeDecl does
+	shoc::assert(-p.proj.types:contains(n.head.name), "Duplicate definition of type "+n.head.name)
 	p.proj:add_Type(StructOType::new(n.head.name))
-	# puts(n.head.name)
 return n
 
 function() predefine_types::init -> TransformerPass does

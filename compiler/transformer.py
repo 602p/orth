@@ -89,7 +89,7 @@ class LiteralExprTransformer(Transformer):
 
 	@staticmethod
 	def get_type(node, out):
-		return node.type
+		return get_type(node.type, out)
 
 class BinOpExprTransformer(Transformer):
 	transforms=BinOpExpr
@@ -235,6 +235,7 @@ class IndexExprTransformer(Transformer):
 	@ret_local
 	def transform_address(self, out): #TODO: Improve
 		base=out.get_temp_name()
+		print(self.node.object)
 		out.emitl("%{} = ptrtoint {} {} to i64 ;IndexExpr:transform_address".format(
 			base,
 			transform.get_transformer(self.node.object, self).get_type(self.node.object, out).get_llvm_representation(),

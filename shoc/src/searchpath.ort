@@ -20,6 +20,12 @@ function(List path, cstr import_name) shoc::resolve_name_import -> cstr does
 		done
 		i+=1
 	done
+	i=0
+	while i<path.len do
+		printf("Tried: %s\n", (path:get(i)|cstr)+"/"+import_name+".ort")
+		printf("Tried: %s\n", (path:get(i)|cstr)+"/"+import_name+"/__init__.ort")
+		i+=1
+	done
 	shoc::bail_out("Can't resolve bare-name import of: "+import_name)
 return ""
 

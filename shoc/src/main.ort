@@ -24,11 +24,23 @@ function(int nargs, ArgList args) main -> int does
 		orth::fail("E: Bad args")
 	done
 
+	cstr source_folder = args:get(0)+" "
+	if source_folder:contains("/") do
+		int slash_search=source_folder:len()-1
+		while source_folder[slash_search]!="/"[0] do
+			slash_search-=1
+		done
+		source_folder[slash_search]=""[0]
+	else do
+		source_folder=""
+	done
+
 	List search_path=List::new()
 	search_path:append(".")
-	search_path:append("lib")
-	search_path:append("../lib")
-	search_path:append("../../lib")
+	search_path:append(source_folder+"/lib")
+	search_path:append(source_folder+"/../lib")
+	search_path:append(source_folder+"/../../lib")
+	search_path:append(source_folder+"/../../../lib")
 
 	StrMap options = StrMap::new()
 	options:set("output_path", "out")

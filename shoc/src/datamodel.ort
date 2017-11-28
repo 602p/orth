@@ -211,16 +211,17 @@ type StructOType is packed
 			size = self.proj.pointer_size/8
 		done
 
-		int curr_offset=0
-		if self.fields.len!=0 do
-			curr_offset = (self:get_field_offset(self.fields:get_TypedVar(self.fields.len-1).name)/8)+size
-		done
+		int curr_offset=self:get_size()/8
 
 		int pad = size-(curr_offset%size)
 		if pad==size do
 			pad = 0
 		done
-		if pad!=0 & -self.proj.options:contains("no_pad_struct") do
+
+		# printf("adding=%s, curr_offset=%i, size=%i, pad=%i\n", decl_string, curr_offset, size, pad)
+
+		if (pad!=0) & (-self.proj.options:contains("no_pad_struct")) & (-self.packed) do
+			# printf("%s: packed=%i, pad=%i, f=%s\n", self.name, self.packed|int, pad, decl_string)
 			# printf(self.name+": add "+new_field.name+" sz="+size:str()+" at "+curr_offset:str()+" : pad by "+pad:str()+"\n")
 			int i=0
 			while i<pad do

@@ -224,6 +224,10 @@ function(int nargs, ArgList args) main -> int does
 				llc_command+=" -march=x86"
 			done
 
+			if options:contains("show_commandlines") do
+				printf("llc_command=%s\ncompiler_command=%s\n", llc_command, compiler_command)
+			done
+
 			os::run_checked(llc_command)
 			os::run_checked(compiler_command)
 

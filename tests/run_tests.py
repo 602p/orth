@@ -2,6 +2,7 @@
 import os, colorama, subprocess, collections, enum, time, glob, sys
 
 do_verbose="--verbose" in sys.argv
+do_all_o="--all-opts" in sys.argv
 
 CallResult = collections.namedtuple("CallResult", ["code", "text"])
 Result = collections.namedtuple("Result", ["code", "text", "compile_time", "exec_time"])
@@ -92,8 +93,21 @@ def process_result(name, result, verbose=False):
 		s+="- "+result.text
 	print(s)
 
-def test_shoc(name, source, stdout=None, code=0, **k):
-	if not "--no-shoc" in sys.argv: process_result(name+"-SHOC", test_generic(source, compile_shoc, code=code, stdout=stdout, **k), verbose=do_verbose)
+def test_shoc(name, source, stdout=None, code=0, disable_all_o=False, **k):
+	if not "--no-shoc" in sys.argv:
+		if do_all_o and not disable_all_o:
+			k.setdefault("flags", [])
+			k["flags"].append("-O1")
+			process_result(name+"-S-O1", test_generic(source, compile_shoc, code=code, stdout=stdout, **k), verbose=do_verbose)
+			k["flags"][-1]="-O2"
+			process_result(name+"-S-O2", test_generic(source, compile_shoc, code=code, stdout=stdout, **k), verbose=do_verbose)
+			k["flags"][-1]="-O3"
+			process_result(name+"-S-O3", test_generic(source, compile_shoc, code=code, stdout=stdout, **k), verbose=do_verbose)
+			k["flags"][-1]="-O0"
+			process_result(name+"-S-O0", test_generic(source, compile_shoc, code=code, stdout=stdout, **k), verbose=do_verbose)
+		else:
+			process_result(name+"-SHOC", test_generic(source, compile_shoc, code=code, stdout=stdout, **k), verbose=do_verbose)
+
 
 def test_orthc(name, source, stdout=None, code=0, **k):
 	if not "--no-orthc" in sys.argv: process_result(name+"-GEN1", test_generic(source, compile_orthc, code=code, stdout=stdout, **k), verbose=do_verbose)
@@ -128,3 +142,5 @@ else:
 	print(colorama.Back.RED+colorama.Fore.BLACK+("Failure! Ran %i tests in %f seconds with %i failures"%(total, total_time, len(failures)))+colorama.Style.RESET_ALL)
 	for i in failures:
 		print(" - "+i)
+
+os.system("rm current_test.ort current_test.a")

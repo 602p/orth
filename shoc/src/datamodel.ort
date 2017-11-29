@@ -127,7 +127,7 @@ type OType is packed
 	function(OType self, OType other) OType:__ne__ -> bool does
 	return self|ptr != other|ptr
 
-	function(OType self, StrMap scope) OType:resolve -> OType does
+	function(OType self, GenericArgs scope) OType:resolve -> OType does
 		shoc::assert(-self.variety==PTYPE & -self.variety==SYMTYPE, "Can't :resolve a PTYPE/SYMTYPE")
 	return self
 endtype
@@ -221,7 +221,10 @@ type StructOType is packed
 	return new|OType
 
 	function(StructOType self, cstr decl_string) StructOType:add_field -> void does
-		TypedVar new_field = TypedVar::from_decl(decl_string, self.proj)
+		self:add_field_tv(TypedVar::from_decl(decl_string, self.proj))
+	return		
+
+	function(StructOType self, TypedVar new_field) StructOType:add_field_tv -> void does
 		int size = new_field.type_:get_size()/8
 		if new_field.type_:is_struct() do
 			size = self.proj.pointer_size/8
@@ -233,7 +236,6 @@ type StructOType is packed
 		if pad==size do
 			pad = 0
 		done
-
 		# printf("adding=%s, curr_offset=%i, size=%i, pad=%i\n", decl_string, curr_offset, size, pad)
 
 		if (pad!=0) & (-self.proj.options:contains("no_pad_struct")) & (-self.packed) do

@@ -4,12 +4,27 @@ type GenericArgs is
 
 	function() GenericArgs::new -> GenericArgs does
 		GenericArgs self = malloc(@sizeof(GenericArgs)@)|GenericArgs
-		self._args = GenericArgs::new()
+		self._args = StrMap::new()
 		self._order = List::new()
+	return self
+
+	function(GenericArgs other) GenericArgs::copy -> GenericArgs does
+		GenericArgs self = malloc(@sizeof(GenericArgs)@)|GenericArgs
+		self._args = StrMap::new()
+		self._order = List::new()
+		int i=0
+		while i<other:len() do
+			self:add(other:get_name_for_idx(i), other:get_idx(i))
+			i+=1
+		done
 	return self
 
 	function(GenericArgs self, cstr name, OType arg) GenericArgs:add -> void does
 		self._order:append(name)
+		self._args:set(name, arg|ptr)
+	return
+
+	function(GenericArgs self, cstr name, OType arg) GenericArgs:set -> void does
 		self._args:set(name, arg|ptr)
 	return
 
@@ -34,29 +49,46 @@ type GType is
 	cstr name
 	GenericArgs arguments #(map of generic name -> OType OR null if no default)
 	bool packed
-	GenericArgs fields #(map of name -> OType(that :is_concrete) )
+	List fields #List of TypedVars
+	Project proj
 
-	function(cstr name, GenericArgs fields, bool packed, GenericArgs arguments) GType::new -> GType does
+	function(Project p, cstr name, List fields, bool packed, GenericArgs arguments) GType::new -> GType does
 		GType self = malloc(@sizeof(GType)@)|GType
 		self.name=name
 		self.arguments=arguments
 		self.fields = fields
 		self.packed = packed
+		self.proj=p
 	return self
 
 	function(GType self, GenericArgs scope) GType:apply -> OType does
 		GenericArgs resolved_children = GenericArgs::new()
-		cstr mangled_name = self.name+"."	
+		cstr mangled_name = self.name+"."
+
 		int i=0
 		while i<scope:len() do
 			cstr key = scope:get_name_for_idx(i)
-			OType resolved = scope:get_name(i):resolve(scope)
-			resolved_children:add(key, resolved|ptr)
+			OType resolved = scope:get_idx(i):resolve(scope)
+			resolved_children:add(key, resolved)
 			mangled_name+=resolved.name+"."
 			i+=1
 		done
-		i=0
+		
 		StructOType new_t = StructOType::new(mangled_name)|StructOType
+		new_t.packed=self.packed
+		self.proj:add_Type(new_t|OType)
+		i=0
+		while i<self.fields.len do
+			TypedVar orig_var = self.fields:get_TypedVar(i)
+			OType resolved_var = orig_var.type_
+			if resolved_var.variety==SYMTYPE do
+				resolved_var=resolved_children:get_name(resolved_var.name)
+			done
+			printf("Adding field: %s ",orig_var.name)
+			resolved_var:print()
+			new_t:add_field_tv(TypedVar::new(orig_var.name, resolved_var))
+			i+=1
+		done
 	return new_t|OType
 
 	function(GType self) GType:print -> void does
@@ -66,17 +98,17 @@ type GType is
 		done
 		printf("\n")
 		int i=0
-		while i<self.fields:len() do
-			printf(" -field: %s:", self.fields:get_name_for_idx(i))
-			self.fields:get_name(i):print()
+		while i<self.fields.len do
+			printf(" -field: %s:", self.fields:get_TypedVar(i).name)
+			self.fields:get_TypedVar(i).type_:print()
 			i+=1
 		done
 		printf("========\n")
 		i=0
 		while i<self.arguments:len() do
 			printf(" -arg: %s: ", self.arguments:get_name_for_idx(i))
-			if self.arguments:get_name(i)|ptr!=null do
-				self.arguments:get_name(i):print()
+			if self.arguments:get_idx(i)|ptr!=null do
+				self.arguments:get_idx(i):print()
 			else do
 				printf(" [no default]\n")
 			done
@@ -92,14 +124,14 @@ type PType is packed
 	GType generic
 	GenericArgs arguments #(map of generic name -> OType OR null if using default)
 
-	function(GType generic, GenericArgs arguments) PType::new -> PType does
+	function(GType generic, GenericArgs arguments) PType::new -> OType does
 		PType self = malloc(@sizeof(PType)@)|PType
 		self.proj=p
 		self.generic=generic
 		self.arguments=arguments
 		self.variety=PTYPE
 		self.name="[Generic Of: "+generic.name+"]"
-	return self
+	return self|OType
 endtype
 
 type SymType is packed
@@ -107,11 +139,11 @@ type SymType is packed
 	cstr name
 	Project proj
 
-	function(cstr name) SymType::new -> SymType does
+	function(cstr name) SymType::new -> OType does
 		SymType self = malloc(@sizeof(SymType)@)|SymType
 		self.variety=SYMTYPE
 		self.name=name
-	return self
+	return self|OType
 
 	function(SymType self) SymType:print -> void does
 		printf("[SymType %s]\n", self.name)

@@ -1,0 +1,26 @@
+import std
+import shoc
+import args
+
+function(int nargs, ArgList args) main -> int does
+	Project proj = shoc::get_empty_project()\
+	                    :with_options(StrMap::new())\
+	                    :with_base_tokens()\
+	                    :with_base_grammar()\
+	                    :with_base_passes()\
+	                    :with_base_gir()\
+	                    :with_arch_bits(64)\
+	                    :with_base_types()\
+	                    :with_search_path(List::new())
+    StrMap fields = StrMap::new()
+    fields:set("some_int", proj:get_type("int")|ptr)
+    fields:set("item", SymType::new("V")|ptr)
+    StrMap generic_args = StrMap::new()
+    generic_args:set("V", null)
+    GType generic_type = GType::new("Container", fields, false, generic_args)
+    generic_type:print()
+    printf("\n\n\n")
+    StrMap inst_args = StrMap::new()
+    inst_args:set("V", proj:get_type("float")|ptr)
+    generic_type:apply(inst_args):print()
+return 0

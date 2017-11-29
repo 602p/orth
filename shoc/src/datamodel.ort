@@ -5,6 +5,8 @@ int FLOAT #3
 int POINTER #4
 int F_PTR #5
 int STRUCT #6
+int PTYPE #7
+int SYMTYPE #8
 
 function(int variety) datamodel::variety_to_name -> cstr does
 	if variety==0 do
@@ -21,6 +23,8 @@ function(int variety) datamodel::variety_to_name -> cstr does
 		return "F_PTR"
 	elif variety==6 do
 		return "STRUCT"
+	elif variety==7 do
+		return "PTYPE"
 	done
 	shoc::bail_out("datamodel::variety_to_name called on invalid variety: "+variety:str())
 return ""
@@ -76,6 +80,9 @@ type OType is packed
 	function(OType t) OType:is_struct -> bool does
 	return t.variety==6
 
+	function(OType t) OType:is_sym -> bool does
+	return t.variety==SYMTYPE
+
 	function(OType t) OType:as_primitive -> PrimitiveOType does
 	return t|PrimitiveOType
 
@@ -84,6 +91,9 @@ type OType is packed
 
 	function(OType t) OType:as_fptr -> FPtrOType does
 	return t|FPtrOType
+
+	function(OType t) OType:as_sym -> SymType does
+	return t|SymType
 
 	function(OType t) OType:get_size -> int does
 		if t:is_primitive() do
@@ -104,6 +114,8 @@ type OType is packed
 			t:as_fptr():print()
 		elif t:is_struct() do
 			t:as_struct():print()
+		elif t:is_sym() do
+			t:as_sym():print()
 		else do
 			printf("??? %i\n", t.variety)
 		done
@@ -114,6 +126,10 @@ type OType is packed
 
 	function(OType self, OType other) OType:__ne__ -> bool does
 	return self|ptr != other|ptr
+
+	function(OType self, StrMap scope) OType:resolve -> OType does
+		shoc::assert(-self.variety==PTYPE & -self.variety==SYMTYPE, "Can't :resolve a PTYPE/SYMTYPE")
+	return self
 endtype
 
 type PrimitiveOType is packed
@@ -311,6 +327,8 @@ type StructOType is packed
 	return
 endtype
 
+import generics
+
 function(Project p) shoc::datamodel::init_base -> void does
 	VOID=0
 	S_INT=1
@@ -319,6 +337,8 @@ function(Project p) shoc::datamodel::init_base -> void does
 	POINTER=4
 	F_PTR=5
 	STRUCT=6
+	PTYPE=7
+	SYMTYPE=8
 
 	p:add_Type(PrimitiveOType::new("int", S_INT, 4*8))
 	p:add_Type(PrimitiveOType::new("short", S_INT, 2*8))

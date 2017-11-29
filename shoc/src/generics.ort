@@ -1,0 +1,119 @@
+type GenericArgs is
+	StrMap _args
+	List _order
+
+	function() GenericArgs::new -> GenericArgs does
+		GenericArgs self = malloc(@sizeof(GenericArgs)@)|GenericArgs
+		self._args = GenericArgs::new()
+		self._order = List::new()
+	return self
+
+	function(GenericArgs self, cstr name, OType arg) GenericArgs:add -> void does
+		self._order:append(name)
+		self._args:set(name, arg|ptr)
+	return
+
+	function(GenericArgs self, cstr name) GenericArgs:add_null -> void does
+		self:add(name, null|OType)
+	return
+
+	function(GenericArgs self, cstr name) GenericArgs:get_name -> OType does
+	return self._args:get(name)|OType
+
+	function(GenericArgs self, int idx) GenericArgs:get_name_for_idx -> cstr does
+	return self._order:get(idx)
+
+	function(GenericArgs self, int idx) GenericArgs:get_idx -> OType does
+	return self:get_name(self:get_name_for_idx(idx))
+
+	function(GenericArgs self) GenericArgs:len -> int does
+	return self._order.len
+endtype
+
+type GType is
+	cstr name
+	GenericArgs arguments #(map of generic name -> OType OR null if no default)
+	bool packed
+	GenericArgs fields #(map of name -> OType(that :is_concrete) )
+
+	function(cstr name, GenericArgs fields, bool packed, GenericArgs arguments) GType::new -> GType does
+		GType self = malloc(@sizeof(GType)@)|GType
+		self.name=name
+		self.arguments=arguments
+		self.fields = fields
+		self.packed = packed
+	return self
+
+	function(GType self, GenericArgs scope) GType:apply -> OType does
+		GenericArgs resolved_children = GenericArgs::new()
+		cstr mangled_name = self.name+"."	
+		int i=0
+		while i<scope:len() do
+			cstr key = scope:get_name_for_idx(i)
+			OType resolved = scope:get_name(i):resolve(scope)
+			resolved_children:add(key, resolved|ptr)
+			mangled_name+=resolved.name+"."
+			i+=1
+		done
+		i=0
+		StructOType new_t = StructOType::new(mangled_name)|StructOType
+	return new_t|OType
+
+	function(GType self) GType:print -> void does
+		printf("GType: %s ", self.name)
+		if self.packed do
+			printf("packed ")
+		done
+		printf("\n")
+		int i=0
+		while i<self.fields:len() do
+			printf(" -field: %s:", self.fields:get_name_for_idx(i))
+			self.fields:get_name(i):print()
+			i+=1
+		done
+		printf("========\n")
+		i=0
+		while i<self.arguments:len() do
+			printf(" -arg: %s: ", self.arguments:get_name_for_idx(i))
+			if self.arguments:get_name(i)|ptr!=null do
+				self.arguments:get_name(i):print()
+			else do
+				printf(" [no default]\n")
+			done
+			i+=1
+		done
+	return
+endtype
+
+type PType is packed
+	int variety
+	cstr name
+	Project proj
+	GType generic
+	GenericArgs arguments #(map of generic name -> OType OR null if using default)
+
+	function(GType generic, GenericArgs arguments) PType::new -> PType does
+		PType self = malloc(@sizeof(PType)@)|PType
+		self.proj=p
+		self.generic=generic
+		self.arguments=arguments
+		self.variety=PTYPE
+		self.name="[Generic Of: "+generic.name+"]"
+	return self
+endtype
+
+type SymType is packed
+	int variety
+	cstr name
+	Project proj
+
+	function(cstr name) SymType::new -> SymType does
+		SymType self = malloc(@sizeof(SymType)@)|SymType
+		self.variety=SYMTYPE
+		self.name=name
+	return self
+
+	function(SymType self) SymType:print -> void does
+		printf("[SymType %s]\n", self.name)
+	return
+endtype

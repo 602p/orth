@@ -1,0 +1,14 @@
+extern(int size) malloc -> ptr
+extern(...) printf -> int
+
+type SomeT is
+	int a
+	int b
+endtype
+
+function() main -> int does
+	SomeT s = malloc(@sizeof(SomeT))|SomeT
+	s.a=1
+	s.b=2
+	printf("%i, %i\n", s.a, s.b)
+return 0

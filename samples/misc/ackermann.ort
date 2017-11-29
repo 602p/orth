@@ -1,0 +1,16 @@
+import std
+
+function(int m, int n) ack -> int does
+	if m==0 do
+		return n+1
+	elif n==0 do
+		return ack(m-1, 1)
+	done
+return ack(m-1, ack(m, n-1))
+
+
+function() main -> int does
+	printf("%i\n", ack(3, 12))
+return 0
+
+#3,12

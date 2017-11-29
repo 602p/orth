@@ -18,7 +18,7 @@ Use -f<flag> to set a flag. Flags include:
 	-fverbose			: Print status info while building (fancy progress bars)
 	-fno_opt			: Skip optimization transformer passes
 
-Use -s<path> to add stuff to the search path (insert before default path), e.g. -s../lib/err_lite to use err_lite shimming in your app
+Use -s<path> to add stuff to the search path (insert before default path)
 Default search path is (in order): [., ./lib, ../lib, ../../lib]
 
 Use -o<path> to specify output path. Executable will built to this path, and intermediate files will be named <path>.ir and <path>.s
@@ -31,3 +31,9 @@ Use -w<flag> to enable warnings. This sets the flag `warn_<flag>`, and is equivi
 	-wunused			: Print warnings about unused methods. These will be optimized away as well
 	-wduplicate			: Print warnings about duplicate or ambiguous locals
 	-wstyle				: Print warnings on old-style syntax
+	-wtypes				: Print warnings on illegal assignments, etc
+	-wstrict_types		: Include cstr <--> ptr issues in above
+
+Shimming examples:
+	-s../lib/err_lite for shimming the err tools
+	-s../lib/nounwind_shim for shimming the libunwind tools

@@ -61,31 +61,31 @@ type GType is
 		self.proj=p
 	return self
 
-	function(GType self, GenericArgs scope) GType:apply -> OType does
-		GenericArgs resolved_children = GenericArgs::new()
+	function(GType self, GenericArgs params) GType:apply -> OType does
 		cstr mangled_name = self.name+"."
 
 		int i=0
-		while i<scope:len() do
-			cstr key = scope:get_name_for_idx(i)
-			OType resolved = scope:get_idx(i):resolve(scope)
-			resolved_children:add(key, resolved)
-			mangled_name+=resolved.name+"."
+		while i<params:len() do
+			mangled_name+=params:get_idx(i).name+"."
 			i+=1
+		done
+
+		if self.proj.types:contains(mangled_name) do
+			return self.proj:get_type(mangled_name)
 		done
 		
 		StructOType new_t = StructOType::new(mangled_name)|StructOType
 		new_t.packed=self.packed
 		self.proj:add_Type(new_t|OType)
+
 		i=0
 		while i<self.fields.len do
 			TypedVar orig_var = self.fields:get_TypedVar(i)
 			OType resolved_var = orig_var.type_
 			if resolved_var.variety==SYMTYPE do
-				resolved_var=resolved_children:get_name(resolved_var.name)
+				resolved_var=params:get_name(resolved_var.name)
 			done
-			printf("Adding field: %s ",orig_var.name)
-			resolved_var:print()
+			resolved_var=resolved_var:resolve(params)
 			new_t:add_field_tv(TypedVar::new(orig_var.name, resolved_var))
 			i+=1
 		done
@@ -126,12 +126,32 @@ type PType is packed
 
 	function(GType generic, GenericArgs arguments) PType::new -> OType does
 		PType self = malloc(@sizeof(PType)@)|PType
-		self.proj=p
 		self.generic=generic
 		self.arguments=arguments
 		self.variety=PTYPE
 		self.name="[Generic Of: "+generic.name+"]"
 	return self|OType
+
+	function(PType self, GenericArgs params) PType:resolve -> OType does
+		int i=0
+		GenericArgs inst_args = GenericArgs::copy(self.arguments)
+		while i<self.arguments:len() do
+			if self.arguments:get_idx(i).variety==SYMTYPE do
+				self.arguments:set(self.arguments:get_name_for_idx(i), params:get_name(self.arguments:get_name_for_idx(i)))
+			done
+			i+=1
+		done
+	return self.generic:apply(self.arguments)
+
+	function(PType self) PType:print -> void does
+		printf("PType %s\n", self.name)
+		int i=0
+		while i<self.arguments:len() do
+			printf(" -arg: %s: ", self.arguments:get_name_for_idx(i))
+			self.arguments:get_idx(i):print()
+			i+=1
+		done
+	return
 endtype
 
 type SymType is packed

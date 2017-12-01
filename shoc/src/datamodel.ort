@@ -116,6 +116,8 @@ type OType is packed
 			t:as_struct():print()
 		elif t:is_sym() do
 			t:as_sym():print()
+		elif t.variety==PTYPE do
+			t|PType:print()
 		else do
 			printf("??? %i\n", t.variety)
 		done
@@ -127,8 +129,11 @@ type OType is packed
 	function(OType self, OType other) OType:__ne__ -> bool does
 	return self|ptr != other|ptr
 
-	function(OType self, GenericArgs scope) OType:resolve -> OType does
-		shoc::assert(-self.variety==PTYPE & -self.variety==SYMTYPE, "Can't :resolve a PTYPE/SYMTYPE")
+	function(OType self, GenericArgs params) OType:resolve -> OType does
+		if self.variety==PTYPE do
+			return self|PType:resolve(params)
+		done
+		shoc::assert(-self.variety==SYMTYPE, "Can't :resolve a SYMTYPE")
 	return self
 endtype
 

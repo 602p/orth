@@ -18,21 +18,21 @@ function(int nargs, ArgList args) main -> int does
 	                    :with_search_path(List::new())
 
     List fields = List::new()
-    fields:append_TypedVar(TypedVar::new("some_int", proj:get_type("int")))
-    fields:append_TypedVar(TypedVar::new("key", SymType::new("K")))
     fields:append_TypedVar(TypedVar::new("value", SymType::new("V")))
 
     GenericArgs generic_args = GenericArgs::new()
-    generic_args:add("K", proj:get_type("cstr"))
     generic_args:add_null("V")
 
-    GType generic_type = GType::new(proj, "Pair", fields, true, generic_args)
+    GType generic_type = GType::new(proj, "Cell", fields, true, generic_args)
+    GenericArgs next_args = GenericArgs::copy(generic_args)
+    next_args:set("V", SymType::new("V"))
+    OType pt = PType::new(generic_type, next_args)
+    generic_type.fields:append_TypedVar(TypedVar::new("next", pt))
     generic_type:print()
     printf("\n\n\n")
 
     GenericArgs inst_args = GenericArgs::copy(generic_args)
-    # inst_args:set("K", proj:get_type("int"))
-    inst_args:set("V", proj:get_type("float"))
+    inst_args:set("V", proj:get_type("int"))
 
-    generic_type:apply(inst_args):print()
+    PType::new(generic_type, inst_args):resolve(GenericArgs::new()):print()
 return 0

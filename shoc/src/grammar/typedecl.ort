@@ -72,13 +72,18 @@ type TypeDeclHead is packed
 		done
 	return 3
 
-	function() TypeDeclHead::impl -> NodeType does
-	return NodeType::new("TypeDeclHead")\
+	function() TypeDeclHead::impl -> void does
+		TypeDeclHead_t = NodeType::new("TypeDeclHead")\
 					:set_printer(TypeDeclHead::print |NodePrinter)\
 					:set_creator(TypeDeclHead::create|NodeCreator)\
 					:set_matcher(TypeDeclHead::match |NodeMatcher)\
 					:matches(3):matches_only_tokens()
+	return
 endtype
+
+NodeType TypeDeclHead_t
+
+
 
 type TypeDeclBody is packed
 	NodeType type_
@@ -152,14 +157,19 @@ type TypeDeclBody is packed
 		done
 	return
 
-	function() TypeDeclBody::impl -> NodeType does
-	return NodeType::new("TypeDeclBody")\
+	function() TypeDeclBody::impl -> void does
+		TypeDeclBody_t = NodeType::new("TypeDeclBody")\
 					:set_printer(TypeDeclBody::print |NodePrinter)\
 					:set_creator(TypeDeclBody::create|NodeCreator)\
 					:set_matcher(TypeDeclBody::match |NodeMatcher)\
 					:set_visitor(TypeDeclBody::visit |NodeVisitor)\
 					:matches(2)
+	return
 endtype
+
+NodeType TypeDeclBody_t
+
+
 
 type TypeDecl is packed
 	NodeType type_
@@ -194,11 +204,14 @@ type TypeDecl is packed
 		n.head=p:visit(n.head|Node)|TypeDeclHead
 	return
 
-	function() TypeDecl::impl -> NodeType does
-	return NodeType::new("TypeDecl")\
+	function() TypeDecl::impl -> void does
+		TypeDecl_t = NodeType::new("TypeDecl")\
 					:set_printer(TypeDecl::print |NodePrinter)\
 					:set_creator(TypeDecl::create|NodeCreator)\
 					:set_matcher(TypeDecl::match |NodeMatcher)\
 					:set_visitor(TypeDecl::visit |NodeVisitor)\
 					:matches(2):matches_only_nodes()
+	return
 endtype
+
+NodeType TypeDecl_t

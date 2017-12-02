@@ -23,12 +23,16 @@ type Node is packed
 	return
 
 	function(Node self, int depth) Node:print -> void does
+		printf(" [0x%x] ", self)
 		self.type_.printer(self, depth)
 	return
 
 	function(Node self) Node:print_root -> void does
 		self:print(0)
 	return
+
+	function(Node self) Node:copy -> Node does
+	return self.type_.copier(self)
 
 	function(Node self, cstr ty) Node:is_a -> bool does
 	return self.type_:is_a(ty)
@@ -172,6 +176,7 @@ type EleList is
 endtype
 
 type NodeDeleter is a function->void #(Node node)
+type NodeTCopier is a function->Node #(Node node) -> Node | Produce a recursive copy
 type NodePrinter is a function->void #(Node node, int depth)
 type NodeVisitor is a function->void #(Node node, TransformerPass p)
 type NodeCreator is a function->Node #(EleList elems) -> created node
@@ -179,6 +184,10 @@ type NodeMatcher is a function->int  #(EleList elems) -> number consumed
 
 function(Node n, TransformerPass p) _default_node_child_visitor -> void does
 return
+
+function(Node n) _default_node_copier -> Node does
+	shoc::bail_out("Cannot copy a "+n.type_.name)
+return null|Node
 
 type NodeType is
 	cstr name
@@ -188,6 +197,7 @@ type NodeType is
 	NodeDeleter deleter
 	NodeCreator creator
 	NodeVisitor child_visitor
+	NodeTCopier copier
 
 	int matcher_flags #0 = Default, 1 = Match only tokens, 2 = Match only nodes
 	int matcher_count #min number of elemnts left requred
@@ -213,6 +223,10 @@ type NodeType is
 		self.matcher=m
 	return self
 
+	function(NodeType self, NodeTCopier m) NodeType:set_tcopier -> NodeType does
+		self.copier=m
+	return self
+
 	function(NodeType self, EleList eles) NodeType:create_node -> Node does
 		Node new = self.creator(eles)
 		new.type_=self
@@ -222,6 +236,7 @@ type NodeType is
 		NodeType new = malloc(@sizeof(NodeType)@)|NodeType
 		new.name=name
 		new.child_visitor=_default_node_child_visitor|NodeVisitor
+		new.copier=_default_node_copier|NodeTCopier
 
 		new.things_i_am=null|List
 		new.matcher_count=1

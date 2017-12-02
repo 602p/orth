@@ -83,13 +83,18 @@ type FunctionDeclHead is packed
 		done
 	return 6
 
-	function() FunctionDeclHead::impl -> NodeType does
-	return NodeType::new("FunctionDeclHead")\
+	function() FunctionDeclHead::impl -> void does
+		FunctionDeclHead_t = NodeType::new("FunctionDeclHead")\
 					:set_printer(FunctionDeclHead::print |NodePrinter)\
 					:set_creator(FunctionDeclHead::create|NodeCreator)\
 					:set_matcher(FunctionDeclHead::match |NodeMatcher)\
 					:matches(5)
+	return
 endtype
+
+NodeType FunctionDeclHead_t
+
+
 
 type FunctionBody is packed
 	NodeType type_
@@ -172,13 +177,17 @@ type FunctionBody is packed
 		done
 	return 0
 
-	function() FunctionBody::impl -> NodeType does
-	return NodeType::new("FunctionBody")\
+	function() FunctionBody::impl -> void does
+		FunctionBody_t = NodeType::new("FunctionBody")\
 					:set_printer(FunctionBody::print |NodePrinter)\
 					:set_creator(FunctionBody::create|NodeCreator)\
 					:set_matcher(FunctionBody::match |NodeMatcher)\
 					:matches(2)
+	return
 endtype
+
+NodeType FunctionBody_t
+
 
 type FunctionDecl is packed
 	NodeType type_
@@ -244,11 +253,14 @@ type FunctionDecl is packed
 		p.proj:exit_method()
 	return
 
-	function() FunctionDecl::impl -> NodeType does
-	return NodeType::new("FunctionDecl")\
+	function() FunctionDecl::impl -> void does
+		FunctionDecl_t = NodeType::new("FunctionDecl")\
 					:set_printer(FunctionDecl::print |NodePrinter)\
 					:set_creator(FunctionDecl::create|NodeCreator)\
 					:set_matcher(FunctionDecl::match |NodeMatcher)\
 					:set_visitor(FunctionDecl::visit |NodeVisitor)\
 					:matches(2):matches_only_nodes()
+	return
 endtype
+
+NodeType FunctionDecl_t

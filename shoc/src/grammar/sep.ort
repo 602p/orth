@@ -6,8 +6,14 @@ type SepExpr is packed
 		printf("SepExpr (Consumed=%i)\n", node.consumed)
 	return
 
-	function(EleList eles) SepExpr::create -> SepExpr does
+	function(int consumed) SepExpr::create_raw -> SepExpr does
 		SepExpr new = malloc(@sizeof(SepExpr)@)|SepExpr
+		new.type_=SepExpr_t
+		new.consumed=consumed
+	return new
+
+	function(EleList eles) SepExpr::create -> SepExpr does
+		SepExpr new = SepExpr::create_raw(0)
 		new.consumed=1
 		if eles:in_slice()>1 do
 			if eles:get(1).is_token do
@@ -52,10 +58,17 @@ type SepExpr is packed
 		done
 	return 1
 
-	function() SepExpr::impl -> NodeType does
-	return NodeType::new("SepExpr")\
+	function(SepExpr self) SepExpr::copy -> Node does
+	return SepExpr::create_raw(self.consumed)|Node
+
+	function() SepExpr::impl -> void does
+		SepExpr_t = NodeType::new("SepExpr")\
 					:set_printer(SepExpr::print |NodePrinter)\
 					:set_creator(SepExpr::create|NodeCreator)\
 					:set_matcher(SepExpr::match |NodeMatcher)\
+					:set_tcopier(SepExpr::copy  |NodeTCopier)\
 					:matches(1):addtype("Expression")
+	return
 endtype
+
+NodeType SepExpr_t

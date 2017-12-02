@@ -23,9 +23,9 @@ type AccessorExpr is packed
 		new.anchor=eles:get(1):t()
 	return new
 
-	function(Project p, Node obj, cstr mode, cstr field, Token anchor) AccessorExpr::create_direct -> AccessorExpr does
+	function(Node obj, cstr mode, cstr field, Token anchor) AccessorExpr::create_direct -> AccessorExpr does
 		AccessorExpr new = malloc(@sizeof(AccessorExpr)@)|AccessorExpr
-		new.type_=p:type_by_name("AccessorExpr")
+		new.type_=AccessorExpr_t
 		new.object=obj
 		new.mode=mode
 		new.field=field
@@ -56,11 +56,19 @@ type AccessorExpr is packed
 		n.object=p:visit(n.object)
 	return
 
-	function() AccessorExpr::impl -> NodeType does
-	return NodeType::new("AccessorExpr")\
+	function(AccessorExpr self) AccessorExpr::copy -> Node does
+		AccessorExpr new = AccessorExpr::create_direct(self.object:copy(), self.mode, self.field, self.anchor)
+	return new|Node
+
+	function() AccessorExpr::impl -> void does
+		AccessorExpr_t = NodeType::new("AccessorExpr")\
 					:set_printer(AccessorExpr::print |NodePrinter)\
 					:set_creator(AccessorExpr::create|NodeCreator)\
 					:set_matcher(AccessorExpr::match |NodeMatcher)\
 					:set_visitor(AccessorExpr::visit |NodeVisitor)\
+					:set_tcopier(AccessorExpr::copy  |NodeTCopier)\
 					:matches(3):addtype("IdentifierExpression")
+	return
 endtype
+
+NodeType AccessorExpr_t

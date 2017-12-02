@@ -13,9 +13,13 @@ type ReturnExpr is packed
 		done
 	return
 
-	function(EleList eles) ReturnExpr::create -> ReturnExpr does
+	function() ReturnExpr::create_direct_void -> ReturnExpr does
 		ReturnExpr new = malloc(@sizeof(ReturnExpr)@)|ReturnExpr
 		new.is_void=true
+	return new
+
+	function(EleList eles) ReturnExpr::create -> ReturnExpr does
+		ReturnExpr new = ReturnExpr::create_direct_void()
 		if eles:in_slice()>1 do
 			if -eles:get(1).is_token do
 				new.is_void=-eles:get(1):n():is_a("ValueExpression")
@@ -53,11 +57,21 @@ type ReturnExpr is packed
 		done
 	return
 
-	function() ReturnExpr::impl -> NodeType does
-	return NodeType::new("ReturnExpr")\
+	function(ReturnExpr self) ReturnExpr::copy -> Node does
+		ReturnExpr new = ReturnExpr::create_direct_void()
+		new.is_void=self.is_void
+		new.value=self.value
+	return new|Node
+
+	function() ReturnExpr::impl -> void does
+		ReturnExpr_t = NodeType::new("ReturnExpr")\
 					:set_printer(ReturnExpr::print |NodePrinter)\
 					:set_creator(ReturnExpr::create|NodeCreator)\
 					:set_matcher(ReturnExpr::match |NodeMatcher)\
 					:set_visitor(ReturnExpr::visit |NodeVisitor)\
+					:set_tcopier(ReturnExpr::copy  |NodeTCopier)\
 					:matches(1):addtype("Expression")
+	return
 endtype
+
+NodeType ReturnExpr_t

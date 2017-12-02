@@ -24,12 +24,12 @@ type AssignmentExpr is packed
 		new.anchor=eles:get(1):t()
 	return new
 
-	function(Project p, Node lhs, Node rhs, Token anchor) AssignmentExpr::create_direct -> AssignmentExpr does
+	function(Node lhs, Node rhs, Token anchor) AssignmentExpr::create_direct -> AssignmentExpr does
 		AssignmentExpr new = malloc(@sizeof(AssignmentExpr)@)|AssignmentExpr
 		new.lhs=lhs
 		new.rhs=rhs
 		new.op="="
-		new.type_=p:type_by_name("AssignmentExpr")
+		new.type_=AssignmentExpr_t
 		new.anchor=anchor
 	return new
 
@@ -58,11 +58,19 @@ type AssignmentExpr is packed
 		n.lhs=p:visit(n.lhs)
 	return
 
-	function() AssignmentExpr::impl -> NodeType does
-	return NodeType::new("AssignmentExpr")\
+	function(AssignmentExpr self) AssignmentExpr::copy -> Node does
+		shoc::assert(self.op=="=", "Should have reduced +=... before any call to AssignmentExpr::copy")
+	return AssignmentExpr::create_direct(self.lhs:copy(), self.rhs:copy(), self.anchor)|Node
+
+	function() AssignmentExpr::impl -> void does
+		AssignmentExpr_t = NodeType::new("AssignmentExpr")\
 					:set_printer(AssignmentExpr::print |NodePrinter)\
 					:set_creator(AssignmentExpr::create|NodeCreator)\
 					:set_matcher(AssignmentExpr::match |NodeMatcher)\
 					:set_visitor(AssignmentExpr::visit |NodeVisitor)\
+					:set_tcopier(AssignmentExpr::copy  |NodeTCopier)\
 					:matches(3):addtype("Expression")
+	return
 endtype
+
+NodeType AssignmentExpr_t

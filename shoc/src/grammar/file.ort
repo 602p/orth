@@ -13,10 +13,14 @@ type FileNode is packed
 		done
 	return
 
-	function(Project p, EleList eles) FileNode::create -> FileNode does
+	function() FileNode::new_empty -> FileNode does
 		FileNode new = malloc(@sizeof(FileNode)@)|FileNode
-		new.type_=p:type_by_name("FileNode")
+		new.type_=FileNode_t
 		new.statements=List::new()
+	return new
+
+	function(Project p, EleList eles) FileNode::create -> FileNode does
+		FileNode new = FileNode::new_empty()
 		int i=0
 		while i<eles:in_slice() do
 			if eles:get(i).is_token do
@@ -44,11 +48,24 @@ type FileNode is packed
 		done
 	return
 
-	function() FileNode::impl -> NodeType does
-	return NodeType::new("FileNode")\
+	function(FileNode self) FileNode::copy -> Node does
+		FileNode new = FileNode::new_empty()
+		int i=0
+		while i<self.statements.len do
+			new.statements:append_Node(self.statements:get_Node(i):copy())
+			i+=1
+		done
+	return new|Node
+
+	function() FileNode::impl -> void does
+		FileNode_t = NodeType::new("FileNode")\
 					:set_printer(FileNode::print |NodePrinter)\
 					:set_creator(FileNode::create|NodeCreator)\
 					:set_matcher(FileNode::match |NodeMatcher)\
 					:set_visitor(FileNode::visit |NodeVisitor)\
+					:set_tcopier(FileNode::copy  |NodeTCopier)\
 					:matches(2)
+	return
 endtype
+
+NodeType FileNode_t

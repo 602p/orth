@@ -27,13 +27,18 @@ type TupleEndFragment is packed
 		done
 	return 3
 
-	function() TupleEndFragment::impl -> NodeType does
-	return NodeType::new("TupleEndFragment")\
+	function() TupleEndFragment::impl -> void does
+		TupleEndFragment_t = NodeType::new("TupleEndFragment")\
 					:set_printer(TupleEndFragment::print |NodePrinter)\
 					:set_creator(TupleEndFragment::create|NodeCreator)\
 					:set_matcher(TupleEndFragment::match |NodeMatcher)\
 					:matches(3):addtype("TupleFragment")
+	return
 endtype
+
+NodeType TupleEndFragment_t
+
+
 
 type TupleMidFragment is packed
 	NodeType type_
@@ -76,13 +81,16 @@ type TupleMidFragment is packed
 		done
 	return 3
 
-	function() TupleMidFragment::impl -> NodeType does
-	return NodeType::new("TupleMidFragment")\
+	function() TupleMidFragment::impl -> void does
+		TupleMidFragment_t = NodeType::new("TupleMidFragment")\
 					:set_printer(TupleMidFragment::print |NodePrinter)\
 					:set_creator(TupleMidFragment::create|NodeCreator)\
 					:set_matcher(TupleMidFragment::match |NodeMatcher)\
 					:matches(3):addtype("TupleFragment")
+	return
 endtype
+
+NodeType TupleMidFragment_t
 
 type Tuple is packed
 	NodeType type_
@@ -129,13 +137,16 @@ type Tuple is packed
 		done
 	return 3
 
-	function() Tuple::impl -> NodeType does
-	return NodeType::new("Tuple")\
+	function() Tuple::impl -> void does
+		Tuple_t = NodeType::new("Tuple")\
 					:set_printer(Tuple::print |NodePrinter)\
 					:set_creator(Tuple::create|NodeCreator)\
 					:set_matcher(Tuple::match |NodeMatcher)\
 					:matches(3)
+	return
 endtype
+
+NodeType Tuple_t
 
 type ZeroTuple is packed
 	NodeType type_
@@ -155,13 +166,16 @@ type ZeroTuple is packed
 		done
 	return 2
 
-	function() ZeroTuple::impl -> NodeType does
-	return NodeType::new("ZeroTuple")\
+	function() ZeroTuple::impl -> void does
+		ZeroTuple_t = NodeType::new("ZeroTuple")\
 					:set_printer(ZeroTuple::print |NodePrinter)\
 					:set_creator(ZeroTuple::create|NodeCreator)\
 					:set_matcher(ZeroTuple::match |NodeMatcher)\
 					:matches(2):matches_only_tokens():addtype("Tuple")
+	return
 endtype
+
+NodeType ZeroTuple_t
 
 type OneTuple is packed
 	NodeType type_
@@ -193,10 +207,13 @@ type OneTuple is packed
 		done
 	return 3
 
-	function() OneTuple::impl -> NodeType does
-	return NodeType::new("OneTuple")\
+	function() OneTuple::impl -> void does
+		OneTuple_t = NodeType::new("OneTuple")\
 					:set_printer(OneTuple::print |NodePrinter)\
 					:set_creator(OneTuple::create|NodeCreator)\
 					:set_matcher(OneTuple::match |NodeMatcher)\
 					:matches(3):addtype("Tuple")
+	return
 endtype
+
+NodeType OneTuple_t

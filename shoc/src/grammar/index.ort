@@ -14,12 +14,16 @@ type IndexExpr is packed
 		node.value:print(depth+1)
 	return
 
-	function(EleList eles) IndexExpr::create -> IndexExpr does
+	function(Node array, Node value, Token anchor) IndexExpr::create_direct -> IndexExpr does
 		IndexExpr new = malloc(@sizeof(IndexExpr)@)|IndexExpr
-		new.array=eles:get(0):n()
-		new.value=eles:get(2):n()
-		new.anchor=eles:get(1):t()
+		new.type_=IndexExpr_t
+		new.anchor=anchor
+		new.value=value
+		new.array=array
 	return new
+
+	function(EleList eles) IndexExpr::create -> IndexExpr does
+	return IndexExpr::create_direct(eles:get(0):n(), eles:get(2):n(), eles:get(1):t())
 
 	function(EleList eles) IndexExpr::match -> int does
 		if eles:get(0).is_token:or(\
@@ -50,11 +54,18 @@ type IndexExpr is packed
 		n.array=p:visit(n.array)
 	return
 
-	function() IndexExpr::impl -> NodeType does
-	return NodeType::new("IndexExpr")\
+	function(IndexExpr self) IndexExpr::copy -> Node does
+	return IndexExpr::create_direct(self.array:copy(), self.value:copy(), self.anchor)|Node
+
+	function() IndexExpr::impl -> void does
+		IndexExpr_t = NodeType::new("IndexExpr")\
 					:set_printer(IndexExpr::print |NodePrinter)\
 					:set_creator(IndexExpr::create|NodeCreator)\
 					:set_matcher(IndexExpr::match |NodeMatcher)\
 					:set_visitor(IndexExpr::visit |NodeVisitor)\
+					:set_tcopier(IndexExpr::copy  |NodeTCopier)\
 					:matches(4):addtype("IdentifierExpression")
+	return
 endtype
+
+NodeType IndexExpr_t

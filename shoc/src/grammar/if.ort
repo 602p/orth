@@ -30,13 +30,18 @@ type IfExprHead is packed
 		done
 	return 3
 
-	function() IfExprHead::impl -> NodeType does
-	return NodeType::new("IfExprHead")\
+	function() IfExprHead::impl -> void does
+		IfExprHead_t = NodeType::new("IfExprHead")\
 					:set_printer(IfExprHead::print |NodePrinter)\
 					:set_creator(IfExprHead::create|NodeCreator)\
 					:set_matcher(IfExprHead::match |NodeMatcher)\
 					:matches(3)
+	return
 endtype
+
+NodeType IfExprHead_t
+
+
 
 type IfExpr is packed
 	NodeType type_
@@ -55,13 +60,18 @@ type IfExpr is packed
 		(node.body|Node):print(depth+2)
 	return
 
-	function(EleList eles) IfExpr::create -> IfExpr does
+	function(Node condition, bool is_elif, BlockBody body, Token anchor) IfExpr::create_raw -> IfExpr does
 		IfExpr new = malloc(@sizeof(IfExpr)@)|IfExpr
-		new.condition=(eles:get(0):n()|IfExprHead).condition
-		new.is_elif=(eles:get(0):n()|IfExprHead).is_elif
-		new.body=eles:get(1):n()|BlockBody
-		new.anchor=(eles:get(0):n()|IfExprHead).anchor
+		new.type_=IfExpr_t
+		new.condition=condition
+		new.is_elif=is_elif
+		new.body=body
+		new.anchor=anchor
 	return new
+
+	function(EleList eles) IfExpr::create -> IfExpr does
+		IfExprHead head = (eles:get(0):n()|IfExprHead)
+	return IfExpr::create_raw(head.condition, head.is_elif, eles:get(1):n()|BlockBody, head.anchor)
 
 	function(EleList eles) IfExpr::match -> int does
 		if (-eles:get(0):n():is_a("IfExprHead")):or(\
@@ -75,11 +85,18 @@ type IfExpr is packed
 		n.body=p:visit(n.body|Node)|BlockBody
 	return
 
-	function() IfExpr::impl -> NodeType does
-	return NodeType::new("IfExpr")\
+	function(IfExpr self) IfExpr::copy -> Node does
+	return IfExpr::create_raw(self.condition:copy(), self.is_elif, self.body|Node:copy()|BlockBody, self.anchor)|Node
+
+	function() IfExpr::impl -> void does
+		IfExpr_t = NodeType::new("IfExpr")\
 					:set_printer(IfExpr::print |NodePrinter)\
 					:set_creator(IfExpr::create|NodeCreator)\
 					:set_matcher(IfExpr::match |NodeMatcher)\
 					:set_visitor(IfExpr::visit |NodeVisitor)\
+					:set_tcopier(IfExpr::copy  |NodeTCopier)\
 					:matches(2):matches_only_nodes():addtype("Expression")
+	return
 endtype
+
+NodeType IfExpr_t

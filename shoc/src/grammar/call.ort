@@ -36,17 +36,16 @@ type CallExpr is packed
 		elif args:is_a("GroupingExpr") do
 			new.args=List::new()
 			new.args:append_Node((args|GroupingExpr).contents)
-
 		else do
 			new.args=(args|Tuple).elements
 		done
 	return new
 
-	function(Project proj, Node meth, List args) CallExpr::create_direct -> CallExpr does
+	function(Node meth, List args) CallExpr::create_direct -> CallExpr does
 		CallExpr new = malloc(@sizeof(CallExpr)@)|CallExpr
 		new.meth=meth
 		new.args=args
-		new.type_=proj:type_by_name("CallExpr")
+		new.type_=CallExpr_t
 	return new
 
 	function(EleList eles) CallExpr::match -> int does
@@ -79,11 +78,24 @@ type CallExpr is packed
 		done
 	return
 
-	function() CallExpr::impl -> NodeType does
-	return NodeType::new("CallExpr")\
+	function(CallExpr self) CallExpr::copy -> Node does
+		List new_list = List::new()
+		int i=0
+		while i<self.args.len do
+			new_list:append_Node(self.args:get_Node(i):copy())
+			i+=1
+		done
+	return CallExpr::create_direct(self.meth:copy(), new_list)|Node
+
+	function() CallExpr::impl -> void does
+		CallExpr_t = NodeType::new("CallExpr")\
 					:set_printer(CallExpr::print |NodePrinter)\
 					:set_creator(CallExpr::create|NodeCreator)\
 					:set_matcher(CallExpr::match |NodeMatcher)\
 					:set_visitor(CallExpr::visit |NodeVisitor)\
+					:set_tcopier(CallExpr::copy  |NodeTCopier)\
 					:matches(2):matches_only_nodes():addtype("ValueExpression")
+	return
 endtype
+
+NodeType CallExpr_t

@@ -8,11 +8,15 @@ type GroupingExpr is packed
 		node.contents:print(depth+1)
 	return
 
-	function(EleList eles) GroupingExpr::create -> GroupingExpr does
+	function(Node contents, Token anchor) GroupingExpr::create_raw -> GroupingExpr does
 		GroupingExpr new = malloc(@sizeof(GroupingExpr)@)|GroupingExpr
-		new.contents=eles:get(1):n()
-		new.anchor=eles:get(0):t()
+		new.type_ = GroupingExpr_t
+		new.contents=contents
+		new.anchor=anchor
 	return new
+
+	function(EleList eles) GroupingExpr::create -> GroupingExpr does
+	return GroupingExpr::create_raw(eles:get(1):n(), eles:get(0):t())
 
 	function(EleList eles) GroupingExpr::match -> int does
 		if (-eles:get(0).is_token):or(\
@@ -36,11 +40,18 @@ type GroupingExpr is packed
 		n.contents=p:visit(n.contents)
 	return
 
-	function() GroupingExpr::impl -> NodeType does
-	return NodeType::new("GroupingExpr")\
+	function(GroupingExpr self) GroupingExpr::copy -> Node does
+	return GroupingExpr::create_raw(self.contents:copy(), self.anchor)|Node
+
+	function() GroupingExpr::impl -> void does
+		GroupingExpr_t = NodeType::new("GroupingExpr")\
 					:set_printer(GroupingExpr::print |NodePrinter)\
 					:set_creator(GroupingExpr::create|NodeCreator)\
 					:set_matcher(GroupingExpr::match |NodeMatcher)\
 					:set_visitor(GroupingExpr::visit |NodeVisitor)\
+					:set_tcopier(GroupingExpr::copy  |NodeTCopier)\
 					:matches(3):addtype("Tuple"):addtype("ValueExpression")
+	return
 endtype
+
+NodeType GroupingExpr_t

@@ -10,3 +10,4 @@ fi
 
 mv shoc ../shoc
 cd ..
+echo OK

@@ -1,0 +1,2 @@
+function(int a, int b) foo -> int does
+return 3

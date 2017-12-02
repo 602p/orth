@@ -17,22 +17,42 @@ function(int nargs, ArgList args) main -> int does
 	                    :with_base_types()\
 	                    :with_search_path(List::new())
 
-    List fields = List::new()
-    fields:append_TypedVar(TypedVar::new("value", SymType::new("V")))
+    # int i=0
+    # while i<proj.node_types.len do
+    #     NodeType n = proj.node_types:get(i)|NodeType
+    #     if n.copier|ptr == _default_node_copier|ptr do
+    #         printf("Missing Copier: %s\n", n.name)
+    #     done
+    #     i+=1
+    # done
 
-    GenericArgs generic_args = GenericArgs::new()
-    generic_args:add_null("V")
 
-    GType generic_type = GType::new(proj, "Cell", fields, true, generic_args)
-    GenericArgs next_args = GenericArgs::copy(generic_args)
-    next_args:set("V", SymType::new("V"))
-    OType pt = PType::new(generic_type, next_args)
-    generic_type.fields:append_TypedVar(TypedVar::new("next", pt))
-    generic_type:print()
-    printf("\n\n\n")
+    File fd = File::open("../nontrivial.ort", "r")
+    cstr contents = fd:readall()+"\n"
+    fd:close()
 
-    GenericArgs inst_args = GenericArgs::copy(generic_args)
-    inst_args:set("V", proj:get_type("int"))
+    List tokens = proj:tokenize(contents, "nontrivial.ort", false)
+    Node node   = proj:parse(tokens, contents, false)
+    node = node|FileNode.statements:get_Node(1)|FunctionDecl|Node
+    node:print_root()
+    node:copy():print_root()
 
-    PType::new(generic_type, inst_args):resolve(GenericArgs::new()):print()
+    # List fields = List::new()
+    # fields:append_TypedVar(TypedVar::new("value", SymType::new("V")))
+
+    # GenericArgs generic_args = GenericArgs::new()
+    # generic_args:add_null("V")
+
+    # GType generic_type = GType::new(proj, "Cell", fields, true, generic_args)
+    # GenericArgs next_args = GenericArgs::copy(generic_args)
+    # next_args:set("V", SymType::new("V"))
+    # OType pt = PType::new(generic_type, next_args)
+    # generic_type.fields:append_TypedVar(TypedVar::new("next", pt))
+    # generic_type:print()
+    # printf("\n\n\n")
+
+    # GenericArgs inst_args = GenericArgs::copy(generic_args)
+    # inst_args:set("V", proj:get_type("int"))
+
+    # PType::new(generic_type, inst_args):resolve(GenericArgs::new()):print()
 return 0

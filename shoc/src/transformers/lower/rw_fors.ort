@@ -9,42 +9,42 @@ function(ForExpr n, TransformerPass p) rewrite_fors::visit_for -> Node does
 	cstr pos_var=for_name+"_pos"
 
 	Node object = n.iterable
-	Node iterator = CallExpr::create_direct(p.proj, AccessorExpr::create_direct(p.proj, object, ":", "__iter__", n.anchor)|Node, List::new())|Node
+	Node iterator = CallExpr::create_direct(AccessorExpr::create_direct(object, ":", "__iter__", n.anchor)|Node, List::new())|Node
 	OType iter_type = p.proj:get_node_type(iterator)
 
-	Node iter_node = NameExpr::create_direct(p.proj, iter_var, n.anchor)|Node
-	Node len_node = NameExpr::create_direct(p.proj, len_var, n.anchor)|Node
-	Node pos_node = NameExpr::create_direct(p.proj, pos_var, n.anchor)|Node
+	Node iter_node = NameExpr::create_direct(iter_var, n.anchor)|Node
+	Node len_node = NameExpr::create_direct(len_var, n.anchor)|Node
+	Node pos_node = NameExpr::create_direct(pos_var, n.anchor)|Node
 
-	nodes:append_Node(AssignmentExpr::create_direct(p.proj, iter_node, iterator, n.anchor)|Node)
+	nodes:append_Node(AssignmentExpr::create_direct(iter_node, iterator, n.anchor)|Node)
 
-	Node len = CallExpr::create_direct(p.proj, AccessorExpr::create_direct(p.proj, iter_node, ":", "__ilen__", n.anchor)|Node, List::new())|Node
-	nodes:append_Node(AssignmentExpr::create_direct(p.proj, len_node, len, n.anchor)|Node)
+	Node len = CallExpr::create_direct(AccessorExpr::create_direct(iter_node, ":", "__ilen__", n.anchor)|Node, List::new())|Node
+	nodes:append_Node(AssignmentExpr::create_direct(len_node, len, n.anchor)|Node)
 
-	nodes:append_Node(AssignmentExpr::create_direct(p.proj, pos_node, LiteralExpr::create_direct_int(p.proj, 0), n.anchor)|Node)
+	nodes:append_Node(AssignmentExpr::create_direct(pos_node, LiteralExpr::create_direct_int(0), n.anchor)|Node)
 
 	List iget_call_args=List::new()
 	iget_call_args:append_Node(pos_node)
 
 	List loop_body=List::new()
-	Node get_call=CallExpr::create_direct(p.proj, AccessorExpr::create_direct(p.proj, iter_node, ":", "__iget__", n.anchor)|Node, iget_call_args)|Node
-	loop_body:append_Node(AssignmentExpr::create_direct(p.proj, NameExpr::create_direct(p.proj, n.iter_name, n.anchor)|Node, get_call, n.anchor)|Node)
+	Node get_call=CallExpr::create_direct(AccessorExpr::create_direct(iter_node, ":", "__iget__", n.anchor)|Node, iget_call_args)|Node
+	loop_body:append_Node(AssignmentExpr::create_direct(NameExpr::create_direct(n.iter_name, n.anchor)|Node, get_call, n.anchor)|Node)
 	loop_body:append_Node(n.body|Node)
-	loop_body:append_Node(AssignmentExpr::create_direct(p.proj, pos_node, \
-		BinOpExpr::create_direct(p.proj, pos_node, LiteralExpr::create_direct_int(p.proj, 1)|Node, "+")|Node,\
+	loop_body:append_Node(AssignmentExpr::create_direct(pos_node, \
+		BinOpExpr::create_direct(pos_node, LiteralExpr::create_direct_int(1)|Node, "+")|Node,\
 		n.anchor)|Node)
 
-	Node while_condition=BinOpExpr::create_direct(p.proj, pos_node, len_node, "<")|Node
+	Node while_condition=BinOpExpr::create_direct(pos_node, len_node, "<")|Node
 
-	nodes:append_Node(WhileExpr::create_direct(p.proj, while_condition, BlockBody::create_direct(p.proj, loop_body)|BlockBody, n.anchor)|Node)
-	nodes:append_Node(CallExpr::create_direct(p.proj, AccessorExpr::create_direct(p.proj, iter_node, ":", "__idel__", n.anchor)|Node, List::new())|Node)
+	nodes:append_Node(WhileExpr::create_direct(while_condition, BlockBody::create_direct(loop_body)|BlockBody, n.anchor)|Node)
+	nodes:append_Node(CallExpr::create_direct(AccessorExpr::create_direct(iter_node, ":", "__idel__", n.anchor)|Node, List::new())|Node)
 
 	p.proj.curr_method:add_local(iter_var, iter_type)
 	p.proj.curr_method:add_local(len_var, p.proj:get_type("int"))
 	p.proj.curr_method:add_local(pos_var, p.proj:get_type("int"))
 	p.proj.curr_method:add_local(n.iter_name, p.proj:get_node_type(get_call))
 
-return BlockBody::create_direct(p.proj, nodes)
+return BlockBody::create_direct(nodes)
 
 function() rw_fors::init -> TransformerPass does
 return TransformerPass::new("rewrite_fors")\

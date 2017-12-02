@@ -22,56 +22,112 @@ import "grammar/while.ort"
 import "grammar/for.ort"
 import "grammar/file.ort"
 
-function(List l) grammar::install -> void does
-	l:append_NodeType(NameExpr::impl())
-	l:append_NodeType(DeclExpr::impl())
-	l:append_NodeType(AccessorExpr::impl())
+function() grammar::init -> void does
+	NameExpr::impl()
+	DeclExpr::impl()
+	AccessorExpr::impl()
 
-	l:append_NodeType(LiteralExpr::impl())
+	LiteralExpr::impl()
 	
-	l:append_NodeType(GroupingExpr::impl())
-	l:append_NodeType(BinOpExpr::impl())
-	l:append_NodeType(UnOpExpr::impl())
-	l:append_NodeType(CastExpr::impl())
-	l:append_NodeType(IndexExpr::impl())
+	GroupingExpr::impl()
+	BinOpExpr::impl()
+	UnOpExpr::impl()
+	CastExpr::impl()
+	IndexExpr::impl()
 
-	l:append_NodeType(CallExpr::impl())
+	CallExpr::impl()
 
-	l:append_NodeType(AssignmentExpr::impl())
-	l:append_NodeType(ReturnExpr::impl())
+	AssignmentExpr::impl()
+	ReturnExpr::impl()
 
-	l:append_NodeType(TupleEndFragment::impl())
-	l:append_NodeType(TupleMidFragment::impl())
-	l:append_NodeType(Tuple::impl())
-	l:append_NodeType(ZeroTuple::impl())
+	TupleEndFragment::impl()
+	TupleMidFragment::impl()
+	Tuple::impl()
+	ZeroTuple::impl()
 
-	l:append_NodeType(ZeroArgList::impl())
-	l:append_NodeType(VarArgsList::impl())
-	l:append_NodeType(OneArgList::impl())
-	l:append_NodeType(MultiArgListStart::impl())
-	l:append_NodeType(MultiArgListExt::impl())
-	l:append_NodeType(MultiArgList::impl())
-	l:append_NodeType(FunctionDeclHead::impl())
+	ZeroArgList::impl()
+	VarArgsList::impl()
+	OneArgList::impl()
+	MultiArgListStart::impl()
+	MultiArgListExt::impl()
+	MultiArgList::impl()
+	FunctionDeclHead::impl()
 
-	l:append_NodeType(FunctionBody::impl())
-	l:append_NodeType(FunctionDecl::impl())
+	FunctionBody::impl()
+	FunctionDecl::impl()
 
-	l:append_NodeType(IfExprHead::impl())
-	l:append_NodeType(IfExpr::impl())
-	l:append_NodeType(WhileExpr::impl())
-	l:append_NodeType(ForExpr::impl())
-	l:append_NodeType(BlockBody::impl())
+	IfExprHead::impl()
+	IfExpr::impl()
+	WhileExpr::impl()
+	ForExpr::impl()
+	BlockBody::impl()
 
-	l:append_NodeType(IntrinsicExpr::impl())
-	l:append_NodeType(ImportStmt::impl())
+	IntrinsicExpr::impl()
+	ImportStmt::impl()
 
-	l:append_NodeType(TypeDeclHead::impl())
-	l:append_NodeType(TypeDeclBody::impl())
-	l:append_NodeType(TypeDecl::impl())
+	TypeDeclHead::impl()
+	TypeDeclBody::impl()
+	TypeDecl::impl()
 
-	l:append_NodeType(SepExpr::impl())
+	SepExpr::impl()
 
-	l:append_NodeType(OneTuple::impl()) #Fallback matching case for one-arg function calls
+	OneTuple::impl() #Fallback matching case for one-arg function calls
 
-	l:append_NodeType(FileNode::impl())
+	FileNode::impl()
+return
+
+function(List l) grammar::install -> void does
+	grammar::init()
+
+	l:append_NodeType(NameExpr_t)
+	l:append_NodeType(DeclExpr_t)
+	l:append_NodeType(AccessorExpr_t)
+
+	l:append_NodeType(LiteralExpr_t)
+	
+	l:append_NodeType(GroupingExpr_t)
+	l:append_NodeType(BinOpExpr_t)
+	l:append_NodeType(UnOpExpr_t)
+	l:append_NodeType(CastExpr_t)
+	l:append_NodeType(IndexExpr_t)
+
+	l:append_NodeType(CallExpr_t)
+
+	l:append_NodeType(AssignmentExpr_t)
+	l:append_NodeType(ReturnExpr_t)
+
+	l:append_NodeType(TupleEndFragment_t)
+	l:append_NodeType(TupleMidFragment_t)
+	l:append_NodeType(Tuple_t)
+	l:append_NodeType(ZeroTuple_t)
+
+	l:append_NodeType(ZeroArgList_t)
+	l:append_NodeType(VarArgsList_t)
+	l:append_NodeType(OneArgList_t)
+	l:append_NodeType(MultiArgListStart_t)
+	l:append_NodeType(MultiArgListExt_t)
+	l:append_NodeType(MultiArgList_t)
+	l:append_NodeType(FunctionDeclHead_t)
+
+	l:append_NodeType(FunctionBody_t)
+	l:append_NodeType(FunctionDecl_t)
+
+	l:append_NodeType(IfExprHead_t)
+	l:append_NodeType(IfExpr_t)
+	l:append_NodeType(WhileExpr_t)
+	l:append_NodeType(ForExpr_t)
+	l:append_NodeType(BlockBody_t)
+
+	l:append_NodeType(IntrinsicExpr_t)
+	l:append_NodeType(ImportStmt_t)
+
+	l:append_NodeType(TypeDeclHead_t)
+	l:append_NodeType(TypeDeclBody_t)
+	l:append_NodeType(TypeDecl_t)
+
+	l:append_NodeType(SepExpr_t)
+
+	l:append_NodeType(OneTuple_t) #Fallback matching case for one-arg function calls
+
+	l:append_NodeType(FileNode_t)
 return

@@ -10,65 +10,65 @@ function(BinOpExpr n, TransformerPass p) fold_constants::visit_binop -> Node doe
 			int ri=rhs.value:int()
 			int li=lhs.value:int()
 			if n.op=="+" do
-				return LiteralExpr::create_direct_int(p.proj, ri+li)
+				return LiteralExpr::create_direct_int(ri+li)
 			elif n.op=="-" do
-				return LiteralExpr::create_direct_int(p.proj, li-ri)
+				return LiteralExpr::create_direct_int(li-ri)
 			elif n.op=="*" do
-				return LiteralExpr::create_direct_int(p.proj, li*ri)
+				return LiteralExpr::create_direct_int(li*ri)
 			elif n.op=="/" do
-				return LiteralExpr::create_direct_int(p.proj, li/ri)
+				return LiteralExpr::create_direct_int(li/ri)
 			elif n.op==">>" do
-				return LiteralExpr::create_direct_int(p.proj, li>>ri)
+				return LiteralExpr::create_direct_int(li>>ri)
 			elif n.op=="<<" do
-				return LiteralExpr::create_direct_int(p.proj, li<<ri)
+				return LiteralExpr::create_direct_int(li<<ri)
 			elif n.op=="==" do
-				return LiteralExpr::create_direct_bool(p.proj, li==ri)
+				return LiteralExpr::create_direct_bool(li==ri)
 			elif n.op=="!=" do
-				return LiteralExpr::create_direct_bool(p.proj, li!=ri)
+				return LiteralExpr::create_direct_bool(li!=ri)
 			elif n.op==">" do
-				return LiteralExpr::create_direct_bool(p.proj, li>ri)
+				return LiteralExpr::create_direct_bool(li>ri)
 			elif n.op=="<" do
-				return LiteralExpr::create_direct_bool(p.proj, li<ri)
+				return LiteralExpr::create_direct_bool(li<ri)
 			elif n.op==">=" do
-				return LiteralExpr::create_direct_bool(p.proj, li>=ri)
+				return LiteralExpr::create_direct_bool(li>=ri)
 			elif n.op=="<=" do
-				return LiteralExpr::create_direct_bool(p.proj, li<=ri)
+				return LiteralExpr::create_direct_bool(li<=ri)
 			elif n.op=="&" do
-				return LiteralExpr::create_direct_int(p.proj, li&ri)
+				return LiteralExpr::create_direct_int(li&ri)
 			elif n.op=="%" do
-				return LiteralExpr::create_direct_int(p.proj, li%ri)
+				return LiteralExpr::create_direct_int(li%ri)
 			done
 		elif (lhs.value_type=="float") & rhs.value_type=="float" do
 			float rf=rhs.value:float()
 			float lf=lhs.value:float()
 			if n.op=="+" do
-				return LiteralExpr::create_direct_float(p.proj, rf+lf)
+				return LiteralExpr::create_direct_float(rf+lf)
 			elif n.op=="-" do
-				return LiteralExpr::create_direct_float(p.proj, lf-rf)
+				return LiteralExpr::create_direct_float(lf-rf)
 			elif n.op=="*" do
-				return LiteralExpr::create_direct_float(p.proj, lf*rf)
+				return LiteralExpr::create_direct_float(lf*rf)
 			elif n.op=="/" do
-				return LiteralExpr::create_direct_float(p.proj, lf/rf)
+				return LiteralExpr::create_direct_float(lf/rf)
 			elif n.op=="==" do
-				return LiteralExpr::create_direct_bool(p.proj, lf==rf)
+				return LiteralExpr::create_direct_bool(lf==rf)
 			elif n.op=="!=" do
-				return LiteralExpr::create_direct_bool(p.proj, lf!=rf)
+				return LiteralExpr::create_direct_bool(lf!=rf)
 			elif n.op==">" do
-				return LiteralExpr::create_direct_bool(p.proj, lf>rf)
+				return LiteralExpr::create_direct_bool(lf>rf)
 			elif n.op=="<" do
-				return LiteralExpr::create_direct_bool(p.proj, lf<rf)
+				return LiteralExpr::create_direct_bool(lf<rf)
 			elif n.op==">=" do
-				return LiteralExpr::create_direct_bool(p.proj, lf>=rf)
+				return LiteralExpr::create_direct_bool(lf>=rf)
 			elif n.op=="<=" do
-				return LiteralExpr::create_direct_bool(p.proj, lf<=rf)
+				return LiteralExpr::create_direct_bool(lf<=rf)
 			done
 		elif (lhs.value_type=="cstr") & rhs.value_type=="cstr" do
 			if (n.op=="+")  & -p.proj.options:contains("no_str_add_fold") do
-				return LiteralExpr::create_direct(p.proj, "cstr", lhs.value+rhs.value)
+				return LiteralExpr::create_direct("cstr", lhs.value+rhs.value)
 			done
 		elif (lhs.value_type=="cstr") & rhs.value_type=="int" do
 			if (n.op=="*") & -p.proj.options:contains("no_str_mul_fold") do
-				return LiteralExpr::create_direct(p.proj, "cstr", lhs.value*rhs.value:int())
+				return LiteralExpr::create_direct("cstr", lhs.value*rhs.value:int())
 			done
 		done
 	done

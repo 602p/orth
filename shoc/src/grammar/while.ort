@@ -21,9 +21,9 @@ type WhileExpr is packed
 		new.anchor=eles:get(0):t()
 	return new
 
-	function(Project p, Node cond, BlockBody body, Token anchor) WhileExpr::create_direct -> WhileExpr does
+	function(Node cond, BlockBody body, Token anchor) WhileExpr::create_direct -> WhileExpr does
 		WhileExpr new = malloc(@sizeof(WhileExpr)@)|WhileExpr
-		new.type_=p:type_by_name("WhileExpr")
+		new.type_=WhileExpr_t
 		new.condition=cond
 		new.body=body
 		new.anchor=anchor
@@ -50,11 +50,18 @@ type WhileExpr is packed
 		n.body=p:visit(n.body|Node)|BlockBody
 	return
 
-	function() WhileExpr::impl -> NodeType does
-	return NodeType::new("WhileExpr")\
+	function(WhileExpr self) WhileExpr::copy -> Node does
+	return WhileExpr::create_direct(self.condition:copy(), self.body|Node:copy()|BlockBody, self.anchor)|Node
+
+	function() WhileExpr::impl -> void does
+		WhileExpr_t = NodeType::new("WhileExpr")\
 					:set_printer(WhileExpr::print |NodePrinter)\
 					:set_creator(WhileExpr::create|NodeCreator)\
 					:set_matcher(WhileExpr::match |NodeMatcher)\
 					:set_visitor(WhileExpr::visit |NodeVisitor)\
+					:set_tcopier(WhileExpr::copy  |NodeTCopier)\
 					:matches(4):addtype("Expression")
+	return
 endtype
+
+NodeType WhileExpr_t

@@ -22,9 +22,9 @@ type BlockBody is packed
 		done
 	return
 
-	function(Project p, List nodes) BlockBody::create_direct -> Node does
+	function(List nodes) BlockBody::create_direct -> Node does
 		BlockBody new = malloc(@sizeof(BlockBody)@)|BlockBody
-		new.type_=p:type_by_name("BlockBody")
+		new.type_=BlockBody_t
 		new.statements=nodes
 		new.has_runoff_clause=false
 	return new|Node
@@ -127,11 +127,28 @@ type BlockBody is packed
 		done
 	return
 
-	function() BlockBody::impl -> NodeType does
-	return NodeType::new("BlockBody")\
+	function(BlockBody self) BlockBody::copy -> Node does
+		BlockBody new = BlockBody::create_direct(List::new())|BlockBody
+		new.has_runoff_clause=self.has_runoff_clause
+		if new.has_runoff_clause do
+			new.runoff_clause=self.runoff_clause:copy()
+		done
+		int i=0
+		while i<self.statements.len do
+			new.statements:append_Node(self.statements:get_Node(i):copy())
+			i+=1
+		done
+	return new|Node
+
+	function() BlockBody::impl -> void does
+		BlockBody_t = NodeType::new("BlockBody")\
 					:set_printer(BlockBody::print |NodePrinter)\
 					:set_creator(BlockBody::create|NodeCreator)\
 					:set_matcher(BlockBody::match |NodeMatcher)\
 					:set_visitor(BlockBody::visit |NodeVisitor)\
+					:set_tcopier(BlockBody::copy  |NodeTCopier)\
 					:matches(2):addtype("Expression")
+	return
 endtype
+
+NodeType BlockBody_t

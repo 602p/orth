@@ -11,12 +11,16 @@ type UnOpExpr is packed
 		node.value:print(depth+1)
 	return
 
-	function(EleList eles) UnOpExpr::create -> UnOpExpr does
+	function(Node value, cstr op, Token anchor) UnOpExpr::create_direct -> UnOpExpr does
 		UnOpExpr new = malloc(@sizeof(UnOpExpr)@)|UnOpExpr
-		new.value=eles:get(1):n()
-		new.op=eles:get(0):t().text
-		new.anchor=eles:get(0):t()
+		new.type_ = UnOpExpr_t
+		new.value=value
+		new.op=op
+		new.anchor=anchor
 	return new
+
+	function(EleList eles) UnOpExpr::create -> UnOpExpr does
+	return UnOpExpr::create_direct(eles:get(1):n(), eles:get(0):t().text, eles:get(0):t())
 
 	function(EleList eles) UnOpExpr::match -> int does
 		if eles:get(1).is_token:or(\
@@ -34,11 +38,18 @@ type UnOpExpr is packed
 		n.value=p:visit(n.value)
 	return
 
-	function() UnOpExpr::impl -> NodeType does
-	return NodeType::new("UnOpExpr")\
+	function(UnOpExpr self) UnOpExpr::copy -> Node does
+	return UnOpExpr::create_direct(self.value:copy(), self.op, self.anchor)|Node
+
+	function() UnOpExpr::impl -> void does
+		UnOpExpr_t = NodeType::new("UnOpExpr")\
 					:set_printer(UnOpExpr::print |NodePrinter)\
 					:set_creator(UnOpExpr::create|NodeCreator)\
 					:set_matcher(UnOpExpr::match |NodeMatcher)\
 					:set_visitor(UnOpExpr::visit |NodeVisitor)\
+					:set_tcopier(UnOpExpr::copy  |NodeTCopier)\
 					:matches(2):addtype("ValueExpression")
+	return
 endtype
+
+NodeType UnOpExpr_t

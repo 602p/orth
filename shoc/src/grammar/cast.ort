@@ -12,12 +12,16 @@ type CastExpr is packed
 		node.value:print(depth+1)
 	return
 
-	function(EleList eles) CastExpr::create -> CastExpr does
+	function(Node value, cstr target, Token anchor) CastExpr::create_direct -> CastExpr does
 		CastExpr new = malloc(@sizeof(CastExpr)@)|CastExpr
-		new.value=eles:get(0):n()
-		new.target=(eles:get(2):n()|NameExpr).name
-		new.anchor=eles:get(1):t()
+		new.type_=CastExpr_t
+		new.value=value
+		new.target=target
+		new.anchor=anchor
 	return new
+
+	function(EleList eles) CastExpr::create -> CastExpr does
+	return CastExpr::create_direct(eles:get(0):n(), (eles:get(2):n()|NameExpr).name, eles:get(1):t())
 
 	function(EleList eles) CastExpr::match -> int does
 		if eles:get(0).is_token:or(\
@@ -51,11 +55,18 @@ type CastExpr is packed
 		n.value=p:visit(n.value)
 	return
 
-	function() CastExpr::impl -> NodeType does
-	return NodeType::new("CastExpr")\
+	function(CastExpr self) CastExpr::copy -> Node does
+	return CastExpr::create_direct(self.value:copy(), self.target, self.anchor)|Node
+
+	function() CastExpr::impl -> void does
+		CastExpr_t = NodeType::new("CastExpr")\
 					:set_printer(CastExpr::print |NodePrinter)\
 					:set_creator(CastExpr::create|NodeCreator)\
 					:set_matcher(CastExpr::match |NodeMatcher)\
 					:set_visitor(CastExpr::visit |NodeVisitor)\
+					:set_tcopier(CastExpr::copy  |NodeTCopier)\
 					:matches(3):addtype("ValueExpression")
+	return
 endtype
+
+NodeType CastExpr_t

@@ -59,9 +59,9 @@ type BinOpExpr is packed
 		new.anchor=eles:get(1):t()
 	return new
 
-	function(Project p, Node lhs, Node rhs, cstr op) BinOpExpr::create_direct -> BinOpExpr does
+	function(Node lhs, Node rhs, cstr op) BinOpExpr::create_direct -> BinOpExpr does
 		BinOpExpr new = malloc(@sizeof(BinOpExpr)@)|BinOpExpr
-		new.type_=p:type_by_name("BinOpExpr")
+		new.type_=BinOpExpr_t
 		new.lhs=lhs
 		new.rhs=rhs
 		new.op=op
@@ -104,11 +104,18 @@ type BinOpExpr is packed
 		n.rhs=p:visit(n.rhs)
 	return
 
-	function() BinOpExpr::impl -> NodeType does
-	return NodeType::new("BinOpExpr")\
+	function(BinOpExpr self) BinOpExpr::copy -> Node does
+	return BinOpExpr::create_direct(self.lhs:copy(), self.rhs:copy(), self.op)|Node
+
+	function() BinOpExpr::impl -> void does
+		BinOpExpr_t = NodeType::new("BinOpExpr")\
 					:set_printer(BinOpExpr::print |NodePrinter)\
 					:set_creator(BinOpExpr::create|NodeCreator)\
 					:set_matcher(BinOpExpr::match |NodeMatcher)\
 					:set_visitor(BinOpExpr::visit |NodeVisitor)\
+					:set_tcopier(BinOpExpr::copy  |NodeTCopier)\
 					:matches(3):addtype("ValueExpression")
+	return
 endtype
+
+NodeType BinOpExpr_t

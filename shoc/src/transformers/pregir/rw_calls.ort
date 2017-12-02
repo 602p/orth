@@ -42,7 +42,7 @@ function(CallExpr n, TransformerPass p) rewrite_calls::visit_call -> CallExpr do
 			# acc.object:print_root()
 			# printf("callrw - %u - %u\n", p.proj:get_node_type(acc.object).name, acc.field)
 			# printf("callrw - %s - %s\n", p.proj:get_node_type(acc.object).name, acc.field)
-			n.meth=NameExpr::create_direct(p.proj, p.proj:get_node_type(acc.object).name+"$"+acc.field, p.proj:get_node_anchor(n|Node))|Node
+			n.meth=NameExpr::create_direct( p.proj:get_node_type(acc.object).name+"$"+acc.field, p.proj:get_node_anchor(n|Node))|Node
 			n.args:insert(0, acc.object|ptr)
 		done
 	done
@@ -54,8 +54,8 @@ function(BinOpExpr n, TransformerPass p) rewrite_calls::visit_binop -> Node does
 		List args=List::new()
 		args:append_Node(n.lhs)
 		args:append_Node(n.rhs)
-		return CallExpr::create_direct(p.proj,\
-			NameExpr::create_direct(p.proj, name, p.proj:get_node_anchor(n|Node))|Node, args)|Node
+		return CallExpr::create_direct(\
+			NameExpr::create_direct( name, p.proj:get_node_anchor(n|Node))|Node, args)|Node
 	done
 return n|Node
 
@@ -64,8 +64,8 @@ function(UnOpExpr n, TransformerPass p) rewrite_calls::visit_unop -> Node does
 	if p.proj.methods:contains(name) do
 		List args=List::new()
 		args:append_Node(n.value)
-		return CallExpr::create_direct(p.proj,\
-			NameExpr::create_direct(p.proj, name, p.proj:get_node_anchor(n|Node))|Node, args)|Node
+		return CallExpr::create_direct(\
+			NameExpr::create_direct( name, p.proj:get_node_anchor(n|Node))|Node, args)|Node
 	done
 return n|Node
 

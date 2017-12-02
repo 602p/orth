@@ -7,7 +7,7 @@ function(IntrinsicExpr n, TransformerPass p) apply_intrinsics::visit_instrinsic 
 		if meth_name=="sizeof" do
 			p.proj:fail_in_if(call.args.len!=1, "Invalid arg count for sizeof", n|Node)
 			p.proj:fail_in_if(-call.args:get_Node(0):is_a("NameExpr"), "Arg 0 for sizeof must be name", n|Node)
-			return LiteralExpr::create_direct_int(p.proj, p.proj:get_type((call.args:get_Node(0)|NameExpr).name):get_size()/8)
+			return LiteralExpr::create_direct_int(p.proj:get_type((call.args:get_Node(0)|NameExpr).name):get_size()/8)
 		done
 	done
 return n|Node #May be implemented in GIR emission, too

@@ -38,10 +38,13 @@ type IntrinsicExpr is packed
 		done
 	return 0
 
-	function() IntrinsicExpr::impl -> NodeType does
-	return NodeType::new("IntrinsicExpr")\
+	function() IntrinsicExpr::impl -> void does
+		IntrinsicExpr_t = NodeType::new("IntrinsicExpr")\
 					:set_printer(IntrinsicExpr::print |NodePrinter)\
 					:set_creator(IntrinsicExpr::create|NodeCreator)\
 					:set_matcher(IntrinsicExpr::match |NodeMatcher)\
 					:matches(2):addtype("ValueExpression")
+	return
 endtype
+
+NodeType IntrinsicExpr_t

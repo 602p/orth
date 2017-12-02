@@ -1,7 +1,7 @@
 
 function(AssignmentExpr n, TransformerPass p) expand_augassign::visit_assignment -> AssignmentExpr does
 	if n.op!="=" do
-		n.rhs=BinOpExpr::create_direct(p.proj, n.lhs, n.rhs, n.op:substr(0, n.op:len()-1))|Node
+		n.rhs=BinOpExpr::create_direct(n.lhs, n.rhs, n.op:substr(0, n.op:len()-1))|Node
 		n.op="="
 	done
 return n

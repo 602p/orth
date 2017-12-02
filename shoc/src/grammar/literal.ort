@@ -28,21 +28,21 @@ type LiteralExpr is packed
 		new.anchor=eles:get(0):t()
 	return new
 
-	function(Project p, cstr value_type, cstr value) LiteralExpr::create_direct -> Node does
+	function(cstr value_type, cstr value) LiteralExpr::create_direct -> Node does
 		LiteralExpr new = malloc(@sizeof(LiteralExpr)@)|LiteralExpr
 		new.value=value
 		new.value_type=value_type
-		new.type_=p:type_by_name("LiteralExpr")
+		new.type_=LiteralExpr_t
 	return new|Node
 
-	function(Project p, int value) LiteralExpr::create_direct_int -> Node does
-	return LiteralExpr::create_direct(p, "int", value:str())
+	function(int value) LiteralExpr::create_direct_int -> Node does
+	return LiteralExpr::create_direct("int", value:str())
 
-	function(Project p, bool value) LiteralExpr::create_direct_bool -> Node does
-	return LiteralExpr::create_direct(p, "bool", value:str())
+	function(bool value) LiteralExpr::create_direct_bool -> Node does
+	return LiteralExpr::create_direct("bool", value:str())
 
-	function(Project p, float value) LiteralExpr::create_direct_float -> Node does
-	return LiteralExpr::create_direct(p, "float", value:str())
+	function(float value) LiteralExpr::create_direct_float -> Node does
+	return LiteralExpr::create_direct("float", value:str())
 
 	function(EleList eles) LiteralExpr::match -> int does
 	return ((eles:get(0):t().type_.name=="T_INT_LITERAL")+\
@@ -51,10 +51,17 @@ type LiteralExpr is packed
 		    (eles:get(0):t().type_.name=="T_NULL_LITERAL")+\
 		    (eles:get(0):t().type_.name=="T_STRING_LITERAL"))|int
 
-	function() LiteralExpr::impl -> NodeType does
-	return NodeType::new("LiteralExpr")\
+	function(LiteralExpr self) LiteralExpr::copy -> Node does
+	return LiteralExpr::create_direct(self.value_type, self.value)|Node
+
+	function() LiteralExpr::impl -> void does
+		LiteralExpr_t = NodeType::new("LiteralExpr")\
 					:set_printer(LiteralExpr::print |NodePrinter)\
 					:set_creator(LiteralExpr::create|NodeCreator)\
 					:set_matcher(LiteralExpr::match |NodeMatcher)\
+					:set_tcopier(LiteralExpr::copy  |NodeTCopier)\
 					:matches(1):matches_only_tokens():addtype("ValueExpression")
+	return
 endtype
+
+NodeType LiteralExpr_t

@@ -48,11 +48,14 @@ type ForExpr is packed
 		n.body=p:visit(n.body|Node)|BlockBody
 	return
 
-	function() ForExpr::impl -> NodeType does
-	return NodeType::new("ForExpr")\
+	function() ForExpr::impl -> void does
+		ForExpr_t = NodeType::new("ForExpr")\
 					:set_printer(ForExpr::print |NodePrinter)\
 					:set_creator(ForExpr::create|NodeCreator)\
 					:set_matcher(ForExpr::match |NodeMatcher)\
 					:set_visitor(ForExpr::visit |NodeVisitor)\
 					:matches(6):addtype("Expression")
+	return
 endtype
+
+NodeType ForExpr_t

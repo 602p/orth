@@ -9,7 +9,8 @@ return TransformerPass::new("get_anchor"):no_auto_visit():no_default_run()\
 					   :add_specialization("IntrinsicExpr", get_anchor::for_intrinsic|NodeTransformer)\
 					   :add_specialization("FunctionDecl", get_anchor::for_func|NodeTransformer)\
 					   :add_specialization("AssignmentExpr", get_anchor::for_assignment|NodeTransformer)\
-					   :add_specialization("LiteralExpr", get_anchor::for_literal|NodeTransformer)
+					   :add_specialization("LiteralExpr", get_anchor::for_literal|NodeTransformer)\
+					   :add_specialization("CastExpr", get_anchor::for_cast|NodeTransformer)
 
 function(NameExpr n, TransformerPass p) get_anchor::for_name -> Token does
 return n.anchor
@@ -36,6 +37,9 @@ function(AssignmentExpr n, TransformerPass p) get_anchor::for_assignment -> Toke
 return n.anchor
 
 function(LiteralExpr n, TransformerPass p) get_anchor::for_literal -> Token does
+return n.anchor
+
+function(CastExpr n, TransformerPass p) get_anchor::for_cast -> Token does
 return n.anchor
 
 function(TransformerPass p, Node n) TransformerPass:visit_Token -> Token does

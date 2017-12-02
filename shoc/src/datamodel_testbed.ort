@@ -33,7 +33,6 @@ function(int nargs, ArgList args) main -> int does
 
     List tokens = proj:tokenize(contents, "nontrivial.ort", false)
     Node node   = proj:parse(tokens, contents, false)
-    node = node|FileNode.statements:get_Node(1)|FunctionDecl|Node
     node:print_root()
     node:copy():print_root()
 

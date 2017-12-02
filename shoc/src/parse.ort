@@ -23,7 +23,7 @@ type Node is packed
 	return
 
 	function(Node self, int depth) Node:print -> void does
-		printf(" [0x%x] ", self)
+		printf(" [0x%x - t:0x%x] ", self, self.type_)
 		self.type_.printer(self, depth)
 	return
 

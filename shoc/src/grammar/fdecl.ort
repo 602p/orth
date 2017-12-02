@@ -28,26 +28,34 @@ type FunctionDeclHead is packed
 		done
 	return
 
-	function(EleList eles) FunctionDeclHead::create -> FunctionDeclHead does
+	function(cstr name, cstr ret_type, bool is_extern, bool is_varargs, List args, Token anchor) FunctionDeclHead::create_raw -> FunctionDeclHead does
 		FunctionDeclHead new = malloc(@sizeof(FunctionDeclHead)@)|FunctionDeclHead
-		new.name=eles:get(2):t().text
-		new.ret_type=eles:get(4):t().text
-		new.is_extern=eles:get(0):t():is_a("T_FUNCTIONDECL_EXTERN")
-
-		Node args = eles:get(1):n()
-		if args:is_a("ZeroArgList") do
-			new.args=List::new()
-		elif args:is_a("OneArgList") do
-			new.args=List::new()
-			new.args:append((eles:get(1):n()|OneArgList).text)
-		elif args:is_a("VarArgsList") do
-			new.args=List::new()
-			new.varargs=true
-		else do #it's a MultiArgList
-			new.args=(eles:get(1):n()|MultiArgList).args
-		done
-		new.anchor=eles:get(0):t()
+		new.name=name
+		new.ret_type=ret_type
+		new.is_extern=is_extern
+		new.varargs=is_varargs
+		new.args=args
+		new.anchor=anchor
+		new.type_=FunctionDeclHead_t
 	return new
+
+	function(EleList eles) FunctionDeclHead::create -> FunctionDeclHead does
+		Node args = eles:get(1):n()
+		List args_list
+		bool varargs=false
+		if args:is_a("ZeroArgList") do
+			args_list=List::new()
+		elif args:is_a("OneArgList") do
+			args_list=List::new()
+			args_list:append((eles:get(1):n()|OneArgList).text)
+		elif args:is_a("VarArgsList") do
+			args_list=List::new()
+			varargs=true
+		else do #it's a MultiArgList
+			args_list=(eles:get(1):n()|MultiArgList).args
+		done
+	return FunctionDeclHead::create_raw(eles:get(2):t().text, eles:get(4):t().text, eles:get(0):t():is_a("T_FUNCTIONDECL_EXTERN"),\
+										 varargs, args_list, eles:get(0):t())
 
 	function(EleList eles) FunctionDeclHead::match -> int does
 		#T_FUNCTIONDECL ArgList T_FUNCTIONDECL_NAME T_FUNCTIONDECL_RETURN T_FUNCTIONDECL_RETURN_TY
@@ -83,11 +91,21 @@ type FunctionDeclHead is packed
 		done
 	return 6
 
+	function(FunctionDeclHead self) FunctionDeclHead::copy -> FunctionDeclHead does
+		List new_args = List::new()
+		int i=0
+		while i<self.args.len do
+			new_args:append(self.args:get(i))
+			i+=1
+		done
+	return FunctionDeclHead::create_raw(self.name, self.ret_type, self.is_extern, self.varargs, new_args, self.anchor)
+
 	function() FunctionDeclHead::impl -> void does
 		FunctionDeclHead_t = NodeType::new("FunctionDeclHead")\
 					:set_printer(FunctionDeclHead::print |NodePrinter)\
 					:set_creator(FunctionDeclHead::create|NodeCreator)\
 					:set_matcher(FunctionDeclHead::match |NodeMatcher)\
+					:set_tcopier(FunctionDeclHead::copy  |NodeTCopier)\
 					:matches(5)
 	return
 endtype
@@ -215,13 +233,22 @@ type FunctionDecl is packed
 		done
 	return
 
-	function(EleList eles) FunctionDecl::create -> FunctionDecl does
+	function(FunctionDeclHead head) FunctionDecl::create_raw_extern -> FunctionDecl does
 		FunctionDecl new = malloc(@sizeof(FunctionDecl)@)|FunctionDecl
-		new.head=eles:get(0):n()|FunctionDeclHead
-		if -new.head.is_extern do
-			new.body=(eles:get(1):n()|FunctionBody).statements
-		done
+		new.type_=FunctionDecl_t
+		new.head=head
 	return new
+
+	function(FunctionDeclHead head, List body) FunctionDecl::create_raw -> FunctionDecl does
+		FunctionDecl new = FunctionDecl::create_raw_extern(head)
+		new.body=body
+	return new
+
+	function(EleList eles) FunctionDecl::create -> FunctionDecl does
+		if -eles:get(0):n()|FunctionDeclHead.is_extern do
+			return FunctionDecl::create_raw(eles:get(0):n()|FunctionDeclHead, (eles:get(1):n()|FunctionBody).statements)
+		done
+	return FunctionDecl::create_raw_extern(eles:get(0):n()|FunctionDeclHead)
 
 	function(EleList eles) FunctionDecl::match -> int does
 		if eles:get(0):n():is_a("FunctionDeclHead") do
@@ -253,12 +280,25 @@ type FunctionDecl is packed
 		p.proj:exit_method()
 	return
 
+	function(FunctionDecl self) FunctionDecl::copy -> FunctionDecl does
+		List new_body = null|List
+		if -self.head.is_extern do
+			new_body=List::new()
+			int i=0
+			while i<self.body.len do
+				new_body:append_Node(self.body:get_Node(i):copy())
+				i+=1
+			done
+		done
+	return FunctionDecl::create_raw(self.head|Node:copy()|FunctionDeclHead, new_body)
+
 	function() FunctionDecl::impl -> void does
 		FunctionDecl_t = NodeType::new("FunctionDecl")\
 					:set_printer(FunctionDecl::print |NodePrinter)\
 					:set_creator(FunctionDecl::create|NodeCreator)\
 					:set_matcher(FunctionDecl::match |NodeMatcher)\
 					:set_visitor(FunctionDecl::visit |NodeVisitor)\
+					:set_tcopier(FunctionDecl::copy  |NodeTCopier)\
 					:matches(2):matches_only_nodes()
 	return
 endtype

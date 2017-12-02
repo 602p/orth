@@ -15,6 +15,7 @@ type ReturnExpr is packed
 
 	function() ReturnExpr::create_direct_void -> ReturnExpr does
 		ReturnExpr new = malloc(@sizeof(ReturnExpr)@)|ReturnExpr
+		new.type_=ReturnExpr_t
 		new.is_void=true
 	return new
 
@@ -60,7 +61,9 @@ type ReturnExpr is packed
 	function(ReturnExpr self) ReturnExpr::copy -> Node does
 		ReturnExpr new = ReturnExpr::create_direct_void()
 		new.is_void=self.is_void
-		new.value=self.value
+		if -self.is_void do
+			new.value=self.value:copy()
+		done
 	return new|Node
 
 	function() ReturnExpr::impl -> void does

@@ -1,34 +1,52 @@
 type FunctionDeclHead is packed
 	NodeType type_
-	List args
+	List args #List of DeclExprs
 	bool varargs
 	bool is_extern
-	cstr name
+	NameExpr name
 	cstr ret_type
 	Token anchor
 
+	function(FunctionDeclHead self) FunctionDeclHead:is_generic -> bool does
+	return self.name|Node:is_a("GenericName")
+
+	function(FunctionDeclHead self) FunctionDeclHead:get_strname -> cstr does
+		shoc::assert(-self:is_generic(), "Can't get_strname for a generic function")
+		if self.name|Node:is_a("AccessorExpr") do
+			if self.name|AccessorExpr.mode==":" do
+				return self.name|AccessorExpr.object|NameExpr.name + "$" + shoc::mangle_name(self.name|AccessorExpr.field)
+			else do
+				return self.name|AccessorExpr.object|NameExpr.name + "$$" + shoc::mangle_name(self.name|AccessorExpr.field)
+			done
+		done
+	return self.name.name
+
 	function(FunctionDeclHead node, int depth) FunctionDeclHead::print -> void does
-		printf("FunctionDeclHead: Name='%s' Type='%s' Nargs=%i", node.name, node.ret_type, node.args.len)
+		printf("FunctionDeclHead: type=%s, Nargs=%i", node.ret_type, node.args.len)
 		if node.varargs do
 			printf("...varargs")
 		done
 		if node.is_extern do
 			printf(" (external linkage)")
 		done
-		printf("\n")
+		printf(": ")
+		node.name|Node:print(depth+1)
+
 		int i=0
 		while i<node.args.len do
 			parse::indent(depth+1)
 			if i==node.args.len-1 do
-				printf("\\%i- %s\n", i, node.args:get(i))
+				printf("\\%i- ", i)
+				node.args:get_Node(i):print(depth+1)
 			else do
-				printf("|%i- %s\n", i, node.args:get(i))
+				printf("|%i- ", i)
+				node.args:get_Node(i):print(depth+1)
 			done
 			i+=1
 		done
 	return
 
-	function(cstr name, cstr ret_type, bool is_extern, bool is_varargs, List args, Token anchor) FunctionDeclHead::create_raw -> FunctionDeclHead does
+	function(NameExpr name, cstr ret_type, bool is_extern, bool is_varargs, List args, Token anchor) FunctionDeclHead::create_raw -> FunctionDeclHead does
 		FunctionDeclHead new = malloc(@sizeof(FunctionDeclHead)@)|FunctionDeclHead
 		new.name=name
 		new.ret_type=ret_type
@@ -43,59 +61,74 @@ type FunctionDeclHead is packed
 		Node args = eles:get(1):n()
 		List args_list
 		bool varargs=false
-		if args:is_a("ZeroArgList") do
+		if args:is_a("ZeroTuple") do
 			args_list=List::new()
-		elif args:is_a("OneArgList") do
+		elif args:is_a("GroupingExpr") do
 			args_list=List::new()
-			args_list:append((eles:get(1):n()|OneArgList).text)
-		elif args:is_a("VarArgsList") do
-			args_list=List::new()
-			varargs=true
-		else do #it's a MultiArgList
-			args_list=(eles:get(1):n()|MultiArgList).args
+			Node c = (eles:get(1):n()|GroupingExpr).contents
+			if c:is_a("LiteralExpr") do
+				if c|LiteralExpr.value=="..." do
+					varargs=true
+				done
+			done
+			if -varargs do
+				args_list:append_Node(c)
+			done
+		elif args:is_a("Tuple") do
+			args_list=(eles:get(1):n()|Tuple).elements
 		done
-	return FunctionDeclHead::create_raw(eles:get(2):t().text, eles:get(4):t().text, eles:get(0):t():is_a("T_FUNCTIONDECL_EXTERN"),\
+		int i=0
+		while i<args_list.len do
+			shoc::assert(args_list:get_Node(i):is_a("DeclExpr"), "Function with non-declexpr args")
+			i+=1
+		done
+	return FunctionDeclHead::create_raw(eles:get(2):n()|NameExpr, eles:get(4):t().text, eles:get(0):t():is_a("T_FUNCTIONDECL_EXTERN"),\
 										 varargs, args_list, eles:get(0):t())
 
 	function(EleList eles) FunctionDeclHead::match -> int does
 		#T_FUNCTIONDECL ArgList T_FUNCTIONDECL_NAME T_FUNCTIONDECL_RETURN T_FUNCTIONDECL_RETURN_TY
 		#...T_FUNCTIONDECL_DOES
+		
 		if (-eles:get(0).is_token):or(\
 			 eles:get(1).is_token):or(\
-			-eles:get(2).is_token):or(\
+			 eles:get(2).is_token):or(\
 			-eles:get(3).is_token):or(\
 			-eles:get(4).is_token) do
 			return 0
 		done
+		
 
 		if eles:get(0):t():is_a("T_FUNCTIONDECL_EXTERN") do
-			if eles:get(1):n():is_a("ArgList")&(\
-		     eles:get(2):t():is_a("T_FUNCTIONDECL_NAME"))&(\
+			if (eles:get(1):n():is_a("Tuple"):or(eles:get(1):n():is_a("GroupingExpr")))&(\
+		     eles:get(2):n():is_a("NameExpr"):or(eles:get(2):n():is_a("AccessorExpr")))&(\
 		     eles:get(3):t():is_a("T_FUNCTIONDECL_RETURN"))&(\
 		     eles:get(4):t():is_a("T_FUNCTIONDECL_RETURN_TY")) do
 		    	return 5
 		    done
 		done
+		
 
 		if -eles:get(5).is_token do
 			return 0
 		done
+		
 
 		if (-eles:get(0):t():is_a("T_FUNCTIONDECL")):or(\
-		    -eles:get(1):n():is_a("ArgList")):or(\
-		    -eles:get(2):t():is_a("T_FUNCTIONDECL_NAME")):or(\
+		    -(eles:get(1):n():is_a("Tuple"):or(eles:get(1):n():is_a("GroupingExpr")))):or(\
+		    -(eles:get(2):n():is_a("NameExpr"):or(eles:get(2):n():is_a("AccessorExpr")))):or(\
 		    -eles:get(3):t():is_a("T_FUNCTIONDECL_RETURN")):or(\
 		    -eles:get(4):t():is_a("T_FUNCTIONDECL_RETURN_TY")):or(\
 		    -eles:get(5):t():is_a("T_FUNCTIONDECL_DOES")) do
 			return 0
 		done
+		
 	return 6
 
 	function(FunctionDeclHead self) FunctionDeclHead::copy -> FunctionDeclHead does
 		List new_args = List::new()
 		int i=0
 		while i<self.args.len do
-			new_args:append(self.args:get(i))
+			new_args:append_Node(self.args:get_Node(i):copy())
 			i+=1
 		done
 	return FunctionDeclHead::create_raw(self.name, self.ret_type, self.is_extern, self.varargs, new_args, self.anchor)
@@ -263,7 +296,12 @@ type FunctionDecl is packed
 	return 2
 
 	function(FunctionDecl n, TransformerPass p) FunctionDecl::visit -> void does
-		p.proj:enter_method_named(n.head.name)
+		if -n.head:is_generic() do
+			printf("Entered")
+			p.proj:enter_method_named(n.head:get_strname())
+		else do
+			printf("\nNOT ENTERIGN GENERIC\n")
+		done
 		if -n.head.is_extern do
 			int i=0
 			Node res
@@ -277,7 +315,9 @@ type FunctionDecl is packed
 				i+=1
 			done
 		done
-		p.proj:exit_method()
+		if -n.head:is_generic() do
+			p.proj:exit_method()
+		done
 	return
 
 	function(FunctionDecl self) FunctionDecl::copy -> FunctionDecl does

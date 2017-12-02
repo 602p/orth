@@ -38,18 +38,6 @@ type TypedVar is
 		new.name=name
 		new.type_=type_
 	return new
-
-	function(cstr decl_string, Project proj) TypedVar::from_decl -> TypedVar does
-		cstr ty = decl_string:substr(0, decl_string:find(" "))
-		int i=decl_string:find(" ")
-		while decl_string[i]:in(" \t") do
-			i+=1
-		done
-		cstr name = decl_string:offset(i)
-		if -proj.types:contains(ty) do
-			shoc::bail_out("Error: Trying to declare variable "+name+" of unknown type "+ty)
-		done
-	return TypedVar::new(name, proj:get_type(ty))
 endtype
 
 function(List l, TypedVar v) List:append_TypedVar -> void does
@@ -225,11 +213,7 @@ type StructOType is packed
 		new.packed=false
 	return new|OType
 
-	function(StructOType self, cstr decl_string) StructOType:add_field -> void does
-		self:add_field_tv(TypedVar::from_decl(decl_string, self.proj))
-	return		
-
-	function(StructOType self, TypedVar new_field) StructOType:add_field_tv -> void does
+	function(StructOType self, TypedVar new_field) StructOType:add_field -> void does
 		int size = new_field.type_:get_size()/8
 		if new_field.type_:is_struct() do
 			size = self.proj.pointer_size/8
@@ -401,7 +385,7 @@ type Method is
 		int i=0
 		TypedVar tv
 		while i<args.len do
-			tv=TypedVar::from_decl(args:get(i), proj)
+			tv=TypedVar::new(args:get_Node(i)|DeclExpr.d_name, proj:get_type(shoc::mangle_name(args:get_Node(i)|DeclExpr.d_type)))
 			new.args:append_TypedVar(tv)
 			fptr_type_args:append_OType(tv.type_)
 			new.locals:set(tv.name, tv.type_|ptr)
@@ -462,3 +446,21 @@ type Method is
 		done
 	return
 endtype
+
+function(NameExpr name) shoc::mangle_name -> cstr does
+	if name|Node:is_a("GenericName") do
+		return name|GenericName.base_name+shoc::mangle_generics(name|GenericName.args)
+	done
+return name.name
+
+function(List g_args) shoc::mangle_generics -> cstr does
+	cstr name = "$$$G_"
+	int i = 0
+	while i<g_args.len do
+		name+=i:str()+"A"+shoc::mangle_name(g_args:get(i)|NameExpr)+"Z_"
+		i+=1
+	done
+return name
+
+function(Project p, NameExpr n) Project:resolve_TypeName -> OType does
+return p:get_type(n|NameExpr.name)

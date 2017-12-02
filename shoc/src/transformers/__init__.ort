@@ -8,7 +8,7 @@ import "transformers/opt/elide_groupings.ort"
 import "transformers/opt/fold_constants.ort"
 import "transformers/opt/elide_branches.ort"
 import "transformers/opt/strip_seps.ort"
-import "transformers/opt/elide_funcs.ort"
+# import "transformers/opt/elide_funcs.ort"
 
 import "transformers/def/predefine_types.ort"
 import "transformers/def/define_types.ort"
@@ -18,7 +18,7 @@ import "transformers/lower/apply_intrinsics.ort"
 
 import "transformers/pregir/define_locals.ort"
 import "transformers/pregir/rw_calls.ort"
-import "transformers/lower/rw_fors.ort"
+# import "transformers/lower/rw_fors.ort"
 
 import "transformers/emit/__init__.ort"
 
@@ -47,14 +47,14 @@ function(Project p) shoc::transformers::init -> void does
 	p:add_Transformer(strip_seps::init())
 	
 	p:add_Transformer(define_locals::init())
-	p:add_Transformer(rw_fors::init())
+	# p:add_Transformer(rw_fors::init())
 	p:add_Transformer(rw_calls::init())
 
-	p:add_Transformer(count_calls::init())
+	# p:add_Transformer(count_calls::init())
 
-	if -p.options:contains("no_opt") do
-		p:add_Transformer(elide_funcs::init())
-	done
+	# if -p.options:contains("no_opt") do
+		# p:add_Transformer(elide_funcs::init())
+	# done
 
 	p:add_Transformer(get_type::init())
 	p:add_Transformer(get_anchor::init())

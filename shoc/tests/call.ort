@@ -1,0 +1,5 @@
+function(int a) foo -> int does
+return a+1
+
+function() main -> int does
+return foo(1)

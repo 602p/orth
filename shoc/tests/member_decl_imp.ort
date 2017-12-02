@@ -1,0 +1,5 @@
+import member_decl
+
+function() main -> int does
+	LinkedListNode a
+return @addressof(a.next)

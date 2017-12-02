@@ -38,11 +38,7 @@ function(CallExpr n, TransformerPass p) rewrite_calls::visit_call -> CallExpr do
 	if n.meth:is_a("AccessorExpr") do
 		AccessorExpr acc = n.meth|AccessorExpr
 		if acc.mode==":" do
-			# printf("\n\n")
-			# acc.object:print_root()
-			# printf("callrw - %u - %u\n", p.proj:get_node_type(acc.object).name, acc.field)
-			# printf("callrw - %s - %s\n", p.proj:get_node_type(acc.object).name, acc.field)
-			n.meth=NameExpr::create_direct( p.proj:get_node_type(acc.object).name+"$"+acc.field, p.proj:get_node_anchor(n|Node))|Node
+			n.meth=NameExpr::create_direct(p.proj:get_node_type(acc.object).name+"$"+shoc::mangle_name(acc.field), p.proj:get_node_anchor(n|Node))|Node
 			n.args:insert(0, acc.object|ptr)
 		done
 	done
@@ -50,6 +46,7 @@ return n
 
 function(BinOpExpr n, TransformerPass p) rewrite_calls::visit_binop -> Node does
 	cstr name=p.proj:get_node_type(n.lhs).name+"$"+shoc::get_magic(n.op)
+	printf("check name = %s\n", name)
 	if p.proj.methods:contains(name) do
 		List args=List::new()
 		args:append_Node(n.lhs)

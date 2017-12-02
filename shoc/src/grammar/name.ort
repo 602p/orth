@@ -26,6 +26,14 @@ type NameExpr is packed
 	return new
 
 	function(EleList eles) NameExpr::match -> int does
+		if eles:has_lookahead() do
+			if eles:get_lookahead():t():is_a("T_NAME") do
+				return 0
+			done
+			if eles:get_lookahead():t():is_a("T_PTYPE_CLOSE") do
+				return 0
+			done
+		done
 	return (eles:get(0):t().type_.name=="T_NAME")|int
 
 	function(NameExpr self) NameExpr::copy -> Node does
@@ -37,7 +45,7 @@ type NameExpr is packed
 					:set_creator(NameExpr::create|NodeCreator)\
 					:set_matcher(NameExpr::match |NodeMatcher)\
 					:set_tcopier(NameExpr::copy  |NodeTCopier)\
-					:matches(1):matches_only_tokens():addtype("IdentifierExpression")
+					:matches(1):matches_only_tokens():addtype("IdentifierExpression"):addtype("TypeName")
 	return
 endtype
 
@@ -48,27 +56,44 @@ NodeType NameExpr_t
 type DeclExpr is packed
 	NodeType type_
 	Token anchor
-	cstr name
+	NameExpr d_type
+	cstr d_name
 
 	function(DeclExpr node, int depth) DeclExpr::print -> void does
-		printf("DeclExpr: '%s'\n", node.name)
+		printf("DeclExpr: '%s'\n", node.d_name)
+		parse::indent(depth+1)
+		printf("\\-Type: ")
+		node.d_type|Node:print(depth+1)
 	return
 
-	function(cstr name, Token anchor) DeclExpr::create_direct -> DeclExpr does
+	function(NameExpr type_, cstr name, Token anchor) DeclExpr::create_direct -> DeclExpr does
 		DeclExpr new = malloc(@sizeof(DeclExpr)@)|DeclExpr
 		new.type_=DeclExpr_t
-		new.name=name
+		new.d_name=name
+		new.d_type=type_
 		new.anchor=anchor
 	return new
 
 	function(EleList eles) DeclExpr::create -> DeclExpr does
-	return DeclExpr::create_direct(eles:get(0):t().text, eles:get(0):t())
+	return DeclExpr::create_direct(eles:get(0):n()|NameExpr, eles:get(1):t().text, eles:get(1):t())
 
 	function(EleList eles) DeclExpr::match -> int does
-	return (eles:get(0):t().type_.name=="T_VAR_DECL")|int
+		if -eles:get(0).is_token do
+			if eles:get(0):n():is_a("TypeName") do
+				if eles:get(1).is_token do
+					if eles:get(1):t():is_a("T_NAME") do
+						return 2
+					done
+				done
+			done
+		done
+	return 0
+
+	function(DeclExpr self, Project p) DeclExpr:make_TypedVar -> TypedVar does
+	return TypedVar::new(self.d_name, p:resolve_TypeName(self.d_type))
 
 	function(DeclExpr self) DeclExpr::copy -> Node does
-	return DeclExpr::create_direct(self.name, self.anchor)|Node
+	return DeclExpr::create_direct(self.d_type, self.d_name, self.anchor)|Node
 
 	function() DeclExpr::impl -> void does
 		DeclExpr_t = NodeType::new("DeclExpr")\
@@ -76,7 +101,7 @@ type DeclExpr is packed
 					:set_creator(DeclExpr::create|NodeCreator)\
 					:set_matcher(DeclExpr::match |NodeMatcher)\
 					:set_tcopier(DeclExpr::copy  |NodeTCopier)\
-					:matches(1):matches_only_tokens():addtype("IdentifierExpression")
+					:matches(2):addtype("IdentifierExpression")
 	return
 endtype
 

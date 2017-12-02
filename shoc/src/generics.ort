@@ -86,7 +86,7 @@ type GType is
 				resolved_var=params:get_name(resolved_var.name)
 			done
 			resolved_var=resolved_var:resolve(params)
-			new_t:add_field_tv(TypedVar::new(orig_var.name, resolved_var))
+			new_t:add_field(TypedVar::new(orig_var.name, resolved_var))
 			i+=1
 		done
 	return new_t|OType

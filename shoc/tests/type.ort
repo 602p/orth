@@ -1,0 +1,24 @@
+extern(int size) malloc -> ptr
+extern(...) printf -> int
+
+type SomeStruct is packed
+	int a
+	int b
+
+	function(int a, int b) SomeStruct::new -> SomeStruct does
+		SomeStruct self = malloc(@sizeof(SomeStruct)@)|SomeStruct
+		self.a=a
+		self.b=b
+	return self
+
+	function(SomeStruct self) SomeStruct:print -> void does
+		printf("(%i,%i)", self.a, self.b)
+	return
+endtype
+
+function(SomeStruct self, SomeStruct other) SomeStruct:__add__ -> SomeStruct does
+return SomeStruct::new(self.a+other.a, self.b+other.b)
+
+function() main -> int does
+	(SomeStruct::new(0,3)+SomeStruct::new(2,1)):print()
+return 0

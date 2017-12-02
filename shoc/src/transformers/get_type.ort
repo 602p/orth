@@ -15,7 +15,12 @@ return TransformerPass::new("get_type"):no_auto_visit():no_default_run()\
 function(NameExpr n, TransformerPass p) get_type::for_name -> OType does
 	if p.proj.curr_method|ptr==null do
 		printf("ERR: curr_method is null\n")
+		printf("In name: ")
+		n|Node:print_root()
+		shoc::bail_out("Can't continue")
 	done
+	printf("\n\n")
+	p.proj.curr_method:print()
 	if p.proj.curr_method.locals:contains(n.name) do
 		return p.proj.curr_method.locals:get(n.name)|OType
 	elif p.proj.globals:contains(n.name) do
@@ -25,7 +30,7 @@ function(NameExpr n, TransformerPass p) get_type::for_name -> OType does
 return p.proj:get_Method(n.name).ptr_type
 
 function(DeclExpr n, TransformerPass p) get_type::for_decl -> OType does
-return TypedVar::from_decl(n|DeclExpr.name, p.proj).type_
+return p.proj:get_type(shoc::mangle_name(n.d_type))
 
 function(BinOpExpr n, TransformerPass p) get_type::for_binop -> OType does
 	if n.op:contains("="):or(n.op==">"):or(n.op=="<"):or(n.op=="&" & p.proj:get_node_type(n.lhs).name=="bool") do
@@ -43,10 +48,10 @@ function(AccessorExpr n, TransformerPass p) get_type::for_accessor -> OType does
 	OType obj_typ=p.proj:get_node_type(n.object)
 	if n.mode=="." do
 		p.proj:fail_in_if(-obj_typ:is_struct(), "Type "+obj_typ.name+" is not a struct - cannot use accessor off of it", n|Node)
-		p.proj:fail_in_if(-obj_typ:as_struct():has_field(n.field), "No such field '"+n.field+"' in type "+obj_typ.name, n|Node)
-		return obj_typ:as_struct():get_field_type(n.field)
+		p.proj:fail_in_if(-obj_typ:as_struct():has_field(n.field.name), "No such field '"+n.field.name+"' in type "+obj_typ.name, n|Node)
+		return obj_typ:as_struct():get_field_type(n.field.name)
 	elif n.mode==":" do
-		cstr name=obj_typ.name+"$"+n.field
+		cstr name=obj_typ.name+"$"+shoc::mangle_name(n.field)
 		p.proj:fail_in_if(-p.proj.methods:contains(name), "Can't resolve name "+name, n|Node)
 		return p.proj:get_Method(name).ptr_type
 	done

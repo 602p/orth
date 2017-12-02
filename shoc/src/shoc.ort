@@ -250,6 +250,7 @@ function(Project p, cstr msg, Token anchor) Project:fail_in_token -> void does
 	esc[1]=0|byte
 	printf("%s[41mCompilation Failure%s[0m : %s[31m%s. From file '%s', line %i, col %i, (likely) in '%s':%s[0m\n", esc, esc, esc, msg, anchor.origin_file, anchor.origin_line, anchor.origin_col, anchor.origin_meth, esc)
 	lex::print_highlight(p.sources:get(anchor.origin_file), anchor.origin_line, anchor.origin_col)
+	unwind::backtrace()
 	exit(3)
 return
 

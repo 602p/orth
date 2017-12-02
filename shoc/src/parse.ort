@@ -335,6 +335,10 @@ function(List l, Node n) List:append_Node -> void does
 	l:append(n|ptr)
 return
 
+function(List l, int pos, Node n) List:insert_Node -> void does
+	l:insert(pos, n|ptr)
+return
+
 function(List l, int n) List:get_Node -> Node does
 return l:get(n)|Node
 
@@ -365,13 +369,16 @@ function(Project p, List tokens, cstr text, bool verbose) Project:parse -> Node 
 	bool     DEBUG=p.options:contains("parse_debug")
 
 	while eles.position>=0 do
+		if DEBUG do
+			parse::update_viz(eles, text)
+		done
 		progress=true
 		while progress do
 			progress=false
 			current_type_idx=0
 			while (current_type_idx<p.node_types.len) & -progress do
 				current_type=p.node_types:get(current_type_idx)|NodeType
-				#printf("%s\n", current_type.name)
+				# printf("try: %s\n", current_type.name)
 				match_count=current_type:match(eles)
 				if match_count>0 do
 					eles:set_tail(match_count,\
@@ -388,7 +395,7 @@ function(Project p, List tokens, cstr text, bool verbose) Project:parse -> Node 
 		done
 		eles:advance(1)
 		if DEBUG do
-			parse::update_viz(eles, text)
+			
 			printf("No further possible parses, advanced by 1\n")
 		done
 		if verbose do

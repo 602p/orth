@@ -391,13 +391,7 @@ function(List t) lex::init_default -> void does
 	#Fucntion decl syntax
 	t:append_TT(TokenType::new_eq("T_FUNCTIONDECL", "function"):after("T_ENDOFSTATEMENT"))
 	t:append_TT(TokenType::new_eq("T_FUNCTIONDECL_EXTERN", "extern"):after("T_ENDOFSTATEMENT"))
-	t:append_TT(TokenType::new_eq("T_ARGLIST_START", "("):after("T_FUNCTIONDECL"):or("T_FUNCTIONDECL_EXTERN"))
-	t:append_TT(TokenType::new_fn("T_ARGLIST_ELE", lex::match_var_decl|TokenMatcher):after("T_ARGLIST_START"):or("T_ARGLIST_SEP"))
-	t:append_TT(TokenType::new_eq("T_ARGLIST_SEP", ","):after("T_ARGLIST_ELE"))
-	t:append_TT(TokenType::new_eq("T_ARGLIST_VARARGS", "..."):after("T_ARGLIST_START"))
-	t:append_TT(TokenType::new_eq("T_ARGLIST_END", ")"):after("T_ARGLIST_ELE"):or("T_ARGLIST_START"):or("T_ARGLIST_VARARGS"))
-	t:append_TT(TokenType::new_fn("T_FUNCTIONDECL_NAME", lex::match_function_identifier|TokenMatcher):after("T_ARGLIST_END"))
-	t:append_TT(TokenType::new_eq("T_FUNCTIONDECL_RETURN", "->"):after("T_FUNCTIONDECL_NAME"))
+	t:append_TT(TokenType::new_eq("T_FUNCTIONDECL_RETURN", "->"))
 	t:append_TT(TokenType::new_fn("T_FUNCTIONDECL_RETURN_TY", lex::match_identifier|TokenMatcher):after("T_FUNCTIONDECL_RETURN"))
 	t:append_TT(TokenType::new_kw("T_FUNCTIONDECL_DOES", "does"):after("T_FUNCTIONDECL_RETURN_TY"))
 
@@ -409,8 +403,10 @@ function(List t) lex::init_default -> void does
 	t:append_TT(TokenType::new_fn("T_STRING_LITERAL", lex::match_string_literal|TokenMatcher))
 
 	#Variables (decls and names)
-	t:append_TT(TokenType::new_fn("T_VAR_DECL", lex::match_var_decl|TokenMatcher):after("T_ENDOFSTATEMENT"))
+	# t:append_TT(TokenType::new_fn("T_VAR_DECL", lex::match_var_decl|TokenMatcher):after("T_ENDOFSTATEMENT"))
 	t:append_TT(TokenType::new_fn("T_NAME", lex::match_identifier|TokenMatcher))
+	t:append_TT(TokenType::new_eq("T_PTYPE_OPEN", "{"))
+	t:append_TT(TokenType::new_eq("T_PTYPE_CLOSE", "}"))
 
 	#Assignment, binops, augassign
 	t:append_TT(TokenType::new_fn("T_AUGASSIGN", lex::match_augassign|TokenMatcher)) #Comes before, otherwise += is parsed as + then =

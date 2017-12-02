@@ -1,10 +1,12 @@
 
 function(DeclExpr n, TransformerPass p) define_locals::visit_decl -> DeclExpr does
+	printf("visiting decl: ")
 	if -p.proj:in_method() do
+		printf("not in method\n")
 		return n
 	done
 
-	TypedVar v = TypedVar::from_decl(n.name, p.proj)
+	TypedVar v = n:make_TypedVar(p.proj)
 
 	p.proj:cond_warn_in_if("warn_duplicate", p.proj.globals:contains(v.name), "Global-shadowing declaration of variable "+v.name, n|Node)
 	

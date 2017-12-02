@@ -1,0 +1,4 @@
+extern(...) printf -> int
+function() main -> int does
+	printf("Hell, Workd!\n")
+return 0

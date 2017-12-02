@@ -19,15 +19,15 @@ return n
 
 function(FunctionDecl n, TransformerPass p) emit_value::for_func -> FunctionDecl does
 	if p.proj.options:contains("debug_emit_meth") do
-		printf("Emitting method %s\n", n.head.name)
+		printf("Emitting method %s\n", n.head:get_strname())
 	done
 	if -n.head.is_extern do
 		int i=0
-		p.proj:enter_method_named(n.head.name)
+		p.proj:enter_method_named(n.head:get_strname())
 
-		if p.proj.options:contains("funchooks") & -n.head.name:startswith("orth$$internal$$hooks") do
+		if p.proj.options:contains("funchooks") & -n.head:get_strname():startswith("orth$$internal$$hooks") do
 			List hook_args=List::new()
-			hook_args:append_GIRVar(GIRLiteral::emit_cstr(p.proj, n.head.name))
+			hook_args:append_GIRVar(GIRLiteral::emit_cstr(p.proj, n.head:get_strname()))
 			GIRCall::emit(p.proj, GIRGetMethod::emit(p.proj, p.proj:get_Method("orth$$internal$$hooks$$function_enter_hook")), hook_args)
 		done
 

@@ -1,0 +1,148 @@
+type GenericArgListTemp is packed
+	NodeType type_
+	Token anchor
+	List args
+
+	function(GenericArgListTemp node, int depth) GenericArgListTemp::print -> void does
+		printf("GenericArgListTemp:\n")
+		int i=0
+		while i<node.args.len do
+			parse::indent(depth+1)
+			printf("|%i- ", i)
+			node.args:get_Node(i):print(depth+1)
+			i+=1
+		done
+	return
+
+	function(EleList eles) GenericArgListTemp::create -> GenericArgListTemp does
+		GenericArgListTemp new = malloc(@sizeof(GenericArgListTemp)@)|GenericArgListTemp
+		
+		int count = GenericArgListTemp::match(eles)
+		if count==2 do
+			if eles:get(1).is_token do
+				if eles:get(1):t():is_a("T_PTYPE_CLOSE") do
+					new.args=List::new()
+					new.args:append(eles:get(0):n()|ptr)
+				done
+			else do
+				new.args=eles:get(2):n()|GenericArgListTemp.args
+			done
+		elif count==3 do
+			new.args=eles:get(2):n()|GenericArgListTemp.args
+			new.args:insert_Node(0, eles:get(0):n())
+		done
+	return new
+
+	function(EleList eles) GenericArgListTemp::match -> int does
+		if eles:get(1).is_token do
+			if eles:get(1):t():is_a("T_PTYPE_CLOSE") do
+				if -eles:get(0).is_token do
+					if eles:get(0):n():is_a("TypeName") do
+						return 2
+					done
+				done
+			done
+		done
+
+		if -eles:get(0).is_token do
+			if eles:get(0):n():is_a("TypeName") do
+				if eles:get(1).is_token do
+					if eles:get(1):t():is_a("T_COMMA") do
+						if -eles:get(2).is_token do
+							if eles:get(2):n():is_a("GenericArgListTemp") do
+								return 3
+							done
+						done
+					done
+				done
+			done
+		done
+	return 0
+
+	function() GenericArgListTemp::impl -> NodeType does
+	return NodeType::new("GenericArgListTemp")\
+					:set_printer(GenericArgListTemp::print |NodePrinter)\
+					:set_creator(GenericArgListTemp::create|NodeCreator)\
+					:set_matcher(GenericArgListTemp::match |NodeMatcher)\
+					:matches(2)
+endtype
+
+type GenericArgList is packed
+	NodeType type_
+	Token anchor
+	List args
+
+	function(GenericArgList node, int depth) GenericArgList::print -> void does
+		printf("GenericArgList:\n")
+		int i=0
+		while i<node.args.len do
+			parse::indent(depth+1)
+			printf("|%i- ", i)
+			node.args:get_Node(i):print(depth+1)
+			i+=1
+		done
+	return
+
+	function(EleList eles) GenericArgList::create -> GenericArgList does
+		GenericArgList new = malloc(@sizeof(GenericArgList)@)|GenericArgList
+		new.args=eles:get(1):n()|GenericArgListTemp.args
+	return new
+
+	function(EleList eles) GenericArgList::match -> int does
+		if eles:get(0).is_token do
+			if -eles:get(1).is_token do
+				if eles:get(0):t():is_a("T_PTYPE_OPEN") & eles:get(1):n():is_a("GenericArgListTemp") do
+					return 2
+				done
+			done
+		done
+	return 0
+
+	function() GenericArgList::impl -> NodeType does
+	return NodeType::new("GenericArgList")\
+					:set_printer(GenericArgList::print |NodePrinter)\
+					:set_creator(GenericArgList::create|NodeCreator)\
+					:set_matcher(GenericArgList::match |NodeMatcher)\
+					:matches(2)
+endtype
+
+type GenericName is packed
+	NodeType type_
+	Token anchor
+	cstr base_name
+	List args
+
+	function(GenericName node, int depth) GenericName::print -> void does
+		printf("GenericName: base=%s\n", node.base_name)
+		int i=0
+		while i<node.args.len do
+			parse::indent(depth+1)
+			printf("|%i- ", i)
+			node.args:get_Node(i):print(depth+1)
+			i+=1
+		done
+	return
+
+	function(EleList eles) GenericName::create -> GenericName does
+		GenericName new = malloc(@sizeof(GenericName)@)|GenericName
+		new.base_name=eles:get(0):n()|NameExpr.name
+		new.args=eles:get(1):n()|GenericArgList.args
+	return new
+
+	function(EleList eles) GenericName::match -> int does
+		if -eles:get(0).is_token do
+			if -eles:get(1).is_token do
+				if eles:get(0):n():is_a("NameExpr") & eles:get(1):n():is_a("GenericArgList") do
+					return 2
+				done
+			done
+		done
+	return 0
+
+	function() GenericName::impl -> NodeType does
+	return NodeType::new("GenericName")\
+					:set_printer(GenericName::print |NodePrinter)\
+					:set_creator(GenericName::create|NodeCreator)\
+					:set_matcher(GenericName::match |NodeMatcher)\
+					:matches(2):addtype("TypeName"):addtype("NameExpr"):addtype("ValueExpression")
+endtype

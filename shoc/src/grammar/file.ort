@@ -22,12 +22,23 @@ type FileNode is packed
 	function(Project p, EleList eles) FileNode::create -> FileNode does
 		FileNode new = FileNode::new_empty()
 		int i=0
+		bool bad = false
 		while i<eles:in_slice() do
 			if eles:get(i).is_token do
 				p:fail_in_token("Invalid Syntax", eles:get(i):t())
 			done
 			new.statements:append_Node(eles:get(i):n())
+			if eles:get(i):n():is_a("TypeDeclHead") do
+				if -eles:get(i):n()|TypeDeclHead.is_func_alias do
+					printf("\n\nError: File node contains a TypeDeclHead\n")
+					bad=true
+				done
+			done
 			i+=1
+		done
+		if bad do
+			new|Node:print(0)
+			shoc::bail_out("Invalid File node. Cannot continue")
 		done
 	return new
 
@@ -39,6 +50,7 @@ type FileNode is packed
 		Node res
 		while i<n.statements.len do
 			res=p:visit(n.statements:get_Node(i))
+			
 			if res|ptr==null do
 				n.statements:del(i)
 			else do

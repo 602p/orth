@@ -1,0 +1,4 @@
+function() main -> int does
+	int a = 1
+	a+=1
+return a

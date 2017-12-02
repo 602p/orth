@@ -33,8 +33,11 @@ function(int nargs, ArgList args) main -> int does
 
     List tokens = proj:tokenize(contents, "nontrivial.ort", false)
     Node node   = proj:parse(tokens, contents, false)
+   
+
+    proj:add_Transformer(modify_types::init())
+    proj:get_transformer_pass("modify_types"):visit(node:copy()):print_root()
     node:print_root()
-    node:copy():print_root()
 
     # List fields = List::new()
     # fields:append_TypedVar(TypedVar::new("value", SymType::new("V")))
@@ -55,3 +58,10 @@ function(int nargs, ArgList args) main -> int does
 
     # PType::new(generic_type, inst_args):resolve(GenericArgs::new()):print()
 return 0
+
+function(LiteralExpr n, TransformerPass p) modify_types::visit_literal -> Node does
+return LiteralExpr::create_direct(n.value_type, (n.value:int()+1):str())|Node
+
+function() modify_types::init -> TransformerPass does
+return TransformerPass::new("modify_types")\
+       :add_specialization("LiteralExpr", modify_types::visit_literal|NodeTransformer)

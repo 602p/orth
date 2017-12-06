@@ -5,6 +5,7 @@ return TransformerPass::new("get_anchor"):no_auto_visit():no_default_run()\
 					   :add_specialization("DeclExpr", get_anchor::for_decl|NodeTransformer)\
 					   :add_specialization("CallExpr", get_anchor::for_call|NodeTransformer)\
 					   :add_specialization("BinOpExpr", get_anchor::for_binop|NodeTransformer)\
+					   :add_specialization("UnOpExpr", get_anchor::for_unnop|NodeTransformer)\
 					   :add_specialization("AccessorExpr", get_anchor::for_accesor|NodeTransformer)\
 					   :add_specialization("IntrinsicExpr", get_anchor::for_intrinsic|NodeTransformer)\
 					   :add_specialization("FunctionDecl", get_anchor::for_func|NodeTransformer)\
@@ -16,6 +17,9 @@ function(NameExpr n, TransformerPass p) get_anchor::for_name -> Token does
 return n.anchor
 
 function(BinOpExpr n, TransformerPass p) get_anchor::for_binop -> Token does
+return n.anchor
+
+function(UnOpExpr n, TransformerPass p) get_anchor::for_unnop -> Token does
 return n.anchor
 
 function(CallExpr n, TransformerPass p) get_anchor::for_call -> Token does

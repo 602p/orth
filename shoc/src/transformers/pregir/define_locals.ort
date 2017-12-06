@@ -1,8 +1,8 @@
 
 function(DeclExpr n, TransformerPass p) define_locals::visit_decl -> DeclExpr does
-	printf("visiting decl: ")
+	# printf("visiting decl: ")
 	if -p.proj:in_method() do
-		printf("not in method\n")
+		# printf("not in method\n")
 		return n
 	done
 

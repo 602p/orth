@@ -46,7 +46,7 @@ return n
 
 function(BinOpExpr n, TransformerPass p) rewrite_calls::visit_binop -> Node does
 	cstr name=p.proj:get_node_type(n.lhs).name+"$"+shoc::get_magic(n.op)
-	printf("check name = %s\n", name)
+	# printf("check name = %s\n", name)
 	if p.proj.methods:contains(name) do
 		List args=List::new()
 		args:append_Node(n.lhs)

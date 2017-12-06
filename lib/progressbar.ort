@@ -65,11 +65,10 @@ type ProgressBar is
 				fprintf(stderr, "Done!\n")
 				self.finished=true
 			done
-			
 		done
 	return
 
-	function(ProgressBar self) ProgressBar:done -> void does
+	function(ProgressBar self) ProgressBar:finish -> void does
 		self:update(self.out_of)
 	return
 

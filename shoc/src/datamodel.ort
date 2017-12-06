@@ -450,6 +450,12 @@ endtype
 function(NameExpr name) shoc::mangle_name -> cstr does
 	if name|Node:is_a("GenericName") do
 		return name|GenericName.base_name+shoc::mangle_generics(name|GenericName.args)
+	elif name|Node:is_a("AccessorExpr") do
+		cstr sep = "$"
+		if name|AccessorExpr.mode=="::" do
+			sep="$$"
+		done
+		return shoc::mangle_name(name|AccessorExpr.object|NameExpr)+sep+shoc::mangle_name(name|AccessorExpr.field|NameExpr)
 	done
 return name.name
 

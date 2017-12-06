@@ -12,14 +12,7 @@ type FunctionDeclHead is packed
 
 	function(FunctionDeclHead self) FunctionDeclHead:get_strname -> cstr does
 		shoc::assert(-self:is_generic(), "Can't get_strname for a generic function")
-		if self.name|Node:is_a("AccessorExpr") do
-			if self.name|AccessorExpr.mode==":" do
-				return self.name|AccessorExpr.object|NameExpr.name + "$" + shoc::mangle_name(self.name|AccessorExpr.field)
-			else do
-				return self.name|AccessorExpr.object|NameExpr.name + "$$" + shoc::mangle_name(self.name|AccessorExpr.field)
-			done
-		done
-	return self.name.name
+	return shoc::mangle_name(self.name)
 
 	function(FunctionDeclHead node, int depth) FunctionDeclHead::print -> void does
 		printf("FunctionDeclHead: type=%s, Nargs=%i", node.ret_type, node.args.len)
@@ -297,7 +290,6 @@ type FunctionDecl is packed
 
 	function(FunctionDecl n, TransformerPass p) FunctionDecl::visit -> void does
 		if -n.head:is_generic() do
-			printf("Entered")
 			p.proj:enter_method_named(n.head:get_strname())
 		else do
 			printf("\nNOT ENTERIGN GENERIC\n")

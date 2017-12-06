@@ -19,8 +19,6 @@ function(NameExpr n, TransformerPass p) get_type::for_name -> OType does
 		n|Node:print_root()
 		shoc::bail_out("Can't continue")
 	done
-	printf("\n\n")
-	p.proj.curr_method:print()
 	if p.proj.curr_method.locals:contains(n.name) do
 		return p.proj.curr_method.locals:get(n.name)|OType
 	elif p.proj.globals:contains(n.name) do

@@ -4,7 +4,7 @@ function(FunctionDecl n, TransformerPass p) define_syms::visit_func -> FunctionD
 	# puts(n.head:get_strname())
 	shoc::assert(-p.proj.methods:contains(n.head:get_strname()), "Duplicate definition of method "+n.head:get_strname())
 	shoc::assert(p.proj.types:contains(n.head.ret_type), "Declaring method "+n.head:get_strname()+" with unknown rtype "+n.head.ret_type)
-	printf("defining method: %s\n", n.head:get_strname())
+	# printf("defining method: %s\n", n.head:get_strname())
 	p.proj:add_Method(Method::new(p.proj, n.head:get_strname(), n.head.args, n.head.varargs, n.head.ret_type, n.head.is_extern))
 	# puts("OK")
 return n

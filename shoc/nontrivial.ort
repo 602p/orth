@@ -1,2 +1,2 @@
-function(int a, int b) foo -> int does
-return 3
+function() a::b::c -> void does
+return

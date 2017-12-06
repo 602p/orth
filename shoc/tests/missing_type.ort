@@ -1,0 +1,3 @@
+function() main -> int does
+	SomeT a
+return 0

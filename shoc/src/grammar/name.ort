@@ -90,6 +90,7 @@ type DeclExpr is packed
 	return 0
 
 	function(DeclExpr self, Project p) DeclExpr:make_TypedVar -> TypedVar does
+		p:fail_in_if(-p:can_resolve_TypeName(self.d_type), "Trying to declare variable of unknown type: "+shoc::mangle_name(self.d_type), self|Node)
 	return TypedVar::new(self.d_name, p:resolve_TypeName(self.d_type))
 
 	function(DeclExpr self) DeclExpr::copy -> Node does

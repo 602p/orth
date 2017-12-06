@@ -36,7 +36,7 @@ test_shoc("err_sym_type",
 		return 0
 	""",
 	expect_fail=True,
-	expect_msg="Trying to declare variable a of unknown type SomeT"
+	expect_msg="Trying to declare variable of unknown type: SomeT"
 )
 
 test_shoc("err_ret_type",
@@ -58,7 +58,7 @@ test_shoc("err_sym_field_ty",
 		return 0
 	""",
 	expect_fail=True,
-	expect_msg="Trying to declare variable a of unknown type NonT"
+	expect_msg="Trying to declare variable of unknown type: NonT"
 )
 
 test_shoc("err_sym_param",
@@ -67,7 +67,7 @@ test_shoc("err_sym_param",
 		return 0
 	""",
 	expect_fail=True,
-	expect_msg="Trying to declare variable a of unknown type NonT"
+	expect_msg="Function `main` has a parameter with unknown type: NonT"
 )
 
 test_shoc("err_dup_global",

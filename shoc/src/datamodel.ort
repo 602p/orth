@@ -385,7 +385,10 @@ type Method is
 		int i=0
 		TypedVar tv
 		while i<args.len do
-			tv=TypedVar::new(args:get_Node(i)|DeclExpr.d_name, proj:get_type(shoc::mangle_name(args:get_Node(i)|DeclExpr.d_type)))
+			if -proj:can_resolve_TypeName(args:get_Node(i)|DeclExpr.d_type) do
+				shoc::bail_out("Function `"+name+"` has a parameter with unknown type: "+shoc::mangle_name(args:get_Node(i)|DeclExpr.d_type))
+			done
+			tv=TypedVar::new(args:get_Node(i)|DeclExpr.d_name, proj:resolve_TypeName(args:get_Node(i)|DeclExpr.d_type))
 			new.args:append_TypedVar(tv)
 			fptr_type_args:append_OType(tv.type_)
 			new.locals:set(tv.name, tv.type_|ptr)
@@ -467,6 +470,10 @@ function(List g_args) shoc::mangle_generics -> cstr does
 		i+=1
 	done
 return name
+
+function(Project p, NameExpr n) Project:can_resolve_TypeName -> bool does
+return p.types:contains(n|NameExpr.name)
+
 
 function(Project p, NameExpr n) Project:resolve_TypeName -> OType does
 return p:get_type(n|NameExpr.name)

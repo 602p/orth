@@ -128,7 +128,15 @@ type PType is packed
 		self.generic=generic
 		self.arguments=arguments
 		self.variety=PTYPE
-		self.name="[Generic Of: "+generic.name+"]"
+		self.name=generic.name+".G_"
+		int i=0
+		while i<arguments:len() do
+			self.name+="A"+arguments:get_idx(i).name+"Z"
+			if i!=arguments:len()-1 do
+				self.name+="."
+			done
+			i+=1
+		done
 	return self|OType
 
 	function(PType self, GenericArgs params) PType:resolve -> OType does

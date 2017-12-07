@@ -466,7 +466,10 @@ function(List g_args) shoc::mangle_generics -> cstr does
 	cstr name = ".G_"
 	int i = 0
 	while i<g_args.len do
-		name+=shoc::mangle_name(g_args:get(i)|NameExpr)+"."
+		name+="A"+shoc::mangle_name(g_args:get(i)|NameExpr)+"Z"
+		if i!=g_args.len-1 do
+			name+="."
+		done
 		i+=1
 	done
 return name
@@ -477,8 +480,11 @@ return p:resolve_TypeName_nullable(n)|ptr!=null
 
 function(Project p, NameExpr n) Project:resolve_TypeName_nullable -> OType does
 	if n|Node:is_a("GenericName") do
-		GenericName gn = gn|GenericName
+		GenericName gn = n|GenericName
 		#TODO: ISSUE HERE
+		# printf("\n\n")
+		# printf("typename=%s\n", n.type_.name)
+		# n|Node:print(0)
 		GType g_type = p.generic_types:get(gn.base_name)|GType
 		GenericArgs args = GenericArgs::copy(g_type.arguments)
 		int i = 0
@@ -486,6 +492,7 @@ function(Project p, NameExpr n) Project:resolve_TypeName_nullable -> OType does
 			args:set(args:get_name_for_idx(i), p:resolve_TypeName(gn.args:get_Node(i)|NameExpr))
 			i+=1
 		done
+		return PType::new(g_type, args)|OType
 	done
 return p:get_type(n|NameExpr.name)
 

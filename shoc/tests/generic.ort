@@ -2,6 +2,9 @@
 type Map{K, V} is
 endtype
 
+type List{V} is
+endtype
+
 function() main -> int does
-	Map{cstr, int} m
+	Map{cstr, List{int}} m
 return 0

@@ -30,14 +30,16 @@ function(CSocket server, int client, cstr req) handle_get -> void does
 	printf("Request for '%s'\n", path)
 
 	if path=="/" do
-		server:send_httpok(client, "<html><head><title>Orth Web Server</title></head><body><h1>StudentRND Rocks!</h1><p>Hello TJ :)</p><br/><a href='test'>This is a link to another page</a></body></html>")
+		server:send_httpok(client, "<html><head><title>Orth Web Server</title></head><body><h1>This is an Orth web server!</h1><p>Hello TJ :)</p><br/><a href='test'>This is a link to another page</a></body></html>")
 	elif path=="/test" do
-		server:send_httpok(client, "<html><head><title>Orth Web Server</title></head><body><p>This is another web page</p></body></html>")
+		server:send_httpok(client, "<html><head><title>Orth Web Server</title></head><body><p>This is another web page</p><a href='/'>Back</a></body></html>")
 	elif path=="/quit" do
 		server:close(server.sockfd)
 		server:close(client)
 		exit(1)
 	done
+
+	path:free()
 
 	server:close(client)
 return

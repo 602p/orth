@@ -67,6 +67,12 @@ function() grammar::init -> void does
 	OneTuple::impl() #Fallback matching case for one-arg function calls
 
 	FileNode::impl()
+
+	GenericArgListTemp::impl()
+	GenericArgList::impl()
+	GenericName::impl()
+	DeclExpr::impl()
+	AccessorExpr::impl()
 return
 
 function(List l) grammar::install -> void does
@@ -75,12 +81,12 @@ function(List l) grammar::install -> void does
 	l:append_NodeType(NameExpr_t)
 	l:append_NodeType(DeclExpr_t)
 	l:append_NodeType(AccessorExpr_t)
-	# l:append_NodeType(NameExpr::impl())
-	# l:append_NodeType(GenericArgListTemp::impl())
-	# l:append_NodeType(GenericArgList::impl())
-	# l:append_NodeType(GenericName::impl())
-	# l:append_NodeType(DeclExpr::impl())
-	# l:append_NodeType(AccessorExpr::impl())
+
+	l:append_NodeType(GenericArgListTemp_t)
+	l:append_NodeType(GenericArgList_t)
+	l:append_NodeType(GenericName_t)
+	l:append_NodeType(DeclExpr_t)
+	l:append_NodeType(AccessorExpr_t)
 
 	l:append_NodeType(LiteralExpr_t)
 	

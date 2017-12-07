@@ -59,13 +59,16 @@ type GenericArgListTemp is packed
 		done
 	return 0
 
-	function() GenericArgListTemp::impl -> NodeType does
-	return NodeType::new("GenericArgListTemp")\
+	function() GenericArgListTemp::impl -> void does
+		GenericArgListTemp_t = NodeType::new("GenericArgListTemp")\
 					:set_printer(GenericArgListTemp::print |NodePrinter)\
 					:set_creator(GenericArgListTemp::create|NodeCreator)\
 					:set_matcher(GenericArgListTemp::match |NodeMatcher)\
 					:matches(2)
+	return
 endtype
+
+NodeType GenericArgListTemp_t
 
 type GenericArgList is packed
 	NodeType type_
@@ -98,13 +101,16 @@ type GenericArgList is packed
 		done
 	return 0
 
-	function() GenericArgList::impl -> NodeType does
-	return NodeType::new("GenericArgList")\
+	function() GenericArgList::impl -> void does
+		GenericArgList_t = NodeType::new("GenericArgList")\
 					:set_printer(GenericArgList::print |NodePrinter)\
 					:set_creator(GenericArgList::create|NodeCreator)\
 					:set_matcher(GenericArgList::match |NodeMatcher)\
 					:matches(2)
+	return
 endtype
+
+NodeType GenericArgList_t
 
 type GenericName is packed
 	NodeType type_
@@ -139,10 +145,13 @@ type GenericName is packed
 		done
 	return 0
 
-	function() GenericName::impl -> NodeType does
-	return NodeType::new("GenericName")\
+	function() GenericName::impl -> void does
+		GenericName_t = NodeType::new("GenericName")\
 					:set_printer(GenericName::print |NodePrinter)\
 					:set_creator(GenericName::create|NodeCreator)\
 					:set_matcher(GenericName::match |NodeMatcher)\
 					:matches(2):addtype("TypeName"):addtype("NameExpr"):addtype("ValueExpression")
+	return
 endtype
+
+NodeType GenericName_t

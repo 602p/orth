@@ -1,15 +1,21 @@
 type TypeDeclHead is packed
 	NodeType type_
-	cstr name
+	NameExpr name
 	bool is_type_alias
 	bool is_func_alias
+	bool is_generic
 	bool packed
 	cstr alias_type #type for normal alias, RT for func alias
 	Token anchor
 
+	function(TypeDeclHead self) TypeDeclHead:nongeneric_name -> cstr does
+		shoc::assert(-self.is_generic, ":nongeneric_name on generic class:" + shoc::mangle_name(self.name))
+	return self.name|NameExpr.name
+
 	function(TypeDeclHead node, int depth) TypeDeclHead::print -> void does
-		printf("TypeDeclHead: `%s` (Is_Func_Alias=%i, Is_Type_Alias:%i, Is_Packed=%i)",\
-		 node.name, node.is_func_alias|int, node.is_type_alias|int, node.packed|int)
+		printf("TypeDeclHead: (Is_Func_Alias=%i, Is_Type_Alias:%i, Is_Packed=%i): ",\
+		 node.is_func_alias|int, node.is_type_alias|int, node.packed|int)
+		node.name|Node:print(depth+1)
 		if node.is_type_alias do
 			printf(" Aliases Type: `%s`", node.alias_type)
 		elif node.is_func_alias do
@@ -21,10 +27,11 @@ type TypeDeclHead is packed
 	function(EleList eles) TypeDeclHead::create -> TypeDeclHead does
 		TypeDeclHead new = malloc(@sizeof(TypeDeclHead)@)|TypeDeclHead
 		int matchnum=TypeDeclHead::match(eles) # 3=regular, 4=regular+packed, 5=alias, 6=func alias
-		new.name=eles:get(1):t().text
+		new.name=eles:get(1):n()|NameExpr
 		new.packed=false
 		new.is_type_alias=false
 		new.is_func_alias=false
+		new.is_generic=false
 		if matchnum==4 do
 			new.packed=true
 		elif matchnum==5 do
@@ -38,8 +45,14 @@ type TypeDeclHead is packed
 	return new
 
 	function(EleList eles) TypeDeclHead::match -> int does
+		if    (-eles:get(0).is_token):or(\
+		        eles:get(1).is_token):or(\
+			   -eles:get(2).is_token) do
+			return 0
+		done
+
 		if -(eles:get(0):t():is_a("T_TYPEDECL") &\
-			 eles:get(1):t():is_a("T_TYPEDECL_NAME") &\
+			 eles:get(1):n():is_a("NameExpr") &\
 			 eles:get(2):t():is_a("T_TYPEDECL_IS")) do
 			return 0
 		done
@@ -77,7 +90,7 @@ type TypeDeclHead is packed
 					:set_printer(TypeDeclHead::print |NodePrinter)\
 					:set_creator(TypeDeclHead::create|NodeCreator)\
 					:set_matcher(TypeDeclHead::match |NodeMatcher)\
-					:matches(3):matches_only_tokens()
+					:matches(3)
 	return
 endtype
 

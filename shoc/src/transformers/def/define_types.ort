@@ -5,7 +5,7 @@ function(TypeDecl n, TransformerPass p) define_types::visit_type -> TypeDecl doe
 	while i<n.body.statements.len do
 		st=n.body.statements:get_Node(i)
 		if st:is_a("DeclExpr") do
-			(p.proj:get_type(n.head.name)|StructOType):add_field((st|DeclExpr):make_TypedVar(p.proj))
+			(p.proj:get_type(n.head:nongeneric_name())|StructOType):add_field((st|DeclExpr):make_TypedVar(p.proj))
 		done
 		i+=1
 	done
@@ -13,11 +13,11 @@ return n
 
 function(TypeDeclHead n, TransformerPass p) define_types::visit_alias -> TypeDeclHead does
 	if n.is_func_alias do
-		shoc::assert(-p.proj.types:contains(n.name), "Duplicate definition of type "+n.name)
+		shoc::assert(-p.proj.types:contains(n:nongeneric_name()), "Duplicate definition of type "+n:nongeneric_name())
 		if -p.proj.types:contains(n.alias_type) do
-			shoc::bail_out("No such type "+n.alias_type+" for RT of FPtr in define_types::visit_alias, atype="+n.name)
+			shoc::bail_out("No such type "+n.alias_type+" for RT of FPtr in define_types::visit_alias, atype="+n:nongeneric_name())
 		done
-		p.proj:add_Type(FPtrOType::new_varargs(n.name, p.proj:get_type(n.alias_type)))
+		p.proj:add_Type(FPtrOType::new_varargs(n:nongeneric_name(), p.proj:get_type(n.alias_type)))
 	done
 	#TODO: Implement
 return n

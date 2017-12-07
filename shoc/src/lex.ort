@@ -380,7 +380,6 @@ function(List t) lex::init_default -> void does
 	#Type declaration syntax
 	t:append_TT(TokenType::new_kw("T_TYPEDECL", "type"))
 	t:append_TT(TokenType::new_kw("T_TYPEDECL_IS", "is"))
-	t:append_TT(TokenType::new_fn("T_TYPEDECL_NAME", lex::match_identifier|TokenMatcher):after("T_TYPEDECL"))
 	t:append_TT(TokenType::new_kw("T_TYPEDECL_ENDTYPE", "endtype"))
 	t:append_TT(TokenType::new_kw("T_TYPEDECL_PACKED", "packed"):after("T_TYPEDECL_IS"))
 	t:append_TT(TokenType::new_kw("T_TYPEDECL_ALIAS", "a"):after("T_TYPEDECL_IS"))

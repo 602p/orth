@@ -1,1 +1,4 @@
-Map{K, List{V}}::new()
+
+type Cell{V} is
+	V val
+endtype

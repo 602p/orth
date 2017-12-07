@@ -13,8 +13,8 @@ type TypeDeclHead is packed
 	return self.name|NameExpr.name
 
 	function(TypeDeclHead node, int depth) TypeDeclHead::print -> void does
-		printf("TypeDeclHead: (Is_Func_Alias=%i, Is_Type_Alias:%i, Is_Packed=%i): ",\
-		 node.is_func_alias|int, node.is_type_alias|int, node.packed|int)
+		printf("TypeDeclHead: (Is_Func_Alias=%i, Is_Type_Alias:%i, Is_Packed=%i, Is_Generic=%i): ",\
+		 node.is_func_alias|int, node.is_type_alias|int, node.packed|int, node.is_generic|int)
 		node.name|Node:print(depth+1)
 		if node.is_type_alias do
 			printf(" Aliases Type: `%s`", node.alias_type)
@@ -31,7 +31,7 @@ type TypeDeclHead is packed
 		new.packed=false
 		new.is_type_alias=false
 		new.is_func_alias=false
-		new.is_generic=false
+		new.is_generic=eles:get(1):n():is_a("GenericName")
 		if matchnum==4 do
 			new.packed=true
 		elif matchnum==5 do

@@ -1,4 +1,5 @@
 
-type Cell{V} is
-	V val
+type Pair{A, B} is
+	A a
+	B b
 endtype

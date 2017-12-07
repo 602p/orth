@@ -463,17 +463,35 @@ function(NameExpr name) shoc::mangle_name -> cstr does
 return name.name
 
 function(List g_args) shoc::mangle_generics -> cstr does
-	cstr name = "$$$G_"
+	cstr name = ".G_"
 	int i = 0
 	while i<g_args.len do
-		name+=i:str()+"A"+shoc::mangle_name(g_args:get(i)|NameExpr)+"Z_"
+		name+=shoc::mangle_name(g_args:get(i)|NameExpr)+"."
 		i+=1
 	done
 return name
 
 function(Project p, NameExpr n) Project:can_resolve_TypeName -> bool does
-return p.types:contains(n|NameExpr.name)
+return p:resolve_TypeName_nullable(n)|ptr!=null
 
+
+function(Project p, NameExpr n) Project:resolve_TypeName_nullable -> OType does
+	if n|Node:is_a("GenericName") do
+		GenericName gn = gn|GenericName
+		#TODO: ISSUE HERE
+		GType g_type = p.generic_types:get(gn.base_name)|GType
+		GenericArgs args = GenericArgs::copy(g_type.arguments)
+		int i = 0
+		while i<gn.args.len do
+			args:set(args:get_name_for_idx(i), p:resolve_TypeName(gn.args:get_Node(i)|NameExpr))
+			i+=1
+		done
+	done
+return p:get_type(n|NameExpr.name)
 
 function(Project p, NameExpr n) Project:resolve_TypeName -> OType does
-return p:get_type(n|NameExpr.name)
+	OType o = p:resolve_TypeName_nullable(n)
+	if o|ptr==null do
+		shoc::bail_out("cant resolve tn")
+	done
+return o

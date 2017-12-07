@@ -1,5 +1,7 @@
 
-type Pair{A, B} is
-	A a
-	B b
+type Map{K, V} is
 endtype
+
+function() main -> int does
+	Map{cstr, int} m
+return 0

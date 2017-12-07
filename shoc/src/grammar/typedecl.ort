@@ -12,6 +12,10 @@ type TypeDeclHead is packed
 		shoc::assert(-self.is_generic, ":nongeneric_name on generic class:" + shoc::mangle_name(self.name))
 	return self.name|NameExpr.name
 
+	function(TypeDeclHead self) TypeDeclHead:generic_base_name -> cstr does
+		shoc::assert(self.is_generic, ":generic_base_name on non generic")
+	return self.name|GenericName.base_name
+
 	function(TypeDeclHead node, int depth) TypeDeclHead::print -> void does
 		printf("TypeDeclHead: (Is_Func_Alias=%i, Is_Type_Alias:%i, Is_Packed=%i, Is_Generic=%i): ",\
 		 node.is_func_alias|int, node.is_type_alias|int, node.packed|int, node.is_generic|int)

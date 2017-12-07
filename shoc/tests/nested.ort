@@ -1,0 +1,8 @@
+function() main -> int does
+	function() sub -> void does
+		printf("foo!\n")
+	return
+
+	printf("calling\n")
+	sub()
+return 0

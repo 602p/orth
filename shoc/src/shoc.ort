@@ -50,6 +50,7 @@ type Project is
 	int    temp_name_count		#Number of temporary names used so far (used for lowering, e.g. internal for variables)
 
 	StrMap types 				#Map of typename -> OType for user-defined types in the project
+	StrMap generic_types		#Map of basename -> GType for user-defined generic types
 	StrMap methods				#Map of identifier -> Method for methods in the project
 								#Note that identifier is not always the same as the Method.name, e.g. for renamed linked libc functions
 	StrMap globals 				#Map of identifier -> TypedVar for globals in the project
@@ -79,6 +80,7 @@ function() shoc::get_empty_project -> Project does
 	p.curr_file="?"
 
 	p.types=StrMap::new()
+	p.generic_types=StrMap::new()
 	p.methods=StrMap::new()
 	p.globals=StrMap::new()
 	p.global_inits=StrMap::new()

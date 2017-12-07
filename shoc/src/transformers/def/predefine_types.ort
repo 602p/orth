@@ -1,5 +1,20 @@
 
 function(TypeDecl n, TransformerPass p) predefine_types::visit_type -> TypeDecl does
+	if n.head.is_generic do
+		GenericArgs g_args = GenericArgs::new()
+		GenericName g_name = n.head.name|GenericName
+		Node g_arg_item
+		int i = 0
+		while i<g_name.args.len do
+			g_arg_item=g_name.args:get_Node(i)
+			shoc::assert(g_arg_item.type_==NameExpr_t, "Generic arg is not a NameExpr_t")
+			g_args:add_null(g_arg_item|NameExpr.name)
+			i+=1
+		done
+		p.proj.generic_types:set(g_name.base_name, GType::new(p.proj, g_name.base_name, n.head.packed, g_args)|ptr)
+		return n
+	done
+
 	shoc::assert(-p.proj.types:contains(n.head:nongeneric_name()), "Duplicate definition of type "+n.head:nongeneric_name())
 	StructOType new_t = StructOType::new(n.head:nongeneric_name())|StructOType
 	p.proj:add_Type(new_t|OType)

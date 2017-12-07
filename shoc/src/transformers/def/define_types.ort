@@ -5,7 +5,11 @@ function(TypeDecl n, TransformerPass p) define_types::visit_type -> TypeDecl doe
 	while i<n.body.statements.len do
 		st=n.body.statements:get_Node(i)
 		if st:is_a("DeclExpr") do
-			(p.proj:get_type(n.head:nongeneric_name())|StructOType):add_field((st|DeclExpr):make_TypedVar(p.proj))
+			if -n.head.is_generic do
+				(p.proj:get_type(n.head:nongeneric_name())|StructOType):add_field((st|DeclExpr):make_TypedVar(p.proj))
+			else do
+				p.proj.generic_types:get(n.head.name|GenericName.base_name)|GType.fields:append_TypedVar(TypedVar::new(st|DeclExpr.d_name, p.proj:resolve_TypeName(st|DeclExpr.d_type)))
+			done
 		done
 		i+=1
 	done

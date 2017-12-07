@@ -160,6 +160,14 @@ function(int nargs, ArgList args) main -> int does
 			done
 			i+=1
 		done
+
+		printf("\n\n===GENERIC TYPES===\n\n")
+		i=0
+		while i<proj.generic_types:num_keys() do
+			(proj.generic_types:get_by_num(i)|GType):print()
+			i+=1
+			printf("\n")
+		done
 	done
 
 	if options:contains("dump_methods"):or(options:contains("dump_locals")):or(options:contains("dump_gir")) do

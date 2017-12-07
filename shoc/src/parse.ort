@@ -315,6 +315,9 @@ type NodeType is
 	function(NodeType self) NodeType:free -> void does
 		free(self|ptr)
 	return
+
+	function(NodeType self, NodeType other) NodeType:__eq__ -> bool does
+	return self|ptr==other|ptr
 endtype
 
 function(Project p, cstr name) Project:type_by_name -> NodeType does

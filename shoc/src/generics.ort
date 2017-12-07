@@ -52,11 +52,11 @@ type GType is
 	List fields #List of TypedVars
 	Project proj
 
-	function(Project p, cstr name, List fields, bool packed, GenericArgs arguments) GType::new -> GType does
+	function(Project p, cstr name, bool packed, GenericArgs arguments) GType::new -> GType does
 		GType self = malloc(@sizeof(GType)@)|GType
 		self.name=name
 		self.arguments=arguments
-		self.fields = fields
+		self.fields = List::new()
 		self.packed = packed
 		self.proj=p
 	return self
@@ -103,7 +103,6 @@ type GType is
 			self.fields:get_TypedVar(i).type_:print()
 			i+=1
 		done
-		printf("========\n")
 		i=0
 		while i<self.arguments:len() do
 			printf(" -arg: %s: ", self.arguments:get_name_for_idx(i))

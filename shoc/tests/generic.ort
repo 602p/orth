@@ -6,5 +6,6 @@ type List{V} is
 endtype
 
 function() main -> int does
-	Map{cstr, List{int}} m
+	Map{cstr, List{int}} a
+	a:foo()
 return 0

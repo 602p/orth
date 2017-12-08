@@ -1,11 +1,13 @@
+extern(int size) malloc -> ptr
 
-type Map{K, V} is
-endtype
-
-type List{V} is
+type Chain{V} is
+	V val
+	Chain{V} next
 endtype
 
 function() main -> int does
-	Map{cstr, List{int}} a
-	a:foo()
-return 0
+	Chain{int} a = malloc(@sizeof(Chain{int}))|Chain{int}
+	a.next=malloc(@sizeof(Chain{int}))|Chain{int}
+	a.val = 42
+	a.next.val= 137
+return a.next.val

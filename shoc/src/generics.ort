@@ -43,6 +43,9 @@ type GenericArgs is
 
 	function(GenericArgs self) GenericArgs:len -> int does
 	return self._order.len
+
+	function(GenericArgs self, cstr i) GenericArgs:contains -> bool does
+	return self._args:contains(i)
 endtype
 
 type GType is
@@ -62,11 +65,14 @@ type GType is
 	return self
 
 	function(GType self, GenericArgs params) GType:apply -> OType does
-		cstr mangled_name = self.name+"."
+		cstr mangled_name = self.name+".G_"
 
 		int i=0
 		while i<params:len() do
-			mangled_name+=params:get_idx(i).name+"."
+			mangled_name+="A"+params:get_idx(i).name+"Z"
+			if i!=params:len()-1 do
+				mangled_name+="."
+			done
 			i+=1
 		done
 
@@ -155,7 +161,7 @@ type PType is packed
 		printf("PType %s\n", self.name)
 		int i=0
 		while i<self.arguments:len() do
-			printf(" -arg: %s: ", self.arguments:get_name_for_idx(i))
+			printf("\t-param: %s: ", self.arguments:get_name_for_idx(i))
 			self.arguments:get_idx(i):print()
 			i+=1
 		done
@@ -177,3 +183,33 @@ type SymType is packed
 		printf("[SymType %s]\n", self.name)
 	return
 endtype
+
+
+
+function(Project proj) generic::implement_generics -> void does
+	# printf("Implementing Generics... %i Methods...\n", proj.methods:num_keys())
+	int i=0
+
+	while i<proj.methods:num_keys() do
+		generic::implement_method(proj, proj.methods:get_by_num(i)|Method)
+		i+=1
+	done
+return
+
+function(Project proj, Method meth) generic::implement_method -> void does
+	# printf("Method: %s\n", meth.name)
+	int i=0
+	while i<meth.locals:num_keys() do
+		OType l_type = meth.locals:get_by_num(i)|OType
+		meth.locals:set(meth.locals:get_key_by_num(i), l_type:resolve(GenericArgs::new())|ptr)
+		i+=1
+	done
+return
+
+function(FileNode n, TransformerPass p) implement_generics::visit_file -> FileNode does
+	generic::implement_generics(p.proj)
+return n
+
+function() implement_generics::init -> TransformerPass does
+return TransformerPass::new("implement_generics"):no_auto_visit()\
+       :add_specialization("FileNode", implement_generics::visit_file|NodeTransformer)

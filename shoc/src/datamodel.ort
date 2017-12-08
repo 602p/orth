@@ -120,8 +120,9 @@ type OType is packed
 	function(OType self, GenericArgs params) OType:resolve -> OType does
 		if self.variety==PTYPE do
 			return self|PType:resolve(params)
+		elif self.variety==SYMTYPE do
+			return params:get_name(self|SymType.name)
 		done
-		shoc::assert(-self.variety==SYMTYPE, "Can't :resolve a SYMTYPE")
 	return self
 endtype
 
@@ -477,14 +478,9 @@ return name
 function(Project p, NameExpr n) Project:can_resolve_TypeName -> bool does
 return p:resolve_TypeName_nullable(n)|ptr!=null
 
-
 function(Project p, NameExpr n) Project:resolve_TypeName_nullable -> OType does
 	if n|Node:is_a("GenericName") do
 		GenericName gn = n|GenericName
-		#TODO: ISSUE HERE
-		# printf("\n\n")
-		# printf("typename=%s\n", n.type_.name)
-		# n|Node:print(0)
 		GType g_type = p.generic_types:get(gn.base_name)|GType
 		GenericArgs args = GenericArgs::copy(g_type.arguments)
 		int i = 0

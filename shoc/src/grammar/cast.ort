@@ -21,7 +21,7 @@ type CastExpr is packed
 	return new
 
 	function(EleList eles) CastExpr::create -> CastExpr does
-	return CastExpr::create_direct(eles:get(0):n(), (eles:get(2):n()|NameExpr).name, eles:get(1):t())
+	return CastExpr::create_direct(eles:get(0):n(), shoc::mangle_name(eles:get(2):n()|NameExpr), eles:get(1):t())
 
 	function(EleList eles) CastExpr::match -> int does
 		if eles:get(0).is_token:or(\

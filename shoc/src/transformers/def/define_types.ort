@@ -8,12 +8,38 @@ function(TypeDecl n, TransformerPass p) define_types::visit_type -> TypeDecl doe
 			if -n.head.is_generic do
 				(p.proj:get_type(n.head:nongeneric_name())|StructOType):add_field((st|DeclExpr):make_TypedVar(p.proj))
 			else do
-				p.proj.generic_types:get(n.head.name|GenericName.base_name)|GType.fields:append_TypedVar(TypedVar::new(st|DeclExpr.d_name, p.proj:resolve_TypeName(st|DeclExpr.d_type)))
+				p.proj.generic_types:get(n.head.name|GenericName.base_name)|GType.fields:append_TypedVar(\
+					TypedVar::new(st|DeclExpr.d_name,\
+						define_types::resolve_symdecl(p.proj, st|DeclExpr.d_type,\
+							p.proj.generic_types:get(n.head.name|GenericName.base_name)|GType.arguments)))
 			done
 		done
 		i+=1
 	done
 return n
+
+function(Project proj, NameExpr typename, GenericArgs g_args) define_types::resolve_symdecl -> OType does
+	if typename.type_==NameExpr_t do
+		if proj.types:contains(typename.name) do
+			return proj:get_type(typename.name)
+		elif g_args:contains(typename.name) do
+			return SymType::new(typename.name)
+		else do
+			shoc::bail_out("Can't resolve name: "+typename.name)
+		done
+	elif typename.type_==GenericName_t do
+		GenericName gn = typename|GenericName
+		GType g_type = proj.generic_types:get(gn.base_name)|GType
+		GenericArgs args = GenericArgs::copy(g_type.arguments)
+		int i = 0
+		while i<gn.args.len do
+			args:set(args:get_name_for_idx(i), define_types::resolve_symdecl(proj, gn.args:get_Node(i)|NameExpr, g_args))
+			i+=1
+		done
+		return PType::new(g_type, args)|OType
+	done
+	shoc::bail_out("Can't resolve name")
+return null|OType
 
 function(TypeDeclHead n, TransformerPass p) define_types::visit_alias -> TypeDeclHead does
 	if n.is_func_alias do

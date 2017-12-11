@@ -484,8 +484,8 @@ function(Project p, NameExpr n) Project:can_resolve_TypeName -> bool does
 return p:resolve_TypeName_nullable(n)|ptr!=null
 
 function(Project p, NameExpr n) Project:resolve_TypeName_nullable -> OType does
-	printf("Resolving: ")
-	n|Node:print_root()
+	# printf("Resolving: ")
+	# n|Node:print_root()
 	if n|Node:is_a("GenericName") do
 		GenericName gn = n|GenericName
 		GType g_type = p.generic_types:get(gn.base_name)|GType

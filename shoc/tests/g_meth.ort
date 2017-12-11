@@ -4,23 +4,23 @@ extern(...) printf -> int
 function() alloc{T} -> T does
 return malloc(@sizeof(T))|T
 
-# type ChainCell{V} is
-# 	V val
-# 	Chain{V} next
+type ChainCell{V} is
+	V val
+	ChainCell{V} next
 
 # 	function(V val) ChainCell::new{V} -> ChainCell{V} does
 # 		ChainCell{V} new = alloc{ChainCell{V}}()
 # 		new.val=val
 # 		new.next=null|ChainCell{V}
 # 	return new
-# endtype
+endtype
 
 type Chain{V} is
-	# ChainCell{V} _val
+	ChainCell{V} _val
 
 	function() Chain::new{V} -> Chain{V} does
 		Chain{V} new = alloc{Chain{V}}()
-		# new._val = null|Chain{V}
+		new._val = null|Chain{V}
 	return new
 
 	# function(Chain{V} self, V val) Chain{V}:append -> Chain{V} does
@@ -39,5 +39,5 @@ endtype
 function() main -> int does
 	Chain{int} a = Chain::new{int}()
 	# a:append(1)
-	printf("0=%i\n", a._val.val)
+	# printf("0=%i\n", a._val.val)
 return 0

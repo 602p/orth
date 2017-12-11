@@ -1,12 +1,20 @@
 extern(int sz) malloc -> ptr
 
-type Box{V} is
+function() alloc{T} -> T does
+return malloc(@sizeof(T))|T
 
-	function(V val) Box::new{V} -> Box{V} does
-		Box{V} new = malloc(@sizeof(Box{V}))|Box{V}
-	return new
+type Box{V} is
+	V val
+
+	# function(V val) Box::new{V} -> Box{V} does
+	# 	Box{V} new = malloc(@sizeof(Box{V}))|Box{V}
+	# 	new.val=val
+	# return new
 endtype
 
+function() make{V} -> Box{V} does
+return alloc{Box{V}}()
+
 function() main -> int does
-	Box{int} a = Box::new{int}()
+	Box{int} a = make{int}()
 return 0

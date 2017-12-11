@@ -5,7 +5,8 @@ type CastExpr is packed
 	NameExpr c_target
 
 	function(CastExpr node, int depth) CastExpr::print -> void does
-		printf("CastExpr (Target='%s')\n", node.target)
+		printf("CastExpr Target=")
+		node.c_target|Node:print(depth+1)
 
 		parse::indent(depth)
 		printf("\\- Value: ")
@@ -16,7 +17,7 @@ type CastExpr is packed
 		CastExpr new = malloc(@sizeof(CastExpr)@)|CastExpr
 		new.type_=CastExpr_t
 		new.value=value
-		new.target=target
+		new.c_target=target
 		new.anchor=anchor
 	return new
 
@@ -53,10 +54,11 @@ type CastExpr is packed
 
 	function(CastExpr n, TransformerPass p) CastExpr::visit -> void does
 		n.value=p:visit(n.value)
+		n.c_target=p:visit(n.c_target|Node)|NameExpr
 	return
 
 	function(CastExpr self) CastExpr::copy -> Node does
-	return CastExpr::create_direct(self.value:copy(), self.target, self.anchor)|Node
+	return CastExpr::create_direct(self.value:copy(), self.c_target|Node:copy()|NameExpr, self.anchor)|Node
 
 	function() CastExpr::impl -> void does
 		CastExpr_t = NodeType::new("CastExpr")\

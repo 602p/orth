@@ -3,12 +3,17 @@ function(FunctionDecl n, TransformerPass p) define_syms::visit_func -> FunctionD
 	if -n.head:is_generic() do
 		# shoc::assert(-p.proj.methods:contains(n.head:get_strname()), "Duplicate definition of method "+n.head:get_strname())
 		# shoc::assert(p.proj.types:contains(n.head.ret_type), "Declaring method "+n.head:get_strname()+" with unknown rtype "+n.head.ret_type)
-		
-		p.proj:add_Method(Method::new(p.proj, n.head:get_strname(), n.head.args, n.head.varargs, p.proj:resolve_TypeName(n.head.ret_type), n.head.is_extern))
+		List args = List::new()
+		int i=0
+		while i<n.head.args.len do
+			args:append_TypedVar(TypedVar::new(n.head.args:get_Node(i)|DeclExpr.d_name, p.proj:resolve_TypeName(n.head.args:get_Node(i)|DeclExpr.d_type)))
+			i+=1
+		done
+		p.proj:add_Method(Method::new(p.proj, n.head:get_strname(), args, n.head.varargs, p.proj:resolve_TypeName(n.head.ret_type), n.head.is_extern))
 	else do
 		GMethod m = GMethod::new(p.proj, n.head.name|GenericName, n.head.args, n.head.ret_type, n)
 		p.proj:add_GMethod(m)
-		m:print()
+		# m:print()
 		return null|FunctionDecl
 	done
 return n

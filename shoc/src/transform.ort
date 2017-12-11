@@ -62,8 +62,8 @@ type TransformerPass is
 	return self:visit(n)|OType
 endtype
 
-function(Project p, Node n) Project:run_transformers -> Node does
-	int i=0
+function(Project p, Node n, int start) Project:run_transformers_ex -> Node does
+	int i=start
 	if p.options:contains("verbose") do
 		fprintf(stderr, "Running transformer passes... ")
 		fflush(stderr)
@@ -82,6 +82,9 @@ function(Project p, Node n) Project:run_transformers -> Node does
 		fprintf(stderr, "\n")
 	done
 return n
+
+function(Project p, Node n) Project:run_transformers -> Node does
+return p:run_transformers_ex(n, 0)
 
 function(TransformerPass p, cstr flag, cstr msg) TransformerPass:cond_warn -> void does
 	if p.proj.options:contains(flag) do

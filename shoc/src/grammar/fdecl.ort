@@ -8,14 +8,15 @@ type FunctionDeclHead is packed
 	Token anchor
 
 	function(FunctionDeclHead self) FunctionDeclHead:is_generic -> bool does
-	return self.name|Node:is_a("GenericName")
+	return generic::is_identifier_generic(self.name|Node)
 
 	function(FunctionDeclHead self) FunctionDeclHead:get_strname -> cstr does
 		shoc::assert(-self:is_generic(), "Can't get_strname for a generic function")
 	return shoc::mangle_name(self.name)
 
 	function(FunctionDeclHead node, int depth) FunctionDeclHead::print -> void does
-		printf("FunctionDeclHead: type=%s, Nargs=%i", node.ret_type, node.args.len)
+		printf("FunctionDeclHead: Nargs=%i :is_generic=%i RT: ", node.args.len, node:is_generic()|int)
+		node.ret_type|Node:print(depth+1)
 		if node.varargs do
 			printf("...varargs")
 		done

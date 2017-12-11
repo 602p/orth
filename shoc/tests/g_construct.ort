@@ -1,0 +1,12 @@
+extern(int sz) malloc -> ptr
+
+type Box{V} is
+
+	function(V val) Box::new{V} -> Box{V} does
+		Box{V} new = malloc(@sizeof(Box{V}))|Box{V}
+	return new
+endtype
+
+function() main -> int does
+	Box{int} a = Box::new{int}()
+return 0

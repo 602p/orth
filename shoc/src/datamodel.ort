@@ -68,6 +68,9 @@ type OType is packed
 	function(OType t) OType:is_struct -> bool does
 	return t.variety==6
 
+	function(OType t) OType:is_parametric -> bool does
+	return t.variety>=7
+
 	function(OType t) OType:is_sym -> bool does
 	return t.variety==SYMTYPE
 
@@ -118,12 +121,16 @@ type OType is packed
 	return self|ptr != other|ptr
 
 	function(OType self, GenericArgs params) OType:resolve -> OType does
-		if self.variety==PTYPE do
-			return self|PType:resolve(params)
-		elif self.variety==SYMTYPE do
-			return params:get_name(self|SymType.name)
+		OType res = self
+		while res:is_parametric() do
+			if self.variety==SYMTYPE do
+				res = params:get_name(self|SymType.name)
+			done
+			if res.variety==PTYPE do
+				res = res|PType:resolve(params)
+			done
 		done
-	return self
+	return res
 endtype
 
 type PrimitiveOType is packed
@@ -387,10 +394,7 @@ type Method is
 		int i=0
 		TypedVar tv
 		while i<args.len do
-			if -proj:can_resolve_TypeName(args:get_Node(i)|DeclExpr.d_type) do
-				shoc::bail_out("Function `"+name+"` has a parameter with unknown type: "+shoc::mangle_name(args:get_Node(i)|DeclExpr.d_type))
-			done
-			tv=TypedVar::new(args:get_Node(i)|DeclExpr.d_name, proj:resolve_TypeName(args:get_Node(i)|DeclExpr.d_type))
+			tv=args:get_TypedVar(i)
 			new.args:append_TypedVar(tv)
 			fptr_type_args:append_OType(tv.type_)
 			new.locals:set(tv.name, tv.type_|ptr)
@@ -480,6 +484,8 @@ function(Project p, NameExpr n) Project:can_resolve_TypeName -> bool does
 return p:resolve_TypeName_nullable(n)|ptr!=null
 
 function(Project p, NameExpr n) Project:resolve_TypeName_nullable -> OType does
+	printf("Resolving: ")
+	n|Node:print_root()
 	if n|Node:is_a("GenericName") do
 		GenericName gn = n|GenericName
 		GType g_type = p.generic_types:get(gn.base_name)|GType

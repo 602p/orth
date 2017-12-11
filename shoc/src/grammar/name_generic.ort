@@ -129,11 +129,16 @@ type GenericName is packed
 		done
 	return
 
-	function(EleList eles) GenericName::create -> GenericName does
+	function(cstr base_name, List args, Token anchor) GenericName::create_direct -> GenericName does
 		GenericName new = malloc(@sizeof(GenericName)@)|GenericName
-		new.base_name=eles:get(0):n()|NameExpr.name
-		new.args=eles:get(1):n()|GenericArgList.args
+		new.type_=GenericName_t
+		new.args=args
+		new.base_name=base_name
+		new.anchor=anchor
 	return new
+
+	function(EleList eles) GenericName::create -> GenericName does
+	return GenericName::create_direct(eles:get(0):n()|NameExpr.name, eles:get(1):n()|GenericArgList.args, eles:get(0):n()|NameExpr.anchor)
 
 	function(EleList eles) GenericName::match -> int does
 		if -eles:get(0).is_token do
@@ -145,11 +150,30 @@ type GenericName is packed
 		done
 	return 0
 
+	function(GenericName self) GenericName::copy -> Node does
+		List new_args = List::new()
+		int i=0
+		while i<self.args.len do
+			new_args:append_Node(self.args:get_Node(i):copy())
+			i+=1
+		done
+	return GenericName::create_direct(self.base_name:copy(), new_args, self.anchor)|Node
+
+	function(GenericName self, TransformerPass p) GenericName::visit -> GenericName does
+		int i=0
+		while i<self.args.len do
+			self.args:set(i, p:visit(self.args:get_Node(i))|ptr)
+			i+=1
+		done
+	return self
+
 	function() GenericName::impl -> void does
 		GenericName_t = NodeType::new("GenericName")\
 					:set_printer(GenericName::print |NodePrinter)\
 					:set_creator(GenericName::create|NodeCreator)\
 					:set_matcher(GenericName::match |NodeMatcher)\
+					:set_tcopier(GenericName::copy  |NodeTCopier)\
+					:set_visitor(GenericName::visit |NodeVisitor)\
 					:matches(2):addtype("TypeName"):addtype("NameExpr"):addtype("ValueExpression")
 	return
 endtype

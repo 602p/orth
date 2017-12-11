@@ -8,11 +8,15 @@ type IntrinsicExpr is packed
 		node.value:print(depth)
 	return
 
-	function(EleList eles) IntrinsicExpr::create -> IntrinsicExpr does
+	function(Node value, Token anchor) IntrinsicExpr::create_direct -> IntrinsicExpr does
 		IntrinsicExpr new = malloc(@sizeof(IntrinsicExpr)@)|IntrinsicExpr
-		new.value=eles:get(1):n()
-		new.anchor=eles:get(0):t()
+		new.type_=IntrinsicExpr_t
+		new.value=value
+		new.anchor=anchor
 	return new
+
+	function(EleList eles) IntrinsicExpr::create -> IntrinsicExpr does
+	return IntrinsicExpr::create_direct(eles:get(1):n(), eles:get(0):t())
 
 	function(EleList eles) IntrinsicExpr::match -> int does
 		if eles:get(1).is_token do
@@ -38,11 +42,20 @@ type IntrinsicExpr is packed
 		done
 	return 0
 
+	function(IntrinsicExpr self) IntrinsicExpr::copy -> IntrinsicExpr does
+	return IntrinsicExpr::create_direct(self.value:copy(), self.anchor)
+
+	function(IntrinsicExpr n, TransformerPass p) IntrinsicExpr::visit -> void does
+		n.value=p:visit(n.value)
+	return
+
 	function() IntrinsicExpr::impl -> void does
 		IntrinsicExpr_t = NodeType::new("IntrinsicExpr")\
 					:set_printer(IntrinsicExpr::print |NodePrinter)\
 					:set_creator(IntrinsicExpr::create|NodeCreator)\
 					:set_matcher(IntrinsicExpr::match |NodeMatcher)\
+					:set_visitor(IntrinsicExpr::visit |NodeVisitor)\
+					:set_tcopier(IntrinsicExpr::copy  |NodeTCopier)\
 					:matches(2):addtype("ValueExpression")
 	return
 endtype

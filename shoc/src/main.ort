@@ -187,6 +187,11 @@ function(int nargs, ArgList args) main -> int does
 			done
 			j+=1
 		done
+		j=0
+		while j<proj.generic_methods:num_keys() do
+			proj.generic_methods:get_by_num(j)|GMethod:print()
+			j+=1
+		done
 	done
 
 	if options:contains("dump_globals") do

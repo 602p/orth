@@ -1,12 +1,76 @@
 
 function(AccessorExpr n, TransformerPass p) rewrite_namespaces::visit_accessor -> AccessorExpr does
+	printf("VISIT\n")
 	if n.mode=="::" do
 		if n.object:is_a("NameExpr") do
-			return NameExpr::create_direct(shoc::mangle_name(n.object|NameExpr)+"$$"+shoc::mangle_name(n.field), p.proj:get_node_anchor(n|Node))|AccessorExpr
+			printf("RW\n")
+			n|Node:print_root()
+			return generic::merge_generic_accessor(n, p.proj:get_node_anchor(n|Node))|AccessorExpr
 		done
 	done
 return n
 
+function(FunctionDecl n, TransformerPass p) rewrite_namespaces::visit_func -> FunctionDecl does
+	if n.head.name|Node:is_a("AccessorExpr") do
+		n.head.name = generic::merge_generic_accessor(n.head.name|AccessorExpr, n.head.anchor)
+	done
+return n
+
+function(AccessorExpr name, Token anchor) generic::merge_generic_accessor -> NameExpr does
+	cstr lhs_name
+	cstr rhs_name
+	List generic_params = List::new()
+	int i
+
+	printf("setup sep\n")
+
+	cstr sep
+	if name.mode==":" do
+		sep="$"
+	else do
+		sep="$$"
+	done
+
+	printf("lhs\n")
+
+	if name.object|Node:is_a("GenericName") do
+		lhs_name=name.object|GenericName.base_name
+		i=0
+		while i<name.object|GenericName.args.len do
+			generic_params:append(name.object|GenericName.args:get(i))
+			i+=1
+		done
+	else do
+		lhs_name=name.object|NameExpr.name
+	done
+
+	printf("rhs\n")
+
+	if name.field|Node:is_a("GenericName") do
+		printf("g\n")
+		name.field|Node:print_root()
+		rhs_name=name.field|GenericName.base_name
+		i=0
+		printf("args=%x\n", name.field|GenericName.args)
+		while i<name.field|GenericName.args.len do
+			printf("1\n")
+			generic_params:append(name.field|GenericName.args:get(i))
+			i+=1
+		done
+	else do
+		printf("non_g\n")
+		rhs_name=name.field|NameExpr.name
+	done
+
+	printf("fin\n")
+
+	if generic_params.len > 0 do
+		printf("g\n")
+		return GenericName::create_direct(lhs_name+sep+rhs_name, generic_params, anchor)|NameExpr
+	done
+return NameExpr::create_direct(lhs_name+sep+rhs_name, anchor)
+
 function() rewrite_namespaces::init -> TransformerPass does
 return TransformerPass::new("rewrite_namespaces")\
-       :add_specialization("AccessorExpr", rewrite_namespaces::visit_accessor|NodeTransformer)
+       :add_specialization("AccessorExpr", rewrite_namespaces::visit_accessor|NodeTransformer)\
+       :add_specialization("FunctionDecl", rewrite_namespaces::visit_func    |NodeTransformer)

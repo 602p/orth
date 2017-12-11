@@ -1,8 +1,22 @@
-# extern(int size) malloc -> ptr
+extern(int size) malloc -> ptr
+extern(...) printf -> int
+
+type Chain{T} is
+	T val
+	Chain{T} next
+endtype
 
 function() new{T} -> T does
-return 0|T
+return malloc(@sizeof(T))|T
+
+function(Chain{T} self, T val) Chain{T}:append -> void does
+	self.next = new{Chain{T}}()
+	self.next.val = val
+return
 
 function() main -> int does
-	new{int}()
+	Chain{int} v = new{Chain{int}}()
+	v.val = 3
+	append{int}(v, 4)
+	printf("v=%i\n", v.next.val)
 return 0

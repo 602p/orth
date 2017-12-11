@@ -1,0 +1,43 @@
+extern(int sz) malloc -> ptr
+extern(...) printf -> int
+
+function() alloc{T} -> T does
+return malloc(@sizeof(T))|T
+
+# type ChainCell{V} is
+# 	V val
+# 	Chain{V} next
+
+# 	function(V val) ChainCell::new{V} -> ChainCell{V} does
+# 		ChainCell{V} new = alloc{ChainCell{V}}()
+# 		new.val=val
+# 		new.next=null|ChainCell{V}
+# 	return new
+# endtype
+
+type Chain{V} is
+	# ChainCell{V} _val
+
+	function() Chain::new{V} -> Chain{V} does
+		Chain{V} new = alloc{Chain{V}}()
+		# new._val = null|Chain{V}
+	return new
+
+	# function(Chain{V} self, V val) Chain{V}:append -> Chain{V} does
+	# 	if self._val|ptr == null do
+	# 		self._val = ChainCell::new{V}(val)
+	# 		return self
+	# 	done
+	# 	ChainCell{V} h = self._val
+	# 	while h.next|ptr!=null do
+	# 		h=h.next
+	# 	done
+	# 	h.next=ChainCell::new{V}(val)
+	# return self
+endtype
+
+function() main -> int does
+	Chain{int} a = Chain::new{int}()
+	# a:append(1)
+	printf("0=%i\n", a._val.val)
+return 0

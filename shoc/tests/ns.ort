@@ -1,0 +1,6 @@
+function() NS::foo{V} -> void does
+return
+
+function() main -> int does
+	NS::foo{int}()
+return 0

@@ -28,6 +28,9 @@ type GenericArgs is
 		self._args:set(name, arg|ptr)
 	return
 
+	function(GenericArgs self, cstr name) GenericArgs:has_arg -> bool does
+	return self._args:contains(name)
+
 	function(GenericArgs self, cstr name) GenericArgs:add_null -> void does
 		self:add(name, null|OType)
 	return
@@ -99,6 +102,25 @@ type GType is packed
 			new_t:add_field(TypedVar::new(orig_var.name, resolved_var))
 			i+=1
 		done
+
+		List to_add = List::new()
+
+		i=0
+		while i<self.proj.generic_methods:num_keys() do
+			GMethod m = self.proj.generic_methods:get_by_num(i)|GMethod
+			if m.name:startswith(self.name+"$") do
+				printf("impl meth: %s\n", m.name)
+				if m.generic_args:len()==self.arguments:len() do
+					m:resolve_named(params, self.name, m.name:offset(m.name:find("$")))
+				done
+			done
+			i+=1
+		done
+
+		# i=0
+		# while i<to_add.len do
+		# 	self.
+
 	return new_t|OType
 
 	function(GType self) GType:print -> void does
@@ -197,6 +219,8 @@ type GMethod is
 	FunctionDecl ast
 
 	function(Project proj, GenericName name, List args_nodes, NameExpr return_value, FunctionDecl ast) GMethod::new -> GMethod does
+		printf("GMethod::new:")
+		name|Node:print_root()
 		GMethod new = malloc(@sizeof(GMethod)@)|GMethod
 		new.proj=proj
 		new.name=name.base_name
@@ -239,9 +263,65 @@ type GMethod is
 		done
 	return
 
-	function(GMethod self, GenericArgs args) GMethod:resolve -> Method does
-		shoc::bail_out(":resolve")
-	return null|Method
+	function(GMethod self, GenericArgs g_args) GMethod:resolve -> Method does
+	return self:resolve_named(g_args, self.name, "")
+
+	function(GMethod self, GenericArgs g_args, cstr prefix, cstr postfix) GMethod:resolve_named -> Method does
+		cstr name = prefix+".G_"
+		int i=0
+		while i<g_args:len() do
+			name+="A"+g_args:get_idx(i):resolve(g_args).name+"Z"
+			if i!=g_args:len()-1 do
+				name+="."
+			done
+			i+=1
+		done
+		name+=postfix
+
+		if self.proj.methods:contains(name) do
+			return self.proj:get_Method(name)
+		done
+
+		printf("=============\n")
+		self.return_value:print()
+		printf("=============\n")
+		OType return_value = self.return_value:resolve(g_args)
+		printf("=============\n")
+		return_value:print()
+		
+		List args = List::new()
+		i=0
+		while i<self.args.len do
+			args:append_TypedVar(TypedVar::new(self.args:get_TypedVar(i).name, self.args:get_TypedVar(i).type_:resolve(g_args)))
+			i+=1
+		done
+
+		# Method new = Method::new(self.proj, name, args, false, return_value, false)
+		# self.proj:add_Method(new)
+
+		FunctionDecl new_ast = self.ast|Node:copy()|FunctionDecl
+		TransformerPass::new("rw_generics_"+name):set_info(g_args|ptr)\
+			:add_specialization("NameExpr", rw_generics::visit_name|NodeTransformer)\
+			:add_specialization("CastExpr", rw_generics::visit_cast|NodeTransformer)\
+			:add_specialization("GenericName", rw_generics::visit_generic|NodeTransformer)\
+			:visit(new_ast|Node)
+		Token anchor = self.proj:get_node_anchor(new_ast|Node)
+		new_ast.head.name = NameExpr::create_direct(name, anchor)
+		new_ast.head.ret_type = NameExpr::create_direct(return_value.name, anchor)
+		new_ast.head.args = List::new()
+		i=0
+		while i<args.len do
+			new_ast.head.args:append_Node(DeclExpr::create_direct(\
+				NameExpr::create_direct(args:get_TypedVar(i).type_.name, anchor), args:get_TypedVar(i).name, anchor)|Node)
+			i+=1
+		done
+		printf("Replaced:")
+		new_ast|Node:print_root()
+		self.proj:run_transformers_ex(new_ast|Node, 1)
+		# printf("Done:\n")
+		# new_ast|Node:print_root()
+
+	return self.proj:get_Method(name)
 endtype
 
 function(Project proj) generic::implement_generics -> void does
@@ -314,3 +394,28 @@ function(Project proj, NameExpr typename, GenericArgs g_args) generic::resolve_s
 	typename|Node:print_root()
 	shoc::bail_out("Can't resolve name (how did we get here)")
 return null|OType
+
+function(Node node) generic::is_identifier_generic -> bool does
+	if node:is_a("GenericName") do
+		return true
+	elif node:is_a("AccessorExpr") do
+		return generic::is_identifier_generic(node|AccessorExpr.object|Node):or(generic::is_identifier_generic(node|AccessorExpr.field|Node))
+	done
+return false
+
+function(NameExpr n, TransformerPass p) rw_generics::visit_name -> NameExpr does
+	if n.type_==NameExpr_t do
+		if p.extra_info|GenericArgs:has_arg(n.name) do
+			return NameExpr::create_direct(p.extra_info|GenericArgs:get_name(n.name):resolve(p.extra_info|GenericArgs).name, n.anchor)
+		done
+	done
+return n
+
+function(CastExpr n, TransformerPass p) rw_generics::visit_cast -> CastExpr does
+	if p.extra_info|GenericArgs:has_arg(n.target) do
+		n.target=p.extra_info|GenericArgs:get_name(n.target):resolve(p.extra_info|GenericArgs).name
+	done
+return n
+
+function(GenericName n, TransformerPass p) rw_generics::visit_generic -> NameExpr does
+return NameExpr::create_direct(shoc::mangle_name(n|NameExpr), n.anchor)

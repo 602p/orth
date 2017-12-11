@@ -2,7 +2,7 @@ type CastExpr is packed
 	NodeType type_
 	Token anchor
 	Node value
-	cstr target
+	NameExpr c_target
 
 	function(CastExpr node, int depth) CastExpr::print -> void does
 		printf("CastExpr (Target='%s')\n", node.target)
@@ -12,7 +12,7 @@ type CastExpr is packed
 		node.value:print(depth+1)
 	return
 
-	function(Node value, cstr target, Token anchor) CastExpr::create_direct -> CastExpr does
+	function(Node value, NameExpr target, Token anchor) CastExpr::create_direct -> CastExpr does
 		CastExpr new = malloc(@sizeof(CastExpr)@)|CastExpr
 		new.type_=CastExpr_t
 		new.value=value
@@ -21,7 +21,7 @@ type CastExpr is packed
 	return new
 
 	function(EleList eles) CastExpr::create -> CastExpr does
-	return CastExpr::create_direct(eles:get(0):n(), shoc::mangle_name(eles:get(2):n()|NameExpr), eles:get(1):t())
+	return CastExpr::create_direct(eles:get(0):n(), eles:get(2):n()|NameExpr, eles:get(1):t())
 
 	function(EleList eles) CastExpr::match -> int does
 		if eles:get(0).is_token:or(\

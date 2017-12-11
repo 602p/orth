@@ -41,6 +41,10 @@ type GenericArgs is
 	function(GenericArgs self, int idx) GenericArgs:get_idx -> OType does
 	return self:get_name(self:get_name_for_idx(idx))
 
+	function(GenericArgs self, int idx, OType v) GenericArgs:set_idx -> void does
+		self:set(self:get_name_for_idx(idx), v)
+	return
+
 	function(GenericArgs self) GenericArgs:len -> int does
 	return self._order.len
 
@@ -48,7 +52,7 @@ type GenericArgs is
 	return self._args:contains(i)
 endtype
 
-type GType is
+type GType is packed
 	cstr name
 	GenericArgs arguments #(map of generic name -> OType OR null if no default)
 	bool packed
@@ -184,7 +188,61 @@ type SymType is packed
 	return
 endtype
 
+type GMethod is
+	Project proj
+	cstr name
+	List args #list of TypedVars
+	OType return_value
+	GenericArgs generic_args
+	FunctionDecl ast
 
+	function(Project proj, GenericName name, List args_nodes, NameExpr return_value, FunctionDecl ast) GMethod::new -> GMethod does
+		GMethod new = malloc(@sizeof(GMethod)@)|GMethod
+		new.proj=proj
+		new.name=name.base_name
+		new.generic_args=GenericArgs::new()
+
+		int i=0
+		while i<name.args.len do
+			new.generic_args:add_null(name.args:get(i)|NameExpr.name)
+			i+=1
+		done
+
+		new.return_value=generic::resolve_symdecl(proj, return_value, new.generic_args)
+
+		new.args=List::new()
+		i=0
+		while i<args_nodes.len do
+			new.args:append_TypedVar(TypedVar::new(args_nodes:get(i)|DeclExpr.d_name,\
+			 generic::resolve_symdecl(proj, args_nodes:get(i)|DeclExpr.d_type, new.generic_args)))
+			i+=1
+		done
+
+		new.ast=ast
+	return new
+
+	function(GMethod self) GMethod:print -> void does
+		printf("GMethod `%s` -> ", self.name)
+		self.return_value:print()
+		int i=0
+		while i<self.args.len do
+			TypedVar t = self.args:get_TypedVar(i)
+			printf(" - arg `%s` : ", t.name)
+			t.type_:print()
+			i+=1
+		done
+
+		i=0
+		while i<self.generic_args:len() do
+			printf(" - param `%s`\n", self.generic_args:get_name_for_idx(i))
+			i+=1
+		done
+	return
+
+	function(GMethod self, GenericArgs args) GMethod:resolve -> Method does
+		shoc::bail_out(":resolve")
+	return null|Method
+endtype
 
 function(Project proj) generic::implement_generics -> void does
 	# printf("Implementing Generics... %i Methods...\n", proj.methods:num_keys())
@@ -197,7 +255,7 @@ function(Project proj) generic::implement_generics -> void does
 return
 
 function(Project proj, Method meth) generic::implement_method -> void does
-	# printf("Method: %s\n", meth.name)
+	# printf("Generifying Method: %s\n", meth.name)
 	int i=0
 	while i<meth.locals:num_keys() do
 		OType l_type = meth.locals:get_by_num(i)|OType
@@ -213,3 +271,46 @@ return n
 function() implement_generics::init -> TransformerPass does
 return TransformerPass::new("implement_generics"):no_auto_visit()\
        :add_specialization("FileNode", implement_generics::visit_file|NodeTransformer)
+
+function(CallExpr n, TransformerPass p) list_generics::visit_call -> CallExpr does
+	if n.meth:is_a("GenericName") do
+		GenericName gn = n.meth|GenericName
+		GenericArgs g_args = GenericArgs::copy(p.proj.generic_methods:get(gn.base_name)|GMethod.generic_args)
+		int i=0
+		while i<gn.args.len do
+			# g_args:set_idx(i, null|OType)
+			g_args:set(g_args:get_name_for_idx(i), p.proj:resolve_TypeName(gn.args:get(i)|NameExpr))
+			i+=1
+		done
+		n.meth=NameExpr::create_direct(\
+			p.proj.generic_methods:get(gn.base_name)|GMethod:resolve(g_args).name, n.meth|GenericName.anchor)|Node
+	done
+return n
+
+function() list_generics::init -> TransformerPass does
+return TransformerPass::new("list_generics")\
+       :add_specialization("CallExpr", list_generics::visit_call|NodeTransformer)
+
+function(Project proj, NameExpr typename, GenericArgs g_args) generic::resolve_symdecl -> OType does
+	if typename.type_==NameExpr_t do
+		if proj.types:contains(typename.name) do
+			return proj:get_type(typename.name)
+		elif g_args:contains(typename.name) do
+			return SymType::new(typename.name)
+		else do
+			shoc::bail_out("Can't resolve name: "+typename.name)
+		done
+	elif typename.type_==GenericName_t do
+		GenericName gn = typename|GenericName
+		GType g_type = proj.generic_types:get(gn.base_name)|GType
+		GenericArgs args = GenericArgs::copy(g_type.arguments)
+		int i = 0
+		while i<gn.args.len do
+			args:set(args:get_name_for_idx(i), generic::resolve_symdecl(proj, gn.args:get_Node(i)|NameExpr, g_args))
+			i+=1
+		done
+		return PType::new(g_type, args)|OType
+	done
+	typename|Node:print_root()
+	shoc::bail_out("Can't resolve name (how did we get here)")
+return null|OType

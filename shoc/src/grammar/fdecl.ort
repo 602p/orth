@@ -4,7 +4,7 @@ type FunctionDeclHead is packed
 	bool varargs
 	bool is_extern
 	NameExpr name
-	cstr ret_type
+	NameExpr ret_type
 	Token anchor
 
 	function(FunctionDeclHead self) FunctionDeclHead:is_generic -> bool does
@@ -39,7 +39,7 @@ type FunctionDeclHead is packed
 		done
 	return
 
-	function(NameExpr name, cstr ret_type, bool is_extern, bool is_varargs, List args, Token anchor) FunctionDeclHead::create_raw -> FunctionDeclHead does
+	function(NameExpr name, NameExpr ret_type, bool is_extern, bool is_varargs, List args, Token anchor) FunctionDeclHead::create_raw -> FunctionDeclHead does
 		FunctionDeclHead new = malloc(@sizeof(FunctionDeclHead)@)|FunctionDeclHead
 		new.name=name
 		new.ret_type=ret_type
@@ -75,18 +75,25 @@ type FunctionDeclHead is packed
 			shoc::assert(args_list:get_Node(i):is_a("DeclExpr"), "Function with non-declexpr args")
 			i+=1
 		done
-	return FunctionDeclHead::create_raw(eles:get(2):n()|NameExpr, eles:get(4):t().text, eles:get(0):t():is_a("T_FUNCTIONDECL_EXTERN"),\
+	return FunctionDeclHead::create_raw(eles:get(2):n()|NameExpr, eles:get(4):n()|NameExpr, eles:get(0):t():is_a("T_FUNCTIONDECL_EXTERN"),\
 										 varargs, args_list, eles:get(0):t())
 
 	function(EleList eles) FunctionDeclHead::match -> int does
 		#T_FUNCTIONDECL ArgList T_FUNCTIONDECL_NAME T_FUNCTIONDECL_RETURN T_FUNCTIONDECL_RETURN_TY
 		#...T_FUNCTIONDECL_DOES
+
+		# printf("eles 0=%i\n", eles:get(0).is_token)
+		# printf("eles 1=%i\n", eles:get(1).is_token)
+		# printf("eles 2=%i\n", eles:get(2).is_token)
+		# printf("eles 3=%i\n", eles:get(3).is_token)
+		# printf("eles 4=%i\n", eles:get(4).is_token)
 		
 		if (-eles:get(0).is_token):or(\
 			 eles:get(1).is_token):or(\
 			 eles:get(2).is_token):or(\
 			-eles:get(3).is_token):or(\
-			-eles:get(4).is_token) do
+			 eles:get(4).is_token) do
+			# printf("FAIL: bad types\n")
 			return 0
 		done
 		
@@ -95,14 +102,20 @@ type FunctionDeclHead is packed
 			if (eles:get(1):n():is_a("Tuple"):or(eles:get(1):n():is_a("GroupingExpr")))&(\
 		     eles:get(2):n():is_a("NameExpr"):or(eles:get(2):n():is_a("AccessorExpr")))&(\
 		     eles:get(3):t():is_a("T_FUNCTIONDECL_RETURN"))&(\
-		     eles:get(4):t():is_a("T_FUNCTIONDECL_RETURN_TY")) do
+		     eles:get(4):n():is_a("TypeName")) do
+		     	# printf("OK 5\n")
 		    	return 5
 		    done
 		done
 		
-
-		if -eles:get(5).is_token do
+		if eles:in_slice()<6 do
 			return 0
+		done
+		
+		if -eles:get(5).is_token do
+			# printf("FAIL 5 isnt node\n")
+			return 0
+			
 		done
 		
 
@@ -110,10 +123,14 @@ type FunctionDeclHead is packed
 		    -(eles:get(1):n():is_a("Tuple"):or(eles:get(1):n():is_a("GroupingExpr")))):or(\
 		    -(eles:get(2):n():is_a("NameExpr"):or(eles:get(2):n():is_a("AccessorExpr")))):or(\
 		    -eles:get(3):t():is_a("T_FUNCTIONDECL_RETURN")):or(\
-		    -eles:get(4):t():is_a("T_FUNCTIONDECL_RETURN_TY")):or(\
+		    -eles:get(4):n():is_a("TypeName")):or(\
 		    -eles:get(5):t():is_a("T_FUNCTIONDECL_DOES")) do
+		     # printf("FAIL: ???\n")
 			return 0
+			
 		done
+
+		# printf("OK 6\n")
 		
 	return 6
 
@@ -292,7 +309,7 @@ type FunctionDecl is packed
 		if -n.head:is_generic() do
 			p.proj:enter_method_named(n.head:get_strname())
 		else do
-			printf("\nNOT ENTERIGN GENERIC\n")
+			0
 		done
 		if -n.head.is_extern do
 			int i=0

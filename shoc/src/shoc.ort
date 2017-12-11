@@ -8,7 +8,7 @@ import generic_ir
 import unwind
 
 Project _project
-#TODO: Refactor out. Onl used for bad old error handling. New error handling should be done via Project:fail_in*
+#TODO: Refactor out. Only used for bad old error handling. New error handling should be done via Project:fail_in*
 
 function(cstr err) shoc::bail_out -> void does
 	#Older method for aborting SHOC. Dumps some little information about the offending method where applicable.
@@ -52,6 +52,7 @@ type Project is
 	StrMap types 				#Map of typename -> OType for user-defined types in the project
 	StrMap generic_types		#Map of basename -> GType for user-defined generic types
 	StrMap methods				#Map of identifier -> Method for methods in the project
+	StrMap generic_methods		#Map of identifier -> GMethod
 								#Note that identifier is not always the same as the Method.name, e.g. for renamed linked libc functions
 	StrMap globals 				#Map of identifier -> TypedVar for globals in the project
 	StrMap global_inits			#Map of identifier -> cstr
@@ -82,6 +83,7 @@ function() shoc::get_empty_project -> Project does
 	p.types=StrMap::new()
 	p.generic_types=StrMap::new()
 	p.methods=StrMap::new()
+	p.generic_methods=StrMap::new()
 	p.globals=StrMap::new()
 	p.global_inits=StrMap::new()
 	p.included_files = List::new()
@@ -168,6 +170,11 @@ return
 function(Project p, Method m) Project:add_Method -> void does
 	#Register a new method
 	p.methods:set(m.name, m|ptr)
+return
+
+function(Project p, GMethod m) Project:add_GMethod -> void does
+	#Register a new method
+	p.generic_methods:set(m.name, m|ptr)
 return
 
 function(Project p, TypedVar v, cstr value) Project:add_Global -> void does

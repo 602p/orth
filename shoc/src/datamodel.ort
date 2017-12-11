@@ -369,7 +369,8 @@ type Method is
 	bool is_extern
 	int  references
 
-	function(Project proj, cstr name, List args, bool varargs, cstr return_value, bool is_extern) Method::new -> Method does
+	#args is list of TypedVar
+	function(Project proj, cstr name, List args, bool varargs, OType return_value, bool is_extern) Method::new -> Method does
 		Method new = malloc(@sizeof(Method)@)|Method
 		new.proj=proj
 		new.locals=StrMap::new()
@@ -396,7 +397,7 @@ type Method is
 			i+=1
 		done
 
-		new.return_value=proj:get_type(return_value)
+		new.return_value=return_value
 
 		if new.varargs do
 			new.ptr_type=FPtrOType::new_varargs("$fp_"+name, new.return_value)

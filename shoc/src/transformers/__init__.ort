@@ -46,6 +46,7 @@ function(Project p) shoc::transformers::init -> void does
 	
 	p:add_Transformer(define_locals::init())
 
+	p:add_Transformer(list_generics::init())
 	p:add_Transformer(implement_generics::init())
 
 	p:add_Transformer(apply_intrinsics::init())

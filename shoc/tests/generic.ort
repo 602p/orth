@@ -1,13 +1,8 @@
-extern(int size) malloc -> ptr
+# extern(int size) malloc -> ptr
 
-type Chain{V} is
-	V val
-	Chain{V} next
-endtype
+function() new{T} -> T does
+return 0|T
 
 function() main -> int does
-	Chain{int} a = malloc(@sizeof(Chain{int}))|Chain{int}
-	a.next=malloc(@sizeof(Chain{int}))|Chain{int}
-	a.val = 42
-	a.next.val= 137
-return a.next.val
+	new{int}()
+return 0

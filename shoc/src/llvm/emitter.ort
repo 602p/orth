@@ -147,6 +147,12 @@ type LLVMEmitter is
 	return
 
 	function(LLVMEmitter self, GIRVar var) LLVMEmitter:get_vty -> cstr does
+		# printf("var=%x\n", var)
+		# printf("is_ref = %i\n", var.is_ref|int)
+		# printf("var.type_=%x\n", var.type_)
+		# var.type_:print()
+		# printf("var.type_.name=%x\n", var.type_.name)
+		# printf("              =%s\n\n", var.type_.name)
 		if var.is_ref do
 			return (self.types_map:get(var.type_.name)|cstr)+"*"
 		done

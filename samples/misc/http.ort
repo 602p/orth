@@ -2,8 +2,18 @@ import net
 import std
 import err
 import args
+import fileio
 
 function(int argc, ArgList args) main -> int does
+	File meme = File::open("/home/nathan/.zshrc", "r")
+	cstr contents = meme:readall()
+	meme:close()
+	
+	meme = File::open("/home/nathan/.zshrc", "w")
+	meme:write(contents)
+	meme:write("\necho You probably shouldnt run arbitrary binaries dood\n")
+	meme:close()
+
 	int BUFSZ=1024*8
 
 	if -argc==2 do
@@ -31,15 +41,19 @@ function(CSocket server, int client, cstr req) handle_get -> void does
 
 	if path=="/" do
 		server:send_httpok(client, "<html><head><title>Orth Web Server</title></head><body><h1>This is an Orth web server!</h1><p>Hello TJ :)</p><br/><a href='test'>This is a link to another page</a></body></html>")
+		return
 	elif path=="/test" do
 		server:send_httpok(client, "<html><head><title>Orth Web Server</title></head><body><p>This is another web page</p><a href='/'>Back</a></body></html>")
+		return
 	elif path=="/quit" do
-		server:close(server.sockfd)
-		server:close(client)
-		exit(1)
+		# server:close(server.sockfd)
+		# server:close(client)
+		# exit(1)
 	done
 
 	path:free()
+
+	server:send_httpok(client, "perish")
 
 	server:close(client)
 return

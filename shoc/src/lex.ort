@@ -391,8 +391,7 @@ function(List t) lex::init_default -> void does
 	t:append_TT(TokenType::new_eq("T_FUNCTIONDECL", "function"):after("T_ENDOFSTATEMENT"))
 	t:append_TT(TokenType::new_eq("T_FUNCTIONDECL_EXTERN", "extern"):after("T_ENDOFSTATEMENT"))
 	t:append_TT(TokenType::new_eq("T_FUNCTIONDECL_RETURN", "->"))
-	t:append_TT(TokenType::new_fn("T_FUNCTIONDECL_RETURN_TY", lex::match_identifier|TokenMatcher):after("T_FUNCTIONDECL_RETURN"))
-	t:append_TT(TokenType::new_kw("T_FUNCTIONDECL_DOES", "does"):after("T_FUNCTIONDECL_RETURN_TY"))
+	t:append_TT(TokenType::new_kw("T_FUNCTIONDECL_DOES", "does"):after("T_PTYPE_CLOSE"):or("T_NAME"))
 
 	#Literals
 	t:append_TT(TokenType::new_fn("T_INT_LITERAL", lex::match_int_literal|TokenMatcher))

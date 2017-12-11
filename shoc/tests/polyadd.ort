@@ -1,0 +1,11 @@
+extern(...) printf -> int
+
+function(A a, B b) add{A, B, C} -> C does
+return a|C + b|C
+
+function() main -> int does
+	printf("add(1, 1) = %i\n", add{int, int, int}(1, 1))
+	printf("add(1L, 1) = %i\n", add{long, int, int}(1|long, 1))
+	int a = add{long, long, int}(1|long, 3|long)
+	printf("a = %i\n", a)
+return 0

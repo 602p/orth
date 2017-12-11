@@ -53,6 +53,7 @@ type FileNode is packed
 			
 			if res|ptr==null do
 				n.statements:del(i)
+				i-=1
 			else do
 				n.statements:set(i, res|ptr)
 			done

@@ -8,11 +8,11 @@ type ChainCell{V} is
 	V val
 	ChainCell{V} next
 
-# 	function(V val) ChainCell::new{V} -> ChainCell{V} does
-# 		ChainCell{V} new = alloc{ChainCell{V}}()
-# 		new.val=val
-# 		new.next=null|ChainCell{V}
-# 	return new
+	function(V val) ChainCell::new{V} -> ChainCell{V} does
+		ChainCell{V} new = alloc{ChainCell{V}}()
+		new.val=val
+		new.next=null|ChainCell{V}
+	return new
 endtype
 
 type Chain{V} is
@@ -20,24 +20,62 @@ type Chain{V} is
 
 	function() Chain::new{V} -> Chain{V} does
 		Chain{V} new = alloc{Chain{V}}()
-		new._val = null|Chain{V}
+		new._val = null|ChainCell{V}
 	return new
 
-	# function(Chain{V} self, V val) Chain{V}:append -> Chain{V} does
-	# 	if self._val|ptr == null do
-	# 		self._val = ChainCell::new{V}(val)
-	# 		return self
-	# 	done
-	# 	ChainCell{V} h = self._val
-	# 	while h.next|ptr!=null do
-	# 		h=h.next
-	# 	done
-	# 	h.next=ChainCell::new{V}(val)
-	# return self
+	function(Chain{V} self, V val) Chain{V}:append -> Chain{V} does
+		if self._val|ptr == null do
+			self._val = ChainCell::new{V}(val)
+			return self
+		done
+		ChainCell{V} h = self._val
+		while h.next|ptr!=null do
+			h=h.next
+		done
+		h.next=ChainCell::new{V}(val)
+	return self
+
+	function(Chain{V} self, int idx) Chain{V}:get_slot -> ChainCell{V} does
+		int i=0
+		ChainCell{V} c = self._val
+		while i<idx do
+			c=c.next
+			i+=1
+		done
+	return c
+
+	function(Chain{V} self, int idx) Chain{V}:get -> V does
+	return self:get_slot(idx).val
+
+	function(Chain{V} self, int idx, V val) Chain{V}:set -> void does
+		self:get_slot(idx).val=val
+	return
+
+	function(Chain{V} self) Chain{V}:len -> int does
+		if self._val|ptr==null do
+			return 0
+		done
+		int i = 1
+		ChainCell{V} c = self._val
+		while c.next|ptr!=null do
+			c=c.next
+			i+=1
+		done
+	return i
 endtype
 
 function() main -> int does
 	Chain{int} a = Chain::new{int}()
-	# a:append(1)
-	# printf("0=%i\n", a._val.val)
+	a:append(1)
+	a:append(2)
+	a:append(3)
+
+	a:set(1, 44)
+
+	printf("len=%i\n", a:len())
+	int i=0
+	while i<a:len() do
+		printf("a[%i] = %i\n", i, a:get(i))
+		i+=1
+	done
 return 0

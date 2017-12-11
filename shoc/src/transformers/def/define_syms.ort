@@ -13,7 +13,6 @@ function(FunctionDecl n, TransformerPass p) define_syms::visit_func -> FunctionD
 	else do
 		GMethod m = GMethod::new(p.proj, n.head.name|GenericName, n.head.args, n.head.ret_type, n)
 		p.proj:add_GMethod(m)
-		# m:print()
 		return null|FunctionDecl
 	done
 return n

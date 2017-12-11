@@ -167,6 +167,7 @@ type TypeDeclBody is packed
 			res=p:visit(n.statements:get_Node(i))
 			if res|ptr==null do
 				n.statements:del(i)
+				i-=1
 			else do
 				n.statements:set(i, res|ptr)
 			done

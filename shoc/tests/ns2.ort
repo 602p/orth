@@ -1,0 +1,9 @@
+extern(...) printf -> int
+
+function() Foo{T}::foo -> void does
+	printf("size=%i\n", @sizeof(T))
+return
+
+function() main -> int does
+	Foo{int}::foo()
+return 0

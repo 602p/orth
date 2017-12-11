@@ -16,6 +16,18 @@ function(TypeDecl n, TransformerPass p) define_types::visit_type -> TypeDecl doe
 		done
 		i+=1
 	done
+	if n.head.is_generic do
+		#kill it since it isn't real
+		List statements = List::new()
+		i=0
+		while i<n.body.statements.len do
+			if n.body.statements:get_Node(i):is_a("FunctionDecl") do
+				statements:append_Node(n.body.statements:get_Node(i))
+			done
+			i+=1
+		done
+		return BlockBody::create_direct(statements)|TypeDecl
+	done
 return n
 
 function(TypeDeclHead n, TransformerPass p) define_types::visit_alias -> TypeDeclHead does

@@ -1,0 +1,19 @@
+extern(...) printf -> int
+
+type AddT is
+	function(AddT _, int a, int b) AddT:apply -> int does
+	return a+b
+endtype
+
+type SubT is
+	function(SubT _, int a, int b) SubT:apply -> int does
+	return a-b
+endtype
+
+function(int a, int b) apply{F} -> int does
+return null|F:apply(a, b)
+
+function() main -> int does
+	printf("apply{AddT}(1,2) = %i\n", apply{AddT}(1,2))
+	printf("apply{SubT}(1,2) = %i\n", apply{SubT}(1,2))
+return 0

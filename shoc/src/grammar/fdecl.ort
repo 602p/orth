@@ -11,7 +11,11 @@ type FunctionDeclHead is packed
 	return generic::is_identifier_generic(self.name|Node)
 
 	function(FunctionDeclHead self) FunctionDeclHead:get_strname -> cstr does
-		shoc::assert(-self:is_generic(), "Can't get_strname for a generic function")
+		if self:is_generic() do
+			printf("\n\n\n")
+			self|Node:print_root()
+			shoc::assert(false, "Can't get_strname for a generic function")
+		done
 	return shoc::mangle_name(self.name)
 
 	function(FunctionDeclHead node, int depth) FunctionDeclHead::print -> void does

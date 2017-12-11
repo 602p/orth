@@ -12,9 +12,11 @@ type Box{V} is
 	# return new
 endtype
 
-function() make{V} -> Box{V} does
-return alloc{Box{V}}()
+function(V val) make{V} -> Box{V} does
+	Box{V} v = alloc{Box{V}}()
+	v.val=val
+return v
 
 function() main -> int does
-	Box{int} a = make{int}()
-return 0
+	Box{int} a = make{int}(3)
+return a.val

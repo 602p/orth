@@ -1,0 +1,9 @@
+
+function() a{T} -> int does
+return b{T}()
+
+function() b{T} -> int does
+return a{T}()
+
+function() main -> int does
+return a{int}()

@@ -37,22 +37,38 @@ return "?"
 function(CallExpr n, TransformerPass p) rewrite_calls::visit_call -> CallExpr does
 	if n.meth:is_a("AccessorExpr") do
 		AccessorExpr acc = n.meth|AccessorExpr
+		OType obj_t = p.proj:get_node_type(acc.object)
+		List g_args = null|List
+		if obj_t.variety == PTYPE do
+			int i=0
+			g_args=List::new()
+			while i<obj_t|PType.arguments:len() do
+				g_args:append_Node(NameExpr::create_direct(obj_t|PType.arguments:get_idx(i).name, anchor)|Node)
+				i+=1
+			done
+		done
 		if acc.mode==":" do
-			n.meth=NameExpr::create_direct(p.proj:get_node_type(acc.object).name+"$"+shoc::mangle_name(acc.field), p.proj:get_node_anchor(n|Node))|Node
+			cstr name = obj_t:get_namespace()+"$"+shoc::mangle_name(acc.field)
+			Token anchor = p.proj:get_node_anchor(n|Node)
+			if g_args|ptr==null do
+				n.meth=NameExpr::create_direct(name, anchor)|Node
+			else do
+				n.meth=GenericName::create_direct(name, g_args, anchor)|Node
+			done
 			n.args:insert(0, acc.object|ptr)
 		done
 	done
 return n
 
 function(BinOpExpr n, TransformerPass p) rewrite_calls::visit_binop -> Node does
-	cstr name=p.proj:get_node_type(n.lhs).name+"$"+shoc::get_magic(n.op)
+	cstr name=p.proj:get_node_type(n.lhs):get_namespace()+"$"+shoc::get_magic(n.op)
 	# printf("check name = %s\n", name)
 	if p.proj.methods:contains(name) do
 		List args=List::new()
 		args:append_Node(n.lhs)
 		args:append_Node(n.rhs)
 		return CallExpr::create_direct(\
-			NameExpr::create_direct( name, p.proj:get_node_anchor(n|Node))|Node, args)|Node
+			NameExpr::create_direct(name, p.proj:get_node_anchor(n|Node))|Node, args)|Node
 	done
 return n|Node
 

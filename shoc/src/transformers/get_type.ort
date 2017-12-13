@@ -57,7 +57,7 @@ function(AccessorExpr n, TransformerPass p) get_type::for_accessor -> OType does
 return null|OType
 
 function(CastExpr n, TransformerPass p) get_type::for_cast -> OType does
-return p.proj:get_type(shoc::mangle_name(n.c_target))
+return p.proj:resolve_TypeName(n.c_target)
 
 function(IntrinsicExpr n, TransformerPass p) get_type::for_intrinsic -> OType does
 return p.proj:get_type("int")

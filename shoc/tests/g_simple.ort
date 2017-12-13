@@ -1,0 +1,11 @@
+
+type Box{T} is
+	T val
+	function(Box{T} self) Box{T}:foo -> void does
+	return
+endtype
+
+function() main -> int does
+	Box{int} a
+	a:foo()
+return 0

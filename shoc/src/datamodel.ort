@@ -131,6 +131,19 @@ type OType is packed
 			done
 		done
 	return res
+
+	function(OType self, GenericArgs params) OType:deabstractify -> OType does
+		if self.variety==PTYPE do
+			return self|PType:deabstractify(params)
+		done
+	return self
+
+	function(OType self) OType:get_namespace -> cstr does
+		shoc::assert(self.variety!=SYMTYPE, ":get_namespace on SYMTYPE")
+		if self.variety==PTYPE do
+			return self|PType.generic.name
+		done
+	return self.name
 endtype
 
 type PrimitiveOType is packed
@@ -457,6 +470,9 @@ type Method is
 endtype
 
 function(NameExpr name) shoc::mangle_name -> cstr does
+	# printf("\n\nmangle: ")
+	# name|Node:print_root()
+	# printf("\n\n")
 	if name|Node:is_a("GenericName") do
 		return name|GenericName.base_name+shoc::mangle_generics(name|GenericName.args)
 	elif name|Node:is_a("AccessorExpr") do

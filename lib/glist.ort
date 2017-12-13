@@ -1,0 +1,177 @@
+# import std
+
+type GLinkedListNode{T} is
+    T value
+    GLinkedListNode{T} next
+
+    function(T value) GLinkedListNode{T}::new -> GLinkedListNode{T} does
+        GLinkedListNode{T} new = malloc(@sizeof(GLinkedListNode{T})@)|GLinkedListNode{T}
+        new.value=value
+        new.next=null|GLinkedListNode{T}
+    return new
+
+    function(GLinkedListNode{T} n) GLinkedListNode{T}:free -> void does
+        free(n|ptr)
+    return
+endtype
+
+type GListCacheBox{T} is packed
+    GLinkedListNode{T} node
+endtype
+
+type GList{T} is
+    int len
+    GLinkedListNode{T} head
+    GLinkedListNode{T} tail
+    ptr cache
+    bool cache_ready
+    bool cache_alloced
+
+    function() GList{T}::new -> GList{T} does
+        GList{T} new = malloc(@sizeof(GList{T})@)|GList{T}
+        new.len=0
+        new.cache_ready=false
+        new.cache_alloced=false
+        new.head=null|GLinkedListNode{T}
+        new.tail=new.head
+    return new
+
+    # function(GList{T} o) GList{T}::copy -> GList{T} does
+    #     GList{T} new = GList{T}::new()
+    #     int i=0
+    #     while i<o.len do
+    #         new:append(o:get(i))
+    #         i+=1
+    #     done
+    # return new
+
+    function(GList{T} l) GList{T}:gen_cache -> void does
+        if l.cache_alloced do
+            free(l.cache)
+        done
+        int SOB=(@sizeof(GListCacheBox{T})@)
+        l.cache_alloced=true
+        l.cache_ready=true
+        l.cache=malloc(SOB*(l.len+1))
+        int idx = 0
+        LinkedListNode current = l.head
+        GListCacheBox{T} box
+        while idx<l.len do
+            box=(l.cache|long+(SOB*idx)|long)|ptr|GListCacheBox{T}
+            box.node=current
+            idx+=1
+            if current.next|ptr!=null do
+                current=current.next
+            done
+        done
+    return
+
+    function(GList{T} l, int want) GList{T}:get_node -> GLinkedListNode{T} does
+        if want>=l.len do
+            orth::fail("Requested GList{T} pos > than exists, "+want:str()+">"+l.len:str())
+        done
+        if want==l.len-1 do
+            return l.tail
+        done
+        if -l.cache_ready do
+            l:gen_cache()
+        done
+    return ((l.cache|long+((@sizeof(GListCacheBox{T})@)*want)|long)|ptr|GListCacheBox{T}).node
+
+    function(GList{T} l, int want) GList{T}:get -> T does
+    return l:get_node(want).value
+
+    function(GList{T} l, T item) GList{T}:append -> void does
+        GLinkedListNode{T} new = GLinkedListNode{T}::new(item)
+        # printf("new v=%u\n", new.value)
+        if l.len>0 do
+            l.tail.next=new
+            l.tail=new
+        else do
+            l.head=new
+            l.tail=new
+            # printf("head v=%u\n", l.head.value)
+            # printf("new v=%u\n", new.value)
+            # printf("new=%u, l.head=%u\n", new, l.head)
+        done
+        l.len+=1
+        l.cache_ready=false
+    return
+
+    # function(GList{T} l, int i, T item) GList{T}:set -> void does
+    #     l:get_node(i).value=item
+    # return
+
+    # function(GList{T} l, int i, T item) GList{T}:insert -> void does
+    #     if i==l.len do
+    #         l:append(item)
+    #         l.cache_ready=false
+    #         return
+    #     elif i>l.len do
+    #         printf("Can't insert past end of GList{T}!\n")
+    #         return
+    #     done
+
+    #     GLinkedListNode{T} new = GLinkedListNode{T}::new(item)
+
+    #     if i==0 do
+    #         if l.len!=0 do
+    #             new.next=l.head
+    #         done
+    #         l.head=new
+    #         l.len+=1
+    #         l.cache_ready=false
+    #         return
+    #     done
+
+    #     l.len+=1
+
+    #     GLinkedListNode{T} prev = l:get_node(i-1)
+    #     new.next=prev.next
+    #     prev.next=new
+    #     l.cache_ready=false
+    # return
+
+    # function(GList{T} l, int i) GList{T}:del -> void does
+    #     if i>=l.len do
+    #         printf("No such item\n")
+    #         return
+    #     done
+
+    #     if i==0 do
+    #         # printf("DELETING Head=%x\n", l.head.value)
+    #         GLinkedListNode{T} old_head = l.head
+    #         if l.len>1 do
+    #             l.head=l.head.next
+    #         done
+    #         old_head:free()
+    #         l.len-=1
+    #         l.cache_ready=false
+    #         return
+    #     done
+
+    #     GLinkedListNode{T} prev = l:get_node(i-1)
+    #     prev.next:free()
+    #     if i!=l.len-1 do
+    #         prev.next=prev.next.next
+    #     else do
+    #         l.tail=prev
+    #     done
+    #     l.len-=1
+    #     l.cache_ready=false
+    # return
+
+    # function(GList{T} l) GList{T}:clear -> void does
+    #     int idx = l.len-1
+    #     while idx!=-1 do
+    #         l:get_node(idx):free()
+    #         idx-=1
+    #     done
+    #     l.len=0
+    #     l.cache_ready=false
+    # return
+
+    # function(GList{T} l) GList{T}:free -> void does
+    #     free(l)
+    # return
+endtype

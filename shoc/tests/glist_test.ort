@@ -1,0 +1,11 @@
+import glist
+
+extern(...) malloc -> ptr
+extern(...) free -> void
+extern(...) printf -> int
+
+function() main -> int does
+	GList{int} a = GList{int}::new()
+	a:append(1)
+	a:append(2)
+return a.tail.value

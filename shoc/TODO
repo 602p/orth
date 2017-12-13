@@ -1,2 +1,3 @@
 Turn back on elide_funcs
 Turn back on rw_fors
+Rewrite GMethod instantiation to generate ASTs

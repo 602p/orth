@@ -75,6 +75,43 @@ function(Project p, Node n, int start) Project:run_transformers_ex -> Node does
 				fflush(stderr)
 			done
 			n=(p.transformer_passes:get(i)|TransformerPass):visit(n)
+			printf("\n\n\n\n\n\n After %s\n", (p.transformer_passes:get(i)|TransformerPass).name)
+			n:print_root()
+						printf("\n======================\n")
+					printf("\n\n===TYPES===\n\n")
+					int j=0
+					while j<p.types:num_keys() do
+							(p.types:get_by_num(j)|OType):print()
+						j+=1
+					done
+
+					printf("\n\n===GENERIC TYPES===\n\n")
+					j=0
+					while j<p.generic_types:num_keys() do
+						(p.generic_types:get_by_num(j)|GType):print()
+						j+=1
+						printf("\n")
+					done
+				
+
+					printf("\n\n===METHODS===\n\n")
+					Method meth
+					TypedVar var
+					j=0
+					while j<p.methods:num_keys() do
+						meth=(p.methods:get_by_num(j)|Method)
+						meth:print()
+							meth:print_locals()
+
+							meth:print_gir()
+						j+=1
+					done
+					j=0
+					while j<p.generic_methods:num_keys() do
+						p.generic_methods:get_by_num(j)|GMethod:print()
+						j+=1
+					done
+			printf("\n\n\n\n\n\n")
 		done
 		i+=1
 	done

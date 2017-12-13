@@ -104,24 +104,20 @@ type GType is packed
 			i+=1
 		done
 
-		List to_add = List::new()
-
-		i=0
-		while i<self.proj.generic_methods:num_keys() do
-			GMethod m = self.proj.generic_methods:get_by_num(i)|GMethod
-			if m.name:startswith(self.name+"$") do
-				if m.generic_args:len()==self.arguments:len() do
-					m:resolve_named(params, self.name, m.name:offset(m.name:find("$")))
-				else do
-					shoc::bail_out("arg lengths are not equal. additional params not supported")
-				done
-			done
-			i+=1
-		done
+		# List to_add = List::new()
 
 		# i=0
-		# while i<to_add.len do
-		# 	self.
+		# while i<self.proj.generic_methods:num_keys() do
+		# 	GMethod m = self.proj.generic_methods:get_by_num(i)|GMethod
+		# 	if m.name:startswith(self.name+"$") do
+		# 		if m.generic_args:len()==self.arguments:len() do
+		# 			m:resolve_named(params, self.name, m.name:offset(m.name:find("$")))
+		# 		else do
+		# 			shoc::bail_out("arg lengths are not equal. additional params not supported")
+		# 		done
+		# 	done
+		# 	i+=1
+		# done
 
 	return new_t|OType
 
@@ -184,6 +180,22 @@ type PType is packed
 			i+=1
 		done
 	return self.generic:apply(self.arguments)
+
+	function(PType old, GenericArgs params) PType:deabstractify -> OType does
+		# self.arguments:print()
+		# printf("COPY:")
+		# old:print()
+		PType self = PType::new(old.generic, GenericArgs::copy(old.arguments))|PType
+		int i=0
+		while i<self.arguments:len() do
+			if self.arguments:get_idx(i).variety==SYMTYPE do
+				self.arguments:set(self.arguments:get_name_for_idx(i), params:get_name(self.arguments:get_name_for_idx(i)))
+			elif self.arguments:get_idx(i).variety==PTYPE do
+				self.arguments:set(self.arguments:get_name_for_idx(i), self.arguments:get_idx(i):deabstractify(params))
+			done
+			i+=1
+		done
+	return self|OType
 
 	function(PType self) PType:print -> void does
 		printf("PType %s\n", self.name)
@@ -264,10 +276,7 @@ type GMethod is
 	return
 
 	function(GMethod self, GenericArgs g_args) GMethod:resolve -> Method does
-	return self:resolve_named(g_args, self.name, "")
-
-	function(GMethod self, GenericArgs g_args, cstr prefix, cstr postfix) GMethod:resolve_named -> Method does
-		cstr name = prefix+".G_"
+		cstr name = self.name+".G_"
 		int i=0
 		while i<g_args:len() do
 			name+="A"+g_args:get_idx(i):resolve(g_args).name+"Z"
@@ -276,23 +285,20 @@ type GMethod is
 			done
 			i+=1
 		done
-		name+=postfix
+		# name+=postfix
 
 		if self.proj.methods:contains(name) do
 			return self.proj:get_Method(name)
 		done
 
-		OType return_value = self.return_value:resolve(g_args)
+		OType return_value = self.return_value:deabstractify(g_args)
 		
 		List args = List::new()
 		i=0
 		while i<self.args.len do
-			args:append_TypedVar(TypedVar::new(self.args:get_TypedVar(i).name, self.args:get_TypedVar(i).type_:resolve(g_args)))
+			args:append_TypedVar(TypedVar::new(self.args:get_TypedVar(i).name, self.args:get_TypedVar(i).type_:deabstractify(g_args)))
 			i+=1
 		done
-
-		# Method new = Method::new(self.proj, name, args, false, return_value, false)
-		# self.proj:add_Method(new)
 
 		FunctionDecl new_ast = self.ast|Node:copy()|FunctionDecl
 		TransformerPass::new("rw_generics_"+name):set_info(g_args|ptr)\
@@ -308,10 +314,9 @@ type GMethod is
 				NameExpr::create_direct(args:get_TypedVar(i).type_.name, anchor), args:get_TypedVar(i).name, anchor)|Node)
 			i+=1
 		done
+		printf("*************************run child\n")
 		self.proj:run_transformers_ex(new_ast|Node, 1)
-		# printf("Done:\n")
-		# new_ast|Node:print_root()
-
+		printf("*************************done\n")
 	return self.proj:get_Method(name)
 endtype
 
@@ -335,6 +340,23 @@ return null|NameExpr
 function() implement_generics::init -> TransformerPass does
 return TransformerPass::new("implement_generics")\
        :add_specialization("GenericName", implement_generics::visit_generic|NodeTransformer)
+
+function(FileNode file, TransformerPass p) rw_generic_locals::visit_file -> FileNode does
+	int m = 0
+	while m<p.proj.methods:num_keys() do
+		Method meth = p.proj.methods:get_by_num(m)|Method
+		int l = 0
+		while l<meth.locals:num_keys() do
+			meth.locals:set(meth.locals:get_key_by_num(l), meth.locals:get_by_num(l)|OType:resolve(GenericArgs::new())|ptr)
+			l+=1
+		done
+		m+=1
+	done
+return file
+
+function() rw_generic_locals::init -> TransformerPass does
+return TransformerPass::new("rw_generic_locals"):no_auto_visit()\
+       :add_specialization("FileNode", rw_generic_locals::visit_file|NodeTransformer)
 
 function(Project proj, NameExpr typename, GenericArgs g_args) generic::resolve_symdecl -> OType does
 	if typename.type_==NameExpr_t do

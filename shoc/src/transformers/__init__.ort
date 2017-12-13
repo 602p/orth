@@ -43,8 +43,6 @@ function(Project p) shoc::transformers::init -> void does
 	done
 
 	p:add_Transformer(strip_seps::init())
-
-	p:add_Transformer(implement_generics::init())
 	
 	p:add_Transformer(define_locals::init())
 
@@ -53,6 +51,11 @@ function(Project p) shoc::transformers::init -> void does
 	p:add_Transformer(apply_intrinsics::init())
 	# p:add_Transformer(rw_fors::init())
 	p:add_Transformer(rw_calls::init())
+
+	p:add_Transformer(implement_generics::init())
+	p:add_Transformer(rw_generic_locals::init())
+
+	# p:add_Transformer(implement_generics::init())
 
 	# p:add_Transformer(count_calls::init())
 

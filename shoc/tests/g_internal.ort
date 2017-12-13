@@ -1,0 +1,18 @@
+extern(...) printf -> int
+
+type Foo{T} is
+	function(Foo{T} self) Foo{T}:do_a -> void does
+		printf("do_a\n")
+		self:do_b()
+	return
+
+	function(Foo{T} self) Foo{T}:do_b -> void does
+		printf("do_b\n")
+		# self:do_b()
+	return
+endtype
+
+function() main -> int does
+	null|Foo{int}:do_a()
+	# null|Foo{int}:do_b()
+return 0

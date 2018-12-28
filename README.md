@@ -1,4 +1,13 @@
 # orth
+
+### Warning & Apology
+
+Unfortunatley, I haven't had time to do a lot of work on Orth recently. As a result, it has fallen into a state of disrepair where SHOC won't build under modern versions of LLVM and/or GCC (also, it's borked half-way through my work to add generics last time I was looking at it.) I may return to it at some point, but more likley is starting over and building another language, since my further learning in the languages realm has exposed some fundamental structural flaws in orth (only one pointer type...)
+
+Nonetheless it's still cool imho, and the OS still builds which is a fun demo!
+
+### Introduction
+
 Orth is a looosley statically typed, Object Oriented, C and Python inspired systems programming language. It allows much of the same functionality as C, with a focus on elegance and cleanliness of syntax.
 It's easy to learn, if you know C you know the fundamentals of orth:
 
